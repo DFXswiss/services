@@ -8,7 +8,9 @@ import {
   ResponseType,
   useApi,
 } from '@dfx.swiss/react';
+import { CreateMrosDto, MrosListEntry } from 'src/dto/mros.dto';
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
+import { CreateRecallDto, RecallListEntry } from 'src/dto/recall.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
 import { downloadFile, downloadPdfFromString, filenameDateFormat } from 'src/util/utils';
@@ -126,6 +128,7 @@ export interface BankTxSearchResult {
   type: string;
   name?: string;
   iban?: string;
+  recall?: RecallInfo;
 }
 
 export interface BankTxInfo {
@@ -138,6 +141,16 @@ export interface BankTxInfo {
   name?: string;
   iban?: string;
   remittanceInfo?: string;
+  recall?: RecallInfo;
+}
+
+export interface RecallInfo {
+  id: number;
+  created: string;
+  sequence: number;
+  reason?: string;
+  comment: string;
+  fee: number;
 }
 
 export interface IpLogInfo {
@@ -556,6 +569,43 @@ export function useCompliance() {
     });
   }
 
+  async function getMrosList(): Promise<MrosListEntry[]> {
+    return call<MrosListEntry[]>({
+      url: 'mros',
+      method: 'GET',
+    });
+  }
+
+  async function getMrosById(id: number): Promise<MrosListEntry> {
+    return call<MrosListEntry>({
+      url: `mros/${id}`,
+      method: 'GET',
+    });
+  }
+
+  async function createMros(dto: CreateMrosDto): Promise<void> {
+    return call<void>({
+      url: 'mros',
+      method: 'POST',
+      data: dto,
+    });
+  }
+
+  async function getRecalls(): Promise<RecallListEntry[]> {
+    return call<RecallListEntry[]>({
+      url: 'recall',
+      method: 'GET',
+    });
+  }
+
+  async function createRecall(dto: CreateRecallDto): Promise<void> {
+    return call<void>({
+      url: 'recall',
+      method: 'POST',
+      data: dto,
+    });
+  }
+
   async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
     return call<RecommendationGraph>({
       url: `support/recommendation-graph/${userDataId}`,
@@ -695,6 +745,11 @@ export function useCompliance() {
       generateOnboardingPdf,
       getCustodyOrders,
       approveCustodyOrder,
+      getMrosList,
+      getMrosById,
+      createMros,
+      getRecalls,
+      createRecall,
       updateKycStep,
       updateUserData,
       createLimitRequest,

@@ -1,13 +1,14 @@
-import { SupportIssueReason, SupportIssueType, useAuthContext, useUserContext } from '@dfx.swiss/react';
+import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { toBase64 } from 'src/util/utils';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { ASSIGNABLE_DEPARTMENTS, UserSearchResult, useSupportDashboard } from 'src/hooks/support-dashboard.hook';
+import { reasonLabel, typeLabel } from 'src/util/support-helpers';
+import { toBase64 } from 'src/util/utils';
 
 const ISSUE_TYPES = Object.values(SupportIssueType);
 const ISSUE_REASONS = Object.values(SupportIssueReason);
@@ -16,10 +17,10 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
   useSupportDashboardGuard();
 
   const { translate } = useSettingsContext();
-  const { session } = useAuthContext();
-  const { user } = useUserContext();
-  const { createIssue, searchUsers } = useSupportDashboard();
+  const { createIssue, searchUsers, getClerks } = useSupportDashboard();
   const { navigate } = useNavigation();
+
+  const [clerks, setClerks] = useState<string[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
@@ -38,6 +39,16 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
   const [reason, setReason] = useState<string>(ISSUE_REASONS[0]);
   const [name, setName] = useState('');
   const [department, setDepartment] = useState<string>(ASSIGNABLE_DEPARTMENTS[0]);
+  const [clerk, setClerk] = useState<string>('');
+
+  useEffect(() => {
+    getClerks()
+      .then((list) => {
+        setClerks(list);
+        setClerk((prev) => prev || list[0] || '');
+      })
+      .catch(() => undefined);
+  }, [getClerks]);
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File>();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,14 +117,13 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
     setError(undefined);
 
     try {
-      const author = user?.mail ?? session?.address ?? 'Support';
       const fileData = selectedFile ? await toBase64(selectedFile) : undefined;
       await createIssue(selectedUser.id, {
         type,
         reason,
         name: name.trim(),
         department,
-        author,
+        author: clerk,
         message: message.trim(),
         file: fileData ?? undefined,
         fileName: selectedFile?.name,
@@ -209,7 +219,7 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
           >
             {ISSUE_TYPES.map((t) => (
               <option key={t} value={t}>
-                {t}
+                {translate('screens/support', typeLabel(t))}
               </option>
             ))}
           </select>
@@ -223,7 +233,7 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
           >
             {ISSUE_REASONS.map((r) => (
               <option key={r} value={r}>
-                {r}
+                {translate('screens/support', reasonLabel(r))}
               </option>
             ))}
           </select>
@@ -249,6 +259,20 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
             {ASSIGNABLE_DEPARTMENTS.map((d) => (
               <option key={d} value={d}>
                 {d}
+              </option>
+            ))}
+          </select>
+        </FormField>
+
+        <FormField label="Clerk">
+          <select
+            className="w-full px-3 py-2 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+            value={clerk}
+            onChange={(e) => setClerk(e.target.value)}
+          >
+            {clerks.map((c) => (
+              <option key={c} value={c}>
+                {c}
               </option>
             ))}
           </select>

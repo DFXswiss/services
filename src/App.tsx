@@ -55,6 +55,8 @@ const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
 const SafeScreen = lazy(() => import('./screens/safe.screen'));
 const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.screen'));
 const ComplianceScreen = lazy(() => import('./screens/compliance.screen'));
+const ComplianceBankTxScreen = lazy(() => import('./screens/compliance-bank-tx.screen'));
+const ComplianceBankTxRecallScreen = lazy(() => import('./screens/compliance-bank-tx-recall.screen'));
 const ComplianceBankTxReturnScreen = lazy(() => import('./screens/compliance-bank-tx-return.screen'));
 const ComplianceKycFilesScreen = lazy(() => import('./screens/compliance-kyc-files.screen'));
 const ComplianceKycFilesDetailsScreen = lazy(() => import('./screens/compliance-kyc-files-details.screen'));
@@ -64,6 +66,10 @@ const ComplianceKycStepScreen = lazy(() => import('./screens/compliance-kyc-step
 const ComplianceSupportIssueScreen = lazy(() => import('./screens/compliance-support-issue.screen'));
 const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
 const ComplianceCustodyOrdersScreen = lazy(() => import('./screens/compliance-custody-orders.screen'));
+const ComplianceMrosListScreen = lazy(() => import('./screens/compliance-mros-list.screen'));
+const ComplianceMrosCreateScreen = lazy(() => import('./screens/compliance-mros-create.screen'));
+const ComplianceMrosDetailScreen = lazy(() => import('./screens/compliance-mros-detail.screen'));
+const ComplianceRecallListScreen = lazy(() => import('./screens/compliance-recall-list.screen'));
 const ComplianceReviewScreen = lazy(() => import('./screens/compliance-review.screen'));
 const CompliancePendingReviewsScreen = lazy(() => import('./screens/compliance-pending-reviews.screen'));
 const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
@@ -84,6 +90,7 @@ const DashboardFinancialHistoryScreen = lazy(() => import('./screens/dashboard-f
 const DashboardFinancialLiveScreen = lazy(() => import('./screens/dashboard-financial-live.screen'));
 const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-financial-expenses.screen'));
 const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard-financial-liquidity.screen'));
+const SitemapScreen = lazy(() => import('./screens/sitemap.screen'));
 
 setupLanguages();
 
@@ -366,6 +373,14 @@ export const Routes = [
         element: withSuspense(<ComplianceRecommendationGraphScreen />),
       },
       {
+        path: 'compliance/bank-tx/:id',
+        element: withSuspense(<ComplianceBankTxScreen />),
+      },
+      {
+        path: 'compliance/bank-tx/:id/recall',
+        element: withSuspense(<ComplianceBankTxRecallScreen />),
+      },
+      {
         path: 'compliance/bank-tx/:id/return',
         element: withSuspense(<ComplianceBankTxReturnScreen />),
       },
@@ -390,12 +405,32 @@ export const Routes = [
         element: withSuspense(<ComplianceCustodyOrdersScreen />),
       },
       {
+        path: 'compliance/mros',
+        element: withSuspense(<ComplianceMrosListScreen />),
+      },
+      {
+        path: 'compliance/mros/create',
+        element: withSuspense(<ComplianceMrosCreateScreen />),
+      },
+      {
+        path: 'compliance/mros/:id',
+        element: withSuspense(<ComplianceMrosDetailScreen />),
+      },
+      {
+        path: 'compliance/recalls',
+        element: withSuspense(<ComplianceRecallListScreen />),
+      },
+      {
         path: 'compliance/user/:id/kyc',
         element: withSuspense(<ComplianceReviewScreen />),
       },
       {
         path: 'compliance/pending-reviews/:type/:name',
         element: withSuspense(<CompliancePendingReviewsScreen />),
+      },
+      {
+        path: 'sitemap',
+        element: withSuspense(<SitemapScreen />),
       },
       {
         path: 'support/dashboard',

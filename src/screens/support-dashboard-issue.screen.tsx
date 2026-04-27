@@ -1,7 +1,6 @@
-import { Department, SupportIssueInternalState, useAuthContext, useUserContext } from '@dfx.swiss/react';
+import { Department, SupportIssueInternalState, useAuthContext, UserRole } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { toBase64 } from 'src/util/utils';
 import { useParams } from 'react-router-dom';
 import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
 import { ErrorHint } from 'src/components/error-hint';
@@ -17,6 +16,8 @@ import {
   useSupportDashboard,
 } from 'src/hooks/support-dashboard.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
+import { reasonLabel, typeLabel } from 'src/util/support-helpers';
+import { toBase64 } from 'src/util/utils';
 
 export default function SupportDashboardIssueScreen(): JSX.Element {
   useSupportDashboardGuard();
@@ -24,8 +25,8 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   const { id } = useParams();
   const { translate } = useSettingsContext();
   const { session } = useAuthContext();
-  const { user } = useUserContext();
-  const { getIssueData, updateIssue, sendMessage, getIssueMessages, getMessageFile } = useSupportDashboard();
+  const canAccessCompliance = session?.role === UserRole.ADMIN || session?.role === UserRole.COMPLIANCE;
+  const { getIssueData, updateIssue, sendMessage, getIssueMessages, getMessageFile, getClerks } = useSupportDashboard();
   const { navigate } = useNavigation();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +34,9 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   const [actionError, setActionError] = useState<string>();
   const [issueData, setIssueData] = useState<SupportIssueInternalData>();
   const [messages, setMessages] = useState<SupportMessageInfo[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const visibleIdsRef = useRef<Set<number>>(new Set());
+  const [clerks, setClerks] = useState<string[]>([]);
 
   // Update form state
   const [updateState, setUpdateState] = useState('');
@@ -42,9 +46,10 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
 
   // Message form state
   const [messageText, setMessageText] = useState('');
+  const [messageAuthor, setMessageAuthor] = useState<string>('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // File preview state
@@ -56,6 +61,15 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
 
   useLayoutOptions({ title: translate('screens/support', 'Support Issue'), backButton: true, noMaxWidth: true });
 
+  useEffect(() => {
+    getClerks()
+      .then((list) => {
+        setClerks(list);
+        setMessageAuthor((prev) => prev || list[0] || '');
+      })
+      .catch(() => undefined);
+  }, [getClerks]);
+
   const loadIssue = useCallback((): void => {
     if (!id) return;
     setIsLoading(true);
@@ -65,15 +79,29 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         setUpdateState(data.state);
         setUpdateDepartment(data.department ?? '');
         setUpdateClerk(data.clerk ?? '');
+        setMessageAuthor((prev) => (data.clerk && clerks.includes(data.clerk) ? data.clerk : prev || clerks[0] || ''));
       })
       .catch((e: Error) => setLoadError(e.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
-  }, [id, getIssueData]);
+  }, [id, getIssueData, clerks]);
 
   const loadMessages = useCallback((): void => {
     if (!issueData?.uid) return;
     getIssueMessages(issueData.uid)
-      .then(setMessages)
+      .then((fetched) => {
+        setMessages(fetched);
+        setPendingCount(0);
+      })
+      .catch((e: Error) => setActionError(e.message ?? 'Failed to load messages'));
+  }, [issueData?.uid, getIssueMessages]);
+
+  const pollForNewMessages = useCallback((): void => {
+    if (!issueData?.uid) return;
+    getIssueMessages(issueData.uid)
+      .then((fetched) => {
+        const newCount = fetched.filter((m) => !visibleIdsRef.current.has(m.id)).length;
+        if (newCount > 0) setPendingCount(newCount);
+      })
       .catch((e: Error) => setActionError(e.message ?? 'Failed to load messages'));
   }, [issueData?.uid, getIssueMessages]);
 
@@ -85,15 +113,21 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     loadMessages();
   }, [loadMessages]);
 
-  // Polling for new messages
+  // Track visible message IDs for polling delta
   useEffect(() => {
-    const interval = setInterval(loadMessages, 15000);
-    return () => clearInterval(interval);
-  }, [loadMessages]);
+    visibleIdsRef.current = new Set(messages.map((m) => m.id));
+  }, [messages]);
 
-  // Scroll to bottom when new messages arrive
+  // Polling for new messages (non-intrusive, sets pendingCount)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const interval = setInterval(() => pollForNewMessages(), 15000);
+    return () => clearInterval(interval);
+  }, [pollForNewMessages]);
+
+  // Scroll messages container to bottom when messages change (initial load, send, manual reload)
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   async function handleUpdate(): Promise<void> {
@@ -119,7 +153,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     setIsSending(true);
     setActionError(undefined);
     try {
-      const author = user?.mail ?? session?.address ?? 'Support';
+      const author = messageAuthor;
       const text = messageText.trim() || undefined;
 
       if (selectedFiles.length > 0) {
@@ -207,15 +241,29 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
           <InfoPanel title="Issue Details">
             <InfoRow label="UID" value={issueData.uid} mono />
             <InfoRow label="Name" value={issueData.name} />
-            <InfoRow label="Type" value={issueData.type} />
-            <InfoRow label="Reason" value={issueData.reason} />
+            <InfoRow label="Type" value={translate('screens/support', typeLabel(issueData.type))} />
+            <InfoRow label="Reason" value={translate('screens/support', reasonLabel(issueData.reason))} />
             <InfoRow label="State" value={statusBadge(issueData.state)} />
             <InfoRow label="Department" value={issueData.department ?? '-'} />
             <InfoRow label="Created" value={formatDateTime(issueData.created)} />
           </InfoPanel>
 
           <InfoPanel title="Account Data">
-            <InfoRow label="UserData ID" value={String(issueData.account.id)} />
+            <InfoRow
+              label="UserData ID"
+              value={
+                canAccessCompliance ? (
+                  <button
+                    className="text-dfxBlue-400 underline hover:text-dfxBlue-800"
+                    onClick={() => navigate(`/compliance/user/${issueData.account.id}`)}
+                  >
+                    {issueData.account.id}
+                  </button>
+                ) : (
+                  String(issueData.account.id)
+                )
+              }
+            />
             <InfoRow label="Status" value={statusBadge(issueData.account.status)} />
             <InfoRow label="Verified Name" value={issueData.account.verifiedName ?? '-'} />
             <InfoRow label="DFX Name" value={issueData.account.completeName ?? '-'} />
@@ -335,7 +383,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                 value={updateDepartment}
                 onChange={(e) => setUpdateDepartment(e.target.value)}
               >
-                <option value="">-</option>
+                {!issueData?.department && <option value="">-</option>}
                 {ASSIGNABLE_DEPARTMENTS.map((d) => (
                   <option key={d} value={d}>
                     {d}
@@ -345,12 +393,18 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-dfxGray-700">Clerk</label>
-              <input
+              <select
                 className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 min-w-[130px]"
                 value={updateClerk}
                 onChange={(e) => setUpdateClerk(e.target.value)}
-                placeholder="Clerk name"
-              />
+              >
+                {!issueData?.clerk && <option value="">-</option>}
+                {clerks.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </div>
             <button
               className="px-4 py-1.5 bg-dfxBlue-400 text-white rounded text-xs hover:bg-dfxBlue-800 transition-colors disabled:opacity-50"
@@ -364,8 +418,21 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
 
         {/* Messages / Chat */}
         <div className="bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-dfxGray-700 mb-3">Messages ({messages.length})</h2>
-          <div className="flex flex-col gap-2 max-h-[40vh] overflow-auto mb-4 p-2">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-dfxGray-700">Messages ({messages.length})</h2>
+            {pendingCount > 0 && (
+              <button
+                className="px-3 py-1 text-xs text-white bg-dfxRed-100 rounded-full hover:bg-dfxRed-150 transition-colors"
+                onClick={() => loadMessages()}
+              >
+                {pendingCount} new {pendingCount === 1 ? 'message' : 'messages'} — load
+              </button>
+            )}
+          </div>
+          <div
+            ref={messagesContainerRef}
+            className="flex flex-col gap-2 max-h-[40vh] overflow-auto mb-4 p-2 scroll-shadow"
+          >
             {[...messages]
               .sort((a, b) => a.id - b.id)
               .map((msg) => {
@@ -399,7 +466,6 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                   </div>
                 );
               })}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Message Input */}
@@ -451,6 +517,18 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                 }
               }}
             />
+            <select
+              className="px-2 py-2 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+              value={messageAuthor}
+              onChange={(e) => setMessageAuthor(e.target.value)}
+              title="Author"
+            >
+              {clerks.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
             <button
               className="px-4 py-2 bg-dfxBlue-400 text-white rounded text-sm hover:bg-dfxBlue-800 transition-colors disabled:opacity-50"
               onClick={handleSendMessage}
