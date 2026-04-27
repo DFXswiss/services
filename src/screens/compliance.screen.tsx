@@ -11,7 +11,7 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
@@ -20,6 +20,8 @@ import {
   BankTxSearchResult,
   ComplianceSearchResult,
   PendingOnboardingInfo,
+  PendingReviewStatus,
+  PendingReviewSummaryEntry,
   UserSearchResult,
   useCompliance,
 } from 'src/hooks/compliance.hook';
@@ -36,7 +38,7 @@ export default function ComplianceScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { search, downloadUserFiles, getPendingOnboardings } = useCompliance();
+  const { search, downloadUserFiles, getPendingOnboardings, getPendingReviews } = useCompliance();
   const { navigate } = useNavigation();
   const { search: query } = useLocation();
 
@@ -46,6 +48,7 @@ export default function ComplianceScreen(): JSX.Element {
   const [showInfo, setShowInfo] = useState(false);
   const [downloadingUserId, setDownloadingUserId] = useState<number>();
   const [pendingOnboardings, setPendingOnboardings] = useState<PendingOnboardingInfo[]>([]);
+  const [pendingReviews, setPendingReviews] = useState<PendingReviewSummaryEntry[]>([]);
 
   const paramSearch = new URLSearchParams(query).get('search') || undefined;
 
@@ -53,6 +56,9 @@ export default function ComplianceScreen(): JSX.Element {
     getPendingOnboardings()
       .then(setPendingOnboardings)
       .catch(() => setPendingOnboardings([]));
+    getPendingReviews()
+      .then(setPendingReviews)
+      .catch(() => setPendingReviews([]));
   }, []);
 
   useEffect(() => {
@@ -395,6 +401,60 @@ export default function ComplianceScreen(): JSX.Element {
                         </button>
                       </td>
                     </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {pendingReviews.length > 0 && (
+          <div className="w-full">
+            <h2 className="text-dfxGray-700">
+              {translate('screens/compliance', 'Pending Reviews')} (
+              {pendingReviews.reduce((sum, r) => sum + r.manualReview + r.internalReview, 0)})
+            </h2>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
+                <thead>
+                  <tr className="bg-dfxGray-300">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                      {translate('screens/compliance', 'Type')}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                      {translate('screens/kyc', 'Name')}
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
+                      {translate('screens/compliance', 'Manual Review')}
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
+                      {translate('screens/compliance', 'Internal Review')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingReviews.map((r) => (
+                    <Fragment key={`${r.type}-${r.name}`}>
+                      {[PendingReviewStatus.MANUAL_REVIEW, PendingReviewStatus.INTERNAL_REVIEW].map((s) => {
+                        const isManual = s === PendingReviewStatus.MANUAL_REVIEW;
+                        const count = isManual ? r.manualReview : r.internalReview;
+                        if (count === 0) return null;
+                        const valueCell = 'px-4 py-3 text-right text-sm text-dfxBlue-800 font-semibold';
+                        const emptyCell = 'px-4 py-3 text-right text-sm text-dfxGray-600';
+                        return (
+                          <tr
+                            key={s}
+                            className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
+                            onClick={() => navigate(`compliance/pending-reviews/${r.type}/${r.name}?status=${s}`)}
+                          >
+                            <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.type}</td>
+                            <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.name}</td>
+                            <td className={isManual ? valueCell : emptyCell}>{isManual ? count : '-'}</td>
+                            <td className={isManual ? emptyCell : valueCell}>{isManual ? '-' : count}</td>
+                          </tr>
+                        );
+                      })}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
