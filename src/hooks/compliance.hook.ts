@@ -8,9 +8,9 @@ import {
   ResponseType,
   useApi,
 } from '@dfx.swiss/react';
-import { MrosListEntry } from 'src/dto/mros.dto';
+import { CreateMrosDto, MrosListEntry, UpdateMrosDto } from 'src/dto/mros.dto';
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
-import { RecallListEntry } from 'src/dto/recall.dto';
+import { CreateRecallDto, RecallListEntry } from 'src/dto/recall.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
 import { downloadFile, downloadPdfFromString, filenameDateFormat } from 'src/util/utils';
@@ -92,6 +92,33 @@ export interface PendingOnboardingInfo {
   date: string;
 }
 
+export enum PendingReviewType {
+  KYC_STEP = 'KycStep',
+  BANK_DATA = 'BankData',
+}
+
+export enum PendingReviewStatus {
+  MANUAL_REVIEW = 'ManualReview',
+  INTERNAL_REVIEW = 'InternalReview',
+}
+
+export interface PendingReviewSummaryEntry {
+  type: PendingReviewType;
+  name: string;
+  manualReview: number;
+  internalReview: number;
+}
+
+export interface PendingReviewItem {
+  id: number;
+  userDataId: number;
+  userName?: string;
+  accountType?: string;
+  kycLevel?: number;
+  status: PendingReviewStatus;
+  date: string;
+}
+
 export interface BankTxSearchResult {
   id: number;
   transactionId?: number;
@@ -101,6 +128,7 @@ export interface BankTxSearchResult {
   type: string;
   name?: string;
   iban?: string;
+  recall?: RecallInfo;
 }
 
 export interface BankTxInfo {
@@ -113,6 +141,16 @@ export interface BankTxInfo {
   name?: string;
   iban?: string;
   remittanceInfo?: string;
+  recall?: RecallInfo;
+}
+
+export interface RecallInfo {
+  id: number;
+  created: string;
+  sequence: number;
+  reason?: string;
+  comment: string;
+  fee: number;
 }
 
 export interface IpLogInfo {
@@ -511,6 +549,26 @@ export function useCompliance() {
     });
   }
 
+  async function getPendingReviews(): Promise<PendingReviewSummaryEntry[]> {
+    return call<PendingReviewSummaryEntry[]>({
+      url: 'support/pending-reviews',
+      method: 'GET',
+    });
+  }
+
+  async function getPendingReviewItems(
+    type: PendingReviewType,
+    status: PendingReviewStatus,
+    name?: string,
+  ): Promise<PendingReviewItem[]> {
+    const query = new URLSearchParams({ type, status });
+    if (name) query.set('name', name);
+    return call<PendingReviewItem[]>({
+      url: `support/pending-reviews/items?${query.toString()}`,
+      method: 'GET',
+    });
+  }
+
   async function getMrosList(): Promise<MrosListEntry[]> {
     return call<MrosListEntry[]>({
       url: 'mros',
@@ -518,10 +576,41 @@ export function useCompliance() {
     });
   }
 
+  async function getMrosById(id: number): Promise<MrosListEntry> {
+    return call<MrosListEntry>({
+      url: `mros/${id}`,
+      method: 'GET',
+    });
+  }
+
+  async function createMros(dto: CreateMrosDto): Promise<void> {
+    return call<void>({
+      url: 'mros',
+      method: 'POST',
+      data: dto,
+    });
+  }
+
+  async function updateMros(id: number, dto: UpdateMrosDto): Promise<void> {
+    return call<void>({
+      url: `mros/${id}`,
+      method: 'PUT',
+      data: dto,
+    });
+  }
+
   async function getRecalls(): Promise<RecallListEntry[]> {
     return call<RecallListEntry[]>({
       url: 'recall',
       method: 'GET',
+    });
+  }
+
+  async function createRecall(dto: CreateRecallDto): Promise<void> {
+    return call<void>({
+      url: 'recall',
+      method: 'POST',
+      data: dto,
     });
   }
 
@@ -650,6 +739,8 @@ export function useCompliance() {
       search,
       getUserData,
       getPendingOnboardings,
+      getPendingReviews,
+      getPendingReviewItems,
       downloadUserFiles,
       checkUserFiles,
       getTransactionRefundData,
@@ -663,7 +754,11 @@ export function useCompliance() {
       getCustodyOrders,
       approveCustodyOrder,
       getMrosList,
+      getMrosById,
+      createMros,
+      updateMros,
       getRecalls,
+      createRecall,
       updateKycStep,
       updateUserData,
       createLimitRequest,

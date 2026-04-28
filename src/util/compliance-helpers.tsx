@@ -1,4 +1,5 @@
 import { Transaction } from '@dfx.swiss/react';
+import { MrosStatus } from 'src/dto/mros.dto';
 
 export function DetailRow({
   label,
@@ -118,9 +119,25 @@ export function boolBadge(value: boolean, trueLabel = 'Yes', falseLabel = 'No'):
   return statusBadge(value ? trueLabel : falseLabel);
 }
 
+const mrosStatusClasses: Record<MrosStatus, string> = {
+  [MrosStatus.DRAFT]: 'bg-dfxGray-400 text-dfxBlue-800',
+  [MrosStatus.SUBMITTED]: 'bg-dfxBlue-300/20 text-dfxBlue-400',
+  [MrosStatus.CONFIRMED]: 'bg-dfxGreen-100/20 text-dfxGreen-300',
+  [MrosStatus.CLOSED]: 'bg-dfxGray-700/20 text-dfxGray-800',
+};
+
+export function mrosStatusBadge(status: MrosStatus): JSX.Element {
+  const classes = mrosStatusClasses[status] ?? 'bg-dfxGray-400 text-dfxBlue-800';
+  return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${classes}`}>{status}</span>;
+}
+
 export function todayAsString(): string {
   return new Date().toISOString().split('T')[0];
 }
+
+// Mirrors `BankTxUnassignedTypes` in DFXswiss/api (bank-tx.entity.ts).
+// Only these types still allow a manual Return via compliance.
+export const BankTxUnassignedTypes = ['GSheet', 'Unknown', 'Pending'];
 
 export function formatDate(value: string): string {
   return new Date(value).toLocaleDateString();

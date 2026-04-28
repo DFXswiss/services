@@ -257,7 +257,7 @@ export default function KycScreen(): JSX.Element {
         setIsLoading(true);
         navigate({ search: `?code=${e.switchToCode}` });
         logout();
-      } else if (e.statusCode === 403 && e.message?.includes('2FA')) {
+      } else if (e.code === 'TFA_REQUIRED') {
         setParams({ autoStart: 'true' });
         navigate('/2fa', { setRedirect: true });
       } else if (e.statusCode === 409 && e.message?.includes('exists')) {

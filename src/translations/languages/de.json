@@ -396,7 +396,7 @@
     "No entries found": "Keine Einträge gefunden",
     "found by {{type}}": "gefunden per {{type}}",
     "Customers": "Kunden",
-    "Unassigned Bank Transactions": "Nicht zugeordnete Banktransaktionen"
+    "Bank Transactions": "Banktransaktionen"
   },
   "screens/2fa": {
     "2FA": "2FA",

@@ -102,7 +102,7 @@ export function useSupportDashboard() {
 
   async function getIssueList(params?: {
     department?: string;
-    state?: string;
+    states?: string;
     type?: string;
     take?: number;
     skip?: number;
@@ -115,6 +115,28 @@ export function useSupportDashboard() {
 
     return call<{ data: SupportIssueListItem[]; total: number }>({
       url: `support/issue/list${queryString}`,
+      method: 'GET',
+    });
+  }
+
+  async function getIssueCounts(): Promise<Record<string, number>> {
+    return call<Record<string, number>>({
+      url: 'support/issue/counts',
+      method: 'GET',
+    });
+  }
+
+  async function getIssueActivity(since?: Date): Promise<{ count: number; latestAt?: string }> {
+    const query = since ? `?since=${encodeURIComponent(since.toISOString())}` : '';
+    return call<{ count: number; latestAt?: string }>({
+      url: `support/issue/activity${query}`,
+      method: 'GET',
+    });
+  }
+
+  async function getClerks(): Promise<string[]> {
+    return call<string[]>({
+      url: 'support/issue/clerks',
       method: 'GET',
     });
   }
@@ -198,6 +220,9 @@ export function useSupportDashboard() {
   return useMemo(
     () => ({
       getIssueList,
+      getIssueCounts,
+      getIssueActivity,
+      getClerks,
       getIssueData,
       updateIssue,
       sendMessage,
