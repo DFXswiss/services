@@ -7,8 +7,12 @@ import {
   BuyRoutesTable,
   KycLogsTable,
   KycStepsTable,
+  NotificationsTable,
+  RefRewardsTable,
   SellRoutesTable,
+  SwapRoutesTable,
   UsersTable,
+  VirtualIbansTable,
 } from 'src/components/compliance/detail-tabs';
 import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
 import { IpLogsPanel } from 'src/components/compliance/ip-logs-panel';
@@ -23,7 +27,18 @@ import { ComplianceUserData, KycFile, useCompliance } from 'src/hooks/compliance
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
-type TabType = 'transactions' | 'users' | 'kycSteps' | 'kycLogs' | 'bankDatas' | 'buyRoutes' | 'sellRoutes';
+type TabType =
+  | 'transactions'
+  | 'users'
+  | 'kycSteps'
+  | 'kycLogs'
+  | 'bankDatas'
+  | 'buyRoutes'
+  | 'sellRoutes'
+  | 'swapRoutes'
+  | 'virtualIbans'
+  | 'refRewards'
+  | 'notifications';
 
 interface TabConfig {
   id: TabType;
@@ -110,8 +125,12 @@ export default function ComplianceUserScreen(): JSX.Element {
         { id: 'kycSteps', label: 'KYC Steps', count: data.kycSteps?.length || 0 },
         { id: 'kycLogs', label: 'KYC Log', count: data.kycLogs?.length || 0 },
         { id: 'bankDatas', label: 'Bank Data', count: data.bankDatas?.length || 0 },
+        { id: 'virtualIbans', label: 'Virtual IBANs', count: data.virtualIbans?.length || 0 },
         { id: 'buyRoutes', label: 'Buy Routes', count: data.buyRoutes?.length || 0 },
         { id: 'sellRoutes', label: 'Sell Routes', count: data.sellRoutes?.length || 0 },
+        { id: 'swapRoutes', label: 'Swap Routes', count: data.swapRoutes?.length || 0 },
+        { id: 'refRewards', label: 'Ref Rewards', count: data.refRewards?.length || 0 },
+        { id: 'notifications', label: 'Notifications', count: data.notifications?.length || 0 },
       ]
     : [];
 
@@ -199,6 +218,10 @@ export default function ComplianceUserScreen(): JSX.Element {
               {activeTab === 'bankDatas' && <BankDatasTable bankDatas={data.bankDatas} />}
               {activeTab === 'buyRoutes' && <BuyRoutesTable buyRoutes={data.buyRoutes} />}
               {activeTab === 'sellRoutes' && <SellRoutesTable sellRoutes={data.sellRoutes} />}
+              {activeTab === 'swapRoutes' && <SwapRoutesTable swapRoutes={data.swapRoutes} />}
+              {activeTab === 'virtualIbans' && <VirtualIbansTable virtualIbans={data.virtualIbans} />}
+              {activeTab === 'refRewards' && <RefRewardsTable refRewards={data.refRewards} />}
+              {activeTab === 'notifications' && <NotificationsTable notifications={data.notifications} />}
             </div>
           </div>
         </div>
