@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LimitRequestModal } from 'src/components/compliance/limit-request-modal';
+import { useCallQueueClerks } from 'src/hooks/call-queue-clerks.hook';
 import { KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
 import { formatDate, formatDateTime, formatValue, statusBadge } from 'src/util/compliance-helpers';
 
@@ -32,7 +32,6 @@ interface OnboardingComplianceReviewFreigabePanelProps {
   onOpenFile: (file: KycFile) => void;
   onSave: (params: ComplianceReviewFreigabeSaveParams) => Promise<void>;
   isSaving: boolean;
-  onLimitRequestCreated?: () => void;
 }
 
 interface SavedComment {
@@ -214,11 +213,13 @@ function DropdownField({
   value,
   options,
   onChange,
+  disabled,
 }: {
   label: string;
   value: string;
   options: { value: string; label: string }[];
   onChange: (v: string) => void;
+  disabled?: boolean;
 }): JSX.Element {
   return (
     <tr>
@@ -226,9 +227,10 @@ function DropdownField({
       <td className="py-1" />
       <td className="py-1 text-right">
         <select
-          className={`px-2 py-1 text-sm border border-dfxGray-400 rounded ${value === 'Akzeptiert' ? 'bg-dfxGreen-100/20 text-dfxGreen-100' : value === 'Abgelehnt' ? 'bg-dfxRed-100/20 text-dfxRed-100' : 'bg-white text-dfxBlue-800'}`}
+          className={`px-2 py-1 text-sm border border-dfxGray-400 rounded disabled:opacity-50 disabled:cursor-not-allowed ${value === 'Akzeptiert' ? 'bg-dfxGreen-100/20 text-dfxGreen-100' : value === 'Abgelehnt' ? 'bg-dfxRed-100/20 text-dfxRed-100' : 'bg-white text-dfxBlue-800'}`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
         >
           <option value="">—</option>
           {options.map((o) => (
@@ -277,7 +279,6 @@ export function ComplianceReviewFreigabePanel({
   onOpenFile,
   onSave,
   isSaving,
-  onLimitRequestCreated,
 }: OnboardingComplianceReviewFreigabePanelProps): JSX.Element {
   // Derived from predecessor step status (read-only, like in GS)
   const ownerDirectoryStep = findStep(kycSteps, 'OwnerDirectory');
@@ -297,14 +298,13 @@ export function ComplianceReviewFreigabePanel({
 
   const [complexOrgStructure, setComplexOrgStructure] = useState('');
   const [highRisk, setHighRisk] = useState('');
-  const [depositLimit, setDepositLimit] = useState('');
   const [amlAccountType, setAmlAccountType] = useState('');
   const [commentGmeR, setCommentGmeR] = useState('');
   const [reasonSeatingCompany, setReasonSeatingCompany] = useState('');
   const [businessActivities, setBusinessActivities] = useState('');
   const [finalDecision, setFinalDecision] = useState<DecisionValue>('');
   const [processedBy, setProcessedBy] = useState('');
-  const [showLimitRequestModal, setShowLimitRequestModal] = useState(false);
+  const { clerks, isLoading: isLoadingClerks } = useCallQueueClerks();
 
   // Load saved state from result.complianceReview and result text fields
   useEffect(() => {
@@ -324,7 +324,6 @@ export function ComplianceReviewFreigabePanel({
         if (saved && typeof saved === 'object') {
           if (saved.complexOrgStructure) setComplexOrgStructure(saved.complexOrgStructure);
           if (saved.highRisk) setHighRisk(saved.highRisk);
-          if (saved.depositLimit) setDepositLimit(saved.depositLimit);
           if (saved.amlAccountType) setAmlAccountType(saved.amlAccountType);
           if (saved.processedBy) setProcessedBy(saved.processedBy);
           if (saved.finalDecision) setFinalDecision(saved.finalDecision as DecisionValue);
@@ -377,6 +376,18 @@ export function ComplianceReviewFreigabePanel({
     // Comment: plain text for GS compatibility
     const comment = finalDecision === 'Abgelehnt' ? 'Blocked' : undefined;
 
+    // depositLimit is always 100000 at onboarding (for all account types).
+    // For Personal: organization-only fields are hidden in the UI; force fixed values for amlAccountType
+    // and skip complexOrgStructure/highRisk so they neither land in result, userDataUpdate nor PDF.
+    const isPersonal = accountType === 'Personal';
+    const effectiveComplexOrg = isPersonal ? '' : complexOrgStructure;
+    const effectiveHighRisk = isPersonal ? '' : highRisk;
+    const effectiveDepositLimit = '100000';
+    const effectiveAmlAccountType = isPersonal ? 'natural person' : amlAccountType;
+    const effectiveCommentGmeR = isPersonal ? '' : commentGmeR;
+    const effectiveReasonSeatingCompany = isPersonal ? '' : reasonSeatingCompany;
+    const effectiveBusinessActivities = isPersonal ? '' : businessActivities;
+
     // Result: merge text fields + complianceReview into existing result
     let existingResult: Record<string, unknown> = {};
     if (step.result) {
@@ -387,15 +398,15 @@ export function ComplianceReviewFreigabePanel({
       }
     }
 
-    existingResult.CommentGmeR = commentGmeR || undefined;
-    existingResult.ReasonSeatingCompany = reasonSeatingCompany || undefined;
-    existingResult.BusinessActivities = businessActivities || undefined;
+    existingResult.CommentGmeR = effectiveCommentGmeR || undefined;
+    existingResult.ReasonSeatingCompany = effectiveReasonSeatingCompany || undefined;
+    existingResult.BusinessActivities = effectiveBusinessActivities || undefined;
 
     existingResult.complianceReview = {
-      complexOrgStructure: complexOrgStructure || undefined,
-      highRisk: highRisk || undefined,
-      depositLimit: depositLimit || undefined,
-      amlAccountType: amlAccountType || undefined,
+      complexOrgStructure: effectiveComplexOrg || undefined,
+      highRisk: effectiveHighRisk || undefined,
+      depositLimit: effectiveDepositLimit || undefined,
+      amlAccountType: effectiveAmlAccountType || undefined,
       processedBy: processedBy || undefined,
       finalDecision,
     } as SavedComment;
@@ -403,10 +414,10 @@ export function ComplianceReviewFreigabePanel({
     const result = JSON.stringify(existingResult);
 
     const userDataUpdate: Record<string, unknown> = {};
-    if (complexOrgStructure) userDataUpdate.complexOrgStructure = complexOrgStructure === 'Ja';
-    if (highRisk) userDataUpdate.highRisk = highRisk === 'Ja';
-    if (depositLimit) userDataUpdate.depositLimit = parseInt(depositLimit);
-    if (amlAccountType) userDataUpdate.amlAccountType = amlAccountType;
+    if (effectiveComplexOrg) userDataUpdate.complexOrgStructure = effectiveComplexOrg === 'Ja';
+    if (effectiveHighRisk) userDataUpdate.highRisk = effectiveHighRisk === 'Ja';
+    if (effectiveDepositLimit) userDataUpdate.depositLimit = Number.parseInt(effectiveDepositLimit);
+    if (effectiveAmlAccountType) userDataUpdate.amlAccountType = effectiveAmlAccountType;
 
     await onSave({
       stepId: step.id,
@@ -417,13 +428,13 @@ export function ComplianceReviewFreigabePanel({
       pdfData: {
         finalDecision,
         processedBy,
-        complexOrgStructure: complexOrgStructure || undefined,
-        highRisk: highRisk || undefined,
-        depositLimit: depositLimit || undefined,
-        amlAccountType: amlAccountType || undefined,
-        commentGmeR: commentGmeR || undefined,
-        reasonSeatingCompany: reasonSeatingCompany || undefined,
-        businessActivities: businessActivities || undefined,
+        complexOrgStructure: effectiveComplexOrg || undefined,
+        highRisk: effectiveHighRisk || undefined,
+        depositLimit: effectiveDepositLimit || undefined,
+        amlAccountType: effectiveAmlAccountType || undefined,
+        commentGmeR: effectiveCommentGmeR || undefined,
+        reasonSeatingCompany: effectiveReasonSeatingCompany || undefined,
+        businessActivities: effectiveBusinessActivities || undefined,
       },
     });
   }
@@ -550,6 +561,11 @@ export function ComplianceReviewFreigabePanel({
           </colgroup>
           <tbody>
             {/* Section 6: Documents */}
+            <tr>
+              <td colSpan={3} className="text-sm font-bold text-dfxBlue-800 pt-4 pb-1">
+                Documents:
+              </td>
+            </tr>
             <DocLink label="Deckblatt" file={deckblatt} onOpenFile={onOpenFile} />
             <DocLink label="Identifikationsdokument" file={identDoc} onOpenFile={onOpenFile} />
             <DocLink label="Identifizierungsformular" file={identForm} onOpenFile={onOpenFile} />
@@ -594,79 +610,64 @@ export function ComplianceReviewFreigabePanel({
             </tr>
 
             {/* Section 7: Decision Fields */}
-            <DropdownField
-              label="Complex organization structure:"
-              value={complexOrgStructure}
-              options={[
-                { value: 'Ja', label: 'Ja' },
-                { value: 'Nein', label: 'Nein' },
-              ]}
-              onChange={setComplexOrgStructure}
-            />
-            <DropdownField
-              label='Risiko Einstufung als "Geschäftsbeziehung mit erhöhtem Risiko":'
-              value={highRisk}
-              options={[
-                { value: 'Ja', label: 'Ja' },
-                { value: 'Nein', label: 'Nein' },
-              ]}
-              onChange={setHighRisk}
-            />
-            <tr>
-              <td className="py-1 pr-4 text-left text-sm text-dfxBlue-800 w-56 align-top">depositLimit in CHF:</td>
-              <td className="py-1 text-right">
-                {userData.id != null && (
-                  <button
-                    className="px-3 py-1 text-xs text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded transition-colors whitespace-nowrap"
-                    onClick={() => setShowLimitRequestModal(true)}
-                  >
-                    Limit Request
-                  </button>
-                )}
-              </td>
-              <td className="py-1 text-right">
-                <select
-                  className="px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
-                  value={depositLimit}
-                  onChange={(e) => setDepositLimit(e.target.value)}
-                >
-                  <option value="">—</option>
-                  <option value="100000">100&apos;000</option>
-                  <option value="500000">500&apos;000</option>
-                </select>
-              </td>
-            </tr>
-            <DropdownField
-              label="amlAccountType:"
-              value={amlAccountType}
-              options={[
-                { value: 'operativ tätige Gesellschaft', label: 'operativ tätige Gesellschaft' },
-                { value: 'Sitzgesellschaft', label: 'Sitzgesellschaft' },
-                { value: 'Einzelunternehmen', label: 'Einzelunternehmen' },
-                { value: 'Stiftung', label: 'Stiftung' },
-                { value: 'Verein', label: 'Verein' },
-                { value: 'natural person', label: 'natural person' },
-              ]}
-              onChange={setAmlAccountType}
-            />
-            <TextareaField
-              label="Wenn GmeR:
+            {accountType !== 'Personal' && (
+              <>
+                <DropdownField
+                  label="Complex organization structure:"
+                  value={complexOrgStructure}
+                  options={[
+                    { value: 'Ja', label: 'Ja' },
+                    { value: 'Nein', label: 'Nein' },
+                  ]}
+                  onChange={setComplexOrgStructure}
+                />
+                <DropdownField
+                  label='Risiko Einstufung als "Geschäftsbeziehung mit erhöhtem Risiko":'
+                  value={highRisk}
+                  options={[
+                    { value: 'Ja', label: 'Ja' },
+                    { value: 'Nein', label: 'Nein' },
+                  ]}
+                  onChange={setHighRisk}
+                />
+              </>
+            )}
+            {accountType !== 'Personal' && (
+              <DropdownField
+                label="amlAccountType:"
+                value={amlAccountType}
+                options={[
+                  { value: 'operativ tätige Gesellschaft', label: 'operativ tätige Gesellschaft' },
+                  { value: 'Sitzgesellschaft', label: 'Sitzgesellschaft' },
+                  { value: 'Einzelunternehmen', label: 'Einzelunternehmen' },
+                  { value: 'Stiftung', label: 'Stiftung' },
+                  { value: 'Verein', label: 'Verein' },
+                ]}
+                onChange={setAmlAccountType}
+              />
+            )}
+            {accountType !== 'Personal' && (
+              <>
+                <TextareaField
+                  label="Wenn GmeR:
 Kommentar für die Aufnahme"
-              value={commentGmeR}
-              onChange={setCommentGmeR}
-            />
-            <TextareaField
-              label="Wenn Sitzgesellschaft:
+                  value={commentGmeR}
+                  onChange={setCommentGmeR}
+                />
+                <TextareaField
+                  label="Wenn Sitzgesellschaft:
 Gründe für die Verwendung einer Sitzgesellschaften"
-              value={reasonSeatingCompany}
-              onChange={setReasonSeatingCompany}
-            />
-            <TextareaField
-              label="Bei Einzelunternehmen und Organisationen:
+                  value={reasonSeatingCompany}
+                  onChange={setReasonSeatingCompany}
+                />
+                <TextareaField
+                  label="Bei Einzelunternehmen und Organisationen:
 Beschreibung der Geschäftlichen Aktivitäten"
-              value={businessActivities}
-              onChange={setBusinessActivities}
-            />
+                  value={businessActivities}
+                  onChange={setBusinessActivities}
+                />
+              </>
+            )}
 
             {/* Spacer */}
             <tr>
@@ -699,11 +700,9 @@ Beschreibung der Geschäftlichen Aktivitäten"
             <DropdownField
               label="Bearbeitet von:"
               value={processedBy}
-              options={[
-                { value: 'Vesa Rasaj', label: 'Vesa Rasaj' },
-                { value: 'Cyrill Thommen', label: 'Cyrill Thommen' },
-              ]}
+              options={clerks.map((c) => ({ value: c, label: c }))}
               onChange={setProcessedBy}
+              disabled={isLoadingClerks}
             />
           </tbody>
         </table>
@@ -719,17 +718,6 @@ Beschreibung der Geschäftlichen Aktivitäten"
           </button>
         </div>
       </div>
-      {userData.id != null && (
-        <LimitRequestModal
-          isOpen={showLimitRequestModal}
-          userDataId={Number(userData.id)}
-          defaultName={[extractField(userData, 'firstname'), extractField(userData, 'surname')]
-            .filter((v) => v !== '-')
-            .join(' ')}
-          onClose={() => setShowLimitRequestModal(false)}
-          onCreated={onLimitRequestCreated}
-        />
-      )}
     </>
   );
 }
