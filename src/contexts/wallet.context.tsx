@@ -65,7 +65,7 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
   [WalletType.TREZOR_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.POLYGON],
   [WalletType.CLI_BTC]: [Blockchain.BITCOIN],
   [WalletType.CLI_SPARK]: [Blockchain.SPARK],
-  [WalletType.CLI_ARK]: [Blockchain.ARK],
+  [WalletType.CLI_ARK]: [Blockchain.ARKADE],
   [WalletType.CLI_FIRO]: [Blockchain.FIRO],
   [WalletType.CLI_LN]: [Blockchain.LIGHTNING],
   [WalletType.CLI_XMR]: [Blockchain.MONERO],

@@ -83,7 +83,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.SOLANA]: 'Solana',
       [Blockchain.TRON]: 'Tron',
       [Blockchain.SPARK]: 'Spark',
-      [Blockchain.ARK]: 'Ark',
+      [Blockchain.ARKADE]: 'Arkade',
       [Blockchain.CITREA]: 'Citrea',
       [Blockchain.CITREA_TESTNET]: 'Citrea Testnet',
     },
