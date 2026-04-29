@@ -53,14 +53,31 @@ type FeatureId =
   | 'recommendation'
   | 'supportIssues'
   | 'limitRequest'
-  | 'transactionActions';
+  | 'transactionActions'
+  | 'kycLogsTab';
 
-// Features (panels and actions) that are hidden for the given role.
+// Features (panels, actions and tabs) that are hidden for the given role.
 // Mirrored on the backend by FIELDS_HIDDEN_BY_ROLE in support.service.ts where applicable
 // (data-only features; pure UI actions like 'limitRequest' have no backend counterpart).
 const FEATURES_HIDDEN_BY_ROLE: Partial<Record<UserRole, FeatureId[]>> = {
-  [UserRole.SUPPORT]: ['kycFiles', 'ipLogs', 'filePreview', 'supportIssues', 'limitRequest', 'transactionActions'],
-  [UserRole.MARKETING]: ['kycFiles', 'ipLogs', 'filePreview', 'supportIssues', 'limitRequest', 'transactionActions'],
+  [UserRole.SUPPORT]: [
+    'kycFiles',
+    'ipLogs',
+    'filePreview',
+    'supportIssues',
+    'limitRequest',
+    'transactionActions',
+    'kycLogsTab',
+  ],
+  [UserRole.MARKETING]: [
+    'kycFiles',
+    'ipLogs',
+    'filePreview',
+    'supportIssues',
+    'limitRequest',
+    'transactionActions',
+    'kycLogsTab',
+  ],
 };
 
 function isFeatureVisible(id: FeatureId, role?: UserRole): boolean {
@@ -146,7 +163,9 @@ export default function ComplianceUserScreen(): JSX.Element {
         { id: 'transactions', label: 'Transactions', count: data.transactions?.length || 0 },
         { id: 'users', label: 'Users', count: data.users?.length || 0 },
         { id: 'kycSteps', label: 'KYC Steps', count: data.kycSteps?.length || 0 },
-        { id: 'kycLogs', label: 'KYC Log', count: data.kycLogs?.length || 0 },
+        ...(isFeatureVisible('kycLogsTab', role)
+          ? [{ id: 'kycLogs' as TabType, label: 'KYC Log', count: data.kycLogs?.length || 0 }]
+          : []),
         { id: 'bankDatas', label: 'Bank Data', count: data.bankDatas?.length || 0 },
         { id: 'virtualIbans', label: 'Virtual IBANs', count: data.virtualIbans?.length || 0 },
         { id: 'buyRoutes', label: 'Buy Routes', count: data.buyRoutes?.length || 0 },
