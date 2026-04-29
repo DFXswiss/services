@@ -8,6 +8,7 @@ interface UserDataPanelProps {
   valueLabel: string;
   titleLabel: string;
   userDataId?: number;
+  canRequestLimit?: boolean;
   onLimitRequestCreated?: () => void;
 }
 
@@ -96,6 +97,7 @@ export function UserDataPanel({
   valueLabel,
   titleLabel,
   userDataId,
+  canRequestLimit = true,
   onLimitRequestCreated,
 }: UserDataPanelProps): JSX.Element {
   const [showAll, setShowAll] = useState(false);
@@ -164,7 +166,7 @@ export function UserDataPanel({
                         >
                           {valueString}
                         </a>
-                      ) : key === 'depositLimit' && userDataId ? (
+                      ) : key === 'depositLimit' && userDataId && canRequestLimit ? (
                         <div className="flex items-center justify-between gap-2">
                           <span>{valueString}</span>
                           <button
@@ -197,7 +199,7 @@ export function UserDataPanel({
           </table>
         </div>
       </div>
-      {userDataId && (
+      {userDataId && canRequestLimit && (
         <LimitRequestModal
           isOpen={showLimitRequestModal}
           userDataId={userDataId}

@@ -1,4 +1,4 @@
-import { useKyc } from '@dfx.swiss/react';
+import { useAuthContext, UserRole, useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -24,7 +24,7 @@ import { UserDataPanel } from 'src/components/compliance/user-data-panel';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { ComplianceUserData, KycFile, useCompliance } from 'src/hooks/compliance.hook';
-import { useComplianceGuard } from 'src/hooks/guard.hook';
+import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
 type TabType =
@@ -46,8 +46,31 @@ interface TabConfig {
   count: number;
 }
 
+type FeatureId =
+  | 'kycFiles'
+  | 'ipLogs'
+  | 'filePreview'
+  | 'recommendation'
+  | 'supportIssues'
+  | 'limitRequest'
+  | 'transactionActions';
+
+// Features (panels and actions) that are hidden for the given role.
+// Mirrored on the backend by FIELDS_HIDDEN_BY_ROLE in support.service.ts where applicable
+// (data-only features; pure UI actions like 'limitRequest' have no backend counterpart).
+const FEATURES_HIDDEN_BY_ROLE: Partial<Record<UserRole, FeatureId[]>> = {
+  [UserRole.SUPPORT]: ['kycFiles', 'ipLogs', 'filePreview', 'supportIssues', 'limitRequest', 'transactionActions'],
+  [UserRole.MARKETING]: ['kycFiles', 'ipLogs', 'filePreview', 'supportIssues', 'limitRequest', 'transactionActions'],
+};
+
+function isFeatureVisible(id: FeatureId, role?: UserRole): boolean {
+  return !role || !(FEATURES_HIDDEN_BY_ROLE[role] ?? []).includes(id);
+}
+
 export default function ComplianceUserScreen(): JSX.Element {
-  useComplianceGuard();
+  useSupportDashboardGuard();
+  const { session } = useAuthContext();
+  const role = session?.role;
 
   const { translate } = useSettingsContext();
   const { id: userDataId } = useParams();
@@ -150,31 +173,40 @@ export default function ComplianceUserScreen(): JSX.Element {
               valueLabel={translate('screens/compliance', 'Value')}
               titleLabel={translate('screens/compliance', 'User Data')}
               userDataId={userDataId ? +userDataId : undefined}
+              canRequestLimit={isFeatureVisible('limitRequest', role)}
               onLimitRequestCreated={loadData}
             />
 
             <div className="w-1/3 min-w-[300px] flex flex-col gap-4">
               <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId ?? ''} navigate={navigate} />
-              <KycFilesPanel
-                kycFiles={data.kycFiles}
-                label={translate('screens/compliance', 'KYC Files')}
-                onOpenFile={openFile}
-              />
-              <IpLogsPanel ipLogs={data.ipLogs} userDataId={+(userDataId ?? '0')} />
-              <SupportIssuesPanel
-                supportIssues={data.supportIssues}
-                userDataId={userDataId ?? ''}
-                navigate={navigate}
-              />
+              {isFeatureVisible('kycFiles', role) && (
+                <KycFilesPanel
+                  kycFiles={data.kycFiles}
+                  label={translate('screens/compliance', 'KYC Files')}
+                  onOpenFile={openFile}
+                />
+              )}
+              {isFeatureVisible('ipLogs', role) && (
+                <IpLogsPanel ipLogs={data.ipLogs} userDataId={+(userDataId ?? '0')} />
+              )}
+              {isFeatureVisible('supportIssues', role) && (
+                <SupportIssuesPanel
+                  supportIssues={data.supportIssues}
+                  userDataId={userDataId ?? ''}
+                  navigate={navigate}
+                />
+              )}
             </div>
 
-            <div className="sticky top-4 self-start">
-              <FilePreviewPanel
-                preview={preview}
-                label={translate('screens/compliance', 'File Preview')}
-                onClose={() => setPreview(undefined)}
-              />
-            </div>
+            {isFeatureVisible('filePreview', role) && (
+              <div className="sticky top-4 self-start">
+                <FilePreviewPanel
+                  preview={preview}
+                  label={translate('screens/compliance', 'File Preview')}
+                  onClose={() => setPreview(undefined)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Bottom Section: Tabs */}
@@ -205,6 +237,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                   expandedBankTxId={expandedBankTxId}
                   expandedCryptoInputId={expandedCryptoInputId}
                   expandedTxUid={expandedTxUid}
+                  canPerformActions={isFeatureVisible('transactionActions', role)}
                   onExpandBankTx={handleExpandBankTx}
                   onExpandCryptoInput={handleExpandCryptoInput}
                   onExpandTxUid={handleExpandTxUid}
