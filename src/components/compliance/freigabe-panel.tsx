@@ -387,9 +387,9 @@ export function ComplianceReviewFreigabePanel({
       }
     }
 
-    if (commentGmeR) existingResult.CommentGmeR = commentGmeR;
-    if (reasonSeatingCompany) existingResult.ReasonSeatingCompany = reasonSeatingCompany;
-    if (businessActivities) existingResult.BusinessActivities = businessActivities;
+    existingResult.CommentGmeR = commentGmeR || undefined;
+    existingResult.ReasonSeatingCompany = reasonSeatingCompany || undefined;
+    existingResult.BusinessActivities = businessActivities || undefined;
 
     existingResult.complianceReview = {
       complexOrgStructure: complexOrgStructure || undefined,
@@ -632,7 +632,7 @@ export function ComplianceReviewFreigabePanel({
                 >
                   <option value="">—</option>
                   <option value="100000">100&apos;000</option>
-                  <option value="500000">500000</option>
+                  <option value="500000">500&apos;000</option>
                 </select>
               </td>
             </tr>

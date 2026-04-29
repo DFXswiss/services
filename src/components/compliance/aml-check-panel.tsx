@@ -1,7 +1,12 @@
-import { AmlReason, CheckStatus } from '@dfx.swiss/react';
+import { AmlReason, CallQueue, CheckStatus } from '@dfx.swiss/react';
 import { useState } from 'react';
 import { ComplianceUserData, TransactionInfo } from 'src/hooks/compliance.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { statusBadge } from 'src/util/compliance-helpers';
+
+function callQueueForReason(reason: string | undefined): CallQueue | undefined {
+  return reason && (Object.values(CallQueue) as string[]).includes(reason) ? (reason as CallQueue) : undefined;
+}
 
 interface AmlCheckPendingPanelProps {
   data: ComplianceUserData;
@@ -196,8 +201,13 @@ export function AmlCheckPendingPanel({
   isSaving,
   onReload,
 }: AmlCheckPendingPanelProps): JSX.Element {
+  const { navigate } = useNavigation();
+
   const pendingTxs = data.transactions.filter(
     (tx) => tx.type != null && tx.amlCheck === CheckStatus.PENDING && tx.amlReason === AmlReason.MANUAL_CHECK,
+  );
+  const callQueueTxs = data.transactions.filter(
+    (tx) => tx.type != null && tx.amlCheck === CheckStatus.PENDING && callQueueForReason(tx.amlReason),
   );
   const ud = data.userData;
 
@@ -263,6 +273,48 @@ export function AmlCheckPendingPanel({
     </div>
   );
 
+  const callQueueInfo =
+    callQueueTxs.length > 0 ? (
+      <div className="bg-white rounded-lg shadow-sm p-4 text-left">
+        <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Weitere AML-Prüfungen über Call-Queue</h3>
+        <p className="text-xs text-dfxGray-700 mb-3">
+          Diese pendenten Transaktionen werden über die Call-Queue bearbeitet.
+        </p>
+        <ul className="divide-y divide-dfxGray-300 border-t border-dfxGray-300">
+          {callQueueTxs.map((tx) => {
+            const queue = callQueueForReason(tx.amlReason);
+            const canNavigate = queue != null && ud.id != null;
+            return (
+              <li key={tx.id} className="py-2 flex items-start justify-between gap-3">
+                <div className="text-sm text-dfxBlue-800 flex flex-col items-start flex-1 min-w-0 text-left">
+                  <span>
+                    <span className="font-mono">{tx.id}</span> · {tx.type ?? '-'}
+                  </span>
+                  <span className="text-xs text-dfxGray-700 break-all">{tx.amlReason}</span>
+                </div>
+                {canNavigate && (
+                  <button
+                    className="px-2 py-1 text-xs font-medium text-white rounded transition-colors bg-dfxBlue-800 hover:bg-dfxBlue-800/80 shrink-0"
+                    onClick={() =>
+                      navigate(
+                        {
+                          pathname: `/compliance/call-queues/${queue}/${ud.id}`,
+                          search: `?txId=${tx.id}`,
+                        },
+                        { clearParams: ['status', 'search'] },
+                      )
+                    }
+                  >
+                    Zur Call-Queue
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ) : null;
+
   if (pendingTxs.length === 0) {
     return (
       <div className="flex flex-col gap-4">
@@ -270,6 +322,7 @@ export function AmlCheckPendingPanel({
         <div className="bg-white rounded-lg shadow-sm p-6 text-center text-dfxGray-700">
           Keine pendenten AML-Prüfungen vorhanden.
         </div>
+        {callQueueInfo}
       </div>
     );
   }
@@ -277,6 +330,7 @@ export function AmlCheckPendingPanel({
   return (
     <div className="flex flex-col gap-6">
       {userInfo}
+      {callQueueInfo}
       {pendingTxs.map((tx) => (
         <div key={tx.id} className="border-b border-dfxGray-300 pb-6 last:border-0">
           <TransactionEntry

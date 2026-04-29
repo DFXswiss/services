@@ -11,17 +11,19 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { Fragment, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
+import { CallQueuesSection } from 'src/components/compliance/call-queues-section';
+import { PendingOnboardingsSection } from 'src/components/compliance/pending-onboardings-section';
+import { PendingReviewsSection } from 'src/components/compliance/pending-reviews-section';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { CallQueueSummaryEntry, PendingReviewSummaryEntry } from '@dfx.swiss/react';
 import {
   BankTxSearchResult,
   ComplianceSearchResult,
   PendingOnboardingInfo,
-  PendingReviewStatus,
-  PendingReviewSummaryEntry,
   UserSearchResult,
   useCompliance,
 } from 'src/hooks/compliance.hook';
@@ -38,32 +40,31 @@ export default function ComplianceScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { search, downloadUserFiles, getPendingOnboardings, getPendingReviews } = useCompliance();
+  const { search, downloadUserFiles, getPendingOnboardings, getPendingReviews, getCallQueues } = useCompliance();
   const { navigate } = useNavigation();
   const { search: query } = useLocation();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const [dashboardError, setDashboardError] = useState<string>();
   const [searchResult, setSearchResult] = useState<ComplianceSearchResult>();
   const [showInfo, setShowInfo] = useState(false);
   const [downloadingUserId, setDownloadingUserId] = useState<number>();
   const [pendingOnboardings, setPendingOnboardings] = useState<PendingOnboardingInfo[]>([]);
   const [pendingReviews, setPendingReviews] = useState<PendingReviewSummaryEntry[]>([]);
+  const [callQueues, setCallQueues] = useState<CallQueueSummaryEntry[]>([]);
 
   const paramSearch = new URLSearchParams(query).get('search') || undefined;
 
   useEffect(() => {
-    getPendingOnboardings()
-      .then(setPendingOnboardings)
-      .catch(() => setPendingOnboardings([]));
-    getPendingReviews()
-      .then(setPendingReviews)
-      .catch(() => setPendingReviews([]));
+    Promise.all([getPendingOnboardings(), getPendingReviews(), getCallQueues()])
+      .then(([onboardings, reviews, queues]) => {
+        setPendingOnboardings(onboardings);
+        setPendingReviews(reviews);
+        setCallQueues(queues);
+      })
+      .catch((e) => setDashboardError(e.message));
   }, []);
-
-  useEffect(() => {
-    if (paramSearch) onSubmit({ key: paramSearch });
-  }, [paramSearch]);
 
   const {
     control,
@@ -71,20 +72,27 @@ export default function ComplianceScreen(): JSX.Element {
     formState: { isValid, errors },
   } = useForm<FormData>({ mode: 'onChange', defaultValues: { key: paramSearch } });
 
-  async function onSubmit(data: FormData) {
-    navigate({ search: `search=${data.key}` });
+  const onSubmit = useCallback(
+    (data: FormData) => {
+      navigate({ search: `search=${data.key}` });
 
-    setIsLoading(true);
-    setError(undefined);
-    setSearchResult(undefined);
+      setIsLoading(true);
+      setError(undefined);
+      setSearchResult(undefined);
 
-    search(data.key)
-      .then(setSearchResult)
-      .catch((e) => setError(e.message))
-      .finally(() => setIsLoading(false));
-  }
+      search(data.key)
+        .then(setSearchResult)
+        .catch((e) => setError(e.message))
+        .finally(() => setIsLoading(false));
+    },
+    [navigate, search],
+  );
 
-  async function handleDownloadUserData(userId: number) {
+  useEffect(() => {
+    if (paramSearch) onSubmit({ key: paramSearch });
+  }, [paramSearch, onSubmit]);
+
+  function handleDownloadUserData(userId: number) {
     setDownloadingUserId(userId);
     setError(undefined);
 
@@ -93,9 +101,7 @@ export default function ComplianceScreen(): JSX.Element {
       .finally(() => setDownloadingUserId(undefined));
   }
 
-  const rules = Utils.createRules({
-    key: Validations.Required,
-  });
+  const rules = Utils.createRules({ key: Validations.Required });
 
   const searchExamples = [
     { label: 'ID', example: '1' },
@@ -331,20 +337,15 @@ export default function ComplianceScreen(): JSX.Element {
                         </tr>
                       </thead>
                       <tbody>
-                        {searchResult.bankTx.map((u) => {
-                          return (
-                            <tr
-                              key={u.id}
-                              className={`border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300`}
-                            >
-                              {bankTxTableData.map((column) => (
-                                <td key={column.key} className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                                  {column.render(u)}
-                                </td>
-                              ))}
-                            </tr>
-                          );
-                        })}
+                        {searchResult.bankTx.map((u) => (
+                          <tr key={u.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                            {bankTxTableData.map((column) => (
+                              <td key={column.key} className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                                {column.render(u)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
@@ -355,112 +356,11 @@ export default function ComplianceScreen(): JSX.Element {
             <p className="text-dfxGray-700">{translate('screens/compliance', 'No entries found')}</p>
           ))}
 
-        {pendingOnboardings.length > 0 && (
-          <div className="w-full">
-            <h2 className="text-dfxGray-700">
-              {translate('screens/compliance', 'Pending Onboardings')} ({pendingOnboardings.length})
-            </h2>
-            <div className="w-full overflow-x-auto">
-              <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
-                <thead>
-                  <tr className="bg-dfxGray-300">
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                      {translate('screens/compliance', 'ID')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                      {translate('screens/kyc', 'Account Type')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                      {translate('screens/kyc', 'Name')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                      {translate('screens/compliance', 'Date')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingOnboardings.map((o) => (
-                    <tr
-                      key={o.id}
-                      className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
-                      onClick={() => navigate(`compliance/user/${o.id}/kyc`)}
-                    >
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{o.id}</td>
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{o.accountType ?? '-'}</td>
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{o.name ?? '-'}</td>
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                        {new Date(o.date).toLocaleDateString('de-CH')}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          className="px-2 py-1 text-xs font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors"
-                          onClick={() => navigate(`compliance/user/${o.id}/kyc`)}
-                        >
-                          Onboarding
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        {dashboardError && <ErrorHint message={dashboardError} />}
 
-        {pendingReviews.length > 0 && (
-          <div className="w-full">
-            <h2 className="text-dfxGray-700">
-              {translate('screens/compliance', 'Pending Reviews')} (
-              {pendingReviews.reduce((sum, r) => sum + r.manualReview + r.internalReview, 0)})
-            </h2>
-            <div className="w-full overflow-x-auto">
-              <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
-                <thead>
-                  <tr className="bg-dfxGray-300">
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                      {translate('screens/compliance', 'Type')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                      {translate('screens/kyc', 'Name')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
-                      {translate('screens/compliance', 'Manual Review')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
-                      {translate('screens/compliance', 'Internal Review')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingReviews.map((r) => (
-                    <Fragment key={`${r.type}-${r.name}`}>
-                      {[PendingReviewStatus.MANUAL_REVIEW, PendingReviewStatus.INTERNAL_REVIEW].map((s) => {
-                        const isManual = s === PendingReviewStatus.MANUAL_REVIEW;
-                        const count = isManual ? r.manualReview : r.internalReview;
-                        if (count === 0) return null;
-                        const valueCell = 'px-4 py-3 text-right text-sm text-dfxBlue-800 font-semibold';
-                        const emptyCell = 'px-4 py-3 text-right text-sm text-dfxGray-600';
-                        return (
-                          <tr
-                            key={s}
-                            className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
-                            onClick={() => navigate(`compliance/pending-reviews/${r.type}/${r.name}?status=${s}`)}
-                          >
-                            <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.type}</td>
-                            <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.name}</td>
-                            <td className={isManual ? valueCell : emptyCell}>{isManual ? count : '-'}</td>
-                            <td className={isManual ? emptyCell : valueCell}>{isManual ? '-' : count}</td>
-                          </tr>
-                        );
-                      })}
-                    </Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        <PendingOnboardingsSection entries={pendingOnboardings} />
+        <PendingReviewsSection entries={pendingReviews} />
+        <CallQueuesSection entries={callQueues} />
       </StyledVerticalStack>
     </Form>
   );

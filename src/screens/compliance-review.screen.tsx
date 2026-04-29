@@ -285,9 +285,9 @@ export default function ComplianceReviewScreen(): JSX.Element {
     }
 
     if (tab.key === 'amlPending') {
-      const txs = data?.transactions.filter((tx) => tx.type != null) ?? [];
+      const txs = data?.transactions.filter((tx) => tx.type != null && tx.amlReason === 'ManualCheck') ?? [];
       if (txs.some((tx) => tx.amlCheck === 'Fail')) return red;
-      const hasPending = txs.some((tx) => tx.amlCheck === 'Pending' && tx.amlReason === 'ManualCheck');
+      const hasPending = txs.some((tx) => tx.amlCheck === 'Pending');
       if (txs.length > 0 && !hasPending) return green;
       return gray;
     }
