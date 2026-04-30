@@ -173,9 +173,9 @@ export default function ComplianceCallQueueDetailScreen(): JSX.Element {
           title={translate('screens/compliance', 'Bank Transactions')}
         />
       )}
-      <CallQueueIpCountries ipLogs={data.ipLogs} title={translate('screens/compliance', 'IP Countries')} />
+      <CallQueueIpCountries ipLogs={data.ipLogs ?? []} title={translate('screens/compliance', 'IP Countries')} />
       <CallQueueKycComments
-        kycLogs={data.kycLogs}
+        kycLogs={data.kycLogs ?? []}
         filterTypes={['ManualLog']}
         title={translate('screens/compliance', 'Recent KYC Comments')}
       />

@@ -366,7 +366,7 @@ export function StammdatenPanel({ data, onOpenFile, onSave, isSaving }: Stammdat
           <ChangeSectionPanel
             section={section}
             step={step}
-            files={data.kycFiles}
+            files={data.kycFiles ?? []}
             userData={data.userData}
             checkItems={getCheckItems(section.stepName, accountType)}
             onOpenFile={onOpenFile}

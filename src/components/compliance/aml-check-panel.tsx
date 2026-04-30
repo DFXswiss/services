@@ -212,7 +212,7 @@ export function AmlCheckPendingPanel({
   const ud = data.userData;
 
   const walletNames = Array.from(new Set(data.users.map((u) => u.walletName).filter((n): n is string => !!n)));
-  const latestManualLogComment = data.kycLogs
+  const latestManualLogComment = (data.kycLogs ?? [])
     .filter((l) => l.type === 'ManualLog' && l.comment)
     .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())[0]?.comment;
 

@@ -1,4 +1,4 @@
-import { useAuthContext, UserRole, useKyc } from '@dfx.swiss/react';
+import { useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -46,48 +46,8 @@ interface TabConfig {
   count: number;
 }
 
-type FeatureId =
-  | 'kycFiles'
-  | 'ipLogs'
-  | 'filePreview'
-  | 'recommendation'
-  | 'supportIssues'
-  | 'limitRequest'
-  | 'transactionActions'
-  | 'kycLogsTab';
-
-// Features (panels, actions and tabs) that are hidden for the given role.
-// Mirrored on the backend by FIELDS_HIDDEN_BY_ROLE in support.service.ts where applicable
-// (data-only features; pure UI actions like 'limitRequest' have no backend counterpart).
-const FEATURES_HIDDEN_BY_ROLE: Partial<Record<UserRole, FeatureId[]>> = {
-  [UserRole.SUPPORT]: [
-    'kycFiles',
-    'ipLogs',
-    'filePreview',
-    'supportIssues',
-    'limitRequest',
-    'transactionActions',
-    'kycLogsTab',
-  ],
-  [UserRole.MARKETING]: [
-    'kycFiles',
-    'ipLogs',
-    'filePreview',
-    'supportIssues',
-    'limitRequest',
-    'transactionActions',
-    'kycLogsTab',
-  ],
-};
-
-function isFeatureVisible(id: FeatureId, role?: UserRole): boolean {
-  return !role || !(FEATURES_HIDDEN_BY_ROLE[role] ?? []).includes(id);
-}
-
 export default function ComplianceUserScreen(): JSX.Element {
   useSupportDashboardGuard();
-  const { session } = useAuthContext();
-  const role = session?.role;
 
   const { translate } = useSettingsContext();
   const { id: userDataId } = useParams();
@@ -163,8 +123,8 @@ export default function ComplianceUserScreen(): JSX.Element {
         { id: 'transactions', label: 'Transactions', count: data.transactions?.length || 0 },
         { id: 'users', label: 'Users', count: data.users?.length || 0 },
         { id: 'kycSteps', label: 'KYC Steps', count: data.kycSteps?.length || 0 },
-        ...(isFeatureVisible('kycLogsTab', role)
-          ? [{ id: 'kycLogs' as TabType, label: 'KYC Log', count: data.kycLogs?.length || 0 }]
+        ...(data.permissions.viewKycLogs
+          ? [{ id: 'kycLogs' as TabType, label: 'KYC Log', count: data.kycLogs?.length ?? 0 }]
           : []),
         { id: 'bankDatas', label: 'Bank Data', count: data.bankDatas?.length || 0 },
         { id: 'virtualIbans', label: 'Virtual IBANs', count: data.virtualIbans?.length || 0 },
@@ -192,32 +152,34 @@ export default function ComplianceUserScreen(): JSX.Element {
               valueLabel={translate('screens/compliance', 'Value')}
               titleLabel={translate('screens/compliance', 'User Data')}
               userDataId={userDataId ? +userDataId : undefined}
-              canRequestLimit={isFeatureVisible('limitRequest', role)}
+              canRequestLimit={data.permissions.canRequestLimit}
               onLimitRequestCreated={loadData}
             />
 
             <div className="w-1/3 min-w-[300px] flex flex-col gap-4">
-              <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId ?? ''} navigate={navigate} />
-              {isFeatureVisible('kycFiles', role) && (
+              {data.permissions.viewRecommendation && (
+                <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId ?? ''} navigate={navigate} />
+              )}
+              {data.permissions.viewKycFiles && (
                 <KycFilesPanel
-                  kycFiles={data.kycFiles}
+                  kycFiles={data.kycFiles ?? []}
                   label={translate('screens/compliance', 'KYC Files')}
                   onOpenFile={openFile}
                 />
               )}
-              {isFeatureVisible('ipLogs', role) && (
-                <IpLogsPanel ipLogs={data.ipLogs} userDataId={+(userDataId ?? '0')} />
+              {data.permissions.viewIpLogs && (
+                <IpLogsPanel ipLogs={data.ipLogs ?? []} userDataId={+(userDataId ?? '0')} />
               )}
-              {isFeatureVisible('supportIssues', role) && (
+              {data.permissions.viewSupportIssues && (
                 <SupportIssuesPanel
-                  supportIssues={data.supportIssues}
+                  supportIssues={data.supportIssues ?? []}
                   userDataId={userDataId ?? ''}
                   navigate={navigate}
                 />
               )}
             </div>
 
-            {isFeatureVisible('filePreview', role) && (
+            {data.permissions.viewKycFiles && (
               <div className="sticky top-4 self-start">
                 <FilePreviewPanel
                   preview={preview}
@@ -256,7 +218,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                   expandedBankTxId={expandedBankTxId}
                   expandedCryptoInputId={expandedCryptoInputId}
                   expandedTxUid={expandedTxUid}
-                  canPerformActions={isFeatureVisible('transactionActions', role)}
+                  canPerformActions={data.permissions.canPerformTransactionActions}
                   onExpandBankTx={handleExpandBankTx}
                   onExpandCryptoInput={handleExpandCryptoInput}
                   onExpandTxUid={handleExpandTxUid}
@@ -266,7 +228,7 @@ export default function ComplianceUserScreen(): JSX.Element {
 
               {activeTab === 'users' && <UsersTable users={data.users} />}
               {activeTab === 'kycSteps' && <KycStepsTable kycSteps={data.kycSteps} />}
-              {activeTab === 'kycLogs' && <KycLogsTable kycLogs={data.kycLogs} />}
+              {activeTab === 'kycLogs' && <KycLogsTable kycLogs={data.kycLogs ?? []} />}
               {activeTab === 'bankDatas' && <BankDatasTable bankDatas={data.bankDatas} />}
               {activeTab === 'buyRoutes' && <BuyRoutesTable buyRoutes={data.buyRoutes} />}
               {activeTab === 'sellRoutes' && <SellRoutesTable sellRoutes={data.sellRoutes} />}

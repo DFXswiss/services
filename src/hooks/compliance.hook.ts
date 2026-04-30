@@ -246,16 +246,26 @@ export interface UserDataDetail {
   wallet?: { name?: string };
 }
 
+export interface SupportPermissions {
+  viewKycFiles: boolean;
+  viewKycLogs: boolean;
+  viewIpLogs: boolean;
+  viewSupportIssues: boolean;
+  canRequestLimit: boolean;
+  canPerformTransactionActions: boolean;
+  viewRecommendation: boolean;
+}
+
 export interface ComplianceUserData {
   userData: UserDataDetail;
-  kycFiles: KycFile[];
+  kycFiles?: KycFile[];
   kycSteps: KycStepInfo[];
-  kycLogs: KycLogInfo[];
+  kycLogs?: KycLogInfo[];
   transactions: TransactionInfo[];
   bankTxs: BankTxInfo[];
   cryptoInputs: CryptoInputInfo[];
-  ipLogs: IpLogInfo[];
-  supportIssues: SupportIssueInfo[];
+  ipLogs?: IpLogInfo[];
+  supportIssues?: SupportIssueInfo[];
   users: UserInfo[];
   bankDatas: BankDataInfo[];
   buyRoutes: BuyRouteInfo[];
@@ -264,6 +274,7 @@ export interface ComplianceUserData {
   virtualIbans: VirtualIbanInfo[];
   refRewards: RefRewardInfo[];
   notifications: NotificationInfo[];
+  permissions: SupportPermissions;
 }
 
 export interface RecommendationGraphNode {
