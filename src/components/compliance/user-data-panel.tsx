@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { CollapsibleSection } from 'src/components/compliance/collapsible-section';
 import { LimitRequestModal } from 'src/components/compliance/limit-request-modal';
+import { useClipboard } from 'src/hooks/clipboard.hook';
 import { OrganizationDetail, UserDataDetail } from 'src/hooks/compliance.hook';
 import { display, formatDate, formatDateTime, Primitive, refName } from 'src/util/compliance-helpers';
 
@@ -8,8 +9,41 @@ interface UserDataPanelProps {
   userData: UserDataDetail;
   userDataId?: number;
   canRequestLimit?: boolean;
+  canCopyKycLinks?: boolean;
   wide?: boolean;
   onLimitRequestCreated?: () => void;
+}
+
+function kycServicesBaseUrl(): string {
+  return process.env.REACT_APP_PUBLIC_URL ?? window.location.origin;
+}
+
+function KycLinkButtons({ kycHash }: Readonly<{ kycHash: string }>): JSX.Element {
+  const kycLink = useClipboard();
+  const videoLink = useClipboard();
+  const base = kycServicesBaseUrl();
+  const buttonClass =
+    'px-2 py-0.5 text-xs font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors whitespace-nowrap';
+  return (
+    <div className="flex gap-2">
+      <button
+        type="button"
+        className={buttonClass}
+        onClick={() => kycLink.copy(`${base}/kyc?code=${kycHash}`)}
+        title="Copy KYC link"
+      >
+        {kycLink.isCopying ? '✓ KYC' : 'KYC'}
+      </button>
+      <button
+        type="button"
+        className={buttonClass}
+        onClick={() => videoLink.copy(`${base}/kyc?code=${kycHash}&step=ident/video`)}
+        title="Copy Video Ident link"
+      >
+        {videoLink.isCopying ? '✓ Video' : 'Video'}
+      </button>
+    </div>
+  );
 }
 
 interface Row {
@@ -30,7 +64,11 @@ function combinedRow(key: string, secondary: string, primaryVal: Primitive, seco
   return { key: `${key} / ${secondary}`, value: combined || '-' };
 }
 
-function SectionTable({ rows, kycHash }: Readonly<{ rows: Row[]; kycHash?: string }>): JSX.Element {
+function SectionTable({
+  rows,
+  kycHash,
+  canCopyKycLinks,
+}: Readonly<{ rows: Row[]; kycHash?: string; canCopyKycLinks?: boolean }>): JSX.Element {
   return (
     <table className="w-full border-collapse">
       <tbody>
@@ -39,14 +77,17 @@ function SectionTable({ rows, kycHash }: Readonly<{ rows: Row[]; kycHash?: strin
             <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 font-medium align-top w-1/2">{row.key}</td>
             <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 break-all">
               {row.key === 'kycHash' && kycHash ? (
-                <a
-                  href={`/kyc?code=${kycHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-dfxBlue-300 underline hover:text-dfxBlue-800"
-                >
-                  {kycHash}
-                </a>
+                <div className="flex flex-col gap-2 items-start">
+                  <a
+                    href={`/kyc?code=${kycHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-dfxBlue-300 underline hover:text-dfxBlue-800"
+                  >
+                    {kycHash}
+                  </a>
+                  {canCopyKycLinks && <KycLinkButtons kycHash={kycHash} />}
+                </div>
               ) : (
                 row.value
               )}
@@ -166,6 +207,7 @@ export function UserDataPanel({
   userData,
   userDataId,
   canRequestLimit = true,
+  canCopyKycLinks = false,
   wide = false,
   onLimitRequestCreated,
 }: Readonly<UserDataPanelProps>): JSX.Element {
@@ -207,7 +249,7 @@ export function UserDataPanel({
           </CollapsibleSection>
 
           <CollapsibleSection title="KYC / AML">
-            <SectionTable rows={kycAmlRows(userData)} kycHash={userData.kycHash} />
+            <SectionTable rows={kycAmlRows(userData)} kycHash={userData.kycHash} canCopyKycLinks={canCopyKycLinks} />
           </CollapsibleSection>
 
           <CollapsibleSection title="PaymentLink Data">

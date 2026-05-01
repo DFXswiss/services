@@ -132,6 +132,7 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   const numericUserDataId = +userDataId;
   const isSupport = role === UserRole.SUPPORT;
+  const canCopyKycLinks = role === UserRole.ADMIN || role === UserRole.COMPLIANCE;
   const showRightPanel = data.permissions.viewKycFiles || isSupport;
 
   const tabs: TabConfig[] = [
@@ -159,6 +160,7 @@ export default function ComplianceUserScreen(): JSX.Element {
             userData={data.userData}
             userDataId={numericUserDataId}
             canRequestLimit={data.permissions.canRequestLimit}
+            canCopyKycLinks={canCopyKycLinks}
             wide={isSupport}
             onLimitRequestCreated={loadData}
           />
