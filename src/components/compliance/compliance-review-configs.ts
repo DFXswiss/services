@@ -5,6 +5,7 @@ export type ReviewCheckTab =
   | 'signatoryPower'
   | 'beneficialOwner'
   | 'operationalActivity'
+  | 'financialData'
   | 'freigabe'
   | 'stammdaten'
   | 'ident'
@@ -231,6 +232,17 @@ export const reviewTabs: ReviewTabConfig[] = [
         href: '/kyc/log?userDataId={id}&eventDate={today}',
       },
     ],
+  },
+  {
+    key: 'financialData',
+    label: 'Financial Data',
+    group: 'onboarding',
+    stepName: 'FinancialData',
+    fileTypes: [],
+    showResult: true,
+    decisionLabel: 'Entscheid:',
+    rejectionReasons: [],
+    checkItems: [],
   },
   // --- Management Tabs ---
   {

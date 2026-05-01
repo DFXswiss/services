@@ -357,7 +357,6 @@ export default function ComplianceReviewScreen(): JSX.Element {
               onOpenFile={openFile}
               onSave={handleFreigabeSave}
               isSaving={isSaving}
-              onLimitRequestCreated={loadData}
             />
           ) : effectiveTab === 'stammdaten' ? (
             <StammdatenPanel data={data} onOpenFile={openFile} onSave={handleSave} isSaving={isSaving} />

@@ -17,6 +17,7 @@ import { useLocation } from 'react-router-dom';
 import { CallQueuesSection } from 'src/components/compliance/call-queues-section';
 import { PendingOnboardingsSection } from 'src/components/compliance/pending-onboardings-section';
 import { PendingReviewsSection } from 'src/components/compliance/pending-reviews-section';
+import { QuickLinksSection } from 'src/components/compliance/quick-links-section';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { CallQueueSummaryEntry, PendingReviewSummaryEntry } from '@dfx.swiss/react';
@@ -361,6 +362,7 @@ export default function ComplianceScreen(): JSX.Element {
         <PendingOnboardingsSection entries={pendingOnboardings} />
         <PendingReviewsSection entries={pendingReviews} />
         <CallQueuesSection entries={callQueues} />
+        <QuickLinksSection />
       </StyledVerticalStack>
     </Form>
   );

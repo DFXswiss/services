@@ -57,12 +57,16 @@ export function renderResultTable(result: string | undefined): JSX.Element | nul
       return (
         <table className="w-full">
           <tbody>
-            {entries.map((entry) => (
-              <tr key={entry.key}>
-                <td className="py-0.5 pr-4 text-left text-sm text-dfxBlue-800 w-56 align-top">{entry.key}</td>
-                <td className="py-0.5 text-left text-sm text-dfxBlue-800">{formatResultValue(entry.value)}</td>
-              </tr>
-            ))}
+            {entries.map((entry) => {
+              const isRisky = typeof entry.value === 'string' && entry.value === 'yes_risky_business';
+              const rowClass = isRisky ? 'bg-dfxRed-100/20' : '';
+              return (
+                <tr key={entry.key} className={rowClass}>
+                  <td className="py-0.5 pr-4 text-left text-sm text-dfxBlue-800 w-56 align-top">{entry.key}</td>
+                  <td className="py-0.5 text-left text-sm text-dfxBlue-800">{formatResultValue(entry.value)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       );
@@ -202,9 +206,7 @@ export function ComplianceReviewPanel({
       {showResult && step.result && (
         <div>
           <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Result</h3>
-          <div className="bg-white rounded-lg shadow-sm overflow-auto max-h-[30vh]">
-            {renderResultTable(step.result)}
-          </div>
+          <div className="bg-white rounded-lg shadow-sm">{renderResultTable(step.result)}</div>
         </div>
       )}
 
