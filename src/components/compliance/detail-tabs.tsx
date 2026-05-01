@@ -82,12 +82,34 @@ export function UsersTable({ users }: { users: UserInfo[] }): JSX.Element {
   return <DataTable data={users} columns={usersColumns} emptyLabel="No users" />;
 }
 
+function formatStepResult(stepName: string, result?: string): string {
+  if (!result) return '-';
+  // Only Recommendation step results are shown (key = refCode | mail | invitationCode).
+  // Other steps store complex JSON that is not useful as a column value.
+  if (stepName !== 'Recommendation') return '-';
+  try {
+    const parsed = JSON.parse(result) as unknown;
+    if (parsed && typeof parsed === 'object' && 'key' in parsed) {
+      return String((parsed as { key: unknown }).key);
+    }
+    return result;
+  } catch {
+    return result;
+  }
+}
+
 const kycStepsColumns: ColumnDef<KycStepInfo>[] = [
   { header: 'ID', render: (s) => s.id },
   { header: 'Name', align: 'left', render: (s) => s.name },
   { header: 'Type', align: 'left', render: (s) => s.type || '-' },
   { header: 'Status', render: (s) => statusBadge(s.status) },
   { header: 'Sequence', render: (s) => s.sequenceNumber },
+  {
+    header: 'Result',
+    align: 'left',
+    render: (s) => <span title={s.result}>{formatStepResult(s.name, s.result)}</span>,
+    className: 'max-w-xs truncate',
+  },
   {
     header: 'Comment',
     align: 'left',

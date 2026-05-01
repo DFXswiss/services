@@ -1,3 +1,5 @@
+import { UserDataDetail } from 'src/hooks/compliance.hook';
+
 export type ReviewCheckTab =
   | 'legalEntity'
   | 'authority'
@@ -22,13 +24,13 @@ export interface CheckItemConfig {
   id: string;
   label: string;
   altLabel?: string;
-  altCondition?: (userData: Record<string, unknown>) => boolean;
+  altCondition?: (userData: UserDataDetail) => boolean;
   type?: CheckItemType;
   options?: string[];
   fileType?: string;
   href?: string;
   condition?: (checks: Record<string, string>) => boolean;
-  visibleCondition?: (userData: Record<string, unknown>) => boolean;
+  visibleCondition?: (userData: UserDataDetail) => boolean;
 }
 
 export interface ReviewTabConfig {
@@ -61,21 +63,18 @@ export const reviewTabs: ReviewTabConfig[] = [
       'Name nicht korrekt',
     ],
     checkItems: [
-      { id: 'nameMatch', label: 'Das Dokument lautet auf den Namen "{organizationName}"' },
+      { id: 'nameMatch', label: 'Das Dokument lautet auf den Namen "{organization.name}"' },
       {
         id: 'verifiedNameMatch',
         label:
-          'Der verifizierte Name des Kunden "{verifiedName}" stimmt mit dem Unternehmensnamen "{organizationName}" überein',
-        visibleCondition: (userData) => {
-          const v = userData['verifiedName'];
-          return typeof v === 'string' && v.trim().length > 0;
-        },
+          'Der verifizierte Name des Kunden "{verifiedName}" stimmt mit dem Unternehmensnamen "{organization.name}" überein',
+        visibleCondition: (userData) => !!userData.verifiedName && userData.verifiedName.trim().length > 0,
       },
       {
         id: 'legalEntityMatch',
         label: 'Das Unternehmen ist gemäss Onboarding eine "{legalEntity}"',
         altLabel: 'Es handelt sich um eine Einzelfirma',
-        altCondition: (userData) => userData['accountType'] === 'SoleProprietorship',
+        altCondition: (userData) => userData.accountType === 'SoleProprietorship',
       },
       { id: 'docAge', label: 'Das Dokument ist weniger als 3 Monate alt' },
       { id: 'legalFormConsistent', label: 'Die Rechtsform stimmt mit den Onboarding Infos überein' },
@@ -93,7 +92,7 @@ export const reviewTabs: ReviewTabConfig[] = [
     checkItems: [
       {
         id: 'authorityName',
-        label: 'Die Vollmacht lautet auf den Namen "{organizationName}"',
+        label: 'Die Vollmacht lautet auf den Namen "{organization.name}"',
       },
       {
         id: 'docAge',
@@ -152,7 +151,7 @@ export const reviewTabs: ReviewTabConfig[] = [
       '§',
     ],
     checkItems: [
-      { id: 'nameMatch', label: 'Das Dokument lautet auf den Namen "{organizationName}"' },
+      { id: 'nameMatch', label: 'Das Dokument lautet auf den Namen "{organization.name}"' },
       { id: 'plausible', label: 'Das Dokument ist plausibel' },
     ],
   },

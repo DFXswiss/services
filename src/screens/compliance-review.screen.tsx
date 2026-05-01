@@ -1,6 +1,6 @@
 import { useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ComplianceReviewHeader } from 'src/components/compliance/compliance-review-header';
 import {
@@ -18,6 +18,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { ComplianceUserData, KycFile, KycStepInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { useSplitPane } from 'src/hooks/split-pane.hook';
 
 function findLatestStep(kycSteps: KycStepInfo[], stepName: string): KycStepInfo | undefined {
   return kycSteps.filter((s) => s.name === stepName).sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
@@ -54,32 +55,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
   const [activeTab, setActiveTab] = useState<ReviewCheckTab | undefined>();
   const [isSaving, setIsSaving] = useState(false);
   const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
-  const [splitPercent, setSplitPercent] = useState(66);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  function handleSplitDrag(e: React.MouseEvent): void {
-    e.preventDefault();
-    const container = containerRef.current;
-    if (!container) return;
-
-    const onMouseMove = (moveEvent: MouseEvent): void => {
-      const rect = container.getBoundingClientRect();
-      const percent = ((moveEvent.clientX - rect.left) / rect.width) * 100;
-      setSplitPercent(Math.min(80, Math.max(30, percent)));
-    };
-
-    const onMouseUp = (): void => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-  }
+  const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   const loadData = useCallback(() => {
     if (!userDataId) {
