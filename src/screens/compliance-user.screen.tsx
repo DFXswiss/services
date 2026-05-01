@@ -1,4 +1,4 @@
-import { useKyc } from '@dfx.swiss/react';
+import { useAuthContext, UserRole, useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -7,23 +7,40 @@ import {
   BuyRoutesTable,
   KycLogsTable,
   KycStepsTable,
+  NotificationsTable,
+  RefRewardsTable,
   SellRoutesTable,
+  SwapRoutesTable,
   UsersTable,
+  VirtualIbansTable,
 } from 'src/components/compliance/detail-tabs';
 import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
 import { IpLogsPanel } from 'src/components/compliance/ip-logs-panel';
 import { KycFilesPanel } from 'src/components/compliance/kyc-files-panel';
 import { RecommendationPanel } from 'src/components/compliance/recommendation-panel';
 import { SupportIssuesPanel } from 'src/components/compliance/support-issues-panel';
+import { SupportUserOverviewPanel } from 'src/components/compliance/support-user-overview-panel';
 import { TransactionsTable } from 'src/components/compliance/transactions-tab';
 import { UserDataPanel } from 'src/components/compliance/user-data-panel';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { ComplianceUserData, KycFile, useCompliance } from 'src/hooks/compliance.hook';
-import { useComplianceGuard } from 'src/hooks/guard.hook';
+import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { useSplitPane } from 'src/hooks/split-pane.hook';
 
-type TabType = 'transactions' | 'users' | 'kycSteps' | 'kycLogs' | 'bankDatas' | 'buyRoutes' | 'sellRoutes';
+type TabType =
+  | 'transactions'
+  | 'users'
+  | 'kycSteps'
+  | 'kycLogs'
+  | 'bankDatas'
+  | 'buyRoutes'
+  | 'sellRoutes'
+  | 'swapRoutes'
+  | 'virtualIbans'
+  | 'refRewards'
+  | 'notifications';
 
 interface TabConfig {
   id: TabType;
@@ -32,7 +49,9 @@ interface TabConfig {
 }
 
 export default function ComplianceUserScreen(): JSX.Element {
-  useComplianceGuard();
+  useSupportDashboardGuard();
+  const { session } = useAuthContext();
+  const role = session?.role;
 
   const { translate } = useSettingsContext();
   const { id: userDataId } = useParams();
@@ -47,6 +66,7 @@ export default function ComplianceUserScreen(): JSX.Element {
   const [expandedBankTxId, setExpandedBankTxId] = useState<number>();
   const [expandedCryptoInputId, setExpandedCryptoInputId] = useState<number>();
   const [expandedTxUid, setExpandedTxUid] = useState<string>();
+  const { containerRef, splitPercent, setSplitPercent, handleSplitDrag } = useSplitPane();
 
   function handleExpandBankTx(id: number | undefined): void {
     setExpandedBankTxId(id);
@@ -101,108 +121,145 @@ export default function ComplianceUserScreen(): JSX.Element {
     return () => preview && URL.revokeObjectURL(preview.url);
   }, [preview]);
 
+  useEffect(() => {
+    if (role === UserRole.SUPPORT) setSplitPercent(50);
+  }, [role]);
+
   useLayoutOptions({ title: translate('screens/compliance', 'User Data'), backButton: true, noMaxWidth: true });
 
-  const tabs: TabConfig[] = data
-    ? [
-        { id: 'transactions', label: 'Transactions', count: data.transactions?.length || 0 },
-        { id: 'users', label: 'Users', count: data.users?.length || 0 },
-        { id: 'kycSteps', label: 'KYC Steps', count: data.kycSteps?.length || 0 },
-        { id: 'kycLogs', label: 'KYC Log', count: data.kycLogs?.length || 0 },
-        { id: 'bankDatas', label: 'Bank Data', count: data.bankDatas?.length || 0 },
-        { id: 'buyRoutes', label: 'Buy Routes', count: data.buyRoutes?.length || 0 },
-        { id: 'sellRoutes', label: 'Sell Routes', count: data.sellRoutes?.length || 0 },
-      ]
-    : [];
+  if (error && !data) return <ErrorHint message={error} />;
+  if (!data || !userDataId) return <StyledLoadingSpinner size={SpinnerSize.LG} />;
+
+  const numericUserDataId = +userDataId;
+  const isSupport = role === UserRole.SUPPORT;
+  const canCopyKycLinks = role === UserRole.ADMIN || role === UserRole.COMPLIANCE;
+  const showRightPanel = data.permissions.viewKycFiles || isSupport;
+
+  const tabs: TabConfig[] = [
+    { id: 'transactions', label: 'Transactions', count: data.transactions?.length || 0 },
+    { id: 'users', label: 'Users', count: data.users?.length || 0 },
+    { id: 'kycSteps', label: 'KYC Steps', count: data.kycSteps?.length || 0 },
+    ...(data.permissions.viewKycLogs
+      ? [{ id: 'kycLogs' as TabType, label: 'KYC Log', count: data.kycLogs?.length ?? 0 }]
+      : []),
+    { id: 'bankDatas', label: 'Bank Data', count: data.bankDatas?.length || 0 },
+    { id: 'virtualIbans', label: 'Virtual IBANs', count: data.virtualIbans?.length || 0 },
+    { id: 'buyRoutes', label: 'Buy Routes', count: data.buyRoutes?.length || 0 },
+    { id: 'sellRoutes', label: 'Sell Routes', count: data.sellRoutes?.length || 0 },
+    { id: 'swapRoutes', label: 'Swap Routes', count: data.swapRoutes?.length || 0 },
+    { id: 'refRewards', label: 'Ref Rewards', count: data.refRewards?.length || 0 },
+    { id: 'notifications', label: 'Notifications', count: data.notifications?.length || 0 },
+  ];
 
   return (
-    <>
-      {error && !data ? (
-        <ErrorHint message={error} />
-      ) : !data ? (
-        <StyledLoadingSpinner size={SpinnerSize.LG} />
-      ) : (
-        <div className="w-full flex flex-col gap-4">
-          {/* Top Section: User Data | Middle Panels | File Preview */}
-          <div className="flex gap-4 min-h-[400px]">
-            <UserDataPanel
-              userData={data.userData}
-              keyLabel={translate('screens/compliance', 'Key')}
-              valueLabel={translate('screens/compliance', 'Value')}
-              titleLabel={translate('screens/compliance', 'User Data')}
-              userDataId={userDataId ? +userDataId : undefined}
-              onLimitRequestCreated={loadData}
-            />
+    <div className="w-full flex flex-col gap-4">
+      {/* Top Section: (User Data | Middle Panels) | Splitter | (File Preview | Support Overview) */}
+      <div ref={containerRef} className="flex min-h-[400px]">
+        <div style={{ width: `${showRightPanel ? splitPercent : 100}%` }} className="flex gap-4 min-w-0 pr-2">
+          <UserDataPanel
+            userData={data.userData}
+            userDataId={numericUserDataId}
+            canRequestLimit={data.permissions.canRequestLimit}
+            canCopyKycLinks={canCopyKycLinks}
+            wide={isSupport}
+            onLimitRequestCreated={loadData}
+          />
 
-            <div className="w-1/3 min-w-[300px] flex flex-col gap-4">
-              <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId ?? ''} navigate={navigate} />
-              <KycFilesPanel
-                kycFiles={data.kycFiles}
-                label={translate('screens/compliance', 'KYC Files')}
-                onOpenFile={openFile}
-              />
-              <IpLogsPanel ipLogs={data.ipLogs} userDataId={+(userDataId ?? '0')} />
-              <SupportIssuesPanel
-                supportIssues={data.supportIssues}
-                userDataId={userDataId ?? ''}
-                navigate={navigate}
-              />
-            </div>
-
-            <div className="sticky top-4 self-start">
-              <FilePreviewPanel
-                preview={preview}
-                label={translate('screens/compliance', 'File Preview')}
-                onClose={() => setPreview(undefined)}
-              />
-            </div>
-          </div>
-
-          {/* Bottom Section: Tabs */}
-          <div className="w-full">
-            <div className="flex border-b border-dfxGray-300">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'text-dfxBlue-800 border-b-2 border-dfxBlue-800 bg-white'
-                      : 'text-dfxGray-700 hover:text-dfxBlue-800 hover:bg-dfxGray-300'
-                  }`}
-                >
-                  {tab.label} ({tab.count})
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-white rounded-b-lg shadow-sm p-4">
-              {activeTab === 'transactions' && (
-                <TransactionsTable
-                  transactions={data.transactions}
-                  bankTxs={data.bankTxs}
-                  cryptoInputs={data.cryptoInputs}
-                  userDataId={+(userDataId ?? '0')}
-                  expandedBankTxId={expandedBankTxId}
-                  expandedCryptoInputId={expandedCryptoInputId}
-                  expandedTxUid={expandedTxUid}
-                  onExpandBankTx={handleExpandBankTx}
-                  onExpandCryptoInput={handleExpandCryptoInput}
-                  onExpandTxUid={handleExpandTxUid}
-                  onStopped={loadData}
+          {!isSupport && (
+            <div className="flex-1 min-w-[300px] flex flex-col gap-4">
+              {data.permissions.viewRecommendation && (
+                <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId} navigate={navigate} />
+              )}
+              {data.permissions.viewKycFiles && (
+                <KycFilesPanel
+                  kycFiles={data.kycFiles ?? []}
+                  label={translate('screens/compliance', 'KYC Files')}
+                  onOpenFile={openFile}
                 />
               )}
-
-              {activeTab === 'users' && <UsersTable users={data.users} />}
-              {activeTab === 'kycSteps' && <KycStepsTable kycSteps={data.kycSteps} />}
-              {activeTab === 'kycLogs' && <KycLogsTable kycLogs={data.kycLogs} />}
-              {activeTab === 'bankDatas' && <BankDatasTable bankDatas={data.bankDatas} />}
-              {activeTab === 'buyRoutes' && <BuyRoutesTable buyRoutes={data.buyRoutes} />}
-              {activeTab === 'sellRoutes' && <SellRoutesTable sellRoutes={data.sellRoutes} />}
+              {data.permissions.viewIpLogs && <IpLogsPanel ipLogs={data.ipLogs ?? []} userDataId={numericUserDataId} />}
+              {data.permissions.viewSupportIssues && (
+                <SupportIssuesPanel
+                  supportIssues={data.supportIssues ?? []}
+                  userDataId={userDataId}
+                  navigate={navigate}
+                />
+              )}
             </div>
-          </div>
+          )}
         </div>
-      )}
-    </>
+
+        {showRightPanel && (
+          <>
+            <div
+              className="w-1.5 cursor-col-resize flex-shrink-0 group flex items-stretch"
+              onMouseDown={handleSplitDrag}
+            >
+              <div className="w-0.5 mx-auto bg-dfxGray-400 group-hover:bg-dfxBlue-400 transition-colors rounded-full" />
+            </div>
+            <div style={{ width: `${100 - splitPercent}%` }} className="min-w-0 sticky top-4 self-start pl-2">
+              {isSupport ? (
+                <SupportUserOverviewPanel data={data} />
+              ) : (
+                <FilePreviewPanel
+                  preview={preview}
+                  label={translate('screens/compliance', 'File Preview')}
+                  onClose={() => setPreview(undefined)}
+                />
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Bottom Section: Tabs */}
+      <div className="w-full">
+        <div className="flex border-b border-dfxGray-300">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'text-dfxBlue-800 border-b-2 border-dfxBlue-800 bg-white'
+                  : 'text-dfxGray-700 hover:text-dfxBlue-800 hover:bg-dfxGray-300'
+              }`}
+            >
+              {tab.label} ({tab.count})
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-b-lg shadow-sm p-4">
+          {activeTab === 'transactions' && (
+            <TransactionsTable
+              transactions={data.transactions}
+              bankTxs={data.bankTxs}
+              cryptoInputs={data.cryptoInputs}
+              userDataId={numericUserDataId}
+              expandedBankTxId={expandedBankTxId}
+              expandedCryptoInputId={expandedCryptoInputId}
+              expandedTxUid={expandedTxUid}
+              canPerformActions={data.permissions.canPerformTransactionActions}
+              onExpandBankTx={handleExpandBankTx}
+              onExpandCryptoInput={handleExpandCryptoInput}
+              onExpandTxUid={handleExpandTxUid}
+              onStopped={loadData}
+            />
+          )}
+
+          {activeTab === 'users' && <UsersTable users={data.users} />}
+          {activeTab === 'kycSteps' && <KycStepsTable kycSteps={data.kycSteps} />}
+          {activeTab === 'kycLogs' && <KycLogsTable kycLogs={data.kycLogs ?? []} />}
+          {activeTab === 'bankDatas' && <BankDatasTable bankDatas={data.bankDatas} />}
+          {activeTab === 'buyRoutes' && <BuyRoutesTable buyRoutes={data.buyRoutes} />}
+          {activeTab === 'sellRoutes' && <SellRoutesTable sellRoutes={data.sellRoutes} />}
+          {activeTab === 'swapRoutes' && <SwapRoutesTable swapRoutes={data.swapRoutes} />}
+          {activeTab === 'virtualIbans' && <VirtualIbansTable virtualIbans={data.virtualIbans} />}
+          {activeTab === 'refRewards' && <RefRewardsTable refRewards={data.refRewards} />}
+          {activeTab === 'notifications' && <NotificationsTable notifications={data.notifications} />}
+        </div>
+      </div>
+    </div>
   );
 }

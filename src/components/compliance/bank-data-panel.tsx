@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { BankDataInfo } from 'src/hooks/compliance.hook';
+import { BankDataInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { statusBadge } from 'src/util/compliance-helpers';
 
 interface BankDataReviewPanelProps {
   bankDatas: BankDataInfo[];
-  userData: Record<string, unknown>;
+  userData: UserDataDetail;
   onApprove: (bankDataId: number) => Promise<void>;
   onReject: (bankDataId: number) => Promise<void>;
   isSaving: boolean;

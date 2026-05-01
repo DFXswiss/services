@@ -16,6 +16,7 @@ interface TransactionsTableProps {
   expandedBankTxId?: number;
   expandedCryptoInputId?: number;
   expandedTxUid?: string;
+  canPerformActions?: boolean;
   onExpandBankTx: (id: number | undefined) => void;
   onExpandCryptoInput: (id: number | undefined) => void;
   onExpandTxUid: (uid: string | undefined) => void;
@@ -30,6 +31,7 @@ export function TransactionsTable({
   expandedBankTxId,
   expandedCryptoInputId,
   expandedTxUid,
+  canPerformActions = true,
   onExpandBankTx,
   onExpandCryptoInput,
   onExpandTxUid,
@@ -310,10 +312,13 @@ export function TransactionsTable({
                                     ].includes(detail.state) && !detail.chargebackAmount;
                                   const existingRecall = bankTx?.recall;
                                   const canRecall = bankTx != null && !existingRecall;
-                                  if (!canStop && !canChargeback && !canRecall && !existingRecall) return null;
+                                  const showStop = canStop && canPerformActions;
+                                  const showChargeback = canChargeback && canPerformActions;
+                                  const showRecall = canRecall && canPerformActions;
+                                  if (!showStop && !showChargeback && !showRecall && !existingRecall) return null;
                                   return (
                                     <div className="mt-3 pt-3 border-t border-dfxGray-400/50 flex gap-2">
-                                      {canStop && (
+                                      {showStop && (
                                         <button
                                           className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                           onClick={() => setStopConfirmTxId(tx.id)}
@@ -322,7 +327,7 @@ export function TransactionsTable({
                                           {stoppingTxId === tx.id ? 'Stopping...' : isStopped ? 'Stopped' : 'Stop'}
                                         </button>
                                       )}
-                                      {canChargeback && (
+                                      {showChargeback && (
                                         <button
                                           className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                           onClick={() => setChargebackTxId(tx.id)}
@@ -330,7 +335,7 @@ export function TransactionsTable({
                                           Chargeback
                                         </button>
                                       )}
-                                      {canRecall && (
+                                      {showRecall && (
                                         <button
                                           className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                           onClick={() => setRecallBankTxId(bankTx.id)}
