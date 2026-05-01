@@ -353,7 +353,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
               step={findLatestStep(data.kycSteps, 'DfxApproval')}
               userData={data.userData}
               kycSteps={data.kycSteps}
-              kycFiles={data.kycFiles}
+              kycFiles={data.kycFiles ?? []}
               onOpenFile={openFile}
               onSave={handleFreigabeSave}
               isSaving={isSaving}
@@ -383,8 +383,8 @@ export default function ComplianceReviewScreen(): JSX.Element {
           ) : (
             <ComplianceReviewPanel
               step={findLatestStep(data.kycSteps, activeConfig.stepName)}
-              files={findFiles(data.kycFiles, activeConfig.fileTypes)}
-              allFiles={data.kycFiles}
+              files={findFiles(data.kycFiles ?? [], activeConfig.fileTypes)}
+              allFiles={data.kycFiles ?? []}
               checkItems={activeConfig.checkItems}
               showResult={activeConfig.showResult}
               decisionLabel={activeConfig.decisionLabel}

@@ -246,20 +246,35 @@ export interface UserDataDetail {
   wallet?: { name?: string };
 }
 
+export interface SupportPermissions {
+  viewKycFiles: boolean;
+  viewKycLogs: boolean;
+  viewIpLogs: boolean;
+  viewSupportIssues: boolean;
+  canRequestLimit: boolean;
+  canPerformTransactionActions: boolean;
+  viewRecommendation: boolean;
+}
+
 export interface ComplianceUserData {
   userData: UserDataDetail;
-  kycFiles: KycFile[];
+  kycFiles?: KycFile[];
   kycSteps: KycStepInfo[];
-  kycLogs: KycLogInfo[];
+  kycLogs?: KycLogInfo[];
   transactions: TransactionInfo[];
   bankTxs: BankTxInfo[];
   cryptoInputs: CryptoInputInfo[];
-  ipLogs: IpLogInfo[];
-  supportIssues: SupportIssueInfo[];
+  ipLogs?: IpLogInfo[];
+  supportIssues?: SupportIssueInfo[];
   users: UserInfo[];
   bankDatas: BankDataInfo[];
   buyRoutes: BuyRouteInfo[];
   sellRoutes: SellRouteInfo[];
+  swapRoutes: SwapRouteInfo[];
+  virtualIbans: VirtualIbanInfo[];
+  refRewards: RefRewardInfo[];
+  notifications: NotificationInfo[];
+  permissions: SupportPermissions;
 }
 
 export interface RecommendationGraphNode {
@@ -377,6 +392,8 @@ export interface BuyRouteInfo {
   bankUsage: string;
   assetName: string;
   blockchain: string;
+  targetAddress?: string;
+  targetAddressExplorerUrl?: string;
   volume: number;
   active: boolean;
   created: string;
@@ -388,6 +405,64 @@ export interface SellRouteInfo {
   fiatName?: string;
   volume: number;
   active: boolean;
+  created: string;
+}
+
+export interface SwapRouteInfo {
+  id: number;
+  assetName?: string;
+  blockchain?: string;
+  depositAddress?: string;
+  depositAddressExplorerUrl?: string;
+  volume: number;
+  annualVolume: number;
+  active: boolean;
+  created: string;
+}
+
+export interface VirtualIbanInfo {
+  id: number;
+  iban: string;
+  bban?: string;
+  currency?: string;
+  bank?: string;
+  status?: string;
+  active: boolean;
+  label?: string;
+  buyId?: number;
+  reservedUntil?: string;
+  activatedAt?: string;
+  deactivatedAt?: string;
+  created: string;
+}
+
+export interface NotificationInfo {
+  id: number;
+  type: string;
+  context: string;
+  correlationId?: string;
+  isComplete: boolean;
+  error?: string;
+  suppressRecurring: boolean;
+  lastTryDate: string;
+  created: string;
+}
+
+export interface RefRewardInfo {
+  id: number;
+  status?: string;
+  outputAmount?: number;
+  outputAsset?: string;
+  outputBlockchain?: string;
+  amountInChf?: number;
+  amountInEur?: number;
+  targetAddress?: string;
+  targetAddressExplorerUrl?: string;
+  txId?: string;
+  txExplorerUrl?: string;
+  outputDate?: string;
+  recipientMail?: string;
+  mailSendDate?: string;
   created: string;
 }
 

@@ -7,8 +7,12 @@ import {
   BuyRoutesTable,
   KycLogsTable,
   KycStepsTable,
+  NotificationsTable,
+  RefRewardsTable,
   SellRoutesTable,
+  SwapRoutesTable,
   UsersTable,
+  VirtualIbansTable,
 } from 'src/components/compliance/detail-tabs';
 import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
 import { IpLogsPanel } from 'src/components/compliance/ip-logs-panel';
@@ -20,10 +24,21 @@ import { UserDataPanel } from 'src/components/compliance/user-data-panel';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { ComplianceUserData, KycFile, useCompliance } from 'src/hooks/compliance.hook';
-import { useComplianceGuard } from 'src/hooks/guard.hook';
+import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
-type TabType = 'transactions' | 'users' | 'kycSteps' | 'kycLogs' | 'bankDatas' | 'buyRoutes' | 'sellRoutes';
+type TabType =
+  | 'transactions'
+  | 'users'
+  | 'kycSteps'
+  | 'kycLogs'
+  | 'bankDatas'
+  | 'buyRoutes'
+  | 'sellRoutes'
+  | 'swapRoutes'
+  | 'virtualIbans'
+  | 'refRewards'
+  | 'notifications';
 
 interface TabConfig {
   id: TabType;
@@ -32,7 +47,7 @@ interface TabConfig {
 }
 
 export default function ComplianceUserScreen(): JSX.Element {
-  useComplianceGuard();
+  useSupportDashboardGuard();
 
   const { translate } = useSettingsContext();
   const { id: userDataId } = useParams();
@@ -108,10 +123,16 @@ export default function ComplianceUserScreen(): JSX.Element {
         { id: 'transactions', label: 'Transactions', count: data.transactions?.length || 0 },
         { id: 'users', label: 'Users', count: data.users?.length || 0 },
         { id: 'kycSteps', label: 'KYC Steps', count: data.kycSteps?.length || 0 },
-        { id: 'kycLogs', label: 'KYC Log', count: data.kycLogs?.length || 0 },
+        ...(data.permissions.viewKycLogs
+          ? [{ id: 'kycLogs' as TabType, label: 'KYC Log', count: data.kycLogs?.length ?? 0 }]
+          : []),
         { id: 'bankDatas', label: 'Bank Data', count: data.bankDatas?.length || 0 },
+        { id: 'virtualIbans', label: 'Virtual IBANs', count: data.virtualIbans?.length || 0 },
         { id: 'buyRoutes', label: 'Buy Routes', count: data.buyRoutes?.length || 0 },
         { id: 'sellRoutes', label: 'Sell Routes', count: data.sellRoutes?.length || 0 },
+        { id: 'swapRoutes', label: 'Swap Routes', count: data.swapRoutes?.length || 0 },
+        { id: 'refRewards', label: 'Ref Rewards', count: data.refRewards?.length || 0 },
+        { id: 'notifications', label: 'Notifications', count: data.notifications?.length || 0 },
       ]
     : [];
 
@@ -131,31 +152,42 @@ export default function ComplianceUserScreen(): JSX.Element {
               valueLabel={translate('screens/compliance', 'Value')}
               titleLabel={translate('screens/compliance', 'User Data')}
               userDataId={userDataId ? +userDataId : undefined}
+              canRequestLimit={data.permissions.canRequestLimit}
               onLimitRequestCreated={loadData}
             />
 
             <div className="w-1/3 min-w-[300px] flex flex-col gap-4">
-              <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId ?? ''} navigate={navigate} />
-              <KycFilesPanel
-                kycFiles={data.kycFiles}
-                label={translate('screens/compliance', 'KYC Files')}
-                onOpenFile={openFile}
-              />
-              <IpLogsPanel ipLogs={data.ipLogs} userDataId={+(userDataId ?? '0')} />
-              <SupportIssuesPanel
-                supportIssues={data.supportIssues}
-                userDataId={userDataId ?? ''}
-                navigate={navigate}
-              />
+              {data.permissions.viewRecommendation && (
+                <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId ?? ''} navigate={navigate} />
+              )}
+              {data.permissions.viewKycFiles && (
+                <KycFilesPanel
+                  kycFiles={data.kycFiles ?? []}
+                  label={translate('screens/compliance', 'KYC Files')}
+                  onOpenFile={openFile}
+                />
+              )}
+              {data.permissions.viewIpLogs && (
+                <IpLogsPanel ipLogs={data.ipLogs ?? []} userDataId={+(userDataId ?? '0')} />
+              )}
+              {data.permissions.viewSupportIssues && (
+                <SupportIssuesPanel
+                  supportIssues={data.supportIssues ?? []}
+                  userDataId={userDataId ?? ''}
+                  navigate={navigate}
+                />
+              )}
             </div>
 
-            <div className="sticky top-4 self-start">
-              <FilePreviewPanel
-                preview={preview}
-                label={translate('screens/compliance', 'File Preview')}
-                onClose={() => setPreview(undefined)}
-              />
-            </div>
+            {data.permissions.viewKycFiles && (
+              <div className="sticky top-4 self-start">
+                <FilePreviewPanel
+                  preview={preview}
+                  label={translate('screens/compliance', 'File Preview')}
+                  onClose={() => setPreview(undefined)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Bottom Section: Tabs */}
@@ -186,6 +218,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                   expandedBankTxId={expandedBankTxId}
                   expandedCryptoInputId={expandedCryptoInputId}
                   expandedTxUid={expandedTxUid}
+                  canPerformActions={data.permissions.canPerformTransactionActions}
                   onExpandBankTx={handleExpandBankTx}
                   onExpandCryptoInput={handleExpandCryptoInput}
                   onExpandTxUid={handleExpandTxUid}
@@ -195,10 +228,14 @@ export default function ComplianceUserScreen(): JSX.Element {
 
               {activeTab === 'users' && <UsersTable users={data.users} />}
               {activeTab === 'kycSteps' && <KycStepsTable kycSteps={data.kycSteps} />}
-              {activeTab === 'kycLogs' && <KycLogsTable kycLogs={data.kycLogs} />}
+              {activeTab === 'kycLogs' && <KycLogsTable kycLogs={data.kycLogs ?? []} />}
               {activeTab === 'bankDatas' && <BankDatasTable bankDatas={data.bankDatas} />}
               {activeTab === 'buyRoutes' && <BuyRoutesTable buyRoutes={data.buyRoutes} />}
               {activeTab === 'sellRoutes' && <SellRoutesTable sellRoutes={data.sellRoutes} />}
+              {activeTab === 'swapRoutes' && <SwapRoutesTable swapRoutes={data.swapRoutes} />}
+              {activeTab === 'virtualIbans' && <VirtualIbansTable virtualIbans={data.virtualIbans} />}
+              {activeTab === 'refRewards' && <RefRewardsTable refRewards={data.refRewards} />}
+              {activeTab === 'notifications' && <NotificationsTable notifications={data.notifications} />}
             </div>
           </div>
         </div>

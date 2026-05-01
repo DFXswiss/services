@@ -95,8 +95,8 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
   }
 
   const identResult = parseIdentResult(step);
-  const identFiles = data.kycFiles.filter((f) => f.type === 'Identification');
-  const ipCountries = getUniqueIpCountries(data.ipLogs);
+  const identFiles = (data.kycFiles ?? []).filter((f) => f.type === 'Identification');
+  const ipCountries = getUniqueIpCountries(data.ipLogs ?? []);
   const ud = data.userData;
 
   let nationalityStepCountry: string | undefined;

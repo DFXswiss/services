@@ -363,6 +363,10 @@ export const Routes = [
         element: withSuspense(<ComplianceUserScreen />),
       },
       {
+        path: 'support/user/:id',
+        element: withSuspense(<ComplianceUserScreen />),
+      },
+      {
         path: 'compliance/user/:id/kyc-step/:stepId',
         element: withSuspense(<ComplianceKycStepScreen />),
       },
