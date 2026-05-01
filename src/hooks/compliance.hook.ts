@@ -212,38 +212,111 @@ export interface CryptoInputInfo {
   purpose?: string;
 }
 
-// Partial view of the backend UserData entity as exposed by the compliance endpoint.
-// Index signature keeps compatibility with legacy Record<string, unknown> consumers;
-// named fields add type safety for the values the UI actually reads.
-export interface UserDataDetail {
-  [key: string]: unknown;
+export interface CountryRef {
+  name?: string;
+  symbol?: string;
+}
+
+export interface LanguageRef {
+  name?: string;
+  symbol?: string;
+}
+
+export interface WalletRef {
+  name?: string;
+}
+
+export interface OrganizationDetail {
   id?: number;
-  accountType?: string;
-  status?: string;
-  kycStatus?: string;
-  kycLevel?: number;
-  firstname?: string;
-  surname?: string;
-  verifiedName?: string;
-  mail?: string;
-  phone?: string;
-  birthday?: string;
+  name?: string;
   street?: string;
   houseNumber?: string;
   zip?: string;
   location?: string;
-  city?: string;
+  country?: CountryRef;
+  legalEntity?: string;
+  signatoryPower?: string;
+  complexOrgStructure?: boolean;
+  allBeneficialOwnersName?: string;
+  allBeneficialOwnersDomicile?: string;
+  accountOpenerAuthorization?: string;
+}
+
+// Mirrors UserDataDetailDto on the backend. Values that are Date on the entity
+// arrive as ISO strings here.
+export interface UserDataDetail {
+  // UserData
+  id: number;
+  created?: string;
+  status?: string;
+  riskStatus?: string;
+  kycStatus?: string;
+  kycLevel?: number;
+  depositLimit?: number;
+  wallet?: WalletRef;
+
+  // Personal Data
+  accountType?: string;
+  mail?: string;
+  verifiedName?: string;
+  verifiedCountry?: CountryRef;
+  firstname?: string;
+  surname?: string;
+  street?: string;
+  houseNumber?: string;
+  zip?: string;
+  location?: string;
+  country?: CountryRef;
+  nationality?: CountryRef;
+  language?: LanguageRef;
+  birthday?: string;
+  phone?: string;
+
+  // Organization Data
+  organization?: OrganizationDetail;
+
+  // KYC / AML
+  kycType?: string;
+  kycHash?: string;
+  kycFileId?: number;
+  identDocumentId?: string;
+  identDocumentType?: string;
+  identificationType?: string;
+  highRisk?: boolean;
+  pep?: boolean;
+  bankTransactionVerification?: string;
+  olkypayAllowed?: boolean;
+
+  // PaymentLink Data
+  paymentLinksAllowed?: boolean;
+  paymentLinksConfig?: string;
+  paymentLinksName?: string;
+
+  // PhoneCall
   phoneCallStatus?: string;
-  phoneCallTimes?: string;
+  phoneCallAccepted?: boolean;
   phoneCallCheckDate?: string;
+  phoneCallExternalAccountCheckDate?: string;
+  phoneCallExternalAccountCheckValues?: string;
   phoneCallIpCheckDate?: string;
   phoneCallIpCountryCheckDate?: string;
-  phoneCallExternalAccountCheckDate?: string;
-  organization?: { name?: string };
-  nationality?: { name?: string };
-  language?: { name?: string; symbol?: string };
-  country?: { name?: string; symbol?: string };
-  wallet?: { name?: string };
+  phoneCallTimes?: string;
+
+  // Volumes
+  buyVolume?: number;
+  annualBuyVolume?: number;
+  sellVolume?: number;
+  annualSellVolume?: number;
+  cryptoVolume?: number;
+  annualCryptoVolume?: number;
+
+  // Other
+  isTrustedReferrer?: boolean;
+  tradeApprovalDate?: string;
+  deactivationDate?: string;
+  lastNameCheckDate?: string;
+  letterSentDate?: string;
+  moderator?: string;
 }
 
 export interface SupportPermissions {

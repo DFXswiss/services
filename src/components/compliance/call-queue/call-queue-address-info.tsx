@@ -10,7 +10,7 @@ export function CallQueueAddressInfo({ userData, title }: Props): JSX.Element {
     ['Street', userData.street],
     ['House Number', userData.houseNumber],
     ['ZIP', userData.zip],
-    ['City', userData.location ?? userData.city],
+    ['City', userData.location],
     ['Country', userData.country?.name ?? userData.country?.symbol],
     ['Phone Call Times', userData.phoneCallTimes],
   ];

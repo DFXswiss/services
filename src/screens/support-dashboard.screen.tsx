@@ -274,24 +274,19 @@ export default function SupportDashboardScreen(): JSX.Element {
                       <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800 break-all">
                         {translate('screens/compliance', 'Email')}
                       </th>
-                      <th className="px-3 py-2"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {customerSearchResults.map((u) => (
-                      <tr key={u.id} className="border-b border-dfxGray-300 hover:bg-dfxGray-300">
-                        <td className="px-3 py-2 text-dfxBlue-800">{u.id}</td>
-                        <td className="px-3 py-2 text-dfxBlue-800">{u.accountType ?? '-'}</td>
-                        <td className="px-3 py-2 text-dfxBlue-800">{u.name ?? '-'}</td>
-                        <td className="px-3 py-2 text-dfxBlue-800 break-all">{u.mail ?? '-'}</td>
-                        <td className="px-3 py-2 text-right">
-                          <button
-                            className="px-2 py-1 text-xs font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors"
-                            onClick={() => navigate(`/support/user/${u.id}`)}
-                          >
-                            {translate('screens/compliance', 'Details')}
-                          </button>
-                        </td>
+                      <tr
+                        key={u.id}
+                        className="border-b border-dfxGray-300 transition-colors hover:bg-dfxBlue-400 cursor-pointer group"
+                        onClick={() => navigate(`/support/user/${u.id}`)}
+                      >
+                        <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.id}</td>
+                        <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.accountType ?? '-'}</td>
+                        <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.name ?? '-'}</td>
+                        <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white break-all">{u.mail ?? '-'}</td>
                       </tr>
                     ))}
                   </tbody>

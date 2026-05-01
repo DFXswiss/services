@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ComplianceUserData, KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
+import { ComplianceUserData, KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { statusBadge, formatDateTime } from 'src/util/compliance-helpers';
 
 interface StammdatenPanelProps {
@@ -89,7 +89,7 @@ function getCheckItems(stepName: string, accountType: string): DocumentCheckItem
   }
 }
 
-function buildComparisonRows(stepName: string, result: string, userData: Record<string, unknown>): ComparisonRow[] {
+function buildComparisonRows(stepName: string, result: string, userData: UserDataDetail): ComparisonRow[] {
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(result) as Record<string, unknown>;
@@ -161,7 +161,7 @@ function ChangeSectionPanel({
   section: ChangeSection;
   step: KycStepInfo;
   files: KycFile[];
-  userData: Record<string, unknown>;
+  userData: UserDataDetail;
   checkItems: DocumentCheckItem[];
   onOpenFile: (file: KycFile) => void;
   onSave: (stepId: number, status: string, comment?: string, result?: string) => Promise<void>;

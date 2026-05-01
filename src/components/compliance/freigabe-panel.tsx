@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useCallQueueClerks } from 'src/hooks/call-queue-clerks.hook';
-import { KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
-import { formatDate, formatDateTime, formatValue, statusBadge } from 'src/util/compliance-helpers';
+import { KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
+import {
+  buildAddress,
+  display,
+  formatDate,
+  formatDateTime,
+  formatValue,
+  refName,
+  statusBadge,
+} from 'src/util/compliance-helpers';
 
 type DecisionValue = '' | 'Akzeptiert' | 'Abgelehnt';
 
@@ -26,7 +34,7 @@ export interface ComplianceReviewFreigabeSaveParams {
 
 interface OnboardingComplianceReviewFreigabePanelProps {
   step: KycStepInfo | undefined;
-  userData: Record<string, unknown>;
+  userData: UserDataDetail;
   kycSteps: KycStepInfo[];
   kycFiles: KycFile[];
   onOpenFile: (file: KycFile) => void;
@@ -41,16 +49,6 @@ interface SavedComment {
   amlAccountType?: string;
   processedBy?: string;
   finalDecision?: string;
-}
-
-function extractField(data: Record<string, unknown>, key: string): string {
-  const value = data[key];
-  if (value == null) return '-';
-  if (typeof value === 'object') {
-    const obj = value as Record<string, unknown>;
-    return (obj.name || obj.symbol || obj.displayName || obj.id || '-').toString();
-  }
-  return value.toString();
 }
 
 function findStep(steps: KycStepInfo[], name: string): KycStepInfo | undefined {
@@ -342,31 +340,19 @@ export function ComplianceReviewFreigabePanel({
     );
   }
 
-  const accountType = extractField(userData, 'accountType');
+  const accountType = display(userData.accountType);
   const isOrganization = accountType === 'Organization';
   const legalEntityStep = findStep(kycSteps, 'LegalEntity');
   const legalEntityResult = parseResult(legalEntityStep);
   const legalEntity = legalEntityResult?.legalEntity ? String(legalEntityResult.legalEntity) : '';
   const isGmbH = legalEntity === 'GmbH';
 
-  const kycHash = extractField(userData, 'kycHash');
+  const kycHash = display(userData.kycHash);
   const financialDataStep = findStep(kycSteps, 'FinancialData');
   const beneficialOwnerStep = findStep(kycSteps, 'BeneficialOwner');
   const signatoryPowerStep = findStep(kycSteps, 'SignatoryPower');
   const operationalActivityStep = findStep(kycSteps, 'OperationalActivity');
   const operationalActivityResult = parseResult(operationalActivityStep);
-
-  function buildAddress(prefix: string): string {
-    const street = extractField(userData, `${prefix}Street`);
-    const houseNr = extractField(userData, `${prefix}HouseNumber`);
-    const zip = extractField(userData, `${prefix}Zip`);
-    const location = extractField(userData, `${prefix}Location`);
-    const country = extractField(userData, `${prefix}Country`);
-    const parts = [`${street} ${houseNr}`.trim(), `${zip} ${location}`.trim(), country]
-      .filter((p) => p && p !== '-')
-      .join(', ');
-    return parts || '-';
-  }
 
   async function handleSave(): Promise<void> {
     if (!step || !finalDecision) return;
@@ -441,28 +427,26 @@ export function ComplianceReviewFreigabePanel({
 
   // --- User info rows ---
   const userInfoRows = [
-    { label: 'UserDataId', value: extractField(userData, 'id') },
+    { label: 'UserDataId', value: display(userData.id) },
     { label: 'Account Type', value: accountType },
     {
       label: 'Name Kontoeröffner',
-      value:
-        [extractField(userData, 'firstname'), extractField(userData, 'surname')].filter((v) => v !== '-').join(' ') ||
-        '-',
+      value: [userData.firstname, userData.surname].filter(Boolean).join(' ') || '-',
     },
-    ...(isOrganization ? [{ label: 'Name Vertragspartei', value: extractField(userData, 'organizationName') }] : []),
-    { label: 'Privat-Adresse', value: buildAddress('') },
-    ...(isOrganization ? [{ label: 'Firmen-Adresse', value: buildAddress('organization') }] : []),
-    { label: 'Geburtstag', value: userData['birthday'] ? formatDate(String(userData['birthday'])) : '-' },
-    { label: 'Mail', value: extractField(userData, 'mail') },
-    { label: 'Phone', value: extractField(userData, 'phone') },
-    { label: 'Sprache', value: extractField(userData, 'language') },
-    { label: 'Nationalität', value: extractField(userData, 'nationality') },
-    { label: 'lastNameCheckDate', value: extractField(userData, 'lastNameCheckDate') },
-    { label: 'PEP', value: extractField(userData, 'pep') },
-    { label: 'HighRisk', value: extractField(userData, 'highRisk') },
-    { label: 'identDocumentId', value: extractField(userData, 'identDocumentId') },
-    { label: 'identificationType', value: extractField(userData, 'identificationType') },
-    { label: 'identDocumentType', value: extractField(userData, 'identDocumentType') },
+    ...(isOrganization ? [{ label: 'Name Vertragspartei', value: display(userData.organization?.name) }] : []),
+    { label: 'Privat-Adresse', value: buildAddress(userData) },
+    ...(isOrganization ? [{ label: 'Firmen-Adresse', value: buildAddress(userData.organization) }] : []),
+    { label: 'Geburtstag', value: userData.birthday ? formatDate(userData.birthday) : '-' },
+    { label: 'Mail', value: display(userData.mail) },
+    { label: 'Phone', value: display(userData.phone) },
+    { label: 'Sprache', value: refName(userData.language) },
+    { label: 'Nationalität', value: refName(userData.nationality) },
+    { label: 'lastNameCheckDate', value: userData.lastNameCheckDate ? formatDate(userData.lastNameCheckDate) : '-' },
+    { label: 'PEP', value: display(userData.pep) },
+    { label: 'HighRisk', value: display(userData.highRisk) },
+    { label: 'identDocumentId', value: display(userData.identDocumentId) },
+    { label: 'identificationType', value: display(userData.identificationType) },
+    { label: 'identDocumentType', value: display(userData.identDocumentType) },
     {
       label: 'kycHash',
       value: kycHash !== '-' ? kycHash : '-',
@@ -470,7 +454,7 @@ export function ComplianceReviewFreigabePanel({
       href: kycHash !== '-' ? `/kyc?code=${kycHash}` : undefined,
     },
     ...(isOrganization
-      ? [{ label: 'accountOpenerAuthorization', value: extractField(userData, 'accountOpenerAuthorization') }]
+      ? [{ label: 'accountOpenerAuthorization', value: display(userData.organization?.accountOpenerAuthorization) }]
       : []),
   ];
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
+import { KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { statusBadge, todayAsString } from 'src/util/compliance-helpers';
 import { CheckItemConfig } from './compliance-review-configs';
 
@@ -13,21 +13,27 @@ interface ComplianceReviewPanelProps {
   showResult?: boolean;
   decisionLabel: string;
   rejectionReasons: string[];
-  userData: Record<string, unknown>;
+  userData: UserDataDetail;
   onOpenFile: (file: KycFile) => void;
   onSave: (stepId: number, status: string, comment?: string, result?: string) => Promise<void>;
   isSaving: boolean;
 }
 
-function resolveLabel(label: string, userData: Record<string, unknown>): string {
-  return label.replace(/\{(\w+)\}/g, (_, key: string) => {
-    const value = userData[key];
-    if (value == null) return '-';
-    if (typeof value === 'object') {
-      const obj = value as Record<string, unknown>;
+// Resolves "{path}" placeholders, supporting dotted nested keys like "organization.name"
+// or "country.symbol". Falls back to '-' if any segment is missing.
+function resolveLabel(label: string, source: object): string {
+  return label.replace(/\{([\w.]+)\}/g, (_, path: string) => {
+    let cursor: unknown = source;
+    for (const segment of path.split('.')) {
+      if (cursor == null || typeof cursor !== 'object') return '-';
+      cursor = (cursor as Record<string, unknown>)[segment];
+    }
+    if (cursor == null) return '-';
+    if (typeof cursor === 'object') {
+      const obj = cursor as Record<string, unknown>;
       return (obj.name || obj.symbol || obj.id || '-').toString();
     }
-    return value.toString();
+    return String(cursor);
   });
 }
 
