@@ -7,6 +7,7 @@ import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { CustomerAuthor, SupportIssueListItem, useSupportDashboard } from 'src/hooks/support-dashboard.hook';
+import { UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
 
@@ -32,7 +33,14 @@ export default function SupportDashboardScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { session } = useAuthContext();
   const { getIssueList, getIssueCounts, getIssueActivity } = useSupportDashboard();
+  const { search: searchCustomers } = useCompliance();
   const { navigate } = useNavigation();
+
+  const [customerSearchKey, setCustomerSearchKey] = useState('');
+  const [customerSearchResults, setCustomerSearchResults] = useState<UserSearchResult[]>();
+  const [customerSearchLoading, setCustomerSearchLoading] = useState(false);
+  const [customerSearchError, setCustomerSearchError] = useState<string>();
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -177,6 +185,17 @@ export default function SupportDashboardScreen(): JSX.Element {
   const openIssueCount =
     openIssueGroups.customerWaiting.length + openIssueGroups.created.length + openIssueGroups.pending.length;
 
+  function handleCustomerSearch(): void {
+    if (!customerSearchKey.trim()) return;
+    setCustomerSearchLoading(true);
+    setCustomerSearchError(undefined);
+    setCustomerSearchResults(undefined);
+    searchCustomers(customerSearchKey.trim())
+      .then((result) => setCustomerSearchResults(result.userDatas))
+      .catch((e: Error) => setCustomerSearchError(e.message ?? 'Unknown error'))
+      .finally(() => setCustomerSearchLoading(false));
+  }
+
   const currentTab = activeTab === 'open' ? null : tabs[activeTab];
   const displayedIssues = currentTab?.issues ?? [];
   const displayedTotal = currentTab?.total ?? 0;
@@ -198,6 +217,12 @@ export default function SupportDashboardScreen(): JSX.Element {
         </div>
         <div className="flex gap-2 ml-auto">
           <button
+            className="px-3 py-2 bg-white border border-dfxGray-400 text-dfxBlue-800 rounded-lg text-sm hover:bg-dfxGray-300 transition-colors"
+            onClick={() => setShowCustomerSearch((v) => !v)}
+          >
+            {showCustomerSearch ? '−' : '+'} {translate('screens/support', 'Customer Search')}
+          </button>
+          <button
             className="px-4 py-2 bg-dfxBlue-400 text-white rounded-lg text-sm hover:bg-dfxBlue-800 transition-colors"
             onClick={() => navigate('/support/dashboard/create')}
           >
@@ -205,6 +230,72 @@ export default function SupportDashboardScreen(): JSX.Element {
           </button>
         </div>
       </div>
+
+      {/* Customer Search */}
+      {showCustomerSearch && (
+        <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input
+              className="px-3 py-1.5 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800 flex-1"
+              value={customerSearchKey}
+              onChange={(e) => setCustomerSearchKey(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCustomerSearch();
+              }}
+              placeholder={translate(
+                'screens/support',
+                'Search by ID, email, phone, name, KYC hash, blockchain address...',
+              )}
+            />
+            <button
+              className="px-4 py-1.5 bg-dfxBlue-400 text-white rounded text-sm hover:bg-dfxBlue-800 transition-colors disabled:opacity-50"
+              onClick={handleCustomerSearch}
+              disabled={customerSearchLoading || !customerSearchKey.trim()}
+            >
+              {customerSearchLoading ? '…' : translate('general/actions', 'Search')}
+            </button>
+          </div>
+          {customerSearchError && <ErrorHint message={customerSearchError} />}
+          {customerSearchResults && (
+            <>
+              {customerSearchResults.length === 0 ? (
+                <p className="text-sm text-dfxGray-700">{translate('screens/compliance', 'No entries found')}</p>
+              ) : (
+                <table className="w-full border-collapse text-sm">
+                  <thead className="bg-dfxGray-300">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">ID</th>
+                      <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
+                        {translate('screens/kyc', 'Account Type')}
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
+                        {translate('screens/kyc', 'Name')}
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800 break-all">
+                        {translate('screens/compliance', 'Email')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerSearchResults.map((u) => (
+                      <tr
+                        key={u.id}
+                        className="border-b border-dfxGray-300 transition-colors hover:bg-dfxBlue-400 cursor-pointer group"
+                        onClick={() => navigate(`/support/user/${u.id}`)}
+                      >
+                        <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.id}</td>
+                        <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.accountType ?? '-'}</td>
+                        <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.name ?? '-'}</td>
+                        <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white break-all">{u.mail ?? '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-dfxGray-400">

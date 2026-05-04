@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ComplianceUserData, KycFile, KycStepInfo, IpLogInfo } from 'src/hooks/compliance.hook';
-import { statusBadge, formatDate, todayAsString } from 'src/util/compliance-helpers';
+import { display, formatDate, refName, statusBadge, todayAsString } from 'src/util/compliance-helpers';
 import { renderResultTable } from './compliance-review-panel';
 
 interface IdentPanelProps {
@@ -59,15 +59,6 @@ function getUniqueIpCountries(ipLogs: IpLogInfo[]): string[] {
   return [...new Set(countries)];
 }
 
-function extractString(value: unknown): string {
-  if (value == null) return '-';
-  if (typeof value === 'object') {
-    const obj = value as Record<string, unknown>;
-    return String(obj.name ?? obj.symbol ?? obj.id ?? '-');
-  }
-  return String(value);
-}
-
 function InfoLine({ label, value }: { label: string; value: string }): JSX.Element {
   return (
     <div className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0">
@@ -95,8 +86,8 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
   }
 
   const identResult = parseIdentResult(step);
-  const identFiles = data.kycFiles.filter((f) => f.type === 'Identification');
-  const ipCountries = getUniqueIpCountries(data.ipLogs);
+  const identFiles = (data.kycFiles ?? []).filter((f) => f.type === 'Identification');
+  const ipCountries = getUniqueIpCountries(data.ipLogs ?? []);
   const ud = data.userData;
 
   let nationalityStepCountry: string | undefined;
@@ -152,22 +143,17 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
       <div>
         <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">User Daten</h3>
         <div className="bg-white rounded-lg shadow-sm">
-          <InfoLine label="UserDataId" value={extractString(ud.id)} />
-          <InfoLine label="Birthday" value={ud.birthday ? formatDate(String(ud.birthday)) : '-'} />
-          <InfoLine label="AccountType" value={extractString(ud.accountType)} />
+          <InfoLine label="UserDataId" value={display(ud.id)} />
+          <InfoLine label="Birthday" value={ud.birthday ? formatDate(ud.birthday) : '-'} />
+          <InfoLine label="AccountType" value={display(ud.accountType)} />
           <InfoLine
             label="Address"
-            value={
-              [ud.street, ud.houseNumber, ud.zip, ud.location]
-                .map((v) => extractString(v))
-                .filter((v) => v !== '-')
-                .join(', ') || '-'
-            }
+            value={[ud.street, ud.houseNumber, ud.zip, ud.location].filter(Boolean).join(', ') || '-'}
           />
           <InfoLine label="Document Type" value={identResult?.documentType ?? '-'} />
-          <InfoLine label="Mail" value={extractString(ud.mail)} />
-          <InfoLine label="Sprache" value={extractString(ud.language ?? ud.languageId)} />
-          <InfoLine label="VerifiedName" value={extractString(ud.verifiedName)} />
+          <InfoLine label="Mail" value={display(ud.mail)} />
+          <InfoLine label="Sprache" value={refName(ud.language)} />
+          <InfoLine label="VerifiedName" value={display(ud.verifiedName)} />
           {step.comment && <InfoLine label="Comment" value={step.comment} />}
         </div>
       </div>
@@ -184,7 +170,7 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
             </div>
             <div className="flex items-center px-3 py-2 border-b border-dfxGray-300">
               <span className="text-sm text-dfxBlue-800 font-medium w-48">Vorname</span>
-              <span className="text-sm text-dfxBlue-800 w-1/2">{extractString(ud.firstname)}</span>
+              <span className="text-sm text-dfxBlue-800 w-1/2">{display(ud.firstname)}</span>
               <span
                 className={`text-sm w-1/2 ${
                   identResult.firstname &&
@@ -199,7 +185,7 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
             </div>
             <div className="flex items-center px-3 py-2 border-b border-dfxGray-300 last:border-0">
               <span className="text-sm text-dfxBlue-800 font-medium w-48">Nachname</span>
-              <span className="text-sm text-dfxBlue-800 w-1/2">{extractString(ud.surname)}</span>
+              <span className="text-sm text-dfxBlue-800 w-1/2">{display(ud.surname)}</span>
               <span
                 className={`text-sm w-1/2 ${
                   identResult.lastname &&
@@ -240,7 +226,7 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
       {/* Aktennotiz Link */}
       <div className="bg-white rounded-lg shadow-sm">
         <a
-          href={`/kyc/log?userDataId=${extractString(ud.id)}&eventDate=${todayAsString()}`}
+          href={`/kyc/log?userDataId=${display(ud.id)}&eventDate=${todayAsString()}`}
           target="_blank"
           rel="noopener noreferrer"
           className="w-full px-3 py-2 text-left text-sm text-dfxBlue-300 underline hover:text-dfxBlue-800 transition-colors block"

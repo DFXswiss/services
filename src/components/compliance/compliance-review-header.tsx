@@ -1,8 +1,8 @@
-import { KycStepInfo } from 'src/hooks/compliance.hook';
-import { formatDate } from 'src/util/compliance-helpers';
+import { KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
+import { buildAddress, display, formatDate, refName } from 'src/util/compliance-helpers';
 
 interface ComplianceReviewHeaderProps {
-  userData: Record<string, unknown>;
+  userData: UserDataDetail;
   kycSteps: KycStepInfo[];
 }
 
@@ -11,33 +11,6 @@ interface HeaderField {
   value: string;
   isLink?: boolean;
   href?: string;
-}
-
-function extractField(userData: Record<string, unknown>, key: string): string {
-  const value = userData[key];
-  if (value == null) return '-';
-  if (typeof value === 'object') {
-    const obj = value as Record<string, unknown>;
-    return (obj.name || obj.symbol || obj.displayName || obj.id || '-').toString();
-  }
-  return value.toString();
-}
-
-function buildAddress(userData: Record<string, unknown>): string {
-  const parts = [
-    [extractField(userData, 'organizationStreet'), extractField(userData, 'organizationHouseNumber')],
-    [extractField(userData, 'organizationZip'), extractField(userData, 'organizationLocation')],
-  ];
-
-  const lines = parts.map((p) => p.filter((v) => v !== '-').join(' ')).filter(Boolean);
-
-  const country = userData['organizationCountry'];
-  if (country && typeof country === 'object') {
-    const name = (country as Record<string, unknown>).name;
-    if (name) lines.push(name.toString());
-  }
-
-  return lines.length > 0 ? lines.join(', ') : '-';
 }
 
 function extractLegalEntityFromStep(kycSteps: KycStepInfo[], accountType: string): string {
@@ -66,43 +39,31 @@ function extractStepCreatedDate(kycSteps: KycStepInfo[]): string {
   return new Date(step.created).toLocaleDateString('de-CH');
 }
 
-export function ComplianceReviewHeader({ userData, kycSteps }: ComplianceReviewHeaderProps): JSX.Element {
-  const contactName =
-    [extractField(userData, 'firstname'), extractField(userData, 'surname')].filter((v) => v !== '-').join(' ') || '-';
-
-  const accountType = extractField(userData, 'accountType');
-
+export function ComplianceReviewHeader({ userData, kycSteps }: Readonly<ComplianceReviewHeaderProps>): JSX.Element {
+  const contactName = [userData.firstname, userData.surname].filter(Boolean).join(' ') || '-';
+  const accountType = display(userData.accountType);
   const isOrganization = accountType === 'Organization' || accountType === 'SoleProprietorship';
 
-  const personalAddress =
-    [
-      [extractField(userData, 'street'), extractField(userData, 'houseNumber')],
-      [extractField(userData, 'zip'), extractField(userData, 'location')],
-    ]
-      .map((p) => p.filter((v) => v !== '-').join(' '))
-      .filter(Boolean)
-      .join(', ') || '-';
-
   const fields: HeaderField[] = [
-    { label: 'UserDataId', value: extractField(userData, 'id') },
+    { label: 'UserDataId', value: display(userData.id) },
     { label: 'Account Type', value: accountType },
     ...(isOrganization
       ? [
-          { label: 'Organization', value: extractField(userData, 'organizationName') },
+          { label: 'Organization', value: display(userData.organization?.name) },
           { label: 'Legal Entity', value: extractLegalEntityFromStep(kycSteps, accountType) },
-          { label: 'Adresse', value: buildAddress(userData) },
+          { label: 'Adresse', value: buildAddress(userData.organization) },
           { label: 'Ansprechsperson', value: contactName },
         ]
       : [
           { label: 'Name', value: contactName },
-          { label: 'Adresse', value: personalAddress },
-          { label: 'Geburtstag', value: userData.birthday ? formatDate(String(userData.birthday)) : '-' },
-          { label: 'VerifiedName', value: extractField(userData, 'verifiedName') },
+          { label: 'Adresse', value: buildAddress(userData) },
+          { label: 'Geburtstag', value: userData.birthday ? formatDate(userData.birthday) : '-' },
+          { label: 'VerifiedName', value: display(userData.verifiedName) },
         ]),
-    { label: 'Mail', value: extractField(userData, 'mail') },
-    { label: 'Sprache', value: extractField(userData, 'language') },
-    { label: 'KYC Level', value: extractField(userData, 'kycLevel') },
-    { label: 'KYC Status', value: extractField(userData, 'kycStatus') },
+    { label: 'Mail', value: display(userData.mail) },
+    { label: 'Sprache', value: refName(userData.language) },
+    { label: 'KYC Level', value: display(userData.kycLevel) },
+    { label: 'KYC Status', value: display(userData.kycStatus) },
     ...(isOrganization ? [{ label: 'Datum Dokument eingereicht', value: extractStepCreatedDate(kycSteps) }] : []),
   ];
 

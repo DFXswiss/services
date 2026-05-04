@@ -1,10 +1,21 @@
 import {
   AccountType,
+  AmlReason,
   Asset,
+  CallQueue,
+  CallQueueItem,
+  CallQueueSourceType,
+  CallQueueSummaryEntry,
+  CheckStatus,
   Fiat,
   FundOrigin,
   InvestmentDate,
   KycStatus,
+  PendingReviewItem,
+  PendingReviewStatus,
+  PendingReviewSummaryEntry,
+  PendingReviewType,
+  PhoneCallStatus,
   ResponseType,
   useApi,
 } from '@dfx.swiss/react';
@@ -92,31 +103,26 @@ export interface PendingOnboardingInfo {
   date: string;
 }
 
-export enum PendingReviewType {
-  KYC_STEP = 'KycStep',
-  BANK_DATA = 'BankData',
+export type CallOutcomeContext =
+  | { queue: CallQueue; userDataId: number; txId: number; sourceType: CallQueueSourceType }
+  | { queue: CallQueue; userDataId: number; txId?: undefined; sourceType?: undefined };
+
+export enum CallOutcome {
+  COMPLETED = 'Completed',
+  UNAVAILABLE = 'Unavailable',
+  SUSPICIOUS = 'Suspicious',
+  USER_REJECTED = 'UserRejected',
+  REPEAT = 'Repeat',
+  RESET = 'Reset',
 }
 
-export enum PendingReviewStatus {
-  MANUAL_REVIEW = 'ManualReview',
-  INTERNAL_REVIEW = 'InternalReview',
-}
+export type CallOutcomeStep = 'transaction' | 'userData' | 'log';
 
-export interface PendingReviewSummaryEntry {
-  type: PendingReviewType;
-  name: string;
-  manualReview: number;
-  internalReview: number;
-}
-
-export interface PendingReviewItem {
-  id: number;
-  userDataId: number;
-  userName?: string;
-  accountType?: string;
-  kycLevel?: number;
-  status: PendingReviewStatus;
-  date: string;
+export interface CallOutcomeResult {
+  success: boolean;
+  failedStep?: CallOutcomeStep;
+  completedSteps: CallOutcomeStep[];
+  message?: string;
 }
 
 export interface BankTxSearchResult {
@@ -206,20 +212,142 @@ export interface CryptoInputInfo {
   purpose?: string;
 }
 
+export interface CountryRef {
+  name?: string;
+  symbol?: string;
+}
+
+export interface LanguageRef {
+  name?: string;
+  symbol?: string;
+}
+
+export interface WalletRef {
+  name?: string;
+}
+
+export interface OrganizationDetail {
+  id?: number;
+  name?: string;
+  street?: string;
+  houseNumber?: string;
+  zip?: string;
+  location?: string;
+  country?: CountryRef;
+  legalEntity?: string;
+  signatoryPower?: string;
+  complexOrgStructure?: boolean;
+  allBeneficialOwnersName?: string;
+  allBeneficialOwnersDomicile?: string;
+  accountOpenerAuthorization?: string;
+}
+
+// Mirrors UserDataDetailDto on the backend. Values that are Date on the entity
+// arrive as ISO strings here.
+export interface UserDataDetail {
+  // UserData
+  id: number;
+  created?: string;
+  status?: string;
+  riskStatus?: string;
+  kycStatus?: string;
+  kycLevel?: number;
+  depositLimit?: number;
+  wallet?: WalletRef;
+
+  // Personal Data
+  accountType?: string;
+  mail?: string;
+  verifiedName?: string;
+  verifiedCountry?: CountryRef;
+  firstname?: string;
+  surname?: string;
+  street?: string;
+  houseNumber?: string;
+  zip?: string;
+  location?: string;
+  country?: CountryRef;
+  nationality?: CountryRef;
+  language?: LanguageRef;
+  birthday?: string;
+  phone?: string;
+
+  // Organization Data
+  organization?: OrganizationDetail;
+
+  // KYC / AML
+  kycType?: string;
+  kycHash?: string;
+  kycFileId?: number;
+  identDocumentId?: string;
+  identDocumentType?: string;
+  identificationType?: string;
+  highRisk?: boolean;
+  pep?: boolean;
+  bankTransactionVerification?: string;
+  olkypayAllowed?: boolean;
+
+  // PaymentLink Data
+  paymentLinksAllowed?: boolean;
+  paymentLinksConfig?: string;
+  paymentLinksName?: string;
+
+  // PhoneCall
+  phoneCallStatus?: string;
+  phoneCallAccepted?: boolean;
+  phoneCallCheckDate?: string;
+  phoneCallExternalAccountCheckDate?: string;
+  phoneCallExternalAccountCheckValues?: string;
+  phoneCallIpCheckDate?: string;
+  phoneCallIpCountryCheckDate?: string;
+  phoneCallTimes?: string;
+
+  // Volumes
+  buyVolume?: number;
+  annualBuyVolume?: number;
+  sellVolume?: number;
+  annualSellVolume?: number;
+  cryptoVolume?: number;
+  annualCryptoVolume?: number;
+
+  // Other
+  isTrustedReferrer?: boolean;
+  tradeApprovalDate?: string;
+  deactivationDate?: string;
+  lastNameCheckDate?: string;
+  letterSentDate?: string;
+  moderator?: string;
+}
+
+export interface SupportPermissions {
+  viewKycFiles: boolean;
+  viewKycLogs: boolean;
+  viewIpLogs: boolean;
+  viewSupportIssues: boolean;
+  canRequestLimit: boolean;
+  canPerformTransactionActions: boolean;
+  viewRecommendation: boolean;
+}
+
 export interface ComplianceUserData {
-  userData: Record<string, unknown>;
-  kycFiles: KycFile[];
+  userData: UserDataDetail;
+  kycFiles?: KycFile[];
   kycSteps: KycStepInfo[];
-  kycLogs: KycLogInfo[];
+  kycLogs?: KycLogInfo[];
   transactions: TransactionInfo[];
   bankTxs: BankTxInfo[];
   cryptoInputs: CryptoInputInfo[];
-  ipLogs: IpLogInfo[];
-  supportIssues: SupportIssueInfo[];
+  ipLogs?: IpLogInfo[];
+  supportIssues?: SupportIssueInfo[];
   users: UserInfo[];
   bankDatas: BankDataInfo[];
   buyRoutes: BuyRouteInfo[];
   sellRoutes: SellRouteInfo[];
+  swapRoutes: SwapRouteInfo[];
+  virtualIbans: VirtualIbanInfo[];
+  refRewards: RefRewardInfo[];
+  notifications: NotificationInfo[];
+  permissions: SupportPermissions;
 }
 
 export interface RecommendationGraphNode {
@@ -288,6 +416,8 @@ export interface UserInfo {
   id: number;
   address: string;
   ref?: string;
+  usedRef?: string;
+  refUserName?: string;
   role: string;
   status: string;
   walletName?: string;
@@ -335,6 +465,8 @@ export interface BuyRouteInfo {
   bankUsage: string;
   assetName: string;
   blockchain: string;
+  targetAddress?: string;
+  targetAddressExplorerUrl?: string;
   volume: number;
   active: boolean;
   created: string;
@@ -346,6 +478,64 @@ export interface SellRouteInfo {
   fiatName?: string;
   volume: number;
   active: boolean;
+  created: string;
+}
+
+export interface SwapRouteInfo {
+  id: number;
+  assetName?: string;
+  blockchain?: string;
+  depositAddress?: string;
+  depositAddressExplorerUrl?: string;
+  volume: number;
+  annualVolume: number;
+  active: boolean;
+  created: string;
+}
+
+export interface VirtualIbanInfo {
+  id: number;
+  iban: string;
+  bban?: string;
+  currency?: string;
+  bank?: string;
+  status?: string;
+  active: boolean;
+  label?: string;
+  buyId?: number;
+  reservedUntil?: string;
+  activatedAt?: string;
+  deactivatedAt?: string;
+  created: string;
+}
+
+export interface NotificationInfo {
+  id: number;
+  type: string;
+  context: string;
+  correlationId?: string;
+  isComplete: boolean;
+  error?: string;
+  suppressRecurring: boolean;
+  lastTryDate: string;
+  created: string;
+}
+
+export interface RefRewardInfo {
+  id: number;
+  status?: string;
+  outputAmount?: number;
+  outputAsset?: string;
+  outputBlockchain?: string;
+  amountInChf?: number;
+  amountInEur?: number;
+  targetAddress?: string;
+  targetAddressExplorerUrl?: string;
+  txId?: string;
+  txExplorerUrl?: string;
+  outputDate?: string;
+  recipientMail?: string;
+  mailSendDate?: string;
   created: string;
 }
 
@@ -411,6 +601,39 @@ function normalizeSearchKey(key: string): string {
     return normalized;
   }
   return key;
+}
+
+const callOutcomeToPhoneStatus: Record<CallOutcome, PhoneCallStatus | undefined> = {
+  [CallOutcome.COMPLETED]: PhoneCallStatus.COMPLETED,
+  [CallOutcome.UNAVAILABLE]: PhoneCallStatus.UNAVAILABLE,
+  [CallOutcome.SUSPICIOUS]: PhoneCallStatus.SUSPICIOUS,
+  [CallOutcome.USER_REJECTED]: PhoneCallStatus.USER_REJECTED,
+  [CallOutcome.REPEAT]: PhoneCallStatus.REPEAT,
+  [CallOutcome.RESET]: undefined,
+};
+
+const checkDateFieldByQueue: Record<CallQueue, string> = {
+  [CallQueue.MANUAL_CHECK_PHONE]: 'phoneCallCheckDate',
+  [CallQueue.MANUAL_CHECK_IP_PHONE]: 'phoneCallIpCheckDate',
+  [CallQueue.MANUAL_CHECK_IP_COUNTRY_PHONE]: 'phoneCallIpCountryCheckDate',
+  [CallQueue.MANUAL_CHECK_EXTERNAL_ACCOUNT_PHONE]: 'phoneCallExternalAccountCheckDate',
+  [CallQueue.UNAVAILABLE_SUSPICIOUS]: 'phoneCallCheckDate',
+};
+
+function checkDateFieldForQueue(queue: CallQueue): string {
+  return checkDateFieldByQueue[queue];
+}
+
+function buildTxUpdatePayload(outcome: CallOutcome): { amlCheck?: string; amlReason?: string } | null {
+  switch (outcome) {
+    case CallOutcome.COMPLETED:
+      return { amlCheck: CheckStatus.PASS };
+    case CallOutcome.USER_REJECTED:
+    case CallOutcome.SUSPICIOUS:
+      return { amlCheck: CheckStatus.FAIL, amlReason: AmlReason.MANUAL_CHECK_PHONE_FAILED };
+    default:
+      return null;
+  }
 }
 
 export function useCompliance() {
@@ -614,6 +837,101 @@ export function useCompliance() {
     });
   }
 
+  async function getCallQueues(): Promise<CallQueueSummaryEntry[]> {
+    return call<CallQueueSummaryEntry[]>({
+      url: 'support/call-queues',
+      method: 'GET',
+    });
+  }
+
+  async function getCallQueueItems(queue: CallQueue): Promise<CallQueueItem[]> {
+    return call<CallQueueItem[]>({
+      url: `support/call-queues/${queue}/items`,
+      method: 'GET',
+    });
+  }
+
+  async function getCallQueueClerks(): Promise<string[]> {
+    return call<string[]>({
+      url: 'support/call-queues/clerks',
+      method: 'GET',
+    });
+  }
+
+  async function createKycLog(userDataId: number, comment: string): Promise<void> {
+    return call<void>({
+      url: 'kyc/admin/log',
+      method: 'POST',
+      data: { type: 'ManualLog', userData: { id: userDataId }, comment },
+    });
+  }
+
+  async function saveCallOutcome(
+    context: CallOutcomeContext,
+    outcome: CallOutcome,
+    options: { signature: string; comment?: string },
+  ): Promise<CallOutcomeResult> {
+    const completedSteps: CallOutcomeStep[] = [];
+    const fail = (step: CallOutcomeStep, err: unknown): CallOutcomeResult => ({
+      success: false,
+      failedStep: step,
+      completedSteps,
+      message: err instanceof Error ? err.message : String(err),
+    });
+
+    const tx = context.txId != null && context.sourceType ? { id: context.txId, sourceType: context.sourceType } : null;
+
+    if (outcome === CallOutcome.RESET && !tx) {
+      return { success: false, failedStep: 'transaction', completedSteps, message: 'Reset requires a transaction' };
+    }
+
+    // 1) Transaction update (if applicable)
+    try {
+      if (outcome === CallOutcome.RESET && tx) {
+        if (tx.sourceType === 'BuyCrypto') await resetBuyCryptoAml(tx.id);
+        else await resetBuyFiatAml(tx.id);
+        completedSteps.push('transaction');
+      } else if (tx) {
+        const txData = buildTxUpdatePayload(outcome);
+        if (txData) {
+          if (tx.sourceType === 'BuyCrypto') await updateBuyCrypto(tx.id, txData);
+          else await updateBuyFiat(tx.id, txData);
+          completedSteps.push('transaction');
+        }
+      }
+    } catch (e) {
+      return fail('transaction', e);
+    }
+
+    // 2) UserData update (phoneCallStatus + check date on completion)
+    const phoneStatus = callOutcomeToPhoneStatus[outcome];
+    const skipUserData = outcome === CallOutcome.REPEAT && context.queue === CallQueue.UNAVAILABLE_SUSPICIOUS;
+    if (phoneStatus && !skipUserData) {
+      try {
+        const udData: Record<string, unknown> = { phoneCallStatus: phoneStatus };
+        if (outcome === CallOutcome.COMPLETED) {
+          udData[checkDateFieldForQueue(context.queue)] = new Date().toISOString();
+        }
+        await updateUserData(context.userDataId, udData);
+        completedSteps.push('userData');
+      } catch (e) {
+        return fail('userData', e);
+      }
+    }
+
+    // 3) KYC log entry (always)
+    try {
+      const comment = options.comment?.trim();
+      const logMessage = [options.signature.trim(), outcome, comment].filter(Boolean).join(' – ');
+      await createKycLog(context.userDataId, logMessage);
+      completedSteps.push('log');
+    } catch (e) {
+      return fail('log', e);
+    }
+
+    return { success: true, completedSteps };
+  }
+
   async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
     return call<RecommendationGraph>({
       url: `support/recommendation-graph/${userDataId}`,
@@ -643,6 +961,7 @@ export function useCompliance() {
   async function createLimitRequest(
     userDataId: number,
     data: {
+      author: string;
       name: string;
       message: string;
       limit: number;
@@ -658,6 +977,7 @@ export function useCompliance() {
       data: {
         type: 'LimitRequest',
         reason: 'Other',
+        author: data.author,
         name: data.name,
         message: data.message,
         file: data.file,
@@ -741,6 +1061,11 @@ export function useCompliance() {
       getPendingOnboardings,
       getPendingReviews,
       getPendingReviewItems,
+      getCallQueues,
+      getCallQueueItems,
+      getCallQueueClerks,
+      saveCallOutcome,
+      createKycLog,
       downloadUserFiles,
       checkUserFiles,
       getTransactionRefundData,

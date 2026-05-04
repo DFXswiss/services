@@ -8,6 +8,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useSplitPane } from 'src/hooks/split-pane.hook';
 import {
   ASSIGNABLE_DEPARTMENTS,
   CustomerAuthor,
@@ -54,8 +55,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
 
   // File preview state
   const [filePreview, setFilePreview] = useState<{ url: string; contentType: string; name: string }>();
-  const [splitPercent, setSplitPercent] = useState(66);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   const isComplianceDept = issueData?.department === Department.COMPLIANCE;
 
@@ -207,30 +207,6 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
 
   if (loadError) return <ErrorHint message={loadError} />;
   if (isLoading || !issueData) return <StyledLoadingSpinner size={SpinnerSize.LG} />;
-
-  function handleSplitDrag(e: React.MouseEvent): void {
-    e.preventDefault();
-    const container = containerRef.current;
-    if (!container) return;
-
-    const onMouseMove = (moveEvent: MouseEvent): void => {
-      const rect = container.getBoundingClientRect();
-      const percent = ((moveEvent.clientX - rect.left) / rect.width) * 100;
-      setSplitPercent(Math.min(80, Math.max(30, percent)));
-    };
-
-    const onMouseUp = (): void => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-  }
 
   return (
     <div ref={containerRef} className="w-full flex text-left">

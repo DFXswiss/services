@@ -71,7 +71,9 @@ const ComplianceMrosCreateScreen = lazy(() => import('./screens/compliance-mros-
 const ComplianceMrosDetailScreen = lazy(() => import('./screens/compliance-mros-detail.screen'));
 const ComplianceRecallListScreen = lazy(() => import('./screens/compliance-recall-list.screen'));
 const ComplianceReviewScreen = lazy(() => import('./screens/compliance-review.screen'));
-const CompliancePendingReviewsScreen = lazy(() => import('./screens/compliance-pending-reviews.screen'));
+const ComplianceCallQueuesScreen = lazy(() => import('./screens/compliance-call-queues.screen'));
+const ComplianceCallQueueScreen = lazy(() => import('./screens/compliance-call-queue.screen'));
+const ComplianceCallQueueDetailScreen = lazy(() => import('./screens/compliance-call-queue-detail.screen'));
 const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
 const SupportDashboardIssueScreen = lazy(() => import('./screens/support-dashboard-issue.screen'));
 const SupportDashboardCreateScreen = lazy(() => import('./screens/support-dashboard-create.screen'));
@@ -361,6 +363,10 @@ export const Routes = [
         element: withSuspense(<ComplianceUserScreen />),
       },
       {
+        path: 'support/user/:id',
+        element: withSuspense(<ComplianceUserScreen />),
+      },
+      {
         path: 'compliance/user/:id/kyc-step/:stepId',
         element: withSuspense(<ComplianceKycStepScreen />),
       },
@@ -425,8 +431,16 @@ export const Routes = [
         element: withSuspense(<ComplianceReviewScreen />),
       },
       {
-        path: 'compliance/pending-reviews/:type/:name',
-        element: withSuspense(<CompliancePendingReviewsScreen />),
+        path: 'compliance/call-queues',
+        element: withSuspense(<ComplianceCallQueuesScreen />),
+      },
+      {
+        path: 'compliance/call-queues/:queue',
+        element: withSuspense(<ComplianceCallQueueScreen />),
+      },
+      {
+        path: 'compliance/call-queues/:queue/:userDataId',
+        element: withSuspense(<ComplianceCallQueueDetailScreen />),
       },
       {
         path: 'sitemap',

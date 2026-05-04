@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
+import { KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { statusBadge, todayAsString } from 'src/util/compliance-helpers';
 import { CheckItemConfig } from './compliance-review-configs';
 
@@ -13,21 +13,27 @@ interface ComplianceReviewPanelProps {
   showResult?: boolean;
   decisionLabel: string;
   rejectionReasons: string[];
-  userData: Record<string, unknown>;
+  userData: UserDataDetail;
   onOpenFile: (file: KycFile) => void;
   onSave: (stepId: number, status: string, comment?: string, result?: string) => Promise<void>;
   isSaving: boolean;
 }
 
-function resolveLabel(label: string, userData: Record<string, unknown>): string {
-  return label.replace(/\{(\w+)\}/g, (_, key: string) => {
-    const value = userData[key];
-    if (value == null) return '-';
-    if (typeof value === 'object') {
-      const obj = value as Record<string, unknown>;
+// Resolves "{path}" placeholders, supporting dotted nested keys like "organization.name"
+// or "country.symbol". Falls back to '-' if any segment is missing.
+function resolveLabel(label: string, source: object): string {
+  return label.replace(/\{([\w.]+)\}/g, (_, path: string) => {
+    let cursor: unknown = source;
+    for (const segment of path.split('.')) {
+      if (cursor == null || typeof cursor !== 'object') return '-';
+      cursor = (cursor as Record<string, unknown>)[segment];
+    }
+    if (cursor == null) return '-';
+    if (typeof cursor === 'object') {
+      const obj = cursor as Record<string, unknown>;
       return (obj.name || obj.symbol || obj.id || '-').toString();
     }
-    return value.toString();
+    return String(cursor);
   });
 }
 
@@ -57,12 +63,16 @@ export function renderResultTable(result: string | undefined): JSX.Element | nul
       return (
         <table className="w-full">
           <tbody>
-            {entries.map((entry) => (
-              <tr key={entry.key}>
-                <td className="py-0.5 pr-4 text-left text-sm text-dfxBlue-800 w-56 align-top">{entry.key}</td>
-                <td className="py-0.5 text-left text-sm text-dfxBlue-800">{formatResultValue(entry.value)}</td>
-              </tr>
-            ))}
+            {entries.map((entry) => {
+              const isRisky = typeof entry.value === 'string' && entry.value === 'yes_risky_business';
+              const rowClass = isRisky ? 'bg-dfxRed-100/20' : '';
+              return (
+                <tr key={entry.key} className={rowClass}>
+                  <td className="py-0.5 pr-4 text-left text-sm text-dfxBlue-800 w-56 align-top">{entry.key}</td>
+                  <td className="py-0.5 text-left text-sm text-dfxBlue-800">{formatResultValue(entry.value)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       );
@@ -202,9 +212,7 @@ export function ComplianceReviewPanel({
       {showResult && step.result && (
         <div>
           <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Result</h3>
-          <div className="bg-white rounded-lg shadow-sm overflow-auto max-h-[30vh]">
-            {renderResultTable(step.result)}
-          </div>
+          <div className="bg-white rounded-lg shadow-sm">{renderResultTable(step.result)}</div>
         </div>
       )}
 

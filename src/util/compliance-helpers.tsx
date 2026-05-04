@@ -171,3 +171,35 @@ export function formatValue(value: unknown): string {
     return 'Fehler: Wert kann nicht ermittelt werden';
   }
 }
+
+export type Primitive = string | number | boolean | null | undefined;
+
+// Display a typed primitive UI value: null/undefined/'' → '-'.
+// For unknown / dynamic values (e.g. JSON-parsed result fields), use formatValue() instead.
+export function display(value: Primitive): string {
+  if (value == null || value === '') return '-';
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  return String(value);
+}
+
+// Resolve a reference type ({ name?, symbol? }) to its display name.
+export function refName(ref?: { name?: string; symbol?: string }): string {
+  return ref?.name ?? ref?.symbol ?? '-';
+}
+
+// Build a comma-separated address line. Works for UserData and Organization (structural typing).
+export function buildAddress(parts?: {
+  street?: string;
+  houseNumber?: string;
+  zip?: string;
+  location?: string;
+  country?: { name?: string };
+}): string {
+  if (!parts) return '-';
+  const lines = [
+    [parts.street, parts.houseNumber].filter(Boolean).join(' '),
+    [parts.zip, parts.location].filter(Boolean).join(' '),
+    parts.country?.name,
+  ].filter((l): l is string => Boolean(l && l.length));
+  return lines.length > 0 ? lines.join(', ') : '-';
+}
