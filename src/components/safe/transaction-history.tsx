@@ -1,10 +1,8 @@
 import { Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
-  DfxIcon,
-  IconColor,
-  IconSize,
-  IconVariant,
+  AssetIconVariant,
+  DfxAssetIcon,
   SpinnerSize,
   StyledDataTable,
   StyledDataTableRow,
@@ -20,23 +18,15 @@ interface TransactionHistoryProps {
 }
 
 const ORDER_TYPE_LABELS: Record<CustodyOrderType, string> = {
-  [CustodyOrderType.DEPOSIT]: 'Fiat Deposit',
-  [CustodyOrderType.WITHDRAWAL]: 'Fiat Withdrawal',
-  [CustodyOrderType.RECEIVE]: 'Crypto Deposit',
-  [CustodyOrderType.SEND]: 'Crypto Withdrawal',
+  [CustodyOrderType.DEPOSIT]: 'Deposit (Fiat)',
+  [CustodyOrderType.WITHDRAWAL]: 'Withdrawal (Fiat)',
+  [CustodyOrderType.RECEIVE]: 'Deposit (Crypto)',
+  [CustodyOrderType.SEND]: 'Withdrawal (Crypto)',
   [CustodyOrderType.SWAP]: 'Swap',
-  [CustodyOrderType.SAVING_DEPOSIT]: 'Saving Deposit',
-  [CustodyOrderType.SAVING_WITHDRAWAL]: 'Saving Withdrawal',
-};
-
-const ORDER_TYPE_ICONS: Record<CustodyOrderType, IconVariant> = {
-  [CustodyOrderType.DEPOSIT]: IconVariant.BANK,
-  [CustodyOrderType.WITHDRAWAL]: IconVariant.BANK,
-  [CustodyOrderType.RECEIVE]: IconVariant.WALLET,
-  [CustodyOrderType.SEND]: IconVariant.WALLET,
-  [CustodyOrderType.SWAP]: IconVariant.SWAP,
-  [CustodyOrderType.SAVING_DEPOSIT]: IconVariant.SAFE,
-  [CustodyOrderType.SAVING_WITHDRAWAL]: IconVariant.SAFE,
+  [CustodyOrderType.EQUITY_MINT]: 'Mint',
+  [CustodyOrderType.EQUITY_REDEEM]: 'Redeem',
+  [CustodyOrderType.SAVING_DEPOSIT]: 'Deposit (Saving)',
+  [CustodyOrderType.SAVING_WITHDRAWAL]: 'Withdrawal (Saving)',
 };
 
 const STATUS_LABELS: Record<CustodyOrderHistoryStatus, string> = {
@@ -47,13 +37,21 @@ const STATUS_LABELS: Record<CustodyOrderHistoryStatus, string> = {
   [CustodyOrderHistoryStatus.FAILED]: 'Failed',
 };
 
+function formatAmount(amount?: number, asset?: string): string | undefined {
+  if (amount === undefined || !asset) return undefined;
+  return `${Utils.formatAmountCrypto(amount)} ${asset}`;
+}
+
+function formatTransfer(tx: CustodyOrderHistory): string {
+  const input = formatAmount(tx.inputAmount, tx.inputAsset);
+  const output = formatAmount(tx.outputAmount, tx.outputAsset);
+
+  if (input && output) return `${output} → ${input}`;
+  return input ?? output ?? '-';
+}
+
 export const TransactionHistory = ({ transactions, isLoading }: TransactionHistoryProps) => {
   const { translate } = useSettingsContext();
-
-  const formatAmount = (amount?: number, asset?: string): string => {
-    if (amount === undefined || !asset) return '-';
-    return `${Utils.formatAmountCrypto(amount)} ${asset}`;
-  };
 
   return isLoading ? (
     <div className="w-full flex flex-col items-center justify-center gap-2 p-4">
@@ -67,16 +65,17 @@ export const TransactionHistory = ({ transactions, isLoading }: TransactionHisto
           <StyledDataTableRow key={index}>
             <div className="w-full flex flex-row justify-between items-center gap-2 text-dfxBlue-800 p-2">
               <div className="flex flex-row items-center gap-3">
-                <DfxIcon icon={ORDER_TYPE_ICONS[tx.type]} color={IconColor.BLUE} size={IconSize.MD} />
+                {(tx.inputAsset ?? tx.outputAsset) && (
+                  <DfxAssetIcon asset={(tx.inputAsset ?? tx.outputAsset) as AssetIconVariant} />
+                )}
                 <div className="text-base flex flex-col font-semibold text-left leading-none gap-1">
                   {translate('screens/safe', ORDER_TYPE_LABELS[tx.type])}
-                  <div className="text-sm text-dfxGray-700">{translate('screens/safe', STATUS_LABELS[tx.status])}</div>
+                  <div className="text-sm text-dfxGray-700">
+                    {translate('screens/safe', STATUS_LABELS[tx.status])}
+                  </div>
                 </div>
               </div>
-              <div className="text-base text-right flex flex-col font-semibold leading-none gap-1 pr-1">
-                <div className="text-dfxGray-700 text-sm">{formatAmount(tx.inputAmount, tx.inputAsset)}</div>
-                <div className="text-dfxBlue-800">{formatAmount(tx.outputAmount, tx.outputAsset)}</div>
-              </div>
+              <div className="text-base text-right font-semibold pr-1">{formatTransfer(tx)}</div>
             </div>
           </StyledDataTableRow>
         ))}

@@ -48,6 +48,7 @@ export default function SafeScreen(): JSX.Element {
     isLoadingHistory,
     isLoadingOrderHistory,
     error,
+    reloadOrderHistory,
     downloadPdf,
   } = useSafe();
   const { currency: userCurrency, translate } = useSettingsContext();
@@ -145,7 +146,13 @@ export default function SafeScreen(): JSX.Element {
       ) : !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : completionType ? (
-        <SafeCompletion type={completionType} onClose={() => setCompletionType()} />
+        <SafeCompletion
+          type={completionType}
+          onClose={() => {
+            setCompletionType();
+            reloadOrderHistory();
+          }}
+        />
       ) : showPaymentNameForm ? (
         // TODO (later?): Retrigger payment execution after name edit
         <NameEdit onSuccess={() => setPaymentNameForm(false)} />
@@ -201,8 +208,10 @@ export default function SafeScreen(): JSX.Element {
             currency={currency}
             isLoading={isLoadingPortfolio}
           />
-          <TransactionHistory transactions={orderHistory} isLoading={isLoadingOrderHistory} />
+          <hr className="border-dfxGray-400" />
           <SafeTransactionInterface />
+          <hr className="border-dfxGray-400" />
+          <TransactionHistory transactions={orderHistory} isLoading={isLoadingOrderHistory} />
         </StyledVerticalStack>
       )}
 

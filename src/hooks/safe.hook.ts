@@ -70,6 +70,7 @@ export interface UseSafeResult {
   confirmSwap: () => Promise<void>;
   confirmWithdraw: () => Promise<void>;
   confirmSend: () => Promise<void>;
+  reloadOrderHistory: () => void;
   pairMap: (asset: string) => Asset | Fiat | undefined;
   downloadPdf: (params: PdfDownloadParams) => Promise<void>;
 }
@@ -143,12 +144,16 @@ export function useSafe(): UseSafeResult {
 
   useEffect(() => {
     if (!user || !isLoggedIn) return;
+    reloadOrderHistory();
+  }, [user, isLoggedIn]);
+
+  function reloadOrderHistory(): void {
     setIsLoadingOrderHistory(true);
     getOrderHistory()
       .then((orders) => setOrderHistory(orders))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingOrderHistory(false));
-  }, [user, isLoggedIn]);
+  }
 
   // ---- Available Deposit Pairs ----
 
@@ -406,6 +411,7 @@ export function useSafe(): UseSafeResult {
       confirmSwap,
       confirmWithdraw,
       confirmSend,
+      reloadOrderHistory,
       pairMap,
       downloadPdf,
     }),
