@@ -1,3 +1,4 @@
+import { Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   DfxIcon,
@@ -51,7 +52,7 @@ export const TransactionHistory = ({ transactions, isLoading }: TransactionHisto
 
   const formatAmount = (amount?: number, asset?: string): string => {
     if (amount === undefined || !asset) return '-';
-    return `${amount.toFixed(2)} ${asset}`;
+    return `${Utils.formatAmountCrypto(amount)} ${asset}`;
   };
 
   return isLoading ? (
