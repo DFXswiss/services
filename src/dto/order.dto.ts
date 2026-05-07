@@ -50,6 +50,9 @@ export enum CustodyOrderType {
 
   SWAP = 'Swap',
 
+  EQUITY_MINT = 'EquityMint',
+  EQUITY_REDEEM = 'EquityRedeem',
+
   SAVING_DEPOSIT = 'SavingDeposit',
   SAVING_WITHDRAWAL = 'SavingWithdrawal',
 }
