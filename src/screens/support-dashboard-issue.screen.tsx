@@ -228,16 +228,14 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             <InfoRow
               label="UserData ID"
               value={
-                canAccessCompliance ? (
-                  <button
-                    className="text-dfxBlue-400 underline hover:text-dfxBlue-800"
-                    onClick={() => navigate(`/compliance/user/${issueData.account.id}`)}
-                  >
-                    {issueData.account.id}
-                  </button>
-                ) : (
-                  String(issueData.account.id)
-                )
+                <button
+                  className="text-dfxBlue-400 underline hover:text-dfxBlue-800"
+                  onClick={() =>
+                    navigate(`${canAccessCompliance ? '/compliance' : '/support'}/user/${issueData.account.id}`)
+                  }
+                >
+                  {issueData.account.id}
+                </button>
               }
             />
             <InfoRow label="Status" value={statusBadge(issueData.account.status)} />
