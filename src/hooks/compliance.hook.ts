@@ -113,7 +113,6 @@ export enum CallOutcome {
   SUSPICIOUS = 'Suspicious',
   USER_REJECTED = 'UserRejected',
   REPEAT = 'Repeat',
-  RESET = 'Reset',
 }
 
 export type CallOutcomeStep = 'transaction' | 'userData' | 'log';
@@ -609,7 +608,6 @@ const callOutcomeToPhoneStatus: Record<CallOutcome, PhoneCallStatus | undefined>
   [CallOutcome.SUSPICIOUS]: PhoneCallStatus.SUSPICIOUS,
   [CallOutcome.USER_REJECTED]: PhoneCallStatus.USER_REJECTED,
   [CallOutcome.REPEAT]: PhoneCallStatus.REPEAT,
-  [CallOutcome.RESET]: undefined,
 };
 
 const checkDateFieldByQueue: Record<CallQueue, string> = {
@@ -881,17 +879,9 @@ export function useCompliance() {
 
     const tx = context.txId != null && context.sourceType ? { id: context.txId, sourceType: context.sourceType } : null;
 
-    if (outcome === CallOutcome.RESET && !tx) {
-      return { success: false, failedStep: 'transaction', completedSteps, message: 'Reset requires a transaction' };
-    }
-
     // 1) Transaction update (if applicable)
     try {
-      if (outcome === CallOutcome.RESET && tx) {
-        if (tx.sourceType === 'BuyCrypto') await resetBuyCryptoAml(tx.id);
-        else await resetBuyFiatAml(tx.id);
-        completedSteps.push('transaction');
-      } else if (tx) {
+      if (tx) {
         const txData = buildTxUpdatePayload(outcome);
         if (txData) {
           if (tx.sourceType === 'BuyCrypto') await updateBuyCrypto(tx.id, txData);

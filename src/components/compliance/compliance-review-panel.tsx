@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
-import { statusBadge, todayAsString } from 'src/util/compliance-helpers';
+import { extractLegalEntity, statusBadge, todayAsString } from 'src/util/compliance-helpers';
 import { CheckItemConfig } from './compliance-review-configs';
 
 type DecisionValue = '' | 'Akzeptiert' | 'Abgelehnt';
@@ -14,6 +14,7 @@ interface ComplianceReviewPanelProps {
   decisionLabel: string;
   rejectionReasons: string[];
   userData: UserDataDetail;
+  kycSteps: KycStepInfo[];
   onOpenFile: (file: KycFile) => void;
   onSave: (stepId: number, status: string, comment?: string, result?: string) => Promise<void>;
   isSaving: boolean;
@@ -37,11 +38,24 @@ function resolveLabel(label: string, source: object): string {
   });
 }
 
-function formatResultValue(value: unknown): string {
+function formatResultValue(value: unknown): ReactNode {
   if (value == null) return '-';
   if (typeof value === 'boolean') return String(value);
   if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
+  const str = String(value);
+  if (/^https?:\/\//.test(str)) {
+    return (
+      <a
+        href={str}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-dfxBlue-400 underline hover:text-dfxBlue-800 break-all"
+      >
+        {str}
+      </a>
+    );
+  }
+  return str;
 }
 
 export function renderResultTable(result: string | undefined): JSX.Element | null {
@@ -107,6 +121,7 @@ export function ComplianceReviewPanel({
   decisionLabel,
   rejectionReasons,
   userData,
+  kycSteps,
   onOpenFile,
   onSave,
   isSaving,
@@ -114,6 +129,17 @@ export function ComplianceReviewPanel({
   const [checks, setChecks] = useState<Record<string, string>>({});
   const [decision, setDecision] = useState<DecisionValue>('');
   const [rejectionComment, setRejectionComment] = useState('');
+
+  // Labels can reference fields that live outside UserData (e.g. {legalEntity}
+  // is stored on the LegalEntity step result). Merge them into the resolver source.
+  const labelSource = useMemo(
+    () => ({ ...userData, legalEntity: extractLegalEntity(kycSteps, userData.accountType) }),
+    [userData, kycSteps],
+  );
+
+  // Steps in InternalReview are still being processed by the API and must not
+  // be accepted/rejected from compliance — only ManualReview is actionable.
+  const isComplianceActionable = step?.status !== 'InternalReview';
 
   useEffect(() => {
     if (!step) return;
@@ -239,7 +265,7 @@ export function ComplianceReviewPanel({
       {checkItems.length > 0 && (
         <div>
           <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Checks</h3>
-          <div className="bg-white rounded-lg shadow-sm">
+          <div className="bg-white rounded-lg shadow-sm text-left">
             {checkItems.map((item) => {
               if (item.visibleCondition && !item.visibleCondition(userData)) return null;
               if (item.type === 'conditional' && item.condition && !item.condition(checks)) return null;
@@ -247,13 +273,13 @@ export function ComplianceReviewPanel({
               if (item.type === 'info') {
                 return (
                   <div key={item.id} className="px-3 py-2 border-b border-dfxGray-300 last:border-0">
-                    <span className="text-sm text-dfxGray-700">{resolveLabel(item.label, userData)}</span>
+                    <span className="text-sm text-dfxGray-700">{resolveLabel(item.label, labelSource)}</span>
                   </div>
                 );
               }
 
               if (item.type === 'link' && item.href) {
-                const resolvedHref = resolveLabel(item.href, { ...userData, today: todayAsString() });
+                const resolvedHref = resolveLabel(item.href, { ...labelSource, today: todayAsString() });
                 return (
                   <div
                     key={item.id}
@@ -298,7 +324,7 @@ export function ComplianceReviewPanel({
                     key={item.id}
                     className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
                   >
-                    <span className="text-sm text-dfxBlue-800">{resolveLabel(item.label, userData)}</span>
+                    <span className="text-sm text-dfxBlue-800">{resolveLabel(item.label, labelSource)}</span>
                     <select
                       className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
                       value={checks[item.id] ?? ''}
@@ -316,7 +342,7 @@ export function ComplianceReviewPanel({
               }
 
               const displayLabel =
-                item.altLabel && item.altCondition?.(userData) ? item.altLabel : resolveLabel(item.label, userData);
+                item.altLabel && item.altCondition?.(userData) ? item.altLabel : resolveLabel(item.label, labelSource);
 
               return (
                 <div
@@ -340,51 +366,59 @@ export function ComplianceReviewPanel({
         </div>
       )}
 
-      {/* Decision */}
-      <div className="bg-white rounded-lg shadow-sm px-3 py-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-dfxBlue-800 font-medium">{decisionLabel}</span>
-          <select
-            className={`ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded ${decision === 'Akzeptiert' ? 'bg-dfxGreen-100/20 text-dfxGreen-100' : decision === 'Abgelehnt' ? 'bg-dfxRed-100/20 text-dfxRed-100' : 'bg-white text-dfxBlue-800'}`}
-            value={decision}
-            onChange={(e) => setDecision(e.target.value as DecisionValue)}
-          >
-            <option value="">—</option>
-            <option value="Akzeptiert">Akzeptiert</option>
-            <option value="Abgelehnt">Abgelehnt</option>
-          </select>
-        </div>
-      </div>
+      {isComplianceActionable ? (
+        <>
+          {/* Decision */}
+          <div className="bg-white rounded-lg shadow-sm px-3 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-dfxBlue-800 font-medium">{decisionLabel}</span>
+              <select
+                className={`ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded ${decision === 'Akzeptiert' ? 'bg-dfxGreen-100/20 text-dfxGreen-100' : decision === 'Abgelehnt' ? 'bg-dfxRed-100/20 text-dfxRed-100' : 'bg-white text-dfxBlue-800'}`}
+                value={decision}
+                onChange={(e) => setDecision(e.target.value as DecisionValue)}
+              >
+                <option value="">—</option>
+                <option value="Akzeptiert">Akzeptiert</option>
+                <option value="Abgelehnt">Abgelehnt</option>
+              </select>
+            </div>
+          </div>
 
-      {/* Comment - only shown when rejected and rejection reasons exist */}
-      {decision === 'Abgelehnt' && rejectionReasons.length > 0 && (
-        <div>
-          <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Kommentar:</h3>
-          <select
-            className="w-full px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
-            value={rejectionComment}
-            onChange={(e) => setRejectionComment(e.target.value)}
-          >
-            <option value="">—</option>
-            {rejectionReasons.map((reason) => (
-              <option key={reason} value={reason}>
-                {reason}
-              </option>
-            ))}
-          </select>
+          {/* Comment - only shown when rejected and rejection reasons exist */}
+          {decision === 'Abgelehnt' && rejectionReasons.length > 0 && (
+            <div>
+              <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Kommentar:</h3>
+              <select
+                className="w-full px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+                value={rejectionComment}
+                onChange={(e) => setRejectionComment(e.target.value)}
+              >
+                <option value="">—</option>
+                {rejectionReasons.map((reason) => (
+                  <option key={reason} value={reason}>
+                    {reason}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Save */}
+          <div>
+            <button
+              className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
+              onClick={handleSave}
+              disabled={isSaving || !decision}
+            >
+              {isSaving ? 'Speichern...' : 'Speichern'}
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
+          Dieser Step ist im Internal Review und kann von Compliance noch nicht akzeptiert oder abgelehnt werden.
         </div>
       )}
-
-      {/* Save */}
-      <div>
-        <button
-          className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
-          onClick={handleSave}
-          disabled={isSaving || !decision}
-        >
-          {isSaving ? 'Speichern...' : 'Speichern'}
-        </button>
-      </div>
     </div>
   );
 }

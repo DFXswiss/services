@@ -366,6 +366,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
               decisionLabel={activeConfig.decisionLabel}
               rejectionReasons={activeConfig.rejectionReasons}
               userData={data.userData}
+              kycSteps={data.kycSteps}
               onOpenFile={openFile}
               onSave={handleSave}
               isSaving={isSaving}

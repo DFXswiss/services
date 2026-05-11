@@ -1,5 +1,5 @@
 import { KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
-import { buildAddress, display, formatDate, refName } from 'src/util/compliance-helpers';
+import { buildAddress, display, extractLegalEntity, formatDate, refName } from 'src/util/compliance-helpers';
 
 interface ComplianceReviewHeaderProps {
   userData: UserDataDetail;
@@ -11,25 +11,6 @@ interface HeaderField {
   value: string;
   isLink?: boolean;
   href?: string;
-}
-
-function extractLegalEntityFromStep(kycSteps: KycStepInfo[], accountType: string): string {
-  if (accountType === 'SoleProprietorship') return 'Einzelunternehmen';
-
-  const legalEntityStep = kycSteps
-    .filter((s) => s.name === 'LegalEntity')
-    .sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
-
-  if (legalEntityStep?.result) {
-    try {
-      const parsed = JSON.parse(legalEntityStep.result) as Record<string, unknown>;
-      if (parsed.legalEntity) return String(parsed.legalEntity);
-    } catch {
-      // ignore parse errors
-    }
-  }
-
-  return '-';
 }
 
 function extractStepCreatedDate(kycSteps: KycStepInfo[]): string {
@@ -50,7 +31,7 @@ export function ComplianceReviewHeader({ userData, kycSteps }: Readonly<Complian
     ...(isOrganization
       ? [
           { label: 'Organization', value: display(userData.organization?.name) },
-          { label: 'Legal Entity', value: extractLegalEntityFromStep(kycSteps, accountType) },
+          { label: 'Legal Entity', value: extractLegalEntity(kycSteps, accountType) },
           { label: 'Adresse', value: buildAddress(userData.organization) },
           { label: 'Ansprechsperson', value: contactName },
         ]

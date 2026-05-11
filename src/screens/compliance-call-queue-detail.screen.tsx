@@ -41,7 +41,6 @@ const TX_OUTCOMES: CallOutcome[] = [
   CallOutcome.SUSPICIOUS,
   CallOutcome.USER_REJECTED,
   CallOutcome.REPEAT,
-  CallOutcome.RESET,
 ];
 
 const USER_OUTCOMES: CallOutcome[] = [

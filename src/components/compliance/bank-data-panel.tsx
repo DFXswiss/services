@@ -95,38 +95,47 @@ function BankDataEntry({
         </div>
       </div>
 
-      {/* Decision */}
-      <div className="bg-white rounded-lg shadow-sm px-3 py-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-dfxBlue-800 font-medium">Die Bank-Daten werden:</span>
-          <select
-            className={`ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded ${
-              decision === 'Akzeptiert'
-                ? 'bg-dfxGreen-100/20 text-dfxGreen-100'
-                : decision === 'Abgelehnt'
-                  ? 'bg-dfxRed-100/20 text-dfxRed-100'
-                  : 'bg-white text-dfxBlue-800'
-            }`}
-            value={decision}
-            onChange={(e) => setDecision(e.target.value as DecisionValue)}
-          >
-            <option value="">—</option>
-            <option value="Akzeptiert">Akzeptiert</option>
-            <option value="Abgelehnt">Abgelehnt</option>
-          </select>
+      {entry.status === 'InternalReview' ? (
+        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
+          Diese Bank-Daten sind im Internal Review und können von Compliance noch nicht akzeptiert oder abgelehnt
+          werden.
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Decision */}
+          <div className="bg-white rounded-lg shadow-sm px-3 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-dfxBlue-800 font-medium">Die Bank-Daten werden:</span>
+              <select
+                className={`ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded ${
+                  decision === 'Akzeptiert'
+                    ? 'bg-dfxGreen-100/20 text-dfxGreen-100'
+                    : decision === 'Abgelehnt'
+                      ? 'bg-dfxRed-100/20 text-dfxRed-100'
+                      : 'bg-white text-dfxBlue-800'
+                }`}
+                value={decision}
+                onChange={(e) => setDecision(e.target.value as DecisionValue)}
+              >
+                <option value="">—</option>
+                <option value="Akzeptiert">Akzeptiert</option>
+                <option value="Abgelehnt">Abgelehnt</option>
+              </select>
+            </div>
+          </div>
 
-      {/* Save */}
-      <div>
-        <button
-          className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
-          onClick={handleSave}
-          disabled={isSaving || isProcessing || !decision}
-        >
-          {isProcessing ? 'Speichern...' : 'Speichern'}
-        </button>
-      </div>
+          {/* Save */}
+          <div>
+            <button
+              className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
+              onClick={handleSave}
+              disabled={isSaving || isProcessing || !decision}
+            >
+              {isProcessing ? 'Speichern...' : 'Speichern'}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
