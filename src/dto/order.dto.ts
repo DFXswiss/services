@@ -21,6 +21,24 @@ export enum CustodyOrderStatus {
   APPROVED = 'Approved',
   IN_PROGRESS = 'InProgress',
   COMPLETED = 'Completed',
+  FAILED = 'Failed',
+}
+
+export enum CustodyOrderHistoryStatus {
+  WAITING_FOR_PAYMENT = 'WaitingForPayment',
+  CHECK_PENDING = 'CheckPending',
+  PROCESSING = 'Processing',
+  COMPLETED = 'Completed',
+  FAILED = 'Failed',
+}
+
+export interface CustodyOrderHistory {
+  type: CustodyOrderType;
+  status: CustodyOrderHistoryStatus;
+  inputAmount?: number;
+  inputAsset?: string;
+  outputAmount?: number;
+  outputAsset?: string;
 }
 
 export enum CustodyOrderType {
@@ -31,6 +49,9 @@ export enum CustodyOrderType {
   SEND = 'Send',
 
   SWAP = 'Swap',
+
+  EQUITY_MINT = 'EquityMint',
+  EQUITY_REDEEM = 'EquityRedeem',
 
   SAVING_DEPOSIT = 'SavingDeposit',
   SAVING_WITHDRAWAL = 'SavingWithdrawal',

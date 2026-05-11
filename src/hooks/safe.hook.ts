@@ -13,7 +13,7 @@ import {
   useUserContext,
 } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
+import { CustodyOrderHistory, CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
 import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
 import { downloadPdfFromString } from 'src/util/utils';
 import { OrderFormData } from './order.hook';
@@ -44,8 +44,10 @@ export interface UseSafeResult {
   isInitialized: boolean;
   isLoadingPortfolio: boolean;
   isLoadingHistory: boolean;
+  isLoadingOrderHistory: boolean;
   portfolio: CustodyBalance;
   history: CustodyHistoryEntry[];
+  orderHistory: CustodyOrderHistory[];
   error?: string;
   custodyAddress?: string;
   custodyBlockchains?: Blockchain[];
@@ -68,6 +70,7 @@ export interface UseSafeResult {
   confirmSwap: () => Promise<void>;
   confirmWithdraw: () => Promise<void>;
   confirmSend: () => Promise<void>;
+  reloadOrderHistory: () => void;
   pairMap: (asset: string) => Asset | Fiat | undefined;
   downloadPdf: (params: PdfDownloadParams) => Promise<void>;
 }
@@ -89,8 +92,10 @@ export function useSafe(): UseSafeResult {
   const [custodyBlockchains, setCustodyBlockchains] = useState<Blockchain[]>([]);
   const [portfolio, setPortfolio] = useState<CustodyBalance>({ totalValue: { chf: 0, eur: 0, usd: 0 }, balances: [] });
   const [history, setHistory] = useState<CustodyHistoryEntry[]>([]);
+  const [orderHistory, setOrderHistory] = useState<CustodyOrderHistory[]>([]);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [isLoadingOrderHistory, setIsLoadingOrderHistory] = useState(true);
   const [selectedSourceAsset, setSelectedSourceAsset] = useState<string>();
 
   // ---- Safe Screen Initialization ----
@@ -136,6 +141,19 @@ export function useSafe(): UseSafeResult {
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingHistory(false));
   }, [user, isLoggedIn]);
+
+  useEffect(() => {
+    if (!user || !isLoggedIn) return;
+    reloadOrderHistory();
+  }, [user, isLoggedIn]);
+
+  function reloadOrderHistory(): void {
+    setIsLoadingOrderHistory(true);
+    getOrderHistory()
+      .then((orders) => setOrderHistory(orders))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoadingOrderHistory(false));
+  }
 
   // ---- Available Deposit Pairs ----
 
@@ -218,6 +236,13 @@ export function useSafe(): UseSafeResult {
   async function getHistory(): Promise<CustodyHistory> {
     return call<CustodyHistory>({
       url: `custody/history`,
+      method: 'GET',
+    });
+  }
+
+  async function getOrderHistory(): Promise<CustodyOrderHistory[]> {
+    return call<CustodyOrderHistory[]>({
+      url: `custody/order`,
       method: 'GET',
     });
   }
@@ -360,8 +385,10 @@ export function useSafe(): UseSafeResult {
       isInitialized,
       isLoadingPortfolio,
       isLoadingHistory,
+      isLoadingOrderHistory,
       portfolio,
       history,
+      orderHistory,
       error,
       custodyAddress,
       custodyBlockchains,
@@ -384,6 +411,7 @@ export function useSafe(): UseSafeResult {
       confirmSwap,
       confirmWithdraw,
       confirmSend,
+      reloadOrderHistory,
       pairMap,
       downloadPdf,
     }),
@@ -391,8 +419,10 @@ export function useSafe(): UseSafeResult {
       isInitialized,
       isLoadingPortfolio,
       isLoadingHistory,
+      isLoadingOrderHistory,
       portfolio,
       history,
+      orderHistory,
       error,
       custodyAddress,
       custodyBlockchains,

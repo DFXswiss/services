@@ -23,6 +23,7 @@ import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
 import { Portfolio } from 'src/components/safe/portfolio';
 import { SafeTransactionInterface } from 'src/components/safe/safe-transaction-interface';
+import { TransactionHistory } from 'src/components/safe/transaction-history';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { FiatCurrency, SafeOperationType } from 'src/dto/safe.dto';
@@ -38,7 +39,18 @@ interface PdfFormData {
 export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
 
-  const { isInitialized, portfolio, history, isLoadingPortfolio, isLoadingHistory, error, downloadPdf } = useSafe();
+  const {
+    isInitialized,
+    portfolio,
+    history,
+    orderHistory,
+    isLoadingPortfolio,
+    isLoadingHistory,
+    isLoadingOrderHistory,
+    error,
+    reloadOrderHistory,
+    downloadPdf,
+  } = useSafe();
   const { currency: userCurrency, translate } = useSettingsContext();
   const {
     completionType,
@@ -134,7 +146,13 @@ export default function SafeScreen(): JSX.Element {
       ) : !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : completionType ? (
-        <SafeCompletion type={completionType} onClose={() => setCompletionType()} />
+        <SafeCompletion
+          type={completionType}
+          onClose={() => {
+            setCompletionType();
+            reloadOrderHistory();
+          }}
+        />
       ) : showPaymentNameForm ? (
         // TODO (later?): Retrigger payment execution after name edit
         <NameEdit onSuccess={() => setPaymentNameForm(false)} />
@@ -143,7 +161,7 @@ export default function SafeScreen(): JSX.Element {
           <div className="shadow-card rounded-xl">
             <div id="chart-timeline" className="relative">
               <div className="p-2 gap-2 flex flex-col items-start">
-                <div className="relative w-full" style={{ height: showChart ? '350px' : '85px' }}>
+                <div className="relative w-full" style={{ height: showChart ? '350px' : 'auto' }}>
                   <div className="w-full flex flex-col gap-3 text-left leading-none z-10">
                     <h2 className="text-dfxBlue-800">{translate('screens/safe', 'Portfolio')}</h2>
                     <div className="flex flex-row justify-between items-center">
@@ -190,7 +208,10 @@ export default function SafeScreen(): JSX.Element {
             currency={currency}
             isLoading={isLoadingPortfolio}
           />
+          <hr className="border-dfxGray-400" />
           <SafeTransactionInterface />
+          <hr className="border-dfxGray-400" />
+          <TransactionHistory transactions={orderHistory} isLoading={isLoadingOrderHistory} />
         </StyledVerticalStack>
       )}
 
