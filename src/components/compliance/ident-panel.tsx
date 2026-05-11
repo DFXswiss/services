@@ -144,7 +144,12 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
         <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">User Daten</h3>
         <div className="bg-white rounded-lg shadow-sm">
           <InfoLine label="UserDataId" value={display(ud.id)} />
-          <InfoLine label="Birthday" value={ud.birthday ? formatDate(ud.birthday) : '-'} />
+          <InfoLine
+            label="Birthday"
+            value={
+              identResult?.birthday ? formatDate(identResult.birthday) : ud.birthday ? formatDate(ud.birthday) : '-'
+            }
+          />
           <InfoLine label="AccountType" value={display(ud.accountType)} />
           <InfoLine
             label="Address"

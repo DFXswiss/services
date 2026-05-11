@@ -1,7 +1,7 @@
 import { useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ComplianceReviewHeader } from 'src/components/compliance/compliance-review-header';
 import {
   ComplianceReviewFreigabePanel,
@@ -33,9 +33,11 @@ export default function ComplianceReviewScreen(): JSX.Element {
 
   const { id: userDataId } = useParams();
   const navigateTo = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTabParam = searchParams.get('tab') as ReviewCheckTab | null;
   const onBack = useCallback(() => navigateTo('/compliance'), [navigateTo]);
 
-  useLayoutOptions({ title: 'KYC Management', backButton: true, noMaxWidth: true, onBack });
+  useLayoutOptions({ title: 'KYC Management', backButton: true, noMaxWidth: true, textStart: true, onBack });
   const {
     getUserData,
     updateKycStep,
@@ -52,7 +54,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ComplianceUserData>();
-  const [activeTab, setActiveTab] = useState<ReviewCheckTab | undefined>();
+  const [activeTab, setActiveTab] = useState<ReviewCheckTab | undefined>(initialTabParam ?? undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();

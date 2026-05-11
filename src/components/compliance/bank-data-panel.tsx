@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BankDataInfo, UserDataDetail } from 'src/hooks/compliance.hook';
+import { BankDataAlternative, BankDataInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { statusBadge } from 'src/util/compliance-helpers';
 
 interface BankDataReviewPanelProps {
@@ -11,6 +11,70 @@ interface BankDataReviewPanelProps {
 }
 
 type DecisionValue = '' | 'Akzeptiert' | 'Abgelehnt';
+
+type YesNo = '' | 'Ja' | 'Nein';
+
+function AlternativeRows({ alt, verifiedName }: { alt: BankDataAlternative; verifiedName: string }): JSX.Element {
+  const [sameVerifiedNamePerson, setSameVerifiedNamePerson] = useState<YesNo>('');
+  const [sameBankDataNamePerson, setSameBankDataNamePerson] = useState<YesNo>('');
+
+  const altVerifiedName = alt.verifiedName ?? '-';
+  const altBankDataName = alt.name ?? '-';
+  const currentVerifiedName = verifiedName || '-';
+
+  return (
+    <div className="px-3 py-2 border-b border-dfxGray-300 last:border-0">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+        <Row label="bankDataId" value={String(alt.id)} />
+        <Row label="userDataId" value={String(alt.userDataId)} />
+        <Row label="accountType" value={alt.accountType ?? '-'} />
+        <Row label="verifiedName" value={altVerifiedName} />
+        <Row label="bankData name" value={altBankDataName} />
+        <Row label="type" value={alt.type ?? '-'} />
+      </div>
+
+      <div className="mt-3 flex flex-col gap-2 bg-yellow-50 rounded px-3 py-2">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-dfxBlue-800">
+            Handelt es sich bei &quot;{currentVerifiedName}&quot; und &quot;{altVerifiedName}&quot; wirklich um die
+            selbe Person oder ist es ein gemeinschaftliches Ehekonto?
+          </span>
+          <YesNoSelect value={sameVerifiedNamePerson} onChange={setSameVerifiedNamePerson} />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-dfxBlue-800">
+            Handelt es sich bei &quot;{altBankDataName}&quot; und &quot;{currentVerifiedName}&quot; wirklich um die
+            selbe Person?
+          </span>
+          <YesNoSelect value={sameBankDataNamePerson} onChange={setSameBankDataNamePerson} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }): JSX.Element {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs text-dfxGray-700">{label}</span>
+      <span className="text-sm text-dfxBlue-800">{value}</span>
+    </div>
+  );
+}
+
+function YesNoSelect({ value, onChange }: { value: YesNo; onChange: (v: YesNo) => void }): JSX.Element {
+  return (
+    <select
+      className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+      value={value}
+      onChange={(e) => onChange(e.target.value as YesNo)}
+    >
+      <option value="">—</option>
+      <option value="Ja">Ja</option>
+      <option value="Nein">Nein</option>
+    </select>
+  );
+}
 
 function BankDataEntry({
   entry,
@@ -95,12 +159,19 @@ function BankDataEntry({
         </div>
       </div>
 
-      {entry.status === 'InternalReview' ? (
-        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
-          Diese Bank-Daten sind im Internal Review und können von Compliance noch nicht akzeptiert oder abgelehnt
-          werden.
+      {/* Alternative bankData with same IBAN (approved=true, different user) */}
+      {entry.alternatives && entry.alternatives.length > 0 && (
+        <div>
+          <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Alternative bankData mit gleicher IBAN:</h3>
+          <div className="bg-white rounded-lg shadow-sm">
+            {entry.alternatives.map((alt) => (
+              <AlternativeRows key={alt.id} alt={alt} verifiedName={verifiedName} />
+            ))}
+          </div>
         </div>
-      ) : (
+      )}
+
+      {entry.status === 'ManualReview' ? (
         <>
           {/* Decision */}
           <div className="bg-white rounded-lg shadow-sm px-3 py-3">
@@ -135,6 +206,11 @@ function BankDataEntry({
             </button>
           </div>
         </>
+      ) : (
+        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
+          Diese Bank-Daten haben Status {entry.status ?? '-'} und können von Compliance nur im Status ManualReview
+          bearbeitet werden.
+        </div>
       )}
     </div>
   );
@@ -147,7 +223,8 @@ export function BankDataReviewPanel({
   onReject,
   isSaving,
 }: BankDataReviewPanelProps): JSX.Element {
-  const pendingEntries = bankDatas.filter((b) => !b.approved || b.status === 'ManualReview');
+  // Ident-type bank data is created from KYC ident results and not relevant for compliance review.
+  const pendingEntries = bankDatas.filter((b) => b.type !== 'Ident' && (!b.approved || b.status === 'ManualReview'));
   const verifiedName = String(userData.verifiedName ?? '');
 
   if (pendingEntries.length === 0) {

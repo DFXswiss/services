@@ -59,7 +59,12 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
 
   const isComplianceDept = issueData?.department === Department.COMPLIANCE;
 
-  useLayoutOptions({ title: translate('screens/support', 'Support Issue'), backButton: true, noMaxWidth: true });
+  useLayoutOptions({
+    title: translate('screens/support', 'Support Issue'),
+    backButton: true,
+    noMaxWidth: true,
+    textStart: true,
+  });
 
   useEffect(() => {
     getClerks()

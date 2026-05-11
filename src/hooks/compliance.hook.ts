@@ -103,6 +103,21 @@ export interface PendingOnboardingInfo {
   date: string;
 }
 
+export interface PendingTransactionInfo {
+  txId: number;
+  uid: string;
+  sourceType: 'BuyCrypto' | 'BuyFiat';
+  userDataId: number;
+  userName?: string;
+  accountType?: string;
+  kycLevel?: number;
+  inputAmount?: number;
+  inputAsset?: string;
+  amlCheck?: string;
+  amlReason?: string;
+  date: string;
+}
+
 export type CallOutcomeContext =
   | { queue: CallQueue; userDataId: number; txId: number; sourceType: CallQueueSourceType }
   | { queue: CallQueue; userDataId: number; txId?: undefined; sourceType?: undefined };
@@ -445,6 +460,15 @@ export interface TransactionInfo {
   created: string;
 }
 
+export interface BankDataAlternative {
+  id: number;
+  userDataId: number;
+  name?: string;
+  verifiedName?: string;
+  accountType?: string;
+  type?: string;
+}
+
 export interface BankDataInfo {
   id: number;
   iban: string;
@@ -456,6 +480,7 @@ export interface BankDataInfo {
   active: boolean;
   comment?: string;
   created: string;
+  alternatives?: BankDataAlternative[];
 }
 
 export interface BuyRouteInfo {
@@ -770,6 +795,13 @@ export function useCompliance() {
     });
   }
 
+  async function getPendingTransactions(): Promise<PendingTransactionInfo[]> {
+    return call<PendingTransactionInfo[]>({
+      url: 'support/pending-transactions',
+      method: 'GET',
+    });
+  }
+
   async function getPendingReviews(): Promise<PendingReviewSummaryEntry[]> {
     return call<PendingReviewSummaryEntry[]>({
       url: 'support/pending-reviews',
@@ -1049,6 +1081,7 @@ export function useCompliance() {
       search,
       getUserData,
       getPendingOnboardings,
+      getPendingTransactions,
       getPendingReviews,
       getPendingReviewItems,
       getCallQueues,

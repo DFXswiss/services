@@ -4,6 +4,16 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useCompliance } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { CollapsibleSection } from './collapsible-section';
+import { reviewTabs } from './compliance-review-configs';
+
+// Map a pending-review row to the review-screen tab key so navigation lands on
+// the right tab instead of the default first one.
+function getTabKey(type: PendingReviewType, name: string): string | undefined {
+  if (type === PendingReviewType.BANK_DATA) return 'bankDataReview';
+  if (name === 'NameChange' || name === 'AddressChange') return 'stammdaten';
+  if (name === 'DfxApproval') return 'freigabe';
+  return reviewTabs.find((t) => t.stepName === name)?.key;
+}
 
 interface Props {
   entries: PendingReviewSummaryEntry[];
@@ -50,55 +60,58 @@ export function PendingReviewsSection({ entries }: Props): JSX.Element | null {
               {translate('screens/kyc', 'Name')}
             </th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
-              {translate('screens/compliance', 'Manual Review')}
+              {translate('screens/compliance', 'Internal Review')}
             </th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
-              {translate('screens/compliance', 'Internal Review')}
+              {translate('screens/compliance', 'Manual Review')}
             </th>
           </tr>
         </thead>
         <tbody>
-          {entries.map((r) => (
-            <Fragment key={`${r.type}-${r.name}`}>
-              {[PendingReviewStatus.MANUAL_REVIEW, PendingReviewStatus.INTERNAL_REVIEW].map((s) => {
-                const isManual = s === PendingReviewStatus.MANUAL_REVIEW;
-                const count = isManual ? r.manualReview : r.internalReview;
-                if (count === 0) return null;
-                const key = `${r.type}-${r.name}-${s}`;
-                const expandState = expanded[key];
-                const valueCell = 'px-4 py-3 text-right text-sm text-dfxBlue-800 font-semibold';
-                const emptyCell = 'px-4 py-3 text-right text-sm text-dfxGray-600';
-                return (
-                  <Fragment key={s}>
-                    <tr
-                      className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
-                      onClick={() => toggleExpansion(r.type, r.name, s)}
-                    >
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.type}</td>
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.name}</td>
-                      <td className={isManual ? valueCell : emptyCell}>{isManual ? count : '-'}</td>
-                      <td className={isManual ? emptyCell : valueCell}>{isManual ? '-' : count}</td>
-                    </tr>
-                    {expandState && (
-                      <tr className="border-b border-dfxGray-300 bg-dfxGray-100">
-                        <td colSpan={4} className="px-4 py-3">
-                          {expandState.state === 'loading' ? (
-                            <div className="text-sm text-dfxGray-700">{translate('general/actions', 'Loading')}…</div>
-                          ) : expandState.items.length === 0 ? (
-                            <div className="text-sm text-dfxGray-700">
-                              {translate('screens/compliance', 'No entries found')}
-                            </div>
-                          ) : (
-                            <ReviewItemsTable items={expandState.items} navigate={navigate} translate={translate} />
-                          )}
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                );
-              })}
-            </Fragment>
-          ))}
+          {entries.map((r) => {
+            const key = `${r.type}-${r.name}-${PendingReviewStatus.MANUAL_REVIEW}`;
+            const expandState = expanded[key];
+            const canExpand = r.manualReview > 0;
+            return (
+              <Fragment key={`${r.type}-${r.name}`}>
+                <tr
+                  className={`border-b border-dfxGray-300 transition-colors ${
+                    canExpand ? 'hover:bg-dfxGray-300 cursor-pointer' : ''
+                  }`}
+                  onClick={
+                    canExpand ? () => toggleExpansion(r.type, r.name, PendingReviewStatus.MANUAL_REVIEW) : undefined
+                  }
+                >
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.type}</td>
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.name}</td>
+                  <td className="px-4 py-3 text-right text-sm text-dfxGray-600">{r.internalReview || '-'}</td>
+                  <td className="px-4 py-3 text-right text-sm text-dfxBlue-800 font-semibold">
+                    {r.manualReview || '-'}
+                  </td>
+                </tr>
+                {expandState && (
+                  <tr className="border-b border-dfxGray-300 bg-dfxGray-100">
+                    <td colSpan={4} className="px-4 py-3">
+                      {expandState.state === 'loading' ? (
+                        <div className="text-sm text-dfxGray-700">{translate('general/actions', 'Loading')}…</div>
+                      ) : expandState.items.length === 0 ? (
+                        <div className="text-sm text-dfxGray-700">
+                          {translate('screens/compliance', 'No entries found')}
+                        </div>
+                      ) : (
+                        <ReviewItemsTable
+                          items={expandState.items}
+                          tabKey={getTabKey(r.type, r.name)}
+                          navigate={navigate}
+                          translate={translate}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </CollapsibleSection>
@@ -107,10 +120,12 @@ export function PendingReviewsSection({ entries }: Props): JSX.Element | null {
 
 function ReviewItemsTable({
   items,
+  tabKey,
   navigate,
   translate,
 }: {
   items: PendingReviewItem[];
+  tabKey?: string;
   navigate: (to: string) => void;
   translate: (namespace: string, key: string) => string;
 }): JSX.Element {
@@ -140,7 +155,7 @@ function ReviewItemsTable({
           <tr
             key={item.id}
             className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
-            onClick={() => navigate(`compliance/user/${item.userDataId}/kyc`)}
+            onClick={() => navigate(`compliance/user/${item.userDataId}/kyc${tabKey ? `?tab=${tabKey}` : ''}`)}
           >
             <td className="px-3 py-2 text-left text-xs text-dfxBlue-800">{item.userDataId}</td>
             <td className="px-3 py-2 text-left text-xs text-dfxBlue-800">{item.accountType ?? '-'}</td>

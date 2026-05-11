@@ -115,6 +115,7 @@ export default function ComplianceCallQueueDetailScreen(): JSX.Element {
     title: queue ? `${queue} – ${userDataId ?? ''}` : translate('screens/compliance', 'Call Queue'),
     noMaxWidth: true,
     backButton: true,
+    textStart: true,
     onBack: () => navigate(-1),
   });
 

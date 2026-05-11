@@ -265,7 +265,7 @@ export function ComplianceReviewPanel({
       {checkItems.length > 0 && (
         <div>
           <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Checks</h3>
-          <div className="bg-white rounded-lg shadow-sm text-left">
+          <div className="bg-white rounded-lg shadow-sm">
             {checkItems.map((item) => {
               if (item.visibleCondition && !item.visibleCondition(userData)) return null;
               if (item.type === 'conditional' && item.condition && !item.condition(checks)) return null;
