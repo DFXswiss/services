@@ -17,11 +17,30 @@ env:
   NODE_VERSION: '20.x'
 
 jobs:
-  chromatic:
-    name: Publish Storybook to Chromatic
+  detect-secret:
+    name: Detect Chromatic token
     runs-on: ubuntu-latest
     # Skip auto-generated develop -> main release PRs (no visual change vs base)
     if: github.head_ref != 'develop'
+    outputs:
+      has_token: ${{ steps.check.outputs.has_token }}
+    steps:
+      - id: check
+        env:
+          TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CHROMATIC_PROJECT_TOKEN secret is not set — skipping visual regression check. See .github/workflows/chromatic.yml for setup instructions."
+          fi
+
+  chromatic:
+    name: Publish Storybook to Chromatic
+    needs: detect-secret
+    if: needs.detect-secret.outputs.has_token == 'true'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
