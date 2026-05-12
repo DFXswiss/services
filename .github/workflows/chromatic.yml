@@ -35,7 +35,7 @@ jobs:
           cache: 'npm'
 
       - name: Install packages
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Run Chromatic
         uses: chromaui/action@v11
