@@ -11,7 +11,9 @@ const SampleFullscreenContent = () => (
     <div className="rounded-md bg-dfxGray-300 p-4 text-sm">
       Body content area — fills the available viewport width up to <code>max-w-screen-md</code>.
     </div>
-    <button className="self-start rounded-md bg-dfxRed-100 px-4 py-2 text-sm font-semibold text-white">Continue</button>
+    <button type="button" className="self-start rounded-md bg-dfxRed-100 px-4 py-2 text-sm font-semibold text-white">
+      Continue
+    </button>
   </div>
 );
 
@@ -23,8 +25,12 @@ const SampleDialogContent = () => (
       backdrop.
     </p>
     <div className="flex justify-end gap-2">
-      <button className="rounded-md border border-dfxGray-500 px-4 py-2 text-sm text-dfxBlue-800">Cancel</button>
-      <button className="rounded-md bg-dfxRed-100 px-4 py-2 text-sm font-semibold text-white">Confirm</button>
+      <button type="button" className="rounded-md border border-dfxGray-500 px-4 py-2 text-sm text-dfxBlue-800">
+        Cancel
+      </button>
+      <button type="button" className="rounded-md bg-dfxRed-100 px-4 py-2 text-sm font-semibold text-white">
+        Confirm
+      </button>
     </div>
   </div>
 );
