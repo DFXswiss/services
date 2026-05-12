@@ -30,10 +30,27 @@ for (const story of STORIES) {
       await page.setViewportSize(viewport);
       await page.goto(`/iframe.html?id=${story.id}&viewMode=story`);
 
-      // Wait for Storybook's story root to confirm the component is mounted,
-      // then for fonts to settle so subpixel differences don't flake the diff.
-      await page.locator('#storybook-root').waitFor({ state: 'attached' });
+      // Story root must be mounted before we look for the modal portal.
+      await page.locator('#storybook-root').waitFor({ state: 'visible' });
+
+      // The Modal portal lands on document.body; wait for its outer wrapper
+      // (`z-50` is on both variants) to ensure the component has reached
+      // its second render after `mounted` and refs have been set.
+      await page.locator('div.z-50').waitFor({ state: 'visible' });
+
+      // Fonts must be ready or text rendering shifts subpixels between runs.
       await page.evaluate(() => document.fonts.ready);
+
+      // Modal's fullscreen variant computes `topOffset` from a ResizeObserver
+      // on documentElement which fires asynchronously after the initial paint.
+      // Wait two animation frames so the re-render with the final `top` style
+      // has been committed before the snapshot is taken.
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
 
       await expect(page).toHaveScreenshot(`${story.name}-${viewportName}.png`, {
         fullPage: true,

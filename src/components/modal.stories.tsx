@@ -3,39 +3,88 @@ import { Modal } from './modal';
 
 function SampleFullscreenContent(): JSX.Element {
   return (
-    <div className="flex flex-col gap-4 text-dfxBlue-800">
-      <h1 className="text-2xl font-semibold">Fullscreen modal</h1>
-      <p className="text-sm">
-        The fullscreen variant fills the viewport below the layout header. It is used for primary content flows such as
-        KYC, Safe Deposit, and Buy / Sell.
-      </p>
-      <div className="rounded-md bg-dfxGray-300 p-4 text-sm">
-        Body content area — fills the available viewport width up to <code>max-w-screen-md</code>.
+    <div className="flex flex-col gap-6 text-dfxBlue-800">
+      <header className="flex flex-col gap-2">
+        <span className="text-xs uppercase tracking-wider text-dfxGray-800">Step 2 of 4</span>
+        <h1 className="text-2xl font-semibold">Identity verification</h1>
+        <p className="text-sm text-dfxGray-800">
+          Confirm the information on your government-issued ID. All fields are required.
+        </p>
+      </header>
+
+      <div className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium">First name</span>
+          <input
+            type="text"
+            defaultValue="Jane"
+            readOnly
+            className="rounded-md border border-dfxGray-500 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium">Last name</span>
+          <input
+            type="text"
+            defaultValue="Müller"
+            readOnly
+            className="rounded-md border border-dfxGray-500 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium">Date of birth</span>
+          <input
+            type="text"
+            defaultValue="1985-04-12"
+            readOnly
+            className="rounded-md border border-dfxGray-500 px-3 py-2 text-sm"
+          />
+        </label>
       </div>
-      <button
-        type="button"
-        className="self-start rounded-md bg-dfxRed-100 px-4 py-2 text-sm font-semibold text-white"
-      >
-        Continue
-      </button>
+
+      <p className="rounded-md bg-dfxGray-300 p-3 text-xs text-dfxGray-800">
+        We share these details with our regulated KYC partner. Your data is never sold and is deleted on request.
+      </p>
+
+      <div className="flex flex-row gap-2 self-start">
+        <button
+          type="button"
+          className="rounded-md border border-dfxGray-500 px-4 py-2 text-sm font-medium text-dfxBlue-800"
+        >
+          Cancel
+        </button>
+        <button type="button" className="rounded-md bg-dfxRed-100 px-4 py-2 text-sm font-semibold text-white">
+          Continue
+        </button>
+      </div>
     </div>
   );
 }
 
 function SampleDialogContent(): JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-auto w-full">
-      <h2 className="text-lg font-semibold text-dfxBlue-800 mb-3 text-left">Confirm action</h2>
-      <p className="text-sm text-dfxBlue-800 mb-6 text-left">
-        The dialog variant is used for confirmations and short compliance flows. The card sits centered on a translucent
-        backdrop.
+    <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-auto w-full text-dfxBlue-800">
+      <h2 className="text-lg font-semibold mb-3 text-left">Refund transaction</h2>
+      <p className="text-sm mb-4 text-left">
+        This will return the full amount to the sender via SEPA. The transaction cannot be undone.
       </p>
+      <dl className="grid grid-cols-2 gap-y-1 text-sm mb-6 rounded-md bg-dfxGray-300 p-3">
+        <dt className="text-dfxGray-800">Amount</dt>
+        <dd className="text-right font-medium">CHF 1,250.00</dd>
+        <dt className="text-dfxGray-800">Recipient IBAN</dt>
+        <dd className="text-right font-mono text-xs">CH00 0000 0000 0000 0000 0</dd>
+        <dt className="text-dfxGray-800">Reference</dt>
+        <dd className="text-right text-xs">TX-2026-04-1893</dd>
+      </dl>
       <div className="flex justify-end gap-2">
-        <button type="button" className="rounded-md border border-dfxGray-500 px-4 py-2 text-sm text-dfxBlue-800">
+        <button
+          type="button"
+          className="rounded-md border border-dfxGray-500 px-4 py-2 text-sm font-medium text-dfxBlue-800"
+        >
           Cancel
         </button>
         <button type="button" className="rounded-md bg-dfxRed-100 px-4 py-2 text-sm font-semibold text-white">
-          Confirm
+          Confirm refund
         </button>
       </div>
     </div>
