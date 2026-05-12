@@ -3,6 +3,10 @@ import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(ts|tsx)'],
+  // Ship a serve.json into the build so `npx serve storybook-static` does not
+  // strip `.html` extensions and redirect `/iframe.html?id=…` to `/iframe`,
+  // losing the query string and breaking story rendering in the visual tests.
+  staticDirs: ['./static'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', '@storybook/preset-create-react-app'],
   framework: {
     name: '@storybook/react-webpack5',

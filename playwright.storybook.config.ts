@@ -8,7 +8,7 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e/storybook',
   snapshotDir: './e2e/storybook/__snapshots__',
-  snapshotPathTemplate: '{snapshotDir}/{testFileName}/{arg}-{projectName}{ext}',
+  snapshotPathTemplate: '{snapshotDir}/{testFileName}/{arg}{ext}',
   outputDir: './e2e/storybook/test-results',
   fullyParallel: false,
   workers: 1,
