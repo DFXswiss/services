@@ -1,4 +1,4 @@
-name: Chromatic — Visual Regression
+name: Chromatic Visual Regression
 
 on:
   pull_request:
@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - develop
+  workflow_dispatch:
 
 permissions:
   contents: read
