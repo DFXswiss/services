@@ -1,0 +1,45 @@
+name: Chromatic — Visual Regression
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  chromatic:
+    name: Publish Storybook to Chromatic
+    runs-on: ubuntu-latest
+    # Skip auto-generated develop -> main release PRs (no visual change vs base)
+    if: github.head_ref != 'develop'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install packages
+        run: npm ci --legacy-peer-deps
+
+      - name: Run Chromatic
+        uses: chromaui/action@v11
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          onlyChanged: true
+          exitZeroOnChanges: false
