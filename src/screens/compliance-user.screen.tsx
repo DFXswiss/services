@@ -125,7 +125,12 @@ export default function ComplianceUserScreen(): JSX.Element {
     if (role === UserRole.SUPPORT) setSplitPercent(50);
   }, [role]);
 
-  useLayoutOptions({ title: translate('screens/compliance', 'User Data'), backButton: true, noMaxWidth: true });
+  useLayoutOptions({
+    title: translate('screens/compliance', 'User Data'),
+    backButton: true,
+    noMaxWidth: true,
+    textStart: true,
+  });
 
   if (error && !data) return <ErrorHint message={error} />;
   if (!data || !userDataId) return <StyledLoadingSpinner size={SpinnerSize.LG} />;

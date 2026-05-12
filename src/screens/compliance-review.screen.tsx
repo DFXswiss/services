@@ -1,7 +1,7 @@
 import { useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ComplianceReviewHeader } from 'src/components/compliance/compliance-review-header';
 import {
   ComplianceReviewFreigabePanel,
@@ -33,9 +33,11 @@ export default function ComplianceReviewScreen(): JSX.Element {
 
   const { id: userDataId } = useParams();
   const navigateTo = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTabParam = searchParams.get('tab') as ReviewCheckTab | null;
   const onBack = useCallback(() => navigateTo('/compliance'), [navigateTo]);
 
-  useLayoutOptions({ title: 'KYC Management', backButton: true, noMaxWidth: true, onBack });
+  useLayoutOptions({ title: 'KYC Management', backButton: true, noMaxWidth: true, textStart: true, onBack });
   const {
     getUserData,
     updateKycStep,
@@ -52,7 +54,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ComplianceUserData>();
-  const [activeTab, setActiveTab] = useState<ReviewCheckTab | undefined>();
+  const [activeTab, setActiveTab] = useState<ReviewCheckTab | undefined>(initialTabParam ?? undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
@@ -205,7 +207,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
     if (tab.key === 'bankDataReview') {
       const count = data?.bankDatas.filter((b) => !b.approved || b.status === 'ManualReview').length ?? 0;
       return count > 0 ? (
-        <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-yellow-500 text-white">{count}</span>
+        <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-dfxBlue-800 text-white">{count}</span>
       ) : null;
     }
     if (tab.key === 'amlPending') {
@@ -214,7 +216,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
           (tx) => tx.type != null && tx.amlCheck === 'Pending' && tx.amlReason === 'ManualCheck',
         ).length ?? 0;
       return count > 0 ? (
-        <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-yellow-500 text-white">{count}</span>
+        <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-dfxBlue-800 text-white">{count}</span>
       ) : null;
     }
     if (tab.key === 'stammdaten') {
@@ -302,11 +304,12 @@ export default function ComplianceReviewScreen(): JSX.Element {
           <div className="flex flex-wrap gap-1">
             {visibleTabs.map((tab, index) => {
               const prevTab = index > 0 ? visibleTabs[index - 1] : null;
+              // Strong break between the Tx review/admin tabs and the KYC onboarding tabs.
               const showSeparator = prevTab && prevTab.group !== tab.group;
 
               return (
                 <Fragment key={tab.key}>
-                  {showSeparator && <div className="w-px bg-dfxGray-400 mx-1 h-8 self-center" />}
+                  {showSeparator && <div className="w-0.5 bg-dfxBlue-400 mx-4 h-8 self-center" />}
                   <button
                     className={`px-3 py-2 text-xs font-medium rounded-t-lg whitespace-nowrap transition-colors ${
                       effectiveTab === tab.key
@@ -366,6 +369,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
               decisionLabel={activeConfig.decisionLabel}
               rejectionReasons={activeConfig.rejectionReasons}
               userData={data.userData}
+              kycSteps={data.kycSteps}
               onOpenFile={openFile}
               onSave={handleSave}
               isSaving={isSaving}

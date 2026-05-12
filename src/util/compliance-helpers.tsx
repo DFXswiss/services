@@ -1,5 +1,6 @@
 import { Transaction } from '@dfx.swiss/react';
 import { MrosStatus } from 'src/dto/mros.dto';
+import { KycStepInfo } from 'src/hooks/compliance.hook';
 
 export function DetailRow({
   label,
@@ -185,6 +186,27 @@ export function display(value: Primitive): string {
 // Resolve a reference type ({ name?, symbol? }) to its display name.
 export function refName(ref?: { name?: string; symbol?: string }): string {
   return ref?.name ?? ref?.symbol ?? '-';
+}
+
+// Resolve the legal entity for a user from the latest LegalEntity KYC step result.
+// Sole proprietorships are treated as Einzelunternehmen without a step lookup.
+export function extractLegalEntity(kycSteps: KycStepInfo[], accountType?: string): string {
+  if (accountType === 'SoleProprietorship') return 'Einzelunternehmen';
+
+  const legalEntityStep = kycSteps
+    .filter((s) => s.name === 'LegalEntity')
+    .sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
+
+  if (legalEntityStep?.result) {
+    try {
+      const parsed = JSON.parse(legalEntityStep.result) as Record<string, unknown>;
+      if (parsed.legalEntity) return String(parsed.legalEntity);
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  return '-';
 }
 
 // Build a comma-separated address line. Works for UserData and Organization (structural typing).
