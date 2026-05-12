@@ -157,10 +157,7 @@ export default function ComplianceCallQueueDetailScreen(): JSX.Element {
         />
       )}
       {config.showAddressInfo && (
-        <CallQueueAddressInfo
-          userData={data.userData}
-          title={translate('screens/compliance', 'Address & Phone Call Times')}
-        />
+        <CallQueueAddressInfo userData={data.userData} title={translate('screens/compliance', 'Address')} />
       )}
       <CallQueueTransactionsList
         transactions={data.transactions}

@@ -12,7 +12,6 @@ export function CallQueueAddressInfo({ userData, title }: Props): JSX.Element {
     ['ZIP', userData.zip],
     ['City', userData.location],
     ['Country', userData.country?.name ?? userData.country?.symbol],
-    ['Phone Call Times', userData.phoneCallTimes],
   ];
 
   return (

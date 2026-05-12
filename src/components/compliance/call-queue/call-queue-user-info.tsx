@@ -80,6 +80,7 @@ export function CallQueueUserInfo({ userData, users, kycSteps, highlightCheckDat
     { label: 'Referrer (Ref Werber)', value: refUserName },
     { label: 'Recommendation Step Result', value: recommendationStepResult },
     { label: 'Phone Call Status', value: userData.phoneCallStatus },
+    { label: 'Phone Call Times', value: userData.phoneCallTimes },
   ];
 
   const checkDateRows: [CheckDateField, string][] = [
