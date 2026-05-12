@@ -16,7 +16,7 @@ export function RecallDetailsModal({ isOpen, recall, onClose }: RecallDetailsMod
   if (!isOpen || !recall) return <></>;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} variant="dialog">
       <div className="bg-white rounded-lg shadow-sm p-6 max-w-lg mx-auto w-full">
         <h2 className="text-lg font-semibold text-dfxBlue-800 mb-4 text-left">
           {translate('screens/compliance', 'Recall')}

@@ -92,7 +92,7 @@ export function RecallModal({ isOpen, bankTxId, onClose, onSuccess }: RecallModa
   if (!isOpen) return <></>;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose}>
+    <Modal isOpen={isOpen} onClose={handleClose} variant="dialog">
       <div className="bg-white rounded-lg shadow-sm p-6 max-w-lg mx-auto w-full">
         <h2 className="text-lg font-semibold text-dfxBlue-800 mb-4 text-left">
           {translate('screens/compliance', 'Recall erfassen')}
