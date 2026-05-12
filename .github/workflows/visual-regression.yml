@@ -50,15 +50,11 @@ jobs:
         if: failure()
         run: |
           set -e
-          mkdir -p baseline-candidates
-          if compgen -G "e2e/storybook/test-results/**/*-actual.png" > /dev/null; then
-            find e2e/storybook/test-results -name '*-actual.png' | while read -r src; do
-              base=$(basename "$src" -actual.png)
-              dst="baseline-candidates/modal-visual.spec.ts/${base}.png"
-              mkdir -p "$(dirname "$dst")"
-              cp "$src" "$dst"
-            done
-          fi
+          mkdir -p baseline-candidates/modal-visual.spec.ts
+          find e2e/storybook/test-results -name '*-actual.png' -print0 | while IFS= read -r -d '' src; do
+            base=$(basename "$src" -actual.png)
+            cp "$src" "baseline-candidates/modal-visual.spec.ts/${base}.png"
+          done
 
       - name: Upload diff + baseline-candidates on failure
         if: failure()

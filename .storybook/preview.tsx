@@ -23,7 +23,6 @@ const preview: Preview = {
   parameters: {
     layout: 'fullscreen',
     controls: { expanded: true },
-    chromatic: { viewports: [375, 1280] },
   },
   decorators: [
     (Story) => (

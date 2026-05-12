@@ -36,7 +36,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npx serve storybook-static -l 6006 --no-clipboard --single',
+    command: 'npx serve storybook-static -l 6006 --no-clipboard',
     url: 'http://localhost:6006',
     reuseExistingServer: !process.env.CI,
     timeout: 60000,
