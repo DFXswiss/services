@@ -46,6 +46,7 @@ const stickerLanguages = ['DE', 'EN', 'FR', 'IT', 'SQ'];
 interface SettingsInterface {
   availableLanguages: Language[];
   availableStickerLanguages: Language[];
+  countries: Country[];
   allowedCountries: Country[];
   nationalityCountries: Country[];
   allowedOrganizationCountries: Country[];
@@ -267,6 +268,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     () => ({
       availableLanguages,
       availableStickerLanguages,
+      countries,
       allowedCountries: countries.filter((c) => c.kycAllowed),
       allowedOrganizationCountries: countries.filter((c) => c.kycOrganizationAllowed),
       nationalityCountries: countries.filter((c) => c.nationalityAllowed),

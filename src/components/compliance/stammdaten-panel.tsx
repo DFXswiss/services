@@ -1,4 +1,6 @@
+import { Country } from '@dfx.swiss/react';
 import { useEffect, useState } from 'react';
+import { useSettingsContext } from 'src/contexts/settings.context';
 import { ComplianceUserData, KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { statusBadge, formatDateTime } from 'src/util/compliance-helpers';
 
@@ -76,6 +78,19 @@ function safeString(value: unknown): string {
   return String(value);
 }
 
+// AddressChange step results store country as `{ id }` only (see kyc-data.dto.ts).
+// Resolve via the loaded countries list so the new country is displayed by name.
+function countryString(value: unknown, countries: Country[]): string {
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    if (obj.name == null && obj.symbol == null && typeof obj.id === 'number') {
+      const match = countries.find((c) => c.id === obj.id);
+      if (match) return match.name ?? match.symbol ?? '-';
+    }
+  }
+  return safeString(value);
+}
+
 function getCheckItems(stepName: string, accountType: string): DocumentCheckItem[] {
   const isCompany = accountType === 'Organization' || accountType === 'SoleProprietorship';
 
@@ -89,7 +104,12 @@ function getCheckItems(stepName: string, accountType: string): DocumentCheckItem
   }
 }
 
-function buildComparisonRows(stepName: string, result: string, userData: UserDataDetail): ComparisonRow[] {
+function buildComparisonRows(
+  stepName: string,
+  result: string,
+  userData: UserDataDetail,
+  countries: Country[],
+): ComparisonRow[] {
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(result) as Record<string, unknown>;
@@ -111,7 +131,11 @@ function buildComparisonRows(stepName: string, result: string, userData: UserDat
         { label: 'Hausnummer', oldValue: safeString(userData.houseNumber), newValue: safeString(addr.houseNumber) },
         { label: 'PLZ', oldValue: safeString(userData.zip), newValue: safeString(addr.zip) },
         { label: 'Ort', oldValue: safeString(userData.location), newValue: safeString(addr.city) },
-        { label: 'Land', oldValue: safeString(userData.country), newValue: safeString(addr.country) },
+        {
+          label: 'Land',
+          oldValue: countryString(userData.country, countries),
+          newValue: countryString(addr.country, countries),
+        },
       ];
     }
 
@@ -198,8 +222,9 @@ function ChangeSectionPanel({
     setChecks(initial);
   }, [step, checkItems]);
 
+  const { countries } = useSettingsContext();
   const relatedFiles = section.fileType ? files.filter((f) => f.type === section.fileType) : [];
-  const comparisonRows = step.result ? buildComparisonRows(section.stepName, step.result, userData) : [];
+  const comparisonRows = step.result ? buildComparisonRows(section.stepName, step.result, userData, countries) : [];
 
   function handleSave(): void {
     if (!decision) return;
@@ -291,52 +316,60 @@ function ChangeSectionPanel({
         </div>
       )}
 
-      {/* Decision */}
-      <div className="bg-white rounded-lg shadow-sm px-3 py-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-dfxBlue-800 font-medium">Entscheid:</span>
-          <select
-            className={`ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded ${
-              decision === 'Akzeptiert'
-                ? 'bg-dfxGreen-100/20 text-dfxGreen-100'
-                : decision === 'Abgelehnt'
-                  ? 'bg-dfxRed-100/20 text-dfxRed-100'
-                  : 'bg-white text-dfxBlue-800'
-            }`}
-            value={decision}
-            onChange={(e) => setDecision(e.target.value as DecisionValue)}
-          >
-            <option value="">---</option>
-            <option value="Akzeptiert">Akzeptiert</option>
-            <option value="Abgelehnt">Abgelehnt</option>
-          </select>
+      {step.status === 'InternalReview' ? (
+        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
+          Dieser Step ist im Internal Review und kann von Compliance noch nicht akzeptiert oder abgelehnt werden.
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Decision */}
+          <div className="bg-white rounded-lg shadow-sm px-3 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-dfxBlue-800 font-medium">Entscheid:</span>
+              <select
+                className={`ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded ${
+                  decision === 'Akzeptiert'
+                    ? 'bg-dfxGreen-100/20 text-dfxGreen-100'
+                    : decision === 'Abgelehnt'
+                      ? 'bg-dfxRed-100/20 text-dfxRed-100'
+                      : 'bg-white text-dfxBlue-800'
+                }`}
+                value={decision}
+                onChange={(e) => setDecision(e.target.value as DecisionValue)}
+              >
+                <option value="">---</option>
+                <option value="Akzeptiert">Akzeptiert</option>
+                <option value="Abgelehnt">Abgelehnt</option>
+              </select>
+            </div>
+          </div>
 
-      {/* Comment */}
-      {decision === 'Abgelehnt' && (
-        <div>
-          <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Kommentar:</h3>
-          <input
-            type="text"
-            className="w-full px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
-            placeholder="Ablehnungsgrund..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
-        </div>
+          {/* Comment */}
+          {decision === 'Abgelehnt' && (
+            <div>
+              <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Kommentar:</h3>
+              <input
+                type="text"
+                className="w-full px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+                placeholder="Ablehnungsgrund..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+            </div>
+          )}
+
+          {/* Save */}
+          <div>
+            <button
+              className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
+              onClick={handleSave}
+              disabled={isSaving || !decision}
+            >
+              {isSaving ? 'Speichern...' : 'Speichern'}
+            </button>
+          </div>
+        </>
       )}
-
-      {/* Save */}
-      <div>
-        <button
-          className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
-          onClick={handleSave}
-          disabled={isSaving || !decision}
-        >
-          {isSaving ? 'Speichern...' : 'Speichern'}
-        </button>
-      </div>
     </div>
   );
 }

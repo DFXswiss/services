@@ -58,7 +58,7 @@ export function CallQueueUserInfo({ userData, users, kycSteps, highlightCheckDat
   const fullName = [userData.firstname, userData.surname, userData.organization?.name].filter(Boolean).join(' ');
 
   const leftRows: Row[] = [
-    { label: 'User ID', value: userData.id != null ? String(userData.id) : undefined },
+    { label: 'User ID', value: userData.id == null ? undefined : String(userData.id) },
     { label: 'Account Type', value: userData.accountType },
     { label: 'Name', value: fullName || undefined },
     { label: 'Verified Name', value: userData.verifiedName },
@@ -72,7 +72,7 @@ export function CallQueueUserInfo({ userData, users, kycSteps, highlightCheckDat
 
   const rightRows: Row[] = [
     { label: 'Status', value: userData.status },
-    { label: 'KYC Level', value: userData.kycLevel != null ? String(userData.kycLevel) : undefined },
+    { label: 'KYC Level', value: userData.kycLevel == null ? undefined : String(userData.kycLevel) },
     { label: 'KYC Status', value: userData.kycStatus },
     { label: 'Wallet', value: primaryUser?.walletName ?? userData.wallet?.name },
     { label: 'User Ref', value: primaryUser?.ref },
@@ -80,6 +80,10 @@ export function CallQueueUserInfo({ userData, users, kycSteps, highlightCheckDat
     { label: 'Referrer (Ref Werber)', value: refUserName },
     { label: 'Recommendation Step Result', value: recommendationStepResult },
     { label: 'Phone Call Status', value: userData.phoneCallStatus },
+    {
+      label: 'Phone Call Accepted',
+      value: userData.phoneCallAccepted == null ? undefined : String(userData.phoneCallAccepted),
+    },
     { label: 'Phone Call Times', value: userData.phoneCallTimes },
   ];
 

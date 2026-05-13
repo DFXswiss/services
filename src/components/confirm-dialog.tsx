@@ -28,7 +28,7 @@ export function ConfirmDialog({
   const { translate } = useSettingsContext();
 
   return (
-    <Modal isOpen={isOpen} onClose={onCancel}>
+    <Modal isOpen={isOpen} onClose={onCancel} variant="dialog">
       <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-auto w-full">
         {title && <h2 className="text-lg font-semibold text-dfxBlue-800 mb-3 text-left">{title}</h2>}
         <p className="text-sm text-dfxBlue-800 mb-6 text-left">{message}</p>

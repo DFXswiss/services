@@ -103,6 +103,21 @@ export interface PendingOnboardingInfo {
   date: string;
 }
 
+export interface PendingTransactionInfo {
+  txId: number;
+  uid: string;
+  sourceType: 'BuyCrypto' | 'BuyFiat';
+  userDataId: number;
+  userName?: string;
+  accountType?: string;
+  kycLevel?: number;
+  inputAmount?: number;
+  inputAsset?: string;
+  amlCheck?: string;
+  amlReason?: string;
+  date: string;
+}
+
 export type CallOutcomeContext =
   | { queue: CallQueue; userDataId: number; txId: number; sourceType: CallQueueSourceType }
   | { queue: CallQueue; userDataId: number; txId?: undefined; sourceType?: undefined };
@@ -113,7 +128,6 @@ export enum CallOutcome {
   SUSPICIOUS = 'Suspicious',
   USER_REJECTED = 'UserRejected',
   REPEAT = 'Repeat',
-  RESET = 'Reset',
 }
 
 export type CallOutcomeStep = 'transaction' | 'userData' | 'log';
@@ -446,6 +460,15 @@ export interface TransactionInfo {
   created: string;
 }
 
+export interface BankDataAlternative {
+  id: number;
+  userDataId: number;
+  name?: string;
+  verifiedName?: string;
+  accountType?: string;
+  type?: string;
+}
+
 export interface BankDataInfo {
   id: number;
   iban: string;
@@ -457,6 +480,7 @@ export interface BankDataInfo {
   active: boolean;
   comment?: string;
   created: string;
+  alternatives?: BankDataAlternative[];
 }
 
 export interface BuyRouteInfo {
@@ -609,7 +633,6 @@ const callOutcomeToPhoneStatus: Record<CallOutcome, PhoneCallStatus | undefined>
   [CallOutcome.SUSPICIOUS]: PhoneCallStatus.SUSPICIOUS,
   [CallOutcome.USER_REJECTED]: PhoneCallStatus.USER_REJECTED,
   [CallOutcome.REPEAT]: PhoneCallStatus.REPEAT,
-  [CallOutcome.RESET]: undefined,
 };
 
 const checkDateFieldByQueue: Record<CallQueue, string> = {
@@ -772,6 +795,13 @@ export function useCompliance() {
     });
   }
 
+  async function getPendingTransactions(): Promise<PendingTransactionInfo[]> {
+    return call<PendingTransactionInfo[]>({
+      url: 'support/pending-transactions',
+      method: 'GET',
+    });
+  }
+
   async function getPendingReviews(): Promise<PendingReviewSummaryEntry[]> {
     return call<PendingReviewSummaryEntry[]>({
       url: 'support/pending-reviews',
@@ -881,17 +911,9 @@ export function useCompliance() {
 
     const tx = context.txId != null && context.sourceType ? { id: context.txId, sourceType: context.sourceType } : null;
 
-    if (outcome === CallOutcome.RESET && !tx) {
-      return { success: false, failedStep: 'transaction', completedSteps, message: 'Reset requires a transaction' };
-    }
-
     // 1) Transaction update (if applicable)
     try {
-      if (outcome === CallOutcome.RESET && tx) {
-        if (tx.sourceType === 'BuyCrypto') await resetBuyCryptoAml(tx.id);
-        else await resetBuyFiatAml(tx.id);
-        completedSteps.push('transaction');
-      } else if (tx) {
+      if (tx) {
         const txData = buildTxUpdatePayload(outcome);
         if (txData) {
           if (tx.sourceType === 'BuyCrypto') await updateBuyCrypto(tx.id, txData);
@@ -1059,6 +1081,7 @@ export function useCompliance() {
       search,
       getUserData,
       getPendingOnboardings,
+      getPendingTransactions,
       getPendingReviews,
       getPendingReviewItems,
       getCallQueues,
