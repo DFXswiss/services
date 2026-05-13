@@ -247,7 +247,6 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
             placeholder={translate('screens/sell', 'Add or select your IBAN')}
             isModalOpen={bankAccountSelection}
             onModalToggle={setBankAccountSelection}
-            className="left-0 right-0 px-[1rem] translate-y-[72rem] h-fit "
           />
         )}
         <div className="w-full">
