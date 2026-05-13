@@ -84,6 +84,7 @@ export function CallQueueUserInfo({ userData, users, kycSteps, highlightCheckDat
       label: 'Phone Call Accepted',
       value: userData.phoneCallAccepted == null ? undefined : String(userData.phoneCallAccepted),
     },
+    { label: 'Phone Call Times', value: userData.phoneCallTimes },
   ];
 
   const checkDateRows: [CheckDateField, string][] = [
