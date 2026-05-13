@@ -26,10 +26,10 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
     setSignature((prev) => prev || clerks[0] || '');
   }, [clerks]);
 
-  const canSubmit = !!signature && !!outcome && !isSaving;
+  const canSubmit = !!signature && !!outcome && !!comment.trim() && !isSaving;
 
   async function handleSubmit() {
-    if (!outcome || !signature) return;
+    if (!outcome || !signature || !comment.trim()) return;
     setIsSaving(true);
     setResult(undefined);
     const res = await saveCallOutcome(context, outcome, { signature, comment });
@@ -74,14 +74,17 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
         </div>
       </div>
       <div className="mt-4">
-        <label className="block text-sm font-medium text-dfxBlue-800 mb-1">{translate('screens/kyc', 'Comment')}</label>
+        <label className="block text-sm font-medium text-dfxBlue-800 mb-1">
+          {translate('screens/kyc', 'Comment')} *
+        </label>
         <textarea
           className="w-full px-3 py-2 text-sm bg-white border border-dfxGray-300 rounded text-dfxBlue-800"
           rows={4}
           maxLength={500}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Optional: Notes from the call"
+          placeholder="Notes from the call"
+          required
         />
       </div>
       {result && !result.success && (

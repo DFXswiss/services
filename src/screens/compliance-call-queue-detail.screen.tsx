@@ -41,7 +41,6 @@ const TX_OUTCOMES: CallOutcome[] = [
   CallOutcome.SUSPICIOUS,
   CallOutcome.USER_REJECTED,
   CallOutcome.REPEAT,
-  CallOutcome.RESET,
 ];
 
 const USER_OUTCOMES: CallOutcome[] = [
@@ -116,6 +115,7 @@ export default function ComplianceCallQueueDetailScreen(): JSX.Element {
     title: queue ? `${queue} – ${userDataId ?? ''}` : translate('screens/compliance', 'Call Queue'),
     noMaxWidth: true,
     backButton: true,
+    textStart: true,
     onBack: () => navigate(-1),
   });
 
@@ -157,10 +157,7 @@ export default function ComplianceCallQueueDetailScreen(): JSX.Element {
         />
       )}
       {config.showAddressInfo && (
-        <CallQueueAddressInfo
-          userData={data.userData}
-          title={translate('screens/compliance', 'Address & Phone Call Times')}
-        />
+        <CallQueueAddressInfo userData={data.userData} title={translate('screens/compliance', 'Address')} />
       )}
       <CallQueueTransactionsList
         transactions={data.transactions}
