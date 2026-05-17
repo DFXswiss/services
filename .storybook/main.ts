@@ -16,17 +16,16 @@ const config: StorybookConfig = {
     check: false,
     reactDocgen: false,
   },
-  webpackFinal: async (webpackConfig) => {
-    webpackConfig.resolve = webpackConfig.resolve ?? {};
-    webpackConfig.resolve.alias = {
-      ...(webpackConfig.resolve.alias ?? {}),
+  webpackFinal: (webpackConfig) => {
+    webpackConfig.resolve!.alias = {
+      ...webpackConfig.resolve!.alias,
       src: path.resolve(__dirname, '../src'),
     };
     // App type-checking is handled by `react-app-rewired build`. Storybook only
     // needs to compile stories for visual rendering; ForkTsCheckerWebpackPlugin
     // (injected by the CRA preset) would otherwise re-evaluate the whole app
     // under strict mode and fail on pre-existing type drift unrelated to stories.
-    webpackConfig.plugins = (webpackConfig.plugins ?? []).filter(
+    webpackConfig.plugins = webpackConfig.plugins!.filter(
       (plugin) => plugin?.constructor?.name !== 'ForkTsCheckerWebpackPlugin',
     );
     return webpackConfig;

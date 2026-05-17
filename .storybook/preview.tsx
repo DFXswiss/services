@@ -3,13 +3,8 @@ import type { Preview } from '@storybook/react';
 import { LayoutContextProvider } from '../src/contexts/layout.context';
 import '../src/index.css';
 
-// The Modal component reads `topOffset` from `modalRootRef.getBoundingClientRect().top`
-// to leave room for the app's layout header. To make stories render the same way
-// the deployed app does, the decorator provides:
-//   - a visible header surrogate (scrollRef-tagged div, 64 px tall) at the top of
-//     the host so screenshots include the blue band the app shows above any modal,
-//   - a measurable modalRootRef anchor placed immediately below the header so its
-//     bounding rect resolves to y = 64 in time for Modal's useEffect.
+// Mirrors the app's layout: a 64 px header surrogate above the modal anchor so
+// Modal's `topOffset` resolves to 64 and snapshots include the visible header.
 function StorybookLayoutHost({ children }: { children: ReactNode }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const modalRootRef = useRef<HTMLDivElement | null>(null);
