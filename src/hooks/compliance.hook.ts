@@ -24,6 +24,7 @@ import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { CreateRecallDto, RecallListEntry } from 'src/dto/recall.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
+import { buildKycLogMessage, KycLogResult } from 'src/util/compliance-helpers';
 import { downloadFile, downloadPdfFromString, filenameDateFormat } from 'src/util/utils';
 
 export interface RefundFeeData {
@@ -647,17 +648,7 @@ function checkDateFieldForQueue(queue: CallQueue): string {
   return checkDateFieldByQueue[queue];
 }
 
-function buildTxUpdatePayload(outcome: CallOutcome): { amlCheck?: string; amlReason?: string } | null {
-  switch (outcome) {
-    case CallOutcome.COMPLETED:
-      return { amlCheck: CheckStatus.PASS };
-    case CallOutcome.USER_REJECTED:
-    case CallOutcome.SUSPICIOUS:
-      return { amlCheck: CheckStatus.FAIL, amlReason: AmlReason.MANUAL_CHECK_PHONE_FAILED };
-    default:
-      return null;
-  }
-}
+export type AmlAction = 'Pass' | 'Fail' | 'Reset';
 
 export function useCompliance() {
   const { call } = useApi();
@@ -899,7 +890,7 @@ export function useCompliance() {
   async function saveCallOutcome(
     context: CallOutcomeContext,
     outcome: CallOutcome,
-    options: { signature: string; comment?: string },
+    options: { signature: string; comment?: string; amlAction?: AmlAction },
   ): Promise<CallOutcomeResult> {
     const completedSteps: CallOutcomeStep[] = [];
     const fail = (step: CallOutcomeStep, err: unknown): CallOutcomeResult => ({
@@ -910,16 +901,29 @@ export function useCompliance() {
     });
 
     const tx = context.txId != null && context.sourceType ? { id: context.txId, sourceType: context.sourceType } : null;
+    const results: KycLogResult[] = [];
 
     // 1) Transaction update (if applicable)
     try {
-      if (tx) {
-        const txData = buildTxUpdatePayload(outcome);
-        if (txData) {
-          if (tx.sourceType === 'BuyCrypto') await updateBuyCrypto(tx.id, txData);
-          else await updateBuyFiat(tx.id, txData);
-          completedSteps.push('transaction');
+      if (tx && options.amlAction) {
+        const signature = options.signature.trim();
+        const txTable = tx.sourceType === 'BuyCrypto' ? 'buyCrypto' : 'buyFiat';
+        if (options.amlAction === 'Pass') {
+          if (tx.sourceType === 'BuyCrypto') await manualPassBuyCrypto(tx.id, signature);
+          else await manualPassBuyFiat(tx.id, signature);
+          results.push({ table: txTable, column: 'amlCheck', value: CheckStatus.PASS });
+        } else if (options.amlAction === 'Fail') {
+          const failData = { amlCheck: CheckStatus.FAIL, amlReason: AmlReason.MANUAL_CHECK_PHONE_FAILED };
+          if (tx.sourceType === 'BuyCrypto') await updateBuyCrypto(tx.id, failData);
+          else await updateBuyFiat(tx.id, failData);
+          results.push({ table: txTable, column: 'amlCheck', value: CheckStatus.FAIL });
+          results.push({ table: txTable, column: 'amlReason', value: AmlReason.MANUAL_CHECK_PHONE_FAILED });
+        } else {
+          if (tx.sourceType === 'BuyCrypto') await resetBuyCryptoAml(tx.id);
+          else await resetBuyFiatAml(tx.id);
+          results.push({ table: txTable, column: 'amlCheck', value: 'Reset' });
         }
+        completedSteps.push('transaction');
       }
     } catch (e) {
       return fail('transaction', e);
@@ -931,8 +935,12 @@ export function useCompliance() {
     if (phoneStatus && !skipUserData) {
       try {
         const udData: Record<string, unknown> = { phoneCallStatus: phoneStatus };
+        results.push({ table: 'userData', column: 'phoneCallStatus', value: phoneStatus });
         if (outcome === CallOutcome.COMPLETED) {
-          udData[checkDateFieldForQueue(context.queue)] = new Date().toISOString();
+          const checkDateField = checkDateFieldForQueue(context.queue);
+          const checkDateValue = new Date().toISOString();
+          udData[checkDateField] = checkDateValue;
+          results.push({ table: 'userData', column: checkDateField, value: checkDateValue });
         }
         await updateUserData(context.userDataId, udData);
         completedSteps.push('userData');
@@ -943,8 +951,12 @@ export function useCompliance() {
 
     // 3) KYC log entry (always)
     try {
-      const comment = options.comment?.trim();
-      const logMessage = [options.signature.trim(), outcome, comment].filter(Boolean).join(' – ');
+      const logMessage = buildKycLogMessage({
+        description: context.queue,
+        clerk: options.signature,
+        results,
+        comment: options.comment,
+      });
       await createKycLog(context.userDataId, logMessage);
       completedSteps.push('log');
     } catch (e) {
@@ -1073,6 +1085,22 @@ export function useCompliance() {
     return call<void>({
       url: `buyFiat/${id}/amlCheck`,
       method: 'DELETE',
+    });
+  }
+
+  async function manualPassBuyCrypto(id: number, responsible: string): Promise<void> {
+    return call<void>({
+      url: `buyCrypto/${id}/amlCheck`,
+      method: 'PUT',
+      data: { amlCheck: CheckStatus.PASS, responsible },
+    });
+  }
+
+  async function manualPassBuyFiat(id: number, responsible: string): Promise<void> {
+    return call<void>({
+      url: `buyFiat/${id}/amlCheck`,
+      method: 'PUT',
+      data: { amlCheck: CheckStatus.PASS, responsible },
     });
   }
 

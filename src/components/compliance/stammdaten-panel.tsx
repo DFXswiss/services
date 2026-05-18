@@ -6,8 +6,16 @@ import { statusBadge, formatDateTime } from 'src/util/compliance-helpers';
 
 interface StammdatenPanelProps {
   data: ComplianceUserData;
+  clerks: string[];
   onOpenFile: (file: KycFile) => void;
-  onSave: (stepId: number, status: string, comment?: string, result?: string) => Promise<void>;
+  onSave: (
+    stepId: number,
+    status: string,
+    clerk: string,
+    description: string,
+    comment?: string,
+    result?: string,
+  ) => Promise<void>;
   isSaving: boolean;
 }
 
@@ -178,6 +186,7 @@ function ChangeSectionPanel({
   files,
   userData,
   checkItems,
+  clerks,
   onOpenFile,
   onSave,
   isSaving,
@@ -187,8 +196,16 @@ function ChangeSectionPanel({
   files: KycFile[];
   userData: UserDataDetail;
   checkItems: DocumentCheckItem[];
+  clerks: string[];
   onOpenFile: (file: KycFile) => void;
-  onSave: (stepId: number, status: string, comment?: string, result?: string) => Promise<void>;
+  onSave: (
+    stepId: number,
+    status: string,
+    clerk: string,
+    description: string,
+    comment?: string,
+    result?: string,
+  ) => Promise<void>;
   isSaving: boolean;
 }): JSX.Element {
   const [decision, setDecision] = useState<DecisionValue>(
@@ -196,6 +213,7 @@ function ChangeSectionPanel({
   );
   const [comment, setComment] = useState(step.comment ?? '');
   const [checks, setChecks] = useState<Record<string, string>>({});
+  const [clerk, setClerk] = useState('');
 
   useEffect(() => {
     const initial: Record<string, string> = {};
@@ -227,7 +245,7 @@ function ChangeSectionPanel({
   const comparisonRows = step.result ? buildComparisonRows(section.stepName, step.result, userData, countries) : [];
 
   function handleSave(): void {
-    if (!decision) return;
+    if (!decision || !clerk) return;
     const status = decision === 'Akzeptiert' ? 'Completed' : 'Failed';
     const comment_ = decision === 'Abgelehnt' && comment ? comment : undefined;
 
@@ -250,7 +268,7 @@ function ChangeSectionPanel({
     existingResult.complianceReview = checksData;
     const result = JSON.stringify(existingResult);
 
-    onSave(step.id, status, comment_, result);
+    onSave(step.id, status, clerk, section.stepName, comment_, result);
   }
 
   return (
@@ -358,12 +376,31 @@ function ChangeSectionPanel({
             </div>
           )}
 
+          {/* Clerk */}
+          <div className="bg-white rounded-lg shadow-sm px-3 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-dfxBlue-800 font-medium">Editor:</span>
+              <select
+                className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+                value={clerk}
+                onChange={(e) => setClerk(e.target.value)}
+              >
+                <option value="">—</option>
+                {clerks.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Save */}
           <div>
             <button
               className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
               onClick={handleSave}
-              disabled={isSaving || !decision}
+              disabled={isSaving || !decision || !clerk}
             >
               {isSaving ? 'Speichern...' : 'Speichern'}
             </button>
@@ -374,7 +411,7 @@ function ChangeSectionPanel({
   );
 }
 
-export function StammdatenPanel({ data, onOpenFile, onSave, isSaving }: StammdatenPanelProps): JSX.Element {
+export function StammdatenPanel({ data, clerks, onOpenFile, onSave, isSaving }: StammdatenPanelProps): JSX.Element {
   const accountType = String(data.userData.accountType ?? '');
 
   const activeSections = changeSections
@@ -402,6 +439,7 @@ export function StammdatenPanel({ data, onOpenFile, onSave, isSaving }: Stammdat
             files={data.kycFiles ?? []}
             userData={data.userData}
             checkItems={getCheckItems(section.stepName, accountType)}
+            clerks={clerks}
             onOpenFile={onOpenFile}
             onSave={onSave}
             isSaving={isSaving}

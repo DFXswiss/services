@@ -225,3 +225,22 @@ export function buildAddress(parts?: {
   ].filter((l): l is string => Boolean(l && l.length));
   return lines.length > 0 ? lines.join(', ') : '-';
 }
+
+export interface KycLogResult {
+  table: string;
+  column: string;
+  value: string;
+}
+
+export function buildKycLogMessage(parts: {
+  description: string;
+  clerk: string;
+  results: KycLogResult[];
+  comment?: string;
+}): string {
+  const resultStr = parts.results.map((r) => `${r.table}-${r.column}-${r.value}`).join(', ');
+  const sections = [`Services - ${parts.description}`, `Editor: ${parts.clerk.trim()}`, `result: ${resultStr}`];
+  const comment = parts.comment?.trim();
+  if (comment) sections.push(`comment: ${comment}`);
+  return sections.join('; ');
+}

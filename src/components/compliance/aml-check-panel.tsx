@@ -8,20 +8,19 @@ function callQueueForReason(reason: string | undefined): CallQueue | undefined {
   return reason && (Object.values(CallQueue) as string[]).includes(reason) ? (reason as CallQueue) : undefined;
 }
 
+export interface AmlCheckUpdate {
+  amlCheck?: string;
+  amlReason?: string;
+  comment?: string;
+  priceDefinitionAllowedDate?: string;
+}
+
 interface AmlCheckPendingPanelProps {
   data: ComplianceUserData;
-  onUpdateBuyCrypto: (
-    id: number,
-    data: { amlCheck?: string; amlReason?: string; comment?: string; priceDefinitionAllowedDate?: string },
-  ) => Promise<void>;
-  onUpdateBuyFiat: (
-    id: number,
-    data: { amlCheck?: string; amlReason?: string; comment?: string; priceDefinitionAllowedDate?: string },
-  ) => Promise<void>;
-  onResetBuyCryptoAml: (id: number) => Promise<void>;
-  onResetBuyFiatAml: (id: number) => Promise<void>;
+  clerks: string[];
   isSaving: boolean;
-  onReload: () => void;
+  onUpdate: (tx: TransactionInfo, update: AmlCheckUpdate, clerk: string) => Promise<void>;
+  onReset: (tx: TransactionInfo, clerk: string) => Promise<void>;
 }
 
 const AML_CHECK_OPTIONS = [CheckStatus.PASS, CheckStatus.FAIL, CheckStatus.PENDING, 'Reset'] as const;
@@ -31,43 +30,40 @@ const AML_REASON_OPTIONS: AmlReason[] = [
   ...(Object.values(AmlReason) as AmlReason[]).filter((r) => r !== AmlReason.NA).sort((a, b) => a.localeCompare(b)),
 ];
 
-function isBuyCrypto(tx: TransactionInfo): boolean {
-  return tx.buyCryptoId != null;
-}
-
 function TransactionEntry({
   tx,
+  clerks,
   onUpdate,
   onReset,
   isSaving,
 }: {
   tx: TransactionInfo;
-  onUpdate: (data: {
-    amlCheck?: string;
-    amlReason?: string;
-    comment?: string;
-    priceDefinitionAllowedDate?: string;
-  }) => Promise<void>;
-  onReset: () => Promise<void>;
+  clerks: string[];
+  onUpdate: (data: AmlCheckUpdate, clerk: string) => Promise<void>;
+  onReset: (clerk: string) => Promise<void>;
   isSaving: boolean;
 }): JSX.Element {
   const [amlCheck, setAmlCheck] = useState(tx.amlCheck ?? '');
   const [amlReason, setAmlReason] = useState<AmlReason>((tx.amlReason as AmlReason) ?? AmlReason.NA);
   const [setPriceDate, setSetPriceDate] = useState(false);
+  const [clerk, setClerk] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
   async function handleSave(): Promise<void> {
-    if (!amlCheck) return;
+    if (!amlCheck || !clerk) return;
     setIsProcessing(true);
     try {
       if (amlCheck === 'Reset') {
-        await onReset();
+        await onReset(clerk);
       } else {
-        await onUpdate({
-          amlCheck,
-          amlReason,
-          priceDefinitionAllowedDate: setPriceDate ? new Date().toISOString() : undefined,
-        });
+        await onUpdate(
+          {
+            amlCheck,
+            amlReason,
+            priceDefinitionAllowedDate: setPriceDate ? new Date().toISOString() : undefined,
+          },
+          clerk,
+        );
       }
     } finally {
       setIsProcessing(false);
@@ -179,11 +175,30 @@ function TransactionEntry({
         </div>
       </div>
 
+      {/* Clerk */}
+      <div className="bg-white rounded-lg shadow-sm px-3 py-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-dfxBlue-800 font-medium">Editor:</span>
+          <select
+            className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+            value={clerk}
+            onChange={(e) => setClerk(e.target.value)}
+          >
+            <option value="">—</option>
+            {clerks.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div>
         <button
           className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
           onClick={handleSave}
-          disabled={isSaving || isProcessing || !amlCheck}
+          disabled={isSaving || isProcessing || !amlCheck || !clerk}
         >
           {isProcessing ? 'Speichern...' : 'Speichern'}
         </button>
@@ -194,12 +209,10 @@ function TransactionEntry({
 
 export function AmlCheckPendingPanel({
   data,
-  onUpdateBuyCrypto,
-  onUpdateBuyFiat,
-  onResetBuyCryptoAml,
-  onResetBuyFiatAml,
+  clerks,
   isSaving,
-  onReload,
+  onUpdate,
+  onReset,
 }: AmlCheckPendingPanelProps): JSX.Element {
   const { navigate } = useNavigation();
 
@@ -335,22 +348,9 @@ export function AmlCheckPendingPanel({
         <div key={tx.id} className="border-b border-dfxGray-300 pb-6 last:border-0">
           <TransactionEntry
             tx={tx}
-            onUpdate={async (updateData) => {
-              if (isBuyCrypto(tx) && tx.buyCryptoId != null) {
-                await onUpdateBuyCrypto(tx.buyCryptoId, updateData);
-              } else if (tx.buyFiatId != null) {
-                await onUpdateBuyFiat(tx.buyFiatId, updateData);
-              }
-              onReload();
-            }}
-            onReset={async () => {
-              if (isBuyCrypto(tx) && tx.buyCryptoId != null) {
-                await onResetBuyCryptoAml(tx.buyCryptoId);
-              } else if (tx.buyFiatId != null) {
-                await onResetBuyFiatAml(tx.buyFiatId);
-              }
-              onReload();
-            }}
+            clerks={clerks}
+            onUpdate={(updateData, clerk) => onUpdate(tx, updateData, clerk)}
+            onReset={(clerk) => onReset(tx, clerk)}
             isSaving={isSaving}
           />
         </div>
