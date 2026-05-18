@@ -500,6 +500,9 @@ export interface SellRouteInfo {
   id: number;
   iban: string;
   fiatName?: string;
+  depositAddress?: string;
+  depositBlockchains?: string[];
+  depositAddressExplorerUrl?: string;
   volume: number;
   active: boolean;
   created: string;
