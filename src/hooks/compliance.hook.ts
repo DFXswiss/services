@@ -1090,17 +1090,17 @@ export function useCompliance() {
 
   async function manualPassBuyCrypto(id: number, responsible: string): Promise<void> {
     return call<void>({
-      url: `buyCrypto/${id}/amlCheck/pass`,
+      url: `buyCrypto/${id}/amlCheck`,
       method: 'PUT',
-      data: { responsible },
+      data: { amlCheck: CheckStatus.PASS, responsible },
     });
   }
 
   async function manualPassBuyFiat(id: number, responsible: string): Promise<void> {
     return call<void>({
-      url: `buyFiat/${id}/amlCheck/pass`,
+      url: `buyFiat/${id}/amlCheck`,
       method: 'PUT',
-      data: { responsible },
+      data: { amlCheck: CheckStatus.PASS, responsible },
     });
   }
 
