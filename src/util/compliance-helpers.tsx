@@ -144,6 +144,15 @@ export function formatDate(value: string): string {
   return new Date(value).toLocaleDateString();
 }
 
+export function calculateAge(birthday: string): number {
+  const birth = new Date(birthday);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
+  return age;
+}
+
 export function formatDateTime(value: string): string {
   return new Date(value).toLocaleString();
 }
