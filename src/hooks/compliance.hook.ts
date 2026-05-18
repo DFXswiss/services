@@ -7,6 +7,7 @@ import {
   CallQueueSourceType,
   CallQueueSummaryEntry,
   CheckStatus,
+  Department,
   Fiat,
   FundOrigin,
   InvestmentDate,
@@ -343,6 +344,28 @@ export interface SupportPermissions {
   viewRecommendation: boolean;
 }
 
+export interface SupportNoteInfo {
+  id: number;
+  department: Department;
+  authorMail: string;
+  subject?: string;
+  content: string;
+  userDataId?: number;
+  userName?: string;
+  isOwn: boolean;
+  isAdmin: boolean;
+  created: string;
+  updated: string;
+}
+
+export type SupportNoteScope = 'all' | 'free' | 'bound';
+
+export interface SupportNoteUser {
+  userDataId: number;
+  name: string;
+  count: number;
+}
+
 export interface ComplianceUserData {
   userData: UserDataDetail;
   kycFiles?: KycFile[];
@@ -361,6 +384,7 @@ export interface ComplianceUserData {
   virtualIbans: VirtualIbanInfo[];
   refRewards: RefRewardInfo[];
   notifications: NotificationInfo[];
+  notes: SupportNoteInfo[];
   permissions: SupportPermissions;
 }
 
@@ -1076,6 +1100,71 @@ export function useCompliance() {
     });
   }
 
+  async function getSupportNotes(userDataId: number): Promise<SupportNoteInfo[]> {
+    return call<SupportNoteInfo[]>({
+      url: `support/note?userDataId=${userDataId}`,
+      method: 'GET',
+    });
+  }
+
+  async function listSupportNotes(params: {
+    search?: string;
+    scope?: SupportNoteScope;
+    userDataId?: number;
+  }): Promise<SupportNoteInfo[]> {
+    const qs = new URLSearchParams();
+    if (params.search) qs.set('search', params.search);
+    if (params.scope) qs.set('scope', params.scope);
+    if (params.userDataId != null) qs.set('userDataId', String(params.userDataId));
+    const query = qs.toString();
+    return call<SupportNoteInfo[]>({
+      url: `support/note/list${query ? `?${query}` : ''}`,
+      method: 'GET',
+    });
+  }
+
+  async function listSupportNoteUsers(): Promise<SupportNoteUser[]> {
+    return call<SupportNoteUser[]>({
+      url: 'support/note/users',
+      method: 'GET',
+    });
+  }
+
+  async function createSupportNote(
+    content: string,
+    options?: { userDataId?: number; subject?: string; department?: Department },
+  ): Promise<SupportNoteInfo> {
+    return call<SupportNoteInfo>({
+      url: 'support/note',
+      method: 'POST',
+      data: {
+        userDataId: options?.userDataId,
+        subject: options?.subject,
+        content,
+        department: options?.department,
+      },
+    });
+  }
+
+  async function updateSupportNote(
+    id: number,
+    content: string,
+    options?: { subject?: string },
+  ): Promise<SupportNoteInfo> {
+    return call<SupportNoteInfo>({
+      url: `support/note/${id}`,
+      method: 'PUT',
+      data: { content, subject: options?.subject },
+    });
+  }
+
+  async function deleteSupportNote(id: number): Promise<void> {
+    return call<void>({
+      url: `support/note/${id}`,
+      method: 'DELETE',
+    });
+  }
+
   return useMemo(
     () => ({
       search,
@@ -1117,6 +1206,12 @@ export function useCompliance() {
       updateBuyFiat,
       resetBuyCryptoAml,
       resetBuyFiatAml,
+      getSupportNotes,
+      listSupportNotes,
+      listSupportNoteUsers,
+      createSupportNote,
+      updateSupportNote,
+      deleteSupportNote,
     }),
     [call],
   );
