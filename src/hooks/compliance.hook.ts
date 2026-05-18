@@ -358,7 +358,7 @@ export interface SupportNoteInfo {
   updated: string;
 }
 
-export type SupportNoteScope = 'all' | 'free' | 'bound';
+export type SupportNoteScope = 'All' | 'Free' | 'Bound';
 
 export interface SupportNoteUser {
   userDataId: number;
@@ -1100,13 +1100,6 @@ export function useCompliance() {
     });
   }
 
-  async function getSupportNotes(userDataId: number): Promise<SupportNoteInfo[]> {
-    return call<SupportNoteInfo[]>({
-      url: `support/note?userDataId=${userDataId}`,
-      method: 'GET',
-    });
-  }
-
   async function listSupportNotes(params: {
     search?: string;
     scope?: SupportNoteScope;
@@ -1117,8 +1110,9 @@ export function useCompliance() {
     if (params.scope) qs.set('scope', params.scope);
     if (params.userDataId != null) qs.set('userDataId', String(params.userDataId));
     const query = qs.toString();
+    const suffix = query ? `?${query}` : '';
     return call<SupportNoteInfo[]>({
-      url: `support/note/list${query ? `?${query}` : ''}`,
+      url: `support/note${suffix}`,
       method: 'GET',
     });
   }
@@ -1206,7 +1200,6 @@ export function useCompliance() {
       updateBuyFiat,
       resetBuyCryptoAml,
       resetBuyFiatAml,
-      getSupportNotes,
       listSupportNotes,
       listSupportNoteUsers,
       createSupportNote,

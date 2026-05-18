@@ -8,7 +8,7 @@ import { SupportNoteInfo, SupportNoteScope, SupportNoteUser, useCompliance } fro
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
-type Scope = Extract<SupportNoteScope, 'all' | 'free'>;
+type Scope = Extract<SupportNoteScope, 'All' | 'Free'>;
 
 export default function NotesScreen(): JSX.Element {
   useSupportDashboardGuard();
@@ -20,7 +20,7 @@ export default function NotesScreen(): JSX.Element {
   const [notes, setNotes] = useState<SupportNoteInfo[]>([]);
   const [search, setSearch] = useState('');
   const [submittedSearch, setSubmittedSearch] = useState('');
-  const [scope, setScope] = useState<Scope>('all');
+  const [scope, setScope] = useState<Scope>('All');
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,9 +39,10 @@ export default function NotesScreen(): JSX.Element {
   const loadNotes = useCallback(() => {
     setIsLoading(true);
     setError(undefined);
+    const effectiveScope = selectedUser || scope === 'All' ? undefined : scope;
     listSupportNotes({
       search: submittedSearch || undefined,
-      scope: selectedUser ? undefined : scope === 'all' ? undefined : scope,
+      scope: effectiveScope,
       userDataId: selectedUser?.userDataId,
     })
       .then(setNotes)
@@ -116,7 +117,7 @@ export default function NotesScreen(): JSX.Element {
     setSelectedUser(user);
     setCustomerQuery('');
     setShowSuggestions(false);
-    if (scope === 'free') setScope('all');
+    if (scope === 'Free') setScope('All');
   }
 
   function clearUser(): void {
@@ -126,7 +127,7 @@ export default function NotesScreen(): JSX.Element {
 
   function handleScopeChange(next: Scope): void {
     setScope(next);
-    if (next === 'free' && selectedUser) clearUser();
+    if (next === 'Free' && selectedUser) clearUser();
   }
 
   return (
@@ -164,8 +165,8 @@ export default function NotesScreen(): JSX.Element {
             disabled={selectedUser != null}
             title={selectedUser ? 'Filter ist auf einen Kunden eingeschränkt' : undefined}
           >
-            <option value="all">Alle</option>
-            <option value="free">Ohne Kundenbezug</option>
+            <option value="All">Alle</option>
+            <option value="Free">Ohne Kundenbezug</option>
           </select>
 
           <div ref={customerBoxRef} className="relative min-w-[220px]">
