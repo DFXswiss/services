@@ -444,6 +444,7 @@ export interface TransactionInfo {
   uid: string;
   buyCryptoId?: number;
   buyFiatId?: number;
+  bankDataId?: number;
   type?: string;
   sourceType: string;
   inputAmount?: number;
