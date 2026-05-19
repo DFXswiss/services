@@ -24,6 +24,21 @@ const TIMEFRAME_OPTIONS = [
 
 const REFRESH_INTERVAL_MS = 60_000;
 
+export function sameLatestBalance(a: LatestBalanceResponse | undefined, b: LatestBalanceResponse | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.timestamp !== b.timestamp) return false;
+  if (a.byType?.length !== b.byType?.length) return false;
+  return true;
+}
+
+export function sameLogEntries(a: FinancialLogEntry[], b: FinancialLogEntry[]): boolean {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  if (a.length === 0) return true;
+  return a[a.length - 1]?.timestamp === b[b.length - 1]?.timestamp;
+}
+
 export default function DashboardFinancialOverviewScreen(): JSX.Element {
   useAdminGuard();
   useLayoutOptions({ title: 'Financial Overview', noMaxWidth: true });
@@ -46,10 +61,10 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
     function load(initial: boolean) {
       if (initial) setIsLoading(true);
       getLatestBalance()
-        .then(setLatestBalance)
+        .then((data) => setLatestBalance((prev) => (sameLatestBalance(prev, data) ? prev : data)))
         .catch(() => undefined);
       getFinancialLog(from, dailySample)
-        .then((logData) => setLogEntries(logData.entries))
+        .then((logData) => setLogEntries((prev) => (sameLogEntries(prev, logData.entries) ? prev : logData.entries)))
         .catch(() => undefined)
         .finally(() => {
           if (initial) setIsLoading(false);
