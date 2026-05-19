@@ -54,7 +54,7 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
   // Prefetch the lazy ApexCharts chunk while the page is mounting so the
   // first chart paint does not wait on a separate network round-trip.
   useEffect(() => {
-    import('react-apexcharts');
+    import('react-apexcharts').catch(() => undefined);
   }, []);
 
   useEffect(() => {
