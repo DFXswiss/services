@@ -2,14 +2,14 @@ import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { BalanceBarChart } from 'src/components/dashboard/latest-balance-bar-chart';
-import { AgeBadge, formatChfOrDash, SummaryCard } from 'src/components/dashboard/summary-card';
+import { AgeBadge, SummaryCard } from 'src/components/dashboard/summary-card';
 import { TotalBalanceLongChart } from 'src/components/dashboard/total-balance-long-chart';
 import { FinancialLogEntry, LatestBalanceResponse } from 'src/dto/dashboard.dto';
 import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { getFromDateByTimeframe, Timeframe } from 'src/util/chart';
-import { TimeRange } from './dashboard-financial-history.screen';
+import { getFromDateByTimeframe, Timeframe, TimeRange } from 'src/util/chart';
+import { formatChfOrDash } from 'src/util/utils';
 
 const TIMEFRAME_OPTIONS = [
   Timeframe.WEEK,

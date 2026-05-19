@@ -1,13 +1,5 @@
 import { useEffect, useState } from 'react';
 
-export function formatChf(value: number): string {
-  return value.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-
-export function formatChfOrDash(value?: number): string {
-  return value !== undefined ? `${formatChf(value)} CHF` : '-';
-}
-
 interface SummaryCardProps {
   label: string;
   value: React.ReactNode;

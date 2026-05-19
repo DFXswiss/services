@@ -2,11 +2,12 @@ import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { BalanceBarChart } from 'src/components/dashboard/latest-balance-bar-chart';
-import { formatChfOrDash, SummaryCard } from 'src/components/dashboard/summary-card';
+import { SummaryCard } from 'src/components/dashboard/summary-card';
 import { LatestBalanceResponse } from 'src/dto/dashboard.dto';
 import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { formatChfOrDash } from 'src/util/utils';
 
 export default function DashboardFinancialLiveScreen(): JSX.Element {
   useAdminGuard();

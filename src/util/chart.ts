@@ -1,3 +1,8 @@
+export interface TimeRange {
+  min: number;
+  max: number;
+}
+
 export enum Timeframe {
   DAY = '24h',
   THREE_DAYS = '3D',
