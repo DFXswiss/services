@@ -14,7 +14,7 @@ export default function DashboardFinancialLiveScreen(): JSX.Element {
   useLayoutOptions({ title: 'Financial Live', noMaxWidth: true });
 
   const { isLoggedIn } = useSessionContext();
-  const { getLatestChanges, getLatestBalance } = useDashboard();
+  const { getLatestBalance } = useDashboard();
 
   const [latestBalance, setLatestBalance] = useState<LatestBalanceResponse>();
   const [isLoading, setIsLoading] = useState(true);
@@ -22,10 +22,8 @@ export default function DashboardFinancialLiveScreen(): JSX.Element {
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    Promise.all([getLatestBalance(), getLatestChanges()])
-      .then(([balanceData]) => {
-        setLatestBalance(balanceData);
-      })
+    getLatestBalance()
+      .then(setLatestBalance)
       .catch(() => undefined)
       .finally(() => setIsLoading(false));
   }, [isLoggedIn]);
