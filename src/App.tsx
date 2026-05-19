@@ -77,6 +77,7 @@ const ComplianceCallQueueDetailScreen = lazy(() => import('./screens/compliance-
 const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
 const SupportDashboardIssueScreen = lazy(() => import('./screens/support-dashboard-issue.screen'));
 const SupportDashboardCreateScreen = lazy(() => import('./screens/support-dashboard-create.screen'));
+const NotesScreen = lazy(() => import('./screens/notes.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
 const RealunitHoldersScreen = lazy(() => import('./screens/realunit-holders.screen'));
 const RealunitQuotesScreen = lazy(() => import('./screens/realunit-quotes.screen'));
@@ -457,6 +458,10 @@ export const Routes = [
       {
         path: 'support/dashboard/create',
         element: withSuspense(<SupportDashboardCreateScreen />),
+      },
+      {
+        path: 'notes',
+        element: withSuspense(<NotesScreen />),
       },
       {
         path: 'realunit',
