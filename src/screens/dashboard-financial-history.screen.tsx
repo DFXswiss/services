@@ -5,6 +5,7 @@ import { BalanceByTypeMinusChart, BalanceByTypePlusChart, BalanceByTypeTotalChar
 import { FinancialChangesMinusChart, FinancialChangesPlusChart, FinancialChangesTotalChart } from 'src/components/dashboard/financial-changes-chart';
 import { TotalBalanceLongChart } from 'src/components/dashboard/total-balance-long-chart';
 import { ShortTermMinusChart, ShortTermPlusChart, ShortTermTotalChart } from 'src/components/dashboard/total-balance-short-chart';
+import { useThemeContext } from 'src/contexts/theme.context';
 import { FinancialChangesEntry, FinancialLogEntry } from 'src/dto/dashboard.dto';
 import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
@@ -21,6 +22,7 @@ export default function DashboardFinancialLogScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { getFinancialLog, getFinancialChanges } = useDashboard();
+  const { isDark, tokens } = useThemeContext();
 
   const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.DAY);
   const [logEntries, setLogEntries] = useState<FinancialLogEntry[]>([]);
@@ -53,8 +55,11 @@ export default function DashboardFinancialLogScreen(): JSX.Element {
     return { min: Math.min(...allTimestamps), max: Math.max(...allTimestamps) };
   }, [logEntries, changesEntries]);
 
+  const inactiveBtnBg = isDark ? '#082948' : '#f3f4f6';
+  const inactiveBtnColor = isDark ? '#D6DBE2' : '#374151';
+
   return (
-    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
+    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: tokens.textPrimary }}>
       {/* Timeframe Selector */}
       <div className="flex gap-2">
         {TIMEFRAME_OPTIONS.map((tf) => (
@@ -63,8 +68,8 @@ export default function DashboardFinancialLogScreen(): JSX.Element {
             onClick={() => setTimeframe(tf)}
             className="px-4 py-1.5 rounded text-sm font-medium transition-colors"
             style={{
-              background: tf === timeframe ? '#3b82f6' : '#f3f4f6',
-              color: tf === timeframe ? '#ffffff' : '#374151',
+              background: tf === timeframe ? '#3b82f6' : inactiveBtnBg,
+              color: tf === timeframe ? '#ffffff' : inactiveBtnColor,
             }}
           >
             {tf}
@@ -79,41 +84,41 @@ export default function DashboardFinancialLogScreen(): JSX.Element {
       ) : (
         <>
           {/* Fee Income */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <FinancialChangesPlusChart entries={changesEntries} timeRange={timeRange} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <FinancialChangesPlusChart entries={changesEntries} timeRange={timeRange} dark={isDark} />
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <FinancialChangesMinusChart entries={changesEntries} timeRange={timeRange} onDetails={() => navigate('/dashboard/financial/history/expenses')} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <FinancialChangesMinusChart entries={changesEntries} timeRange={timeRange} dark={isDark} onDetails={() => navigate('/dashboard/financial/history/expenses')} />
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <FinancialChangesTotalChart entries={changesEntries} timeRange={timeRange} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <FinancialChangesTotalChart entries={changesEntries} timeRange={timeRange} dark={isDark} />
           </div>
 
           {/* Total Balance vs BTC */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <TotalBalanceLongChart entries={logEntries} timeRange={timeRange} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <TotalBalanceLongChart entries={logEntries} timeRange={timeRange} dark={isDark} />
           </div>
 
           {/* Balance Breakdown */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <ShortTermPlusChart entries={logEntries} timeRange={timeRange} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <ShortTermPlusChart entries={logEntries} timeRange={timeRange} dark={isDark} />
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <ShortTermMinusChart entries={logEntries} timeRange={timeRange} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <ShortTermMinusChart entries={logEntries} timeRange={timeRange} dark={isDark} />
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <ShortTermTotalChart entries={logEntries} timeRange={timeRange} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <ShortTermTotalChart entries={logEntries} timeRange={timeRange} dark={isDark} />
           </div>
 
           {/* Balance by Financial Type */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <BalanceByTypePlusChart entries={logEntries} timeRange={timeRange} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <BalanceByTypePlusChart entries={logEntries} timeRange={timeRange} dark={isDark} />
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <BalanceByTypeMinusChart entries={logEntries} timeRange={timeRange} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <BalanceByTypeMinusChart entries={logEntries} timeRange={timeRange} dark={isDark} />
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <BalanceByTypeTotalChart entries={logEntries} timeRange={timeRange} />
+          <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+            <BalanceByTypeTotalChart entries={logEntries} timeRange={timeRange} dark={isDark} />
           </div>
         </>
       )}

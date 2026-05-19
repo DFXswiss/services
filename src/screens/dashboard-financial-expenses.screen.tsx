@@ -3,36 +3,40 @@ import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { ApexOptions } from 'apexcharts';
 import { useEffect, useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
+import { useThemeContext } from 'src/contexts/theme.context';
 import { FinancialChangesEntry, RefRewardRecipient } from 'src/dto/dashboard.dto';
+import { useDashboard } from 'src/hooks/dashboard.hook';
+import { useAdminGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
 const KNOWN_USERS: Record<number, string> = {
   8938: 'Fab',
   187402: 'Cake Wallet',
 };
-import { useDashboard } from 'src/hooks/dashboard.hook';
-import { useAdminGuard } from 'src/hooks/guard.hook';
-import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
-const baseOptions: ApexOptions = {
-  chart: { type: 'area', toolbar: { show: true, offsetY: -5 }, zoom: { enabled: true }, background: '0' },
-  stroke: { width: 2, curve: 'smooth' },
-  dataLabels: { enabled: false },
-  fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.05 } },
-  grid: { borderColor: '#e5e7eb' },
-  xaxis: { type: 'datetime', labels: { datetimeUTC: false, format: 'dd MMM yy' } },
-  yaxis: {
-    title: { text: 'CHF (cumulative)' },
-    labels: { formatter: (val: number) => (val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val.toFixed(0)) },
-  },
-  tooltip: {
-    x: { format: 'dd MMM yyyy HH:mm' },
-    y: { formatter: (val: number) => `${val.toLocaleString('de-CH', { maximumFractionDigits: 0 })} CHF` },
-  },
-  legend: { position: 'bottom' },
-};
+function makeBaseOptions(dark?: boolean): ApexOptions {
+  return {
+    chart: { type: 'area', toolbar: { show: true, offsetY: -5 }, zoom: { enabled: true }, background: '0' },
+    theme: { mode: dark ? 'dark' : 'light' },
+    stroke: { width: 2, curve: 'smooth' },
+    dataLabels: { enabled: false },
+    fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.05 } },
+    grid: { borderColor: dark ? '#0A355C' : '#e5e7eb' },
+    xaxis: { type: 'datetime', labels: { datetimeUTC: false, format: 'dd MMM yy' } },
+    yaxis: {
+      title: { text: 'CHF (cumulative)' },
+      labels: { formatter: (val: number) => (val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val.toFixed(0)) },
+    },
+    tooltip: {
+      x: { format: 'dd MMM yyyy HH:mm' },
+      y: { formatter: (val: number) => `${val.toLocaleString('de-CH', { maximumFractionDigits: 0 })} CHF` },
+    },
+    legend: { position: 'bottom' },
+  };
+}
 
-function RefDetailChart({ entries }: { entries: FinancialChangesEntry[] }) {
-  const options = useMemo((): ApexOptions => ({ ...baseOptions, colors: ['#ef4444', '#f97316'] }), []);
+function RefDetailChart({ entries, dark }: { entries: FinancialChangesEntry[]; dark?: boolean }) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(dark), colors: ['#ef4444', '#f97316'] }), [dark]);
   const series = useMemo(
     () => [
       {
@@ -52,8 +56,8 @@ function RefDetailChart({ entries }: { entries: FinancialChangesEntry[] }) {
   );
 }
 
-function BinanceDetailChart({ entries }: { entries: FinancialChangesEntry[] }) {
-  const options = useMemo((): ApexOptions => ({ ...baseOptions, colors: ['#f97316', '#8b5cf6'] }), []);
+function BinanceDetailChart({ entries, dark }: { entries: FinancialChangesEntry[]; dark?: boolean }) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(dark), colors: ['#f97316', '#8b5cf6'] }), [dark]);
   const series = useMemo(
     () => [
       {
@@ -76,8 +80,8 @@ function BinanceDetailChart({ entries }: { entries: FinancialChangesEntry[] }) {
   );
 }
 
-function BlockchainDetailChart({ entries }: { entries: FinancialChangesEntry[] }) {
-  const options = useMemo((): ApexOptions => ({ ...baseOptions, colors: ['#3b82f6', '#ef4444', '#64748b'] }), []);
+function BlockchainDetailChart({ entries, dark }: { entries: FinancialChangesEntry[]; dark?: boolean }) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(dark), colors: ['#3b82f6', '#ef4444', '#64748b'] }), [dark]);
   const series = useMemo(
     () => [
       {
@@ -110,6 +114,7 @@ export default function DashboardFinancialExpensesScreen(): JSX.Element {
 
   const { isLoggedIn } = useSessionContext();
   const { getFinancialChanges, getRefRecipients } = useDashboard();
+  const { isDark, tokens } = useThemeContext();
 
   const [entries, setEntries] = useState<FinancialChangesEntry[]>([]);
   const [recipients, setRecipients] = useState<RefRewardRecipient[]>([]);
@@ -135,16 +140,16 @@ export default function DashboardFinancialExpensesScreen(): JSX.Element {
   }
 
   return (
-    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
-      <div className="bg-white rounded-lg shadow p-4">
-        <RefDetailChart entries={entries} />
+    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: tokens.textPrimary }}>
+      <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+        <RefDetailChart entries={entries} dark={isDark} />
       </div>
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
         <h3 className="text-sm font-semibold mb-2">Referral Recipients</h3>
         <div className="overflow-auto max-h-[400px]">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-white">
-              <tr className="border-b border-gray-200">
+            <thead className="sticky top-0 bg-white dark:bg-dfxBlue-700">
+              <tr className="border-b border-gray-200 dark:border-dfxBlue-500">
                 <th className="text-left py-2 px-3 font-semibold">UserData ID</th>
                 <th className="text-right py-2 px-3 font-semibold">Payouts</th>
                 <th className="text-right py-2 px-3 font-semibold">Total (CHF)</th>
@@ -152,7 +157,10 @@ export default function DashboardFinancialExpensesScreen(): JSX.Element {
             </thead>
             <tbody>
               {recipients.map((r) => (
-                <tr key={r.userDataId} className="border-b border-gray-100 hover:bg-gray-50">
+                <tr
+                  key={r.userDataId}
+                  className="border-b border-gray-100 dark:border-dfxBlue-600 hover:bg-gray-50 dark:hover:bg-dfxBlue-600"
+                >
                   <td className="py-1.5 px-3">{KNOWN_USERS[r.userDataId] ?? r.userDataId}</td>
                   <td className="py-1.5 px-3 text-right">{r.count}</td>
                   <td className="py-1.5 px-3 text-right font-medium">
@@ -164,11 +172,11 @@ export default function DashboardFinancialExpensesScreen(): JSX.Element {
           </table>
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow p-4">
-        <BinanceDetailChart entries={entries} />
+      <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+        <BinanceDetailChart entries={entries} dark={isDark} />
       </div>
-      <div className="bg-white rounded-lg shadow p-4">
-        <BlockchainDetailChart entries={entries} />
+      <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+        <BlockchainDetailChart entries={entries} dark={isDark} />
       </div>
     </div>
   );

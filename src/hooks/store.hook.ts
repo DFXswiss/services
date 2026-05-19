@@ -15,6 +15,7 @@ export interface StoreInterface {
   activeWallet: StoreItem<WalletType>;
   infoBanner: StoreItem<InfoBanner>;
   queryParams: StoreItem<AppParams>;
+  darkMode: StoreItem<boolean>;
 }
 
 enum StoreKey {
@@ -25,6 +26,7 @@ enum StoreKey {
   ACTIVE_WALLET = 'dfx.srv.activeWallet',
   INFO_BANNER = 'dfx.srv.infoBanner',
   QUERY_PARAMS = 'dfx.srv.queryParams',
+  DARK_MODE = 'dfx.srv.darkMode',
 }
 
 export function useStore(): StoreInterface {
@@ -81,6 +83,14 @@ export function useStore(): StoreInterface {
       get: () => getJson<AppParams>(StoreKey.QUERY_PARAMS),
       set: (value: AppParams) => setJson(StoreKey.QUERY_PARAMS, value),
       remove: () => remove(StoreKey.QUERY_PARAMS),
+    },
+    darkMode: {
+      get: () => {
+        const value = get(StoreKey.DARK_MODE);
+        return value === undefined ? undefined : value === 'true';
+      },
+      set: (value: boolean) => set(StoreKey.DARK_MODE, value ? 'true' : 'false'),
+      remove: () => remove(StoreKey.DARK_MODE),
     },
   };
 }
