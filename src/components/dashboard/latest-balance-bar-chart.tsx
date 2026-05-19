@@ -9,11 +9,25 @@ interface BalanceBarChartProps {
   dark?: boolean;
 }
 
-const ASSET_COLORS = [
-  '#3b82f6', '#22c55e', '#f97316', '#8b5cf6', '#ef4444',
-  '#06b6d4', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1',
+const FALLBACK_ASSET_COLORS = [
+  '#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1',
   '#84cc16', '#e11d48', '#0ea5e9', '#a855f7', '#64748b',
 ];
+
+const ASSET_COLOR_RULES: Array<{ test: (upper: string) => boolean; color: string }> = [
+  { test: (u) => u.includes('BTC'), color: '#f97316' }, // orange — BTC family
+  { test: (u) => u.includes('USD'), color: '#22c55e' }, // green — USD family
+  { test: (u) => u.includes('EUR'), color: '#3b82f6' }, // blue — EUR family
+  { test: (u) => u.includes('CHF'), color: '#ef4444' }, // red — CHF family
+];
+
+function assetColor(name: string, fallbackIndex: number): string {
+  const upper = name.toUpperCase();
+  for (const rule of ASSET_COLOR_RULES) {
+    if (rule.test(upper)) return rule.color;
+  }
+  return FALLBACK_ASSET_COLORS[fallbackIndex % FALLBACK_ASSET_COLORS.length];
+}
 
 export function BalanceBarChart({ title, data, dark }: BalanceBarChartProps) {
   const hasAssets = data.some((d) => d.assets && Object.keys(d.assets).length > 0);
@@ -91,7 +105,7 @@ function StackedBarChart({ title, data, dark }: { title: string; data: BalanceBy
     chart: { type: 'bar', stacked: true, toolbar: { show: false }, background: '0' },
     theme: { mode: dark ? 'dark' : 'light' },
     plotOptions: { bar: { borderRadius: 4, borderRadiusWhenStacked: 'last' as any } },
-    colors: assetNames.map((_, i) => ASSET_COLORS[i % ASSET_COLORS.length]),
+    colors: assetNames.map((name, i) => assetColor(name, i)),
     dataLabels: { enabled: false },
     grid: { borderColor: dark ? '#1f3a5c' : '#e5e7eb' },
     xaxis: { categories },
