@@ -334,11 +334,7 @@ function ChangeSectionPanel({
         </div>
       )}
 
-      {step.status === 'InternalReview' ? (
-        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
-          Dieser Step ist im Internal Review und kann von Compliance noch nicht akzeptiert oder abgelehnt werden.
-        </div>
-      ) : (
+      {step.status === 'ManualReview' ? (
         <>
           {/* Decision */}
           <div className="bg-white rounded-lg shadow-sm px-3 py-3">
@@ -406,6 +402,10 @@ function ChangeSectionPanel({
             </button>
           </div>
         </>
+      ) : (
+        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
+          Steps im Status Manual Review können akzeptiert oder abgelehnt werden.
+        </div>
       )}
     </div>
   );

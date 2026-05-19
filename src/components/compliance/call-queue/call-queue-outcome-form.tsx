@@ -1,4 +1,3 @@
-import { canManualPass } from '@dfx.swiss/react';
 import { StyledButton, StyledButtonWidth } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
@@ -17,17 +16,9 @@ interface Props {
   clerks: string[];
   onSaved: () => void;
   title: string;
-  txComment?: string;
 }
 
-export function CallQueueOutcomeForm({
-  context,
-  availableOutcomes,
-  clerks,
-  onSaved,
-  title,
-  txComment,
-}: Props): JSX.Element {
+export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSaved, title }: Props): JSX.Element {
   const { translate } = useSettingsContext();
   const { saveCallOutcome } = useCompliance();
 
@@ -44,7 +35,6 @@ export function CallQueueOutcomeForm({
 
   const hasTx = context.txId != null && context.sourceType != null;
   const showAmlCheck = hasTx && outcome !== CallOutcome.COMPLETED;
-  const passAllowed = hasTx && canManualPass(txComment);
   const canSubmit = !!signature && !!outcome && !!comment.trim() && !isSaving;
 
   async function handleSubmit() {
@@ -107,17 +97,7 @@ export function CallQueueOutcomeForm({
             onChange={(e) => setAmlAction(e.target.value as AmlAction | '')}
           >
             <option value="">— {translate('screens/compliance', 'No change')}</option>
-            <option
-              value="Pass"
-              disabled={!passAllowed}
-              title={
-                passAllowed
-                  ? undefined
-                  : translate('screens/compliance', 'Pass only allowed when all errors are phone-related')
-              }
-            >
-              Pass{passAllowed ? '' : ` (${translate('screens/compliance', 'blocked')})`}
-            </option>
+            <option value="Pass">Pass</option>
             <option value="Fail">Fail</option>
             <option value="Reset">Reset</option>
           </select>

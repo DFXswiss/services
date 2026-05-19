@@ -313,7 +313,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
 
   function getTabBadge(tab: ReviewTabConfig): JSX.Element | null {
     if (tab.key === 'bankDataReview') {
-      const count = data?.bankDatas.filter((b) => !b.approved || b.status === 'ManualReview').length ?? 0;
+      const count = data?.bankDatas.filter((b) => b.status === 'ManualReview').length ?? 0;
       return count > 0 ? (
         <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-dfxBlue-800 text-white">{count}</span>
       ) : null;
@@ -332,7 +332,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
       const hasChanges = data?.kycSteps.some(
         (s) => changeSteps.includes(s.name) && !['Completed', 'Failed'].includes(s.status),
       );
-      return hasChanges ? <span className="ml-1 inline-block w-2 h-2 rounded-full bg-yellow-500" /> : null;
+      return hasChanges ? <span className="ml-1 inline-block w-2 h-2 rounded-full bg-dfxYellow-500" /> : null;
     }
     // KYC step-based tabs
     if (tab.stepName) {
@@ -340,7 +340,11 @@ export default function ComplianceReviewScreen(): JSX.Element {
       return step ? (
         <span
           className={`ml-1 inline-block w-2 h-2 rounded-full ${
-            step.status === 'Completed' ? 'bg-green-500' : step.status === 'Failed' ? 'bg-red-500' : 'bg-yellow-500'
+            step.status === 'Completed'
+              ? 'bg-dfxGreen-100'
+              : step.status === 'Failed'
+                ? 'bg-dfxRed-100'
+                : 'bg-dfxYellow-500'
           }`}
         />
       ) : null;
@@ -365,7 +369,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
     if (tab.key === 'bankDataReview') {
       const entries = data?.bankDatas ?? [];
       if (entries.some((b) => b.status === 'Failed')) return red;
-      const pending = entries.filter((b) => !b.approved || b.status === 'ManualReview');
+      const pending = entries.filter((b) => b.status === 'ManualReview');
       if (entries.length > 0 && pending.length === 0) return green;
       return gray;
     }

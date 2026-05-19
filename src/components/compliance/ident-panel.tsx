@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ComplianceUserData, KycFile, KycStepInfo, IpLogInfo } from 'src/hooks/compliance.hook';
-import { display, formatDate, refName, statusBadge, todayAsString } from 'src/util/compliance-helpers';
+import { display, formatBirthday, refName, statusBadge, todayAsString } from 'src/util/compliance-helpers';
 import { renderResultTable } from './compliance-review-panel';
 
 interface IdentPanelProps {
@@ -50,7 +50,7 @@ function parseIdentResult(step: KycStepInfo): IdentResult | undefined {
       lastname: (parsed.lastname ?? fixedInfo?.lastName ?? info?.lastName) as string,
       documentType: parsed.documentType as string,
       documentNumber: parsed.documentNumber as string,
-      birthday: parsed.birthday as string,
+      birthday: (parsed.birthday ?? info?.dob) as string,
       nationality: parsed.nationality as string,
       success: parsed.success as boolean,
       ipCountry: (parsed.ipCountry ?? data?.ipCountry) as string,
@@ -159,12 +159,7 @@ export function IdentPanel({ data, clerks, onOpenFile, onSave, isSaving }: Ident
         <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">User Daten</h3>
         <div className="bg-white rounded-lg shadow-sm">
           <InfoLine label="UserDataId" value={display(ud.id)} />
-          <InfoLine
-            label="Birthday"
-            value={
-              identResult?.birthday ? formatDate(identResult.birthday) : ud.birthday ? formatDate(ud.birthday) : '-'
-            }
-          />
+          <InfoLine label="Birthday" value={identResult?.birthday ? formatBirthday(identResult.birthday) : '-'} />
           <InfoLine label="AccountType" value={display(ud.accountType)} />
           <InfoLine
             label="Address"
@@ -196,7 +191,7 @@ export function IdentPanel({ data, clerks, onOpenFile, onSave, isSaving }: Ident
                   identResult.firstname &&
                   ud.firstname &&
                   String(ud.firstname).toLowerCase() !== identResult.firstname.toLowerCase()
-                    ? 'text-red-600 font-semibold'
+                    ? 'text-dfxRed-100 font-semibold'
                     : 'text-dfxBlue-800'
                 }`}
               >
@@ -211,7 +206,7 @@ export function IdentPanel({ data, clerks, onOpenFile, onSave, isSaving }: Ident
                   identResult.lastname &&
                   ud.surname &&
                   String(ud.surname).toLowerCase() !== identResult.lastname.toLowerCase()
-                    ? 'text-red-600 font-semibold'
+                    ? 'text-dfxRed-100 font-semibold'
                     : 'text-dfxBlue-800'
                 }`}
               >
@@ -255,11 +250,7 @@ export function IdentPanel({ data, clerks, onOpenFile, onSave, isSaving }: Ident
         </a>
       </div>
 
-      {step?.status === 'InternalReview' ? (
-        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
-          Dieser Step ist im Internal Review und kann von Compliance noch nicht akzeptiert oder abgelehnt werden.
-        </div>
-      ) : (
+      {step?.status === 'ManualReview' ? (
         <>
           {/* Decision */}
           <div className="bg-white rounded-lg shadow-sm px-3 py-3">
@@ -332,6 +323,10 @@ export function IdentPanel({ data, clerks, onOpenFile, onSave, isSaving }: Ident
             </button>
           </div>
         </>
+      ) : (
+        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
+          Steps im Status Manual Review können akzeptiert oder abgelehnt werden.
+        </div>
       )}
     </div>
   );

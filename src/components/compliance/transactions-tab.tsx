@@ -364,7 +364,12 @@ export function TransactionsTable({
                             const isStopped = (detail.state as string) === 'Stopped';
                             return (
                               <>
-                                <TransactionDetailRows tx={detail} />
+                                <TransactionDetailRows
+                                  tx={detail}
+                                  amlCheck={tx.amlCheck}
+                                  amlReason={tx.amlReason}
+                                  comment={tx.comment}
+                                />
                                 {(() => {
                                   const canStop = tx.type === 'BuyCrypto' && !tx.isCompleted;
                                   const canChargeback =

@@ -3,7 +3,7 @@ import { CollapsibleSection } from 'src/components/compliance/collapsible-sectio
 import { LimitRequestModal } from 'src/components/compliance/limit-request-modal';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { OrganizationDetail, UserDataDetail } from 'src/hooks/compliance.hook';
-import { calculateAge, display, formatDate, formatDateTime, Primitive, refName } from 'src/util/compliance-helpers';
+import { display, formatBirthday, formatDate, formatDateTime, Primitive, refName } from 'src/util/compliance-helpers';
 
 interface UserDataPanelProps {
   userData: UserDataDetail;
@@ -125,7 +125,7 @@ function personalDataRows(d: UserDataDetail): Row[] {
     { key: 'country', value: refName(d.country) },
     { key: 'nationality', value: refName(d.nationality) },
     { key: 'language', value: refName(d.language) },
-    { key: 'birthday', value: d.birthday ? `${formatDate(d.birthday)} (Alter: ${calculateAge(d.birthday)})` : '-' },
+    { key: 'birthday', value: d.birthday ? formatBirthday(d.birthday) : '-' },
     { key: 'phone', value: display(d.phone) },
   ];
 }

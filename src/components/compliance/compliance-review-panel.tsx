@@ -147,9 +147,8 @@ export function ComplianceReviewPanel({
     [userData, kycSteps],
   );
 
-  // Steps in InternalReview are still being processed by the API and must not
-  // be accepted/rejected from compliance — only ManualReview is actionable.
-  const isComplianceActionable = step?.status !== 'InternalReview';
+  // Only steps in ManualReview can be accepted/rejected by compliance.
+  const isComplianceActionable = step?.status === 'ManualReview';
 
   useEffect(() => {
     if (!step) return;
@@ -282,8 +281,14 @@ export function ComplianceReviewPanel({
 
               if (item.type === 'info') {
                 return (
-                  <div key={item.id} className="px-3 py-2 border-b border-dfxGray-300 last:border-0">
-                    <span className="text-sm text-dfxGray-700">{resolveLabel(item.label, labelSource)}</span>
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
+                  >
+                    <span className="text-sm text-dfxBlue-800">{item.label}</span>
+                    <span className="text-sm text-dfxBlue-800">
+                      {item.value ? resolveLabel(item.value, labelSource) : ''}
+                    </span>
                   </div>
                 );
               }
@@ -445,7 +450,7 @@ export function ComplianceReviewPanel({
         </>
       ) : (
         <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
-          Dieser Step ist im Internal Review und kann von Compliance noch nicht akzeptiert oder abgelehnt werden.
+          Steps im Status Manual Review können akzeptiert oder abgelehnt werden.
         </div>
       )}
     </div>

@@ -98,13 +98,6 @@ export interface UserSearchResult {
   name?: string;
 }
 
-export interface PendingOnboardingInfo {
-  id: number;
-  name?: string;
-  accountType?: string;
-  date: string;
-}
-
 export interface PendingTransactionInfo {
   txId: number;
   uid: string;
@@ -807,13 +800,6 @@ export function useCompliance() {
     });
   }
 
-  async function getPendingOnboardings(): Promise<PendingOnboardingInfo[]> {
-    return call<PendingOnboardingInfo[]>({
-      url: 'support/pending-onboardings',
-      method: 'GET',
-    });
-  }
-
   async function getPendingTransactions(): Promise<PendingTransactionInfo[]> {
     return call<PendingTransactionInfo[]>({
       url: 'support/pending-transactions',
@@ -937,13 +923,18 @@ export function useCompliance() {
         const signature = options.signature.trim();
         const txTable = tx.sourceType === 'BuyCrypto' ? 'buyCrypto' : 'buyFiat';
         if (options.amlAction === 'Pass') {
-          if (tx.sourceType === 'BuyCrypto') await manualPassBuyCrypto(tx.id, signature);
-          else await manualPassBuyFiat(tx.id, signature);
+          const passData = { amlCheck: CheckStatus.PASS, responsible: signature };
+          if (tx.sourceType === 'BuyCrypto') await updateBuyCryptoAmlCheck(tx.id, passData);
+          else await updateBuyFiatAmlCheck(tx.id, passData);
           results.push({ table: txTable, column: 'amlCheck', value: CheckStatus.PASS });
         } else if (options.amlAction === 'Fail') {
-          const failData = { amlCheck: CheckStatus.FAIL, amlReason: AmlReason.MANUAL_CHECK_PHONE_FAILED };
-          if (tx.sourceType === 'BuyCrypto') await updateBuyCrypto(tx.id, failData);
-          else await updateBuyFiat(tx.id, failData);
+          const failData = {
+            amlCheck: CheckStatus.FAIL,
+            amlReason: AmlReason.MANUAL_CHECK_PHONE_FAILED,
+            responsible: signature,
+          };
+          if (tx.sourceType === 'BuyCrypto') await updateBuyCryptoAmlCheck(tx.id, failData);
+          else await updateBuyFiatAmlCheck(tx.id, failData);
           results.push({ table: txTable, column: 'amlCheck', value: CheckStatus.FAIL });
           results.push({ table: txTable, column: 'amlReason', value: AmlReason.MANUAL_CHECK_PHONE_FAILED });
         } else {
@@ -1116,19 +1107,25 @@ export function useCompliance() {
     });
   }
 
-  async function manualPassBuyCrypto(id: number, responsible: string): Promise<void> {
+  async function updateBuyCryptoAmlCheck(
+    id: number,
+    data: { amlCheck: CheckStatus; amlReason?: AmlReason; responsible: string },
+  ): Promise<void> {
     return call<void>({
       url: `buyCrypto/${id}/amlCheck`,
       method: 'PUT',
-      data: { amlCheck: CheckStatus.PASS, responsible },
+      data,
     });
   }
 
-  async function manualPassBuyFiat(id: number, responsible: string): Promise<void> {
+  async function updateBuyFiatAmlCheck(
+    id: number,
+    data: { amlCheck: CheckStatus; amlReason?: AmlReason; responsible: string },
+  ): Promise<void> {
     return call<void>({
       url: `buyFiat/${id}/amlCheck`,
       method: 'PUT',
-      data: { amlCheck: CheckStatus.PASS, responsible },
+      data,
     });
   }
 
@@ -1195,7 +1192,6 @@ export function useCompliance() {
     () => ({
       search,
       getUserData,
-      getPendingOnboardings,
       getPendingTransactions,
       getPendingReviews,
       getPendingReviewItems,

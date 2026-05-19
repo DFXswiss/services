@@ -6,6 +6,22 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 import { CollapsibleSection } from './collapsible-section';
 import { reviewTabs } from './compliance-review-configs';
 
+// Steps without an own review tab — inserted between the last KYC-flow step
+// and DfxApproval in the overview order.
+const EXTRA_STEPS_BEFORE_APPROVAL = ['AdditionalDocuments', 'NameChange', 'AddressChange'];
+
+// Canonical ordered list of pending-review rows. Derived from `reviewTabs` so
+// the dashboard overview and the review-screen tabs stay in sync. All rows are
+// always shown (even with count 0) in this stable order.
+const kycStepsFromTabs = reviewTabs.filter((t) => t.group === 'kyc' && t.stepName).map((t) => t.stepName);
+
+const ORDERED_REVIEW_ROWS: Array<{ type: PendingReviewType; name: string }> = [
+  { type: PendingReviewType.BANK_DATA, name: 'BankData' },
+  ...kycStepsFromTabs.filter((s) => s !== 'DfxApproval').map((name) => ({ type: PendingReviewType.KYC_STEP, name })),
+  ...EXTRA_STEPS_BEFORE_APPROVAL.map((name) => ({ type: PendingReviewType.KYC_STEP, name })),
+  { type: PendingReviewType.KYC_STEP, name: 'DfxApproval' },
+];
+
 // Map a pending-review row to the review-screen tab key so navigation lands on
 // the right tab instead of the default first one.
 function getTabKey(type: PendingReviewType, name: string): string | undefined {
@@ -28,9 +44,12 @@ export function PendingReviewsSection({ entries }: Props): JSX.Element | null {
 
   const [expanded, setExpanded] = useState<Record<string, ExpandState>>({});
 
-  if (entries.length === 0) return null;
+  const entriesByKey = new Map(entries.map((e) => [`${e.type}:${e.name}`, e]));
+  const rows: PendingReviewSummaryEntry[] = ORDERED_REVIEW_ROWS.map(
+    ({ type, name }) => entriesByKey.get(`${type}:${name}`) ?? { type, name, manualReview: 0, internalReview: 0 },
+  );
 
-  const totalCount = entries.reduce((sum, r) => sum + r.manualReview + r.internalReview, 0);
+  const totalCount = rows.reduce((sum, r) => sum + r.manualReview, 0);
 
   async function toggleExpansion(type: PendingReviewType, name: string, status: PendingReviewStatus) {
     const key = `${type}-${name}-${status}`;
@@ -68,7 +87,7 @@ export function PendingReviewsSection({ entries }: Props): JSX.Element | null {
           </tr>
         </thead>
         <tbody>
-          {entries.map((r) => {
+          {rows.map((r) => {
             const key = `${r.type}-${r.name}-${PendingReviewStatus.MANUAL_REVIEW}`;
             const expandState = expanded[key];
             const canExpand = r.manualReview > 0;
@@ -84,10 +103,8 @@ export function PendingReviewsSection({ entries }: Props): JSX.Element | null {
                 >
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.type}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{r.name}</td>
-                  <td className="px-4 py-3 text-right text-sm text-dfxGray-600">{r.internalReview || '-'}</td>
-                  <td className="px-4 py-3 text-right text-sm text-dfxBlue-800 font-semibold">
-                    {r.manualReview || '-'}
-                  </td>
+                  <td className="px-4 py-3 text-right text-sm text-dfxGray-600">{r.internalReview}</td>
+                  <td className="px-4 py-3 text-right text-sm text-dfxBlue-800 font-semibold">{r.manualReview}</td>
                 </tr>
                 {expandState && (
                   <tr className="border-b border-dfxGray-300 bg-dfxGray-100">
