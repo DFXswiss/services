@@ -185,7 +185,6 @@ export default function ComplianceCallQueueDetailScreen(): JSX.Element {
           navigate({ pathname: `/compliance/call-queues/${queue}` }, { replace: true, clearParams: ['txId'] })
         }
         title={translate('screens/compliance', 'Save Outcome')}
-        txComment={transaction?.comment}
       />
     </StyledVerticalStack>
   );
