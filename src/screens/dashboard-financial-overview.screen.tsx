@@ -9,7 +9,7 @@ import { FinancialLogEntry, LatestBalanceResponse } from 'src/dto/dashboard.dto'
 import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { getFromDateByTimeframe, Timeframe, TimeRange } from 'src/util/chart';
+import { getFromDateByTimeframe, isDailySample, Timeframe, TimeRange } from 'src/util/chart';
 import { formatChfOrDash } from 'src/util/utils';
 
 const TIMEFRAME_OPTIONS = [
@@ -21,8 +21,6 @@ const TIMEFRAME_OPTIONS = [
   Timeframe.YEAR,
   Timeframe.ALL,
 ] as const;
-
-const HOURLY_SAMPLE_TIMEFRAMES = new Set<Timeframe>([Timeframe.DAY, Timeframe.THREE_DAYS]);
 
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -43,7 +41,7 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
 
     const fromTimestamp = getFromDateByTimeframe(timeframe);
     const from = fromTimestamp > 0 ? new Date(fromTimestamp).toISOString() : undefined;
-    const dailySample = !HOURLY_SAMPLE_TIMEFRAMES.has(timeframe);
+    const dailySample = isDailySample(timeframe);
 
     function load(initial: boolean) {
       if (initial) setIsLoading(true);

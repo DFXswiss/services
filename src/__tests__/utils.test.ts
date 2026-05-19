@@ -28,6 +28,8 @@ import {
   formatUnits,
   filenameDateFormat,
   extractFilename,
+  formatChf,
+  formatChfOrDash,
   formatCurrency,
   FormatType,
   deepEqual,
@@ -192,6 +194,36 @@ describe('utils', () => {
 
     it('should return null for invalid values', () => {
       expect(formatCurrency(NaN)).toBeNull();
+    });
+  });
+
+  describe('formatChf', () => {
+    it('should format integer values with Swiss thousands separator', () => {
+      const result = formatChf(48515);
+      expect(result).toContain('48');
+      expect(result).toContain('515');
+    });
+
+    it('should round to zero decimals', () => {
+      const result = formatChf(1234.78);
+      expect(result).not.toContain(',');
+      expect(result).not.toContain('.');
+    });
+  });
+
+  describe('formatChfOrDash', () => {
+    it('should return dash for undefined', () => {
+      expect(formatChfOrDash(undefined)).toBe('-');
+    });
+
+    it('should format zero as "0 CHF"', () => {
+      expect(formatChfOrDash(0)).toBe('0 CHF');
+    });
+
+    it('should append CHF suffix to formatted value', () => {
+      const result = formatChfOrDash(48515);
+      expect(result.endsWith(' CHF')).toBe(true);
+      expect(result).toContain('48');
     });
   });
 

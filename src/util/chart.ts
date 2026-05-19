@@ -15,6 +15,10 @@ export enum Timeframe {
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
+export function isDailySample(timeframe: Timeframe): boolean {
+  return timeframe !== Timeframe.DAY && timeframe !== Timeframe.THREE_DAYS;
+}
+
 export function getFromDateByTimeframe(timeframe: Timeframe): number {
   switch (timeframe) {
     case Timeframe.ALL:
