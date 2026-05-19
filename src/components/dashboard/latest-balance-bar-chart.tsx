@@ -45,9 +45,14 @@ export function BalanceBarChart({ title, data, dark }: BalanceBarChartProps) {
 }
 
 function SimpleBarChart({ title, data, dark }: { title: string; data: BalanceByGroup[]; dark?: boolean }) {
-  const categories = data.map((i) => i.name);
-  const values = data.map((i) => Math.round(i.netBalanceChf));
-  const colors = data.map((i) => (i.netBalanceChf >= 0 ? '#22c55e' : '#ef4444'));
+  const { categories, values, colors } = useMemo(
+    () => ({
+      categories: data.map((i) => i.name),
+      values: data.map((i) => Math.round(i.netBalanceChf)),
+      colors: data.map((i) => (i.netBalanceChf >= 0 ? '#22c55e' : '#ef4444')),
+    }),
+    [data],
+  );
 
   const options = useMemo((): ApexOptions => ({
     chart: { type: 'bar', toolbar: { show: false }, background: '0' },
