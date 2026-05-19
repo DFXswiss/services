@@ -51,6 +51,12 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
   const [logEntries, setLogEntries] = useState<FinancialLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Prefetch the lazy ApexCharts chunk while the page is mounting so the
+  // first chart paint does not wait on a separate network round-trip.
+  useEffect(() => {
+    import('react-apexcharts');
+  }, []);
+
   useEffect(() => {
     if (!isLoggedIn) return;
 

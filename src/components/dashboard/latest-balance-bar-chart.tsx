@@ -1,7 +1,8 @@
 import { ApexOptions } from 'apexcharts';
-import { useMemo } from 'react';
-import Chart from 'react-apexcharts';
+import { lazy, Suspense, useMemo } from 'react';
 import { BalanceByGroup } from 'src/dto/dashboard.dto';
+
+const Chart = lazy(() => import('react-apexcharts'));
 
 interface BalanceBarChartProps {
   title: string;
@@ -75,7 +76,9 @@ function SimpleBarChart({ title, data, dark }: { title: string; data: BalanceByG
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">{title}</h3>
-      <Chart type="bar" height={300} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 300 }} />}>
+        <Chart type="bar" height={300} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }
@@ -125,7 +128,9 @@ function StackedBarChart({ title, data, dark }: { title: string; data: BalanceBy
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">{title}</h3>
-      <Chart type="bar" height={400} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 400 }} />}>
+        <Chart type="bar" height={400} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }

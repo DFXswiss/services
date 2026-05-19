@@ -1,8 +1,9 @@
 import { ApexOptions } from 'apexcharts';
-import { useMemo } from 'react';
-import Chart from 'react-apexcharts';
+import { lazy, Suspense, useMemo } from 'react';
 import { FinancialLogEntry } from 'src/dto/dashboard.dto';
 import { TimeRange } from 'src/util/chart';
+
+const Chart = lazy(() => import('react-apexcharts'));
 
 interface TotalBalanceLongChartProps {
   entries: FinancialLogEntry[];
@@ -68,7 +69,9 @@ export function TotalBalanceLongChart({ entries, timeRange, dark }: TotalBalance
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">Total Balance vs BTC Price</h3>
-      <Chart type="line" height={300} options={chartOptions} series={chartSeries} />
+      <Suspense fallback={<div style={{ height: 300 }} />}>
+        <Chart type="line" height={300} options={chartOptions} series={chartSeries} />
+      </Suspense>
     </div>
   );
 }

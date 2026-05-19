@@ -1,8 +1,9 @@
 import { ApexOptions } from 'apexcharts';
-import { useMemo } from 'react';
-import Chart from 'react-apexcharts';
+import { lazy, Suspense, useMemo } from 'react';
 import { FinancialChangesEntry } from 'src/dto/dashboard.dto';
 import { TimeRange } from 'src/util/chart';
+
+const Chart = lazy(() => import('react-apexcharts'));
 
 interface FinancialChangesChartProps {
   entries: FinancialChangesEntry[];
@@ -54,7 +55,9 @@ export function FinancialChangesTotalChart({ entries, timeRange }: FinancialChan
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">Net Total (cumulative)</h3>
-      <Chart type="area" height={250} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 250 }} />}>
+        <Chart type="area" height={250} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }
@@ -72,7 +75,9 @@ export function FinancialChangesPlusChart({ entries, timeRange }: FinancialChang
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">Income / Plus (cumulative)</h3>
-      <Chart type="area" height={250} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 250 }} />}>
+        <Chart type="area" height={250} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }
@@ -102,7 +107,9 @@ export function FinancialChangesMinusChart({ entries, timeRange, onDetails }: Fi
           </button>
         )}
       </div>
-      <Chart type="area" height={250} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 250 }} />}>
+        <Chart type="area" height={250} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }
