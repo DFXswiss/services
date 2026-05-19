@@ -10,18 +10,9 @@ import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { getFromDateByTimeframe, Timeframe } from 'src/util/chart';
-
-export interface TimeRange {
-  min: number;
-  max: number;
-}
+import { getFromDateByTimeframe, isDailySample, Timeframe, TimeRange } from 'src/util/chart';
 
 const TIMEFRAME_OPTIONS = [Timeframe.DAY, Timeframe.THREE_DAYS, Timeframe.WEEK, Timeframe.MONTH] as const;
-
-function isDailySample(timeframe: Timeframe): boolean {
-  return timeframe === Timeframe.WEEK || timeframe === Timeframe.MONTH;
-}
 
 export default function DashboardFinancialLogScreen(): JSX.Element {
   useAdminGuard();
