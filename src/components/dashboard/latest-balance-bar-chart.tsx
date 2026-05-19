@@ -6,6 +6,7 @@ import { BalanceByGroup } from 'src/dto/dashboard.dto';
 interface BalanceBarChartProps {
   title: string;
   data: BalanceByGroup[];
+  dark?: boolean;
 }
 
 const ASSET_COLORS = [
@@ -14,7 +15,7 @@ const ASSET_COLORS = [
   '#84cc16', '#e11d48', '#0ea5e9', '#a855f7', '#64748b',
 ];
 
-export function BalanceBarChart({ title, data }: BalanceBarChartProps) {
+export function BalanceBarChart({ title, data, dark }: BalanceBarChartProps) {
   const hasAssets = data.some((d) => d.assets && Object.keys(d.assets).length > 0);
 
   const sorted = useMemo(() => {
@@ -25,21 +26,22 @@ export function BalanceBarChart({ title, data }: BalanceBarChartProps) {
 
   if (data.length === 0) return null;
 
-  if (hasAssets) return <StackedBarChart title={title} data={sorted} />;
-  return <SimpleBarChart title={title} data={sorted} />;
+  if (hasAssets) return <StackedBarChart title={title} data={sorted} dark={dark} />;
+  return <SimpleBarChart title={title} data={sorted} dark={dark} />;
 }
 
-function SimpleBarChart({ title, data }: { title: string; data: BalanceByGroup[] }) {
+function SimpleBarChart({ title, data, dark }: { title: string; data: BalanceByGroup[]; dark?: boolean }) {
   const categories = data.map((i) => i.name);
   const values = data.map((i) => Math.round(i.netBalanceChf));
   const colors = data.map((i) => (i.netBalanceChf >= 0 ? '#22c55e' : '#ef4444'));
 
   const options = useMemo((): ApexOptions => ({
     chart: { type: 'bar', toolbar: { show: false }, background: '0' },
+    theme: { mode: dark ? 'dark' : 'light' },
     plotOptions: { bar: { distributed: true, borderRadius: 4 } },
     colors,
     dataLabels: { enabled: false },
-    grid: { borderColor: '#e5e7eb' },
+    grid: { borderColor: dark ? '#1f3a5c' : '#e5e7eb' },
     xaxis: { categories },
     yaxis: {
       title: { text: 'Net Balance (CHF)' },
@@ -47,7 +49,7 @@ function SimpleBarChart({ title, data }: { title: string; data: BalanceByGroup[]
     },
     tooltip: { y: { formatter: (val: number) => `${val.toLocaleString('de-CH')} CHF` } },
     legend: { show: false },
-  }), [categories, colors]);
+  }), [categories, colors, dark]);
 
   const series = useMemo(() => [{ name: 'Net Balance', data: values }], [values]);
 
@@ -59,7 +61,7 @@ function SimpleBarChart({ title, data }: { title: string; data: BalanceByGroup[]
   );
 }
 
-function StackedBarChart({ title, data }: { title: string; data: BalanceByGroup[] }) {
+function StackedBarChart({ title, data, dark }: { title: string; data: BalanceByGroup[]; dark?: boolean }) {
   const { categories, assetNames, series } = useMemo(() => {
     const cats = data.map((d) => d.name);
 
@@ -87,10 +89,11 @@ function StackedBarChart({ title, data }: { title: string; data: BalanceByGroup[
 
   const options = useMemo((): ApexOptions => ({
     chart: { type: 'bar', stacked: true, toolbar: { show: false }, background: '0' },
+    theme: { mode: dark ? 'dark' : 'light' },
     plotOptions: { bar: { borderRadius: 4, borderRadiusWhenStacked: 'last' as any } },
     colors: assetNames.map((_, i) => ASSET_COLORS[i % ASSET_COLORS.length]),
     dataLabels: { enabled: false },
-    grid: { borderColor: '#e5e7eb' },
+    grid: { borderColor: dark ? '#1f3a5c' : '#e5e7eb' },
     xaxis: { categories },
     yaxis: {
       title: { text: 'Balance (CHF)' },
@@ -98,7 +101,7 @@ function StackedBarChart({ title, data }: { title: string; data: BalanceByGroup[
     },
     tooltip: { y: { formatter: (val: number) => `${val.toLocaleString('de-CH')} CHF` } },
     legend: { position: 'bottom' },
-  }), [categories, assetNames]);
+  }), [categories, assetNames, dark]);
 
   return (
     <div>

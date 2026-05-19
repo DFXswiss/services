@@ -82,12 +82,12 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
   }, [latestBalance]);
 
   return (
-    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
+    <div className="space-y-4 p-4 w-full self-stretch bg-dfxBlue-800 min-h-screen" style={{ color: '#ffffff' }}>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard label="Total Balance" value={formatChfOrDash(totalBalance)} />
-        <SummaryCard label="Plus Balance" value={formatChfOrDash(totalPlus)} color="#22c55e" />
-        <SummaryCard label="Minus Balance" value={formatChfOrDash(totalMinus)} color="#ef4444" />
-        <SummaryCard label="Timestamp" value={<AgeBadge timestamp={latestBalance?.timestamp} />} />
+        <SummaryCard label="Total Balance" value={formatChfOrDash(totalBalance)} dark />
+        <SummaryCard label="Plus Balance" value={formatChfOrDash(totalPlus)} color="#22c55e" dark />
+        <SummaryCard label="Minus Balance" value={formatChfOrDash(totalMinus)} color="#ef4444" dark />
+        <SummaryCard label="Timestamp" value={<AgeBadge timestamp={latestBalance?.timestamp} />} dark />
       </div>
 
       <div className="flex gap-2">
@@ -97,8 +97,8 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
             onClick={() => setTimeframe(tf)}
             className="px-4 py-1.5 rounded text-sm font-medium transition-colors"
             style={{
-              background: tf === timeframe ? '#3b82f6' : '#f3f4f6',
-              color: tf === timeframe ? '#ffffff' : '#374151',
+              background: tf === timeframe ? '#3b82f6' : '#082948',
+              color: tf === timeframe ? '#ffffff' : '#D6DBE2',
             }}
           >
             {tf}
@@ -112,12 +112,12 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
         </div>
       ) : (
         <>
-          <div className="bg-white rounded-lg shadow p-4">
-            <TotalBalanceLongChart entries={logEntries} timeRange={timeRange} />
+          <div className="bg-dfxBlue-700 rounded-lg shadow p-4">
+            <TotalBalanceLongChart entries={logEntries} timeRange={timeRange} dark />
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
-            <BalanceBarChart title="Liquidity by Provider" data={latestBalance?.byBlockchain ?? []} />
+          <div className="bg-dfxBlue-700 rounded-lg shadow p-4">
+            <BalanceBarChart title="Liquidity by Provider" data={latestBalance?.byBlockchain ?? []} dark />
           </div>
         </>
       )}

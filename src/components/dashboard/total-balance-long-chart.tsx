@@ -7,9 +7,10 @@ import { TimeRange } from 'src/util/chart';
 interface TotalBalanceLongChartProps {
   entries: FinancialLogEntry[];
   timeRange?: TimeRange;
+  dark?: boolean;
 }
 
-export function TotalBalanceLongChart({ entries, timeRange }: TotalBalanceLongChartProps) {
+export function TotalBalanceLongChart({ entries, timeRange, dark }: TotalBalanceLongChartProps) {
   const chartOptions = useMemo((): ApexOptions => {
     return {
       chart: {
@@ -18,10 +19,11 @@ export function TotalBalanceLongChart({ entries, timeRange }: TotalBalanceLongCh
         zoom: { enabled: true },
         background: '0',
       },
+      theme: { mode: dark ? 'dark' : 'light' },
       stroke: { width: [3, 3], curve: 'smooth' },
       colors: ['#22c55e', '#f97316'],
       dataLabels: { enabled: false },
-      grid: { borderColor: '#e5e7eb' },
+      grid: { borderColor: dark ? '#1f3a5c' : '#e5e7eb' },
       xaxis: {
         type: 'datetime',
         labels: { datetimeUTC: false, format: 'dd MMM yy' },
@@ -48,7 +50,7 @@ export function TotalBalanceLongChart({ entries, timeRange }: TotalBalanceLongCh
       },
       legend: { position: 'bottom' },
     };
-  }, [timeRange]);
+  }, [timeRange, dark]);
 
   const chartSeries = useMemo(() => {
     return [
