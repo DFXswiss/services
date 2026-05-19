@@ -55,7 +55,7 @@ function SimpleBarChart({ title, data, dark }: { title: string; data: BalanceByG
     plotOptions: { bar: { distributed: true, borderRadius: 4 } },
     colors,
     dataLabels: { enabled: false },
-    grid: { borderColor: dark ? '#1f3a5c' : '#e5e7eb' },
+    grid: { borderColor: dark ? '#0A355C' : '#e5e7eb' },
     xaxis: { categories },
     yaxis: {
       title: { text: 'Net Balance (CHF)' },
@@ -107,7 +107,7 @@ function StackedBarChart({ title, data, dark }: { title: string; data: BalanceBy
     plotOptions: { bar: { borderRadius: 4, borderRadiusWhenStacked: 'last' as any } },
     colors: assetNames.map((name, i) => assetColor(name, i)),
     dataLabels: { enabled: false },
-    grid: { borderColor: dark ? '#1f3a5c' : '#e5e7eb' },
+    grid: { borderColor: dark ? '#0A355C' : '#e5e7eb' },
     xaxis: { categories },
     yaxis: {
       title: { text: 'Balance (CHF)' },

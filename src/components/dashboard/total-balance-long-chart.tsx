@@ -23,7 +23,7 @@ export function TotalBalanceLongChart({ entries, timeRange, dark }: TotalBalance
       stroke: { width: [3, 3], curve: 'smooth' },
       colors: ['#22c55e', '#f97316'],
       dataLabels: { enabled: false },
-      grid: { borderColor: dark ? '#1f3a5c' : '#e5e7eb' },
+      grid: { borderColor: dark ? '#0A355C' : '#e5e7eb' },
       xaxis: {
         type: 'datetime',
         labels: { datetimeUTC: false, format: 'dd MMM yy' },

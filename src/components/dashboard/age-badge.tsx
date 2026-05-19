@@ -15,9 +15,15 @@ interface AgeBadgeProps {
 
 export function AgeBadge({ timestamp }: AgeBadgeProps): JSX.Element {
   const [now, setNow] = useState(Date.now());
+
   useEffect(() => {
+    if (!timestamp) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, []);
-  return <>{timestamp ? formatAge(now - new Date(timestamp).getTime()) : '-'}</>;
+  }, [timestamp]);
+
+  if (!timestamp) return <>-</>;
+  const parsed = new Date(timestamp).getTime();
+  if (Number.isNaN(parsed)) return <>-</>;
+  return <>{formatAge(now - parsed)}</>;
 }
