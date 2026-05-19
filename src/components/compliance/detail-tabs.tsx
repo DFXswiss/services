@@ -383,5 +383,6 @@ const notificationsColumns: ColumnDef<NotificationInfo>[] = [
 ];
 
 export function NotificationsTable({ notifications }: { notifications: NotificationInfo[] }): JSX.Element {
-  return <DataTable data={notifications} columns={notificationsColumns} emptyLabel="No notifications" />;
+  const sorted = [...notifications].sort((a, b) => b.id - a.id);
+  return <DataTable data={sorted} columns={notificationsColumns} emptyLabel="No notifications" />;
 }

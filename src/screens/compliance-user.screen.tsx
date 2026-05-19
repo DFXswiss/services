@@ -67,18 +67,28 @@ export default function ComplianceUserScreen(): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabType>('transactions');
   const [expandedBankTxId, setExpandedBankTxId] = useState<number>();
   const [expandedCryptoInputId, setExpandedCryptoInputId] = useState<number>();
+  const [expandedBankDataId, setExpandedBankDataId] = useState<number>();
   const [expandedTxUid, setExpandedTxUid] = useState<string>();
   const { containerRef, splitPercent, setSplitPercent, handleSplitDrag } = useSplitPane();
 
   function handleExpandBankTx(id: number | undefined): void {
     setExpandedBankTxId(id);
     setExpandedCryptoInputId(undefined);
+    setExpandedBankDataId(undefined);
     setExpandedTxUid(undefined);
   }
 
   function handleExpandCryptoInput(id: number | undefined): void {
     setExpandedCryptoInputId(id);
     setExpandedBankTxId(undefined);
+    setExpandedBankDataId(undefined);
+    setExpandedTxUid(undefined);
+  }
+
+  function handleExpandBankData(id: number | undefined): void {
+    setExpandedBankDataId(id);
+    setExpandedBankTxId(undefined);
+    setExpandedCryptoInputId(undefined);
     setExpandedTxUid(undefined);
   }
 
@@ -86,6 +96,7 @@ export default function ComplianceUserScreen(): JSX.Element {
     setExpandedTxUid(uid);
     setExpandedBankTxId(undefined);
     setExpandedCryptoInputId(undefined);
+    setExpandedBankDataId(undefined);
   }
 
   async function openFile(file: KycFile): Promise<void> {
@@ -245,13 +256,16 @@ export default function ComplianceUserScreen(): JSX.Element {
               transactions={data.transactions}
               bankTxs={data.bankTxs}
               cryptoInputs={data.cryptoInputs}
+              bankDatas={data.bankDatas}
               userDataId={numericUserDataId}
               expandedBankTxId={expandedBankTxId}
               expandedCryptoInputId={expandedCryptoInputId}
+              expandedBankDataId={expandedBankDataId}
               expandedTxUid={expandedTxUid}
               canPerformActions={data.permissions.canPerformTransactionActions}
               onExpandBankTx={handleExpandBankTx}
               onExpandCryptoInput={handleExpandCryptoInput}
+              onExpandBankData={handleExpandBankData}
               onExpandTxUid={handleExpandTxUid}
               onStopped={loadData}
             />
