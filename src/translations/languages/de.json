@@ -396,7 +396,11 @@
     "No entries found": "Keine Einträge gefunden",
     "found by {{type}}": "gefunden per {{type}}",
     "Customers": "Kunden",
-    "Bank Transactions": "Banktransaktionen"
+    "Bank Transactions": "Banktransaktionen",
+    "AmlCheck": "AmlCheck",
+    "No change": "keine Änderung",
+    "blocked": "gesperrt",
+    "Pass only allowed when all errors are phone-related": "Pass nur erlaubt, wenn alle Errors Phone-bezogen sind"
   },
   "screens/2fa": {
     "2FA": "2FA",

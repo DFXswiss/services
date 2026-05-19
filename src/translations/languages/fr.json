@@ -396,7 +396,11 @@
     "No entries found": "Aucune entrée trouvée",
     "found by {{type}}": "trouvés par {{type}}",
     "Customers": "Clients",
-    "Bank Transactions": "Transactions bancaires"
+    "Bank Transactions": "Transactions bancaires",
+    "AmlCheck": "AmlCheck",
+    "No change": "aucun changement",
+    "blocked": "bloqué",
+    "Pass only allowed when all errors are phone-related": "Pass autorisé uniquement si toutes les erreurs sont liées au téléphone"
   },
   "screens/2fa": {
     "2FA": "2FA",

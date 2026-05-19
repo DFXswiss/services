@@ -429,7 +429,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                         <span className="text-xs font-medium">{msg.author}</span>
                         <span className="text-xs opacity-70">{formatDateTime(msg.created)}</span>
                       </div>
-                      <div className="text-sm">{msg.message || '-'}</div>
+                      <div className="text-sm whitespace-pre-wrap">{msg.message || '-'}</div>
                       {msg.fileName && (
                         <button
                           className="text-xs mt-1 text-dfxBlue-400 underline hover:text-dfxBlue-800"

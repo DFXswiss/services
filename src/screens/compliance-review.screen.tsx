@@ -12,13 +12,15 @@ import { ReviewCheckTab, ReviewTabConfig, reviewTabs } from 'src/components/comp
 import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
 import { StammdatenPanel } from 'src/components/compliance/stammdaten-panel';
 import { BankDataReviewPanel } from 'src/components/compliance/bank-data-panel';
-import { AmlCheckPendingPanel } from 'src/components/compliance/aml-check-panel';
+import { AmlCheckPendingPanel, AmlCheckUpdate } from 'src/components/compliance/aml-check-panel';
 import { IdentPanel } from 'src/components/compliance/ident-panel';
 import { ErrorHint } from 'src/components/error-hint';
-import { ComplianceUserData, KycFile, KycStepInfo, useCompliance } from 'src/hooks/compliance.hook';
+import { useCallQueueClerks } from 'src/hooks/call-queue-clerks.hook';
+import { ComplianceUserData, KycFile, KycStepInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSplitPane } from 'src/hooks/split-pane.hook';
+import { buildKycLogMessage, KycLogResult } from 'src/util/compliance-helpers';
 
 function findLatestStep(kycSteps: KycStepInfo[], stepName: string): KycStepInfo | undefined {
   return kycSteps.filter((s) => s.name === stepName).sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
@@ -48,8 +50,10 @@ export default function ComplianceReviewScreen(): JSX.Element {
     resetBuyCryptoAml,
     resetBuyFiatAml,
     generateOnboardingPdf,
+    createKycLog,
   } = useCompliance();
   const { getFile } = useKyc();
+  const { clerks } = useCallQueueClerks();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -121,12 +125,24 @@ export default function ComplianceReviewScreen(): JSX.Element {
         comment: params.comment,
       });
 
+      const results: KycLogResult[] = [{ table: 'kycStep', column: 'status', value: params.status }];
+
       // 2. Update UserData if needed
       if (params.userDataUpdate && userDataId) {
         await updateUserData(+userDataId, params.userDataUpdate);
+        for (const [col, val] of Object.entries(params.userDataUpdate)) {
+          if (val == null) continue;
+          results.push({ table: 'userData', column: col, value: String(val) });
+        }
       }
 
-      // 3. Generate PDF if data provided
+      // 3. KycLog (Editor = processedBy aus den params, single source of truth)
+      const clerk = params.pdfData?.processedBy;
+      if (userDataId && clerk) {
+        await createKycLog(+userDataId, buildKycLogMessage({ description: 'DfxApproval', clerk, results }));
+      }
+
+      // 4. Generate PDF if data provided
       if (params.pdfData && userDataId) {
         try {
           const { pdfData, fileName } = await generateOnboardingPdf(+userDataId, params.pdfData);
@@ -146,7 +162,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
         }
       }
 
-      // 4. Reload data (now includes the new PDF)
+      // 5. Reload data (now includes the new PDF)
       loadData();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error saving');
@@ -155,18 +171,32 @@ export default function ComplianceReviewScreen(): JSX.Element {
     }
   }
 
-  async function handleSave(stepId: number, status: string, comment?: string, result?: string): Promise<void> {
+  async function handleSave(
+    stepId: number,
+    status: string,
+    clerk: string,
+    description: string,
+    comment?: string,
+    result?: string,
+  ): Promise<void> {
     setIsSaving(true);
     setError(undefined);
     try {
       await updateKycStep(stepId, { status, comment, result });
+
+      const results: KycLogResult[] = [{ table: 'kycStep', column: 'status', value: status }];
 
       if (effectiveTab === 'operationalActivity' && userDataId) {
         const step = findLatestStep(data?.kycSteps ?? [], 'OperationalActivity');
         const amlAccountType = deriveAmlAccountType(step);
         if (amlAccountType) {
           await updateUserData(+userDataId, { amlAccountType });
+          results.push({ table: 'userData', column: 'amlAccountType', value: amlAccountType });
         }
+      }
+
+      if (userDataId) {
+        await createKycLog(+userDataId, buildKycLogMessage({ description, clerk, results }));
       }
 
       loadData();
@@ -177,11 +207,25 @@ export default function ComplianceReviewScreen(): JSX.Element {
     }
   }
 
-  async function handleBankDataApprove(bankDataId: number): Promise<void> {
+  async function handleBankDataApprove(bankDataId: number, clerk: string): Promise<void> {
     setIsSaving(true);
     setError(undefined);
     try {
       await updateBankData(bankDataId, { manualApproved: true, approved: true, status: 'Completed' });
+      if (userDataId) {
+        await createKycLog(
+          +userDataId,
+          buildKycLogMessage({
+            description: 'BankData',
+            clerk,
+            results: [
+              { table: 'bankData', column: 'approved', value: 'true' },
+              { table: 'bankData', column: 'manualApproved', value: 'true' },
+              { table: 'bankData', column: 'status', value: 'Completed' },
+            ],
+          }),
+        );
+      }
       loadData();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error approving');
@@ -190,14 +234,78 @@ export default function ComplianceReviewScreen(): JSX.Element {
     }
   }
 
-  async function handleBankDataReject(bankDataId: number): Promise<void> {
+  async function handleBankDataReject(bankDataId: number, clerk: string): Promise<void> {
     setIsSaving(true);
     setError(undefined);
     try {
       await updateBankData(bankDataId, { manualApproved: false, approved: false, status: 'Failed' });
+      if (userDataId) {
+        await createKycLog(
+          +userDataId,
+          buildKycLogMessage({
+            description: 'BankData',
+            clerk,
+            results: [
+              { table: 'bankData', column: 'approved', value: 'false' },
+              { table: 'bankData', column: 'manualApproved', value: 'false' },
+              { table: 'bankData', column: 'status', value: 'Failed' },
+            ],
+          }),
+        );
+      }
       loadData();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error rejecting');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleAmlUpdate(tx: TransactionInfo, update: AmlCheckUpdate, clerk: string): Promise<void> {
+    setIsSaving(true);
+    setError(undefined);
+    try {
+      const isBc = tx.buyCryptoId != null;
+      const table = isBc ? 'buyCrypto' : 'buyFiat';
+      if (isBc) await updateBuyCrypto(tx.buyCryptoId as number, update);
+      else if (tx.buyFiatId != null) await updateBuyFiat(tx.buyFiatId, update);
+      if (userDataId) {
+        const results: KycLogResult[] = [];
+        if (update.amlCheck) results.push({ table, column: 'amlCheck', value: update.amlCheck });
+        if (update.amlReason) results.push({ table, column: 'amlReason', value: update.amlReason });
+        if (update.priceDefinitionAllowedDate)
+          results.push({ table, column: 'priceDefinitionAllowedDate', value: update.priceDefinitionAllowedDate });
+        await createKycLog(+userDataId, buildKycLogMessage({ description: 'AmlCheck', clerk, results }));
+      }
+      loadData();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error saving');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleAmlReset(tx: TransactionInfo, clerk: string): Promise<void> {
+    setIsSaving(true);
+    setError(undefined);
+    try {
+      const isBc = tx.buyCryptoId != null;
+      const table = isBc ? 'buyCrypto' : 'buyFiat';
+      if (isBc) await resetBuyCryptoAml(tx.buyCryptoId as number);
+      else if (tx.buyFiatId != null) await resetBuyFiatAml(tx.buyFiatId);
+      if (userDataId) {
+        await createKycLog(
+          +userDataId,
+          buildKycLogMessage({
+            description: 'AmlCheck',
+            clerk,
+            results: [{ table, column: 'amlCheck', value: 'Reset' }],
+          }),
+        );
+      }
+      loadData();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error resetting');
     } finally {
       setIsSaving(false);
     }
@@ -338,13 +446,20 @@ export default function ComplianceReviewScreen(): JSX.Element {
               isSaving={isSaving}
             />
           ) : effectiveTab === 'stammdaten' ? (
-            <StammdatenPanel data={data} onOpenFile={openFile} onSave={handleSave} isSaving={isSaving} />
+            <StammdatenPanel
+              data={data}
+              clerks={clerks}
+              onOpenFile={openFile}
+              onSave={handleSave}
+              isSaving={isSaving}
+            />
           ) : effectiveTab === 'ident' ? (
-            <IdentPanel data={data} onOpenFile={openFile} onSave={handleSave} isSaving={isSaving} />
+            <IdentPanel data={data} clerks={clerks} onOpenFile={openFile} onSave={handleSave} isSaving={isSaving} />
           ) : effectiveTab === 'bankDataReview' ? (
             <BankDataReviewPanel
               bankDatas={data.bankDatas}
               userData={data.userData}
+              clerks={clerks}
               onApprove={handleBankDataApprove}
               onReject={handleBankDataReject}
               isSaving={isSaving}
@@ -352,12 +467,10 @@ export default function ComplianceReviewScreen(): JSX.Element {
           ) : effectiveTab === 'amlPending' ? (
             <AmlCheckPendingPanel
               data={data}
-              onUpdateBuyCrypto={updateBuyCrypto}
-              onUpdateBuyFiat={updateBuyFiat}
-              onResetBuyCryptoAml={resetBuyCryptoAml}
-              onResetBuyFiatAml={resetBuyFiatAml}
+              clerks={clerks}
               isSaving={isSaving}
-              onReload={loadData}
+              onUpdate={handleAmlUpdate}
+              onReset={handleAmlReset}
             />
           ) : (
             <ComplianceReviewPanel
@@ -370,6 +483,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
               rejectionReasons={activeConfig.rejectionReasons}
               userData={data.userData}
               kycSteps={data.kycSteps}
+              clerks={clerks}
               onOpenFile={openFile}
               onSave={handleSave}
               isSaving={isSaving}

@@ -72,6 +72,7 @@ function DataTable<T extends { id: number }>({
 const usersColumns: ColumnDef<UserInfo>[] = [
   { header: 'ID', render: (u) => u.id },
   { header: 'Address', align: 'left', render: (u) => u.address, className: 'font-mono' },
+  { header: 'Wallet', align: 'left', render: (u) => u.walletName || '-' },
   { header: 'Ref', render: (u) => u.ref || '-' },
   { header: 'Role', render: (u) => u.role },
   { header: 'Status', render: (u) => u.status },
@@ -203,6 +204,30 @@ const sellRoutesColumns: ColumnDef<SellRouteInfo>[] = [
   { header: 'ID', render: (s) => s.id },
   { header: 'IBAN', align: 'left', render: (s) => s.iban, className: 'font-mono' },
   { header: 'Fiat', render: (s) => s.fiatName || '-' },
+  {
+    header: 'Deposit Address',
+    align: 'left',
+    render: (s) =>
+      s.depositAddress ? (
+        s.depositAddressExplorerUrl ? (
+          <a
+            href={s.depositAddressExplorerUrl}
+            target="_blank"
+            rel="noreferrer"
+            title={s.depositAddress}
+            className="text-dfxBlue-800 hover:underline"
+          >
+            {s.depositAddress}
+          </a>
+        ) : (
+          <span title={s.depositAddress}>{s.depositAddress}</span>
+        )
+      ) : (
+        '-'
+      ),
+    className: 'font-mono',
+  },
+  { header: 'Blockchain', align: 'left', render: (s) => s.depositBlockchains?.join(', ') || '-' },
   { header: 'Volume', align: 'right', render: (s) => s.volume?.toFixed(2) },
   { header: 'Active', render: (s) => boolBadge(s.active) },
   { header: 'Created', render: (s) => formatDate(s.created) },
