@@ -89,6 +89,7 @@ const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
 const DashboardScreen = lazy(() => import('./screens/dashboard.screen'));
 const DashboardFinancialScreen = lazy(() => import('./screens/dashboard-financial.screen'));
+const DashboardFinancialOverviewScreen = lazy(() => import('./screens/dashboard-financial-overview.screen'));
 const DashboardFinancialHistoryScreen = lazy(() => import('./screens/dashboard-financial-history.screen'));
 const DashboardFinancialLiveScreen = lazy(() => import('./screens/dashboard-financial-live.screen'));
 const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-financial-expenses.screen'));
@@ -514,6 +515,10 @@ export const Routes = [
               {
                 index: true,
                 element: withSuspense(<DashboardFinancialScreen />),
+              },
+              {
+                path: 'overview',
+                element: withSuspense(<DashboardFinancialOverviewScreen />),
               },
               {
                 path: 'live',

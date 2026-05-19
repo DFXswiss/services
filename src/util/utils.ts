@@ -312,6 +312,14 @@ export function formatAmountForDisplay(amount?: number): string {
   return Utils.formatAmount(amount).replace('.00', '.-').replace(' ', "'");
 }
 
+export function formatChf(value: number): string {
+  return value.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+export function formatChfOrDash(value?: number): string {
+  return value !== undefined ? `${formatChf(value)} CHF` : '-';
+}
+
 export function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;
   if (a == null || b == null) return false;

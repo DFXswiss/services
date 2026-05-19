@@ -1,4 +1,4 @@
-import { Timeframe, getFromDateByTimeframe } from '../util/chart';
+import { getFromDateByTimeframe, isDailySample, Timeframe } from '../util/chart';
 
 describe('chart utils', () => {
   const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -53,6 +53,19 @@ describe('chart utils', () => {
 
     it('should return 0 for unknown timeframe', () => {
       expect(getFromDateByTimeframe('unknown' as Timeframe)).toBe(0);
+    });
+
+    it('should return hourly sampling for DAY and THREE_DAYS', () => {
+      expect(isDailySample(Timeframe.DAY)).toBe(false);
+      expect(isDailySample(Timeframe.THREE_DAYS)).toBe(false);
+    });
+
+    it('should return daily sampling for WEEK and longer', () => {
+      expect(isDailySample(Timeframe.WEEK)).toBe(true);
+      expect(isDailySample(Timeframe.MONTH)).toBe(true);
+      expect(isDailySample(Timeframe.QUARTER)).toBe(true);
+      expect(isDailySample(Timeframe.YEAR)).toBe(true);
+      expect(isDailySample(Timeframe.ALL)).toBe(true);
     });
 
     it('should return increasing values for longer timeframes', () => {

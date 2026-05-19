@@ -2,7 +2,7 @@ import { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { FinancialChangesEntry } from 'src/dto/dashboard.dto';
-import { TimeRange } from 'src/screens/dashboard-financial-history.screen';
+import { TimeRange } from 'src/util/chart';
 
 interface FinancialChangesChartProps {
   entries: FinancialChangesEntry[];

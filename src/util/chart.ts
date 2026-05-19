@@ -1,3 +1,8 @@
+export interface TimeRange {
+  min: number;
+  max: number;
+}
+
 export enum Timeframe {
   DAY = '24h',
   THREE_DAYS = '3D',
@@ -9,6 +14,10 @@ export enum Timeframe {
 }
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+export function isDailySample(timeframe: Timeframe): boolean {
+  return timeframe !== Timeframe.DAY && timeframe !== Timeframe.THREE_DAYS;
+}
 
 export function getFromDateByTimeframe(timeframe: Timeframe): number {
   switch (timeframe) {
