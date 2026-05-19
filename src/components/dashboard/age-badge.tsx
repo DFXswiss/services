@@ -9,7 +9,11 @@ function formatAge(ms: number): string {
   return `${h}h ${m % 60}m ago`;
 }
 
-export function AgeBadge({ timestamp }: { timestamp?: string }): JSX.Element {
+interface AgeBadgeProps {
+  timestamp?: string;
+}
+
+export function AgeBadge({ timestamp }: AgeBadgeProps): JSX.Element {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);

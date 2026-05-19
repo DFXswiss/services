@@ -1,6 +1,8 @@
+import { ReactNode } from 'react';
+
 interface SummaryCardProps {
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
   color?: string;
 }
 

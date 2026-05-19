@@ -1,8 +1,8 @@
 import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
-import { BalanceBarChart } from 'src/components/dashboard/latest-balance-bar-chart';
 import { AgeBadge } from 'src/components/dashboard/age-badge';
+import { BalanceBarChart } from 'src/components/dashboard/latest-balance-bar-chart';
 import { SummaryCard } from 'src/components/dashboard/summary-card';
 import { TotalBalanceLongChart } from 'src/components/dashboard/total-balance-long-chart';
 import { FinancialLogEntry, LatestBalanceResponse } from 'src/dto/dashboard.dto';
