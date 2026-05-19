@@ -4,6 +4,7 @@ import { KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook'
 import {
   buildAddress,
   display,
+  formatBirthday,
   formatDate,
   formatDateTime,
   formatValue,
@@ -436,7 +437,7 @@ export function ComplianceReviewFreigabePanel({
     ...(isOrganization ? [{ label: 'Name Vertragspartei', value: display(userData.organization?.name) }] : []),
     { label: 'Privat-Adresse', value: buildAddress(userData) },
     ...(isOrganization ? [{ label: 'Firmen-Adresse', value: buildAddress(userData.organization) }] : []),
-    { label: 'Geburtstag', value: userData.birthday ? formatDate(userData.birthday) : '-' },
+    { label: 'Geburtstag', value: userData.birthday ? formatBirthday(userData.birthday) : '-' },
     { label: 'Mail', value: display(userData.mail) },
     { label: 'Phone', value: display(userData.phone) },
     { label: 'Sprache', value: refName(userData.language) },

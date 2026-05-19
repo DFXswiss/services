@@ -142,13 +142,13 @@ function BankDataEntry({
           </div>
           <div className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300">
             <span className="text-sm text-dfxBlue-800">bankData name</span>
-            <span className={`text-sm ${nameMismatch ? 'text-red-600 font-semibold' : 'text-dfxBlue-800'}`}>
+            <span className={`text-sm ${nameMismatch ? 'text-dfxRed-100 font-semibold' : 'text-dfxBlue-800'}`}>
               {entry.name || '-'}
             </span>
           </div>
           {nameMismatch && (
             <div className="px-3 py-2 border-b border-dfxGray-300 last:border-0">
-              <span className="text-sm text-yellow-700">
+              <span className="text-sm text-dfxYellow-700">
                 Handelt es sich bei &quot;{verifiedName}&quot; und &quot;{entry.name}&quot; um die selbe Person oder ist
                 es ein gemeinschaftliches Ehekonto?
               </span>
@@ -248,7 +248,7 @@ export function BankDataReviewPanel({
   isSaving,
 }: BankDataReviewPanelProps): JSX.Element {
   // Ident-type bank data is created from KYC ident results and not relevant for compliance review.
-  const pendingEntries = bankDatas.filter((b) => b.type !== 'Ident' && (!b.approved || b.status === 'ManualReview'));
+  const pendingEntries = bankDatas.filter((b) => b.type !== 'Ident' && b.status === 'ManualReview');
   const verifiedName = String(userData.verifiedName ?? '');
 
   if (pendingEntries.length === 0) {

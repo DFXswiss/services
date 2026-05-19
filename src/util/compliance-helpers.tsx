@@ -36,14 +36,25 @@ export function DetailRow({
   );
 }
 
-export function TransactionDetailRows({ tx }: { tx: Transaction }): JSX.Element {
+export function TransactionDetailRows({
+  tx,
+  amlCheck,
+  amlReason,
+  comment,
+}: {
+  tx: Transaction;
+  amlCheck?: string;
+  amlReason?: string;
+  comment?: string;
+}): JSX.Element {
   return (
     <table className="text-sm text-dfxBlue-800 text-left">
       <tbody>
         <DetailRow label="Date" value={tx.date ? new Date(tx.date).toLocaleString() : undefined} />
         <DetailRow label="Type" value={tx.type} />
-        <DetailRow label="State" value={tx.state} />
-        {tx.reason && <DetailRow label="Failure Reason" value={tx.reason} />}
+        <DetailRow label="AmlCheck" value={amlCheck} />
+        <DetailRow label="AmlReason" value={amlReason} />
+        <DetailRow label="Comment" value={comment} />
         <DetailRow
           label="Input"
           value={
@@ -144,13 +155,13 @@ export function formatDate(value: string): string {
   return new Date(value).toLocaleDateString();
 }
 
-export function calculateAge(birthday: string): number {
+export function formatBirthday(birthday: string): string {
   const birth = new Date(birthday);
   const now = new Date();
   let age = now.getFullYear() - birth.getFullYear();
   const m = now.getMonth() - birth.getMonth();
   if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-  return age;
+  return `${formatDate(birthday)} (${age} Jahre)`;
 }
 
 export function formatDateTime(value: string): string {

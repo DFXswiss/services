@@ -49,6 +49,10 @@ module.exports = {
         300: '#196F3D',
         400: '#145A32',
       },
+      dfxYellow: {
+        500: '#EAB308',
+        700: '#A16207',
+      },
     },
     fontSize: {
       '2xs': '0.625rem', // 10px

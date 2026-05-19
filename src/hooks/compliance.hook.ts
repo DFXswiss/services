@@ -98,13 +98,6 @@ export interface UserSearchResult {
   name?: string;
 }
 
-export interface PendingOnboardingInfo {
-  id: number;
-  name?: string;
-  accountType?: string;
-  date: string;
-}
-
 export interface PendingTransactionInfo {
   txId: number;
   uid: string;
@@ -807,13 +800,6 @@ export function useCompliance() {
     });
   }
 
-  async function getPendingOnboardings(): Promise<PendingOnboardingInfo[]> {
-    return call<PendingOnboardingInfo[]>({
-      url: 'support/pending-onboardings',
-      method: 'GET',
-    });
-  }
-
   async function getPendingTransactions(): Promise<PendingTransactionInfo[]> {
     return call<PendingTransactionInfo[]>({
       url: 'support/pending-transactions',
@@ -1195,7 +1181,6 @@ export function useCompliance() {
     () => ({
       search,
       getUserData,
-      getPendingOnboardings,
       getPendingTransactions,
       getPendingReviews,
       getPendingReviewItems,

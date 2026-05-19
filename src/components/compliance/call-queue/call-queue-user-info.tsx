@@ -1,5 +1,5 @@
 import { KycStepInfo, UserDataDetail, UserInfo } from 'src/hooks/compliance.hook';
-import { formatDate, formatDateTime } from 'src/util/compliance-helpers';
+import { formatBirthday, formatDateTime } from 'src/util/compliance-helpers';
 
 type CheckDateField =
   | 'phoneCallCheckDate'
@@ -64,7 +64,7 @@ export function CallQueueUserInfo({ userData, users, kycSteps, highlightCheckDat
     { label: 'Verified Name', value: userData.verifiedName },
     { label: 'Mail', value: userData.mail },
     { label: 'Phone', value: userData.phone },
-    { label: 'Birthday', value: userData.birthday ? formatDate(userData.birthday) : undefined },
+    { label: 'Birthday', value: userData.birthday ? formatBirthday(userData.birthday) : undefined },
     { label: 'Nationality', value: userData.nationality?.name },
     { label: 'Language', value: userData.language?.symbol ?? userData.language?.name },
     { label: 'Country', value: userData.country?.name ?? userData.country?.symbol },
