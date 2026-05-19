@@ -36,10 +36,12 @@ interface ThemeContextInterface {
   tokens: ThemeTokens;
 }
 
-const ThemeContext = createContext<ThemeContextInterface>(undefined as any);
+const ThemeContext = createContext<ThemeContextInterface | undefined>(undefined);
 
 export function useThemeContext(): ThemeContextInterface {
-  return useContext(ThemeContext);
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error('useThemeContext must be used within ThemeContextProvider');
+  return ctx;
 }
 
 // Reads dark-mode preference from URL (?dark=1, ?dark=0, ?theme=dark, ?theme=light) and persists it.
