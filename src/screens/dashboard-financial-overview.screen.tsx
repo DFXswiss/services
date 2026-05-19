@@ -2,6 +2,7 @@ import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { BalanceBarChart } from 'src/components/dashboard/latest-balance-bar-chart';
+import { AgeBadge, formatChfOrDash, SummaryCard } from 'src/components/dashboard/summary-card';
 import { TotalBalanceLongChart } from 'src/components/dashboard/total-balance-long-chart';
 import { FinancialLogEntry, LatestBalanceResponse } from 'src/dto/dashboard.dto';
 import { useDashboard } from 'src/hooks/dashboard.hook';
@@ -18,27 +19,7 @@ const TIMEFRAME_OPTIONS = [
   Timeframe.ALL,
 ] as const;
 
-function formatChf(value: number): string {
-  return value.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-
-function formatAge(ms: number): string {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ${s % 60}s ago`;
-  const h = Math.floor(m / 60);
-  return `${h}h ${m % 60}m ago`;
-}
-
-function AgeBadge({ timestamp }: { timestamp?: string }): JSX.Element {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  return <>{timestamp ? formatAge(now - new Date(timestamp).getTime()) : '-'}</>;
-}
+const REFRESH_INTERVAL_MS = 60_000;
 
 export default function DashboardFinancialOverviewScreen(): JSX.Element {
   useAdminGuard();
@@ -72,7 +53,7 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
     }
 
     load(true);
-    const interval = setInterval(() => load(false), 60_000);
+    const interval = setInterval(() => load(false), REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [isLoggedIn, timeframe]);
 
@@ -99,37 +80,13 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
     return { totalPlus: plus, totalMinus: minus, totalBalance: plus - minus };
   }, [latestBalance]);
 
-  const chfOrDash = (v?: number) => (v !== undefined ? `${formatChf(v)} CHF` : '-');
-
   return (
     <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-xs font-medium" style={{ color: '#6b7280' }}>
-            Total Balance
-          </div>
-          <div className="text-xl font-bold mt-1">{chfOrDash(totalBalance)}</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-xs font-medium" style={{ color: '#6b7280' }}>
-            Plus Balance
-          </div>
-          <div className="text-xl font-bold mt-1" style={{ color: '#22c55e' }}>{chfOrDash(totalPlus)}</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-xs font-medium" style={{ color: '#6b7280' }}>
-            Minus Balance
-          </div>
-          <div className="text-xl font-bold mt-1" style={{ color: '#ef4444' }}>{chfOrDash(totalMinus)}</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-xs font-medium" style={{ color: '#6b7280' }}>
-            Timestamp
-          </div>
-          <div className="text-xl font-bold mt-1">
-            <AgeBadge timestamp={latestBalance?.timestamp} />
-          </div>
-        </div>
+        <SummaryCard label="Total Balance" value={formatChfOrDash(totalBalance)} />
+        <SummaryCard label="Plus Balance" value={formatChfOrDash(totalPlus)} color="#22c55e" />
+        <SummaryCard label="Minus Balance" value={formatChfOrDash(totalMinus)} color="#ef4444" />
+        <SummaryCard label="Timestamp" value={<AgeBadge timestamp={latestBalance?.timestamp} />} />
       </div>
 
       <div className="flex gap-2">
