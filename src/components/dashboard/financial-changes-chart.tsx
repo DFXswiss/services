@@ -7,11 +7,12 @@ import { TimeRange } from 'src/util/chart';
 interface FinancialChangesChartProps {
   entries: FinancialChangesEntry[];
   timeRange?: TimeRange;
+  dark?: boolean;
 }
 
 const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
 
-function makeBaseOptions(timeRange?: TimeRange): ApexOptions {
+function makeBaseOptions(timeRange?: TimeRange, dark?: boolean): ApexOptions {
   const isShortRange = timeRange && (timeRange.max - timeRange.min) < FOUR_DAYS_MS;
 
   return {
@@ -21,10 +22,11 @@ function makeBaseOptions(timeRange?: TimeRange): ApexOptions {
       zoom: { enabled: true },
       background: '0',
     },
+    theme: { mode: dark ? 'dark' : 'light' },
     stroke: { width: 2, curve: 'smooth' },
     dataLabels: { enabled: false },
     fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.05 } },
-    grid: { borderColor: '#e5e7eb' },
+    grid: { borderColor: dark ? '#0A355C' : '#e5e7eb' },
     xaxis: {
       type: 'datetime',
       labels: { datetimeUTC: false, format: isShortRange ? 'dd MMM HH:mm' : 'dd MMM yy' },
@@ -44,8 +46,8 @@ function makeBaseOptions(timeRange?: TimeRange): ApexOptions {
   };
 }
 
-export function FinancialChangesTotalChart({ entries, timeRange }: FinancialChangesChartProps) {
-  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#22c55e'] }), [timeRange]);
+export function FinancialChangesTotalChart({ entries, timeRange, dark }: FinancialChangesChartProps) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange, dark), colors: ['#22c55e'] }), [timeRange, dark]);
 
   const series = useMemo(() => [
     { name: 'Net Total', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.total)]) },
@@ -59,8 +61,8 @@ export function FinancialChangesTotalChart({ entries, timeRange }: FinancialChan
   );
 }
 
-export function FinancialChangesPlusChart({ entries, timeRange }: FinancialChangesChartProps) {
-  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#3b82f6', '#f97316', '#8b5cf6', '#64748b'] }), [timeRange]);
+export function FinancialChangesPlusChart({ entries, timeRange, dark }: FinancialChangesChartProps) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange, dark), colors: ['#3b82f6', '#f97316', '#8b5cf6', '#64748b'] }), [timeRange, dark]);
 
   const series = useMemo(() => [
     { name: 'BuyCrypto', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.plus.buyCrypto)]) },
@@ -81,8 +83,8 @@ interface FinancialChangesMinusChartProps extends FinancialChangesChartProps {
   onDetails?: () => void;
 }
 
-export function FinancialChangesMinusChart({ entries, timeRange, onDetails }: FinancialChangesMinusChartProps) {
-  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#ef4444', '#f97316', '#64748b', '#6366f1', '#14b8a6'] }), [timeRange]);
+export function FinancialChangesMinusChart({ entries, timeRange, dark, onDetails }: FinancialChangesMinusChartProps) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange, dark), colors: ['#ef4444', '#f97316', '#64748b', '#6366f1', '#14b8a6'] }), [timeRange, dark]);
 
   const series = useMemo(() => [
     { name: 'Referral', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.ref.total)]) },
@@ -97,7 +99,14 @@ export function FinancialChangesMinusChart({ entries, timeRange, onDetails }: Fi
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-sm font-semibold">Expenses / Minus (cumulative)</h3>
         {onDetails && (
-          <button onClick={onDetails} className="text-xs font-medium px-3 py-1 rounded" style={{ color: '#3b82f6', background: '#eff6ff' }}>
+          <button
+            onClick={onDetails}
+            className="text-xs font-medium px-3 py-1 rounded"
+            style={{
+              color: dark ? '#93c5fd' : '#3b82f6',
+              background: dark ? '#082948' : '#eff6ff',
+            }}
+          >
             Details
           </button>
         )}

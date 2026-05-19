@@ -152,6 +152,44 @@ describe('useStore', () => {
     });
   });
 
+  describe('darkMode', () => {
+    it('should set and get darkMode true', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.darkMode.set(true);
+      });
+
+      expect(result.current.darkMode.get()).toBe(true);
+    });
+
+    it('should set and get darkMode false', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.darkMode.set(false);
+      });
+
+      expect(result.current.darkMode.get()).toBe(false);
+    });
+
+    it('should return undefined when not set', () => {
+      const { result } = renderHook(() => useStore());
+      expect(result.current.darkMode.get()).toBeUndefined();
+    });
+
+    it('should remove darkMode', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.darkMode.set(true);
+        result.current.darkMode.remove();
+      });
+
+      expect(result.current.darkMode.get()).toBeUndefined();
+    });
+  });
+
   describe('persistence', () => {
     it('should persist data across hook instances', () => {
       const { result: result1 } = renderHook(() => useStore());
