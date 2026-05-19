@@ -1,4 +1,4 @@
-import { render, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { PropsWithChildren } from 'react';
 import { ThemeContextProvider, useThemeContext } from '../contexts/theme.context';
 
@@ -114,16 +114,24 @@ describe('ThemeContext', () => {
     });
   });
 
-  describe('cleanup', () => {
-    it('removes dark class from html and body when switched off', () => {
-      localStorageMock.setItem('dfx.srv.darkMode', 'true');
-      const { unmount } = render(
-        <ThemeContextProvider>
-          <span>child</span>
-        </ThemeContextProvider>,
-      );
+  describe('setDark', () => {
+    it('switches mode and updates dom + localStorage', () => {
+      const { result } = renderHook(() => useThemeContext(), { wrapper });
+      expect(result.current.isDark).toBe(false);
+
+      act(() => result.current.setDark(true));
+
+      expect(result.current.isDark).toBe(true);
       expect(document.documentElement.classList.contains('dark')).toBe(true);
-      unmount();
+      expect(document.body.classList.contains('dark')).toBe(true);
+      expect(localStorageMock.getItem('dfx.srv.darkMode')).toBe('true');
+
+      act(() => result.current.setDark(false));
+
+      expect(result.current.isDark).toBe(false);
+      expect(document.documentElement.classList.contains('dark')).toBe(false);
+      expect(document.body.classList.contains('dark')).toBe(false);
+      expect(localStorageMock.getItem('dfx.srv.darkMode')).toBe('false');
     });
   });
 });
