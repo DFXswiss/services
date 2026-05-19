@@ -2,7 +2,13 @@ import { StyledButton, StyledButtonWidth } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { CallOutcome, CallOutcomeContext, CallOutcomeResult, useCompliance } from 'src/hooks/compliance.hook';
+import {
+  AmlAction,
+  CallOutcome,
+  CallOutcomeContext,
+  CallOutcomeResult,
+  useCompliance,
+} from 'src/hooks/compliance.hook';
 
 interface Props {
   context: CallOutcomeContext;
@@ -19,6 +25,7 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
   const [signature, setSignature] = useState<string>('');
   const [comment, setComment] = useState<string>('');
   const [outcome, setOutcome] = useState<CallOutcome | ''>('');
+  const [amlAction, setAmlAction] = useState<AmlAction | ''>('');
   const [isSaving, setIsSaving] = useState(false);
   const [result, setResult] = useState<CallOutcomeResult>();
 
@@ -26,13 +33,19 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
     setSignature((prev) => prev || clerks[0] || '');
   }, [clerks]);
 
+  const hasTx = context.txId != null && context.sourceType != null;
+  const showAmlCheck = hasTx && outcome !== CallOutcome.COMPLETED;
   const canSubmit = !!signature && !!outcome && !!comment.trim() && !isSaving;
 
   async function handleSubmit() {
     if (!outcome || !signature || !comment.trim()) return;
     setIsSaving(true);
     setResult(undefined);
-    const res = await saveCallOutcome(context, outcome, { signature, comment });
+    const res = await saveCallOutcome(context, outcome, {
+      signature,
+      comment,
+      amlAction: showAmlCheck && amlAction ? amlAction : undefined,
+    });
     setIsSaving(false);
     setResult(res);
     if (res.success) onSaved();
@@ -73,6 +86,23 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
           </select>
         </div>
       </div>
+      {showAmlCheck && (
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-dfxBlue-800 mb-1">
+            {translate('screens/compliance', 'AmlCheck')}
+          </label>
+          <select
+            className="w-full px-3 py-2 text-sm bg-white border border-dfxGray-300 rounded text-dfxBlue-800"
+            value={amlAction}
+            onChange={(e) => setAmlAction(e.target.value as AmlAction | '')}
+          >
+            <option value="">— {translate('screens/compliance', 'No change')}</option>
+            <option value="Pass">Pass</option>
+            <option value="Fail">Fail</option>
+            <option value="Reset">Reset</option>
+          </select>
+        </div>
+      )}
       <div className="mt-4">
         <label className="block text-sm font-medium text-dfxBlue-800 mb-1">
           {translate('screens/kyc', 'Comment')} *

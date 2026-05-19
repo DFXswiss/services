@@ -15,7 +15,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { CallQueuesSection } from 'src/components/compliance/call-queues-section';
-import { PendingOnboardingsSection } from 'src/components/compliance/pending-onboardings-section';
 import { PendingReviewsSection } from 'src/components/compliance/pending-reviews-section';
 import { PendingTransactionsSection } from 'src/components/compliance/pending-transactions-section';
 import { QuickLinksSection } from 'src/components/compliance/quick-links-section';
@@ -25,7 +24,6 @@ import { CallQueueSummaryEntry, PendingReviewSummaryEntry } from '@dfx.swiss/rea
 import {
   BankTxSearchResult,
   ComplianceSearchResult,
-  PendingOnboardingInfo,
   PendingTransactionInfo,
   UserSearchResult,
   useCompliance,
@@ -43,8 +41,7 @@ export default function ComplianceScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { search, downloadUserFiles, getPendingOnboardings, getPendingReviews, getPendingTransactions, getCallQueues } =
-    useCompliance();
+  const { search, downloadUserFiles, getPendingReviews, getPendingTransactions, getCallQueues } = useCompliance();
   const { navigate } = useNavigation();
   const { search: query } = useLocation();
 
@@ -54,7 +51,6 @@ export default function ComplianceScreen(): JSX.Element {
   const [searchResult, setSearchResult] = useState<ComplianceSearchResult>();
   const [showInfo, setShowInfo] = useState(false);
   const [downloadingUserId, setDownloadingUserId] = useState<number>();
-  const [pendingOnboardings, setPendingOnboardings] = useState<PendingOnboardingInfo[]>([]);
   const [pendingReviews, setPendingReviews] = useState<PendingReviewSummaryEntry[]>([]);
   const [pendingTransactions, setPendingTransactions] = useState<PendingTransactionInfo[]>([]);
   const [callQueues, setCallQueues] = useState<CallQueueSummaryEntry[]>([]);
@@ -62,9 +58,8 @@ export default function ComplianceScreen(): JSX.Element {
   const paramSearch = new URLSearchParams(query).get('search') || undefined;
 
   useEffect(() => {
-    Promise.all([getPendingOnboardings(), getPendingReviews(), getPendingTransactions(), getCallQueues()])
-      .then(([onboardings, reviews, transactions, queues]) => {
-        setPendingOnboardings(onboardings);
+    Promise.all([getPendingReviews(), getPendingTransactions(), getCallQueues()])
+      .then(([reviews, transactions, queues]) => {
         setPendingReviews(reviews);
         setPendingTransactions(transactions);
         setCallQueues(queues);
@@ -364,7 +359,6 @@ export default function ComplianceScreen(): JSX.Element {
 
         {dashboardError && <ErrorHint message={dashboardError} />}
 
-        <PendingOnboardingsSection entries={pendingOnboardings} />
         <PendingReviewsSection entries={pendingReviews} />
         <PendingTransactionsSection entries={pendingTransactions} />
         <CallQueuesSection entries={callQueues} />

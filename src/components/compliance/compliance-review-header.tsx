@@ -1,5 +1,5 @@
 import { KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
-import { buildAddress, display, extractLegalEntity, formatDate, refName } from 'src/util/compliance-helpers';
+import { buildAddress, display, extractLegalEntity, formatBirthday, refName } from 'src/util/compliance-helpers';
 
 interface ComplianceReviewHeaderProps {
   userData: UserDataDetail;
@@ -38,7 +38,7 @@ export function ComplianceReviewHeader({ userData, kycSteps }: Readonly<Complian
       : [
           { label: 'Name', value: contactName },
           { label: 'Adresse', value: buildAddress(userData) },
-          { label: 'Geburtstag', value: userData.birthday ? formatDate(userData.birthday) : '-' },
+          { label: 'Geburtstag', value: userData.birthday ? formatBirthday(userData.birthday) : '-' },
           { label: 'VerifiedName', value: display(userData.verifiedName) },
         ]),
     { label: 'Mail', value: display(userData.mail) },

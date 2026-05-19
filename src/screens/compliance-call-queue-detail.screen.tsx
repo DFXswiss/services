@@ -181,7 +181,9 @@ export default function ComplianceCallQueueDetailScreen(): JSX.Element {
         context={context}
         availableOutcomes={config.outcomes}
         clerks={clerks}
-        onSaved={() => navigate(`compliance/call-queues/${queue}`)}
+        onSaved={() =>
+          navigate({ pathname: `/compliance/call-queues/${queue}` }, { replace: true, clearParams: ['txId'] })
+        }
         title={translate('screens/compliance', 'Save Outcome')}
       />
     </StyledVerticalStack>

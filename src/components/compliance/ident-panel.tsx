@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { ComplianceUserData, KycFile, KycStepInfo, IpLogInfo } from 'src/hooks/compliance.hook';
-import { display, formatDate, refName, statusBadge, todayAsString } from 'src/util/compliance-helpers';
+import { display, formatBirthday, refName, statusBadge, todayAsString } from 'src/util/compliance-helpers';
 import { renderResultTable } from './compliance-review-panel';
 
 interface IdentPanelProps {
   data: ComplianceUserData;
+  clerks: string[];
   onOpenFile: (file: KycFile) => void;
-  onSave: (stepId: number, status: string, comment?: string, result?: string) => Promise<void>;
+  onSave: (
+    stepId: number,
+    status: string,
+    clerk: string,
+    description: string,
+    comment?: string,
+    result?: string,
+  ) => Promise<void>;
   isSaving: boolean;
 }
 
@@ -42,7 +50,7 @@ function parseIdentResult(step: KycStepInfo): IdentResult | undefined {
       lastname: (parsed.lastname ?? fixedInfo?.lastName ?? info?.lastName) as string,
       documentType: parsed.documentType as string,
       documentNumber: parsed.documentNumber as string,
-      birthday: parsed.birthday as string,
+      birthday: (parsed.birthday ?? info?.dob) as string,
       nationality: parsed.nationality as string,
       success: parsed.success as boolean,
       ipCountry: (parsed.ipCountry ?? data?.ipCountry) as string,
@@ -68,7 +76,7 @@ function InfoLine({ label, value }: { label: string; value: string }): JSX.Eleme
   );
 }
 
-export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelProps): JSX.Element {
+export function IdentPanel({ data, clerks, onOpenFile, onSave, isSaving }: IdentPanelProps): JSX.Element {
   const step = findLatestStep(data.kycSteps, 'Ident');
   const nationalityStep = findLatestStep(data.kycSteps, 'NationalityData');
 
@@ -76,6 +84,7 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
     step?.status === 'Completed' ? 'Akzeptiert' : step?.status === 'Failed' ? 'Abgelehnt' : '',
   );
   const [rejectionComment, setRejectionComment] = useState(step?.comment ?? '');
+  const [clerk, setClerk] = useState('');
 
   if (!step) {
     return (
@@ -102,9 +111,15 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
   }
 
   function handleSave(): void {
-    if (!step || !decision) return;
+    if (!step || !decision || !clerk) return;
     const status = decision === 'Akzeptiert' ? 'Completed' : 'Failed';
-    onSave(step.id, status, decision === 'Abgelehnt' && rejectionComment ? rejectionComment : undefined);
+    onSave(
+      step.id,
+      status,
+      clerk,
+      'Ident',
+      decision === 'Abgelehnt' && rejectionComment ? rejectionComment : undefined,
+    );
   }
 
   const rejectionReasons = ['Identification failed', 'Document expired', 'Name mismatch', 'Photo quality insufficient'];
@@ -144,12 +159,7 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
         <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">User Daten</h3>
         <div className="bg-white rounded-lg shadow-sm">
           <InfoLine label="UserDataId" value={display(ud.id)} />
-          <InfoLine
-            label="Birthday"
-            value={
-              identResult?.birthday ? formatDate(identResult.birthday) : ud.birthday ? formatDate(ud.birthday) : '-'
-            }
-          />
+          <InfoLine label="Birthday" value={identResult?.birthday ? formatBirthday(identResult.birthday) : '-'} />
           <InfoLine label="AccountType" value={display(ud.accountType)} />
           <InfoLine
             label="Address"
@@ -181,7 +191,7 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
                   identResult.firstname &&
                   ud.firstname &&
                   String(ud.firstname).toLowerCase() !== identResult.firstname.toLowerCase()
-                    ? 'text-red-600 font-semibold'
+                    ? 'text-dfxRed-100 font-semibold'
                     : 'text-dfxBlue-800'
                 }`}
               >
@@ -196,7 +206,7 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
                   identResult.lastname &&
                   ud.surname &&
                   String(ud.surname).toLowerCase() !== identResult.lastname.toLowerCase()
-                    ? 'text-red-600 font-semibold'
+                    ? 'text-dfxRed-100 font-semibold'
                     : 'text-dfxBlue-800'
                 }`}
               >
@@ -240,11 +250,7 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
         </a>
       </div>
 
-      {step?.status === 'InternalReview' ? (
-        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
-          Dieser Step ist im Internal Review und kann von Compliance noch nicht akzeptiert oder abgelehnt werden.
-        </div>
-      ) : (
+      {step?.status === 'ManualReview' ? (
         <>
           {/* Decision */}
           <div className="bg-white rounded-lg shadow-sm px-3 py-3">
@@ -287,17 +293,40 @@ export function IdentPanel({ data, onOpenFile, onSave, isSaving }: IdentPanelPro
             </div>
           )}
 
+          {/* Clerk */}
+          <div className="bg-white rounded-lg shadow-sm px-3 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-dfxBlue-800 font-medium">Editor:</span>
+              <select
+                className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+                value={clerk}
+                onChange={(e) => setClerk(e.target.value)}
+              >
+                <option value="">—</option>
+                {clerks.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Save */}
           <div>
             <button
               className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
               onClick={handleSave}
-              disabled={isSaving || !decision}
+              disabled={isSaving || !decision || !clerk}
             >
               {isSaving ? 'Speichern...' : 'Speichern'}
             </button>
           </div>
         </>
+      ) : (
+        <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
+          Steps im Status Manual Review können akzeptiert oder abgelehnt werden.
+        </div>
       )}
     </div>
   );

@@ -3,7 +3,7 @@ import { CollapsibleSection } from 'src/components/compliance/collapsible-sectio
 import { LimitRequestModal } from 'src/components/compliance/limit-request-modal';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { OrganizationDetail, UserDataDetail } from 'src/hooks/compliance.hook';
-import { display, formatDate, formatDateTime, Primitive, refName } from 'src/util/compliance-helpers';
+import { display, formatBirthday, formatDate, formatDateTime, Primitive, refName } from 'src/util/compliance-helpers';
 
 interface UserDataPanelProps {
   userData: UserDataDetail;
@@ -12,6 +12,7 @@ interface UserDataPanelProps {
   canCopyKycLinks?: boolean;
   wide?: boolean;
   onLimitRequestCreated?: () => void;
+  onCreateNote?: () => void;
 }
 
 function kycServicesBaseUrl(): string {
@@ -99,9 +100,9 @@ function SectionTable({
   );
 }
 
-function userDataRows(d: UserDataDetail, depositLimitNode: ReactNode): Row[] {
+function userDataRows(d: UserDataDetail, depositLimitNode: ReactNode, idNode: ReactNode): Row[] {
   return [
-    { key: 'id', value: display(d.id) },
+    { key: 'id', value: idNode },
     { key: 'created', value: fmtDateTime(d.created) },
     { key: 'status', value: display(d.status) },
     { key: 'riskStatus', value: display(d.riskStatus) },
@@ -124,7 +125,7 @@ function personalDataRows(d: UserDataDetail): Row[] {
     { key: 'country', value: refName(d.country) },
     { key: 'nationality', value: refName(d.nationality) },
     { key: 'language', value: refName(d.language) },
-    { key: 'birthday', value: fmtDate(d.birthday) },
+    { key: 'birthday', value: d.birthday ? formatBirthday(d.birthday) : '-' },
     { key: 'phone', value: display(d.phone) },
   ];
 }
@@ -210,6 +211,7 @@ export function UserDataPanel({
   canCopyKycLinks = false,
   wide = false,
   onLimitRequestCreated,
+  onCreateNote,
 }: Readonly<UserDataPanelProps>): JSX.Element {
   const [showLimitRequestModal, setShowLimitRequestModal] = useState(false);
 
@@ -228,12 +230,26 @@ export function UserDataPanel({
       display(userData.depositLimit)
     );
 
+  const idNode: ReactNode = onCreateNote ? (
+    <div className="flex items-center justify-between gap-2">
+      <span>{display(userData.id)}</span>
+      <button
+        className="px-3 py-1 text-xs text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded transition-colors whitespace-nowrap"
+        onClick={onCreateNote}
+      >
+        Notiz erstellen
+      </button>
+    </div>
+  ) : (
+    display(userData.id)
+  );
+
   return (
     <>
       <div className={`${wide ? 'w-full' : 'w-1/2'} min-w-0`}>
         <div className="bg-white rounded-lg shadow-sm divide-y divide-dfxGray-300">
           <CollapsibleSection title="UserData" initiallyOpen>
-            <SectionTable rows={userDataRows(userData, depositLimitNode)} />
+            <SectionTable rows={userDataRows(userData, depositLimitNode, idNode)} />
           </CollapsibleSection>
 
           <CollapsibleSection title="Personal Data" initiallyOpen>

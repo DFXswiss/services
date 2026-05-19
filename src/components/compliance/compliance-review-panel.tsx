@@ -15,8 +15,16 @@ interface ComplianceReviewPanelProps {
   rejectionReasons: string[];
   userData: UserDataDetail;
   kycSteps: KycStepInfo[];
+  clerks: string[];
   onOpenFile: (file: KycFile) => void;
-  onSave: (stepId: number, status: string, comment?: string, result?: string) => Promise<void>;
+  onSave: (
+    stepId: number,
+    status: string,
+    clerk: string,
+    description: string,
+    comment?: string,
+    result?: string,
+  ) => Promise<void>;
   isSaving: boolean;
 }
 
@@ -122,6 +130,7 @@ export function ComplianceReviewPanel({
   rejectionReasons,
   userData,
   kycSteps,
+  clerks,
   onOpenFile,
   onSave,
   isSaving,
@@ -129,6 +138,7 @@ export function ComplianceReviewPanel({
   const [checks, setChecks] = useState<Record<string, string>>({});
   const [decision, setDecision] = useState<DecisionValue>('');
   const [rejectionComment, setRejectionComment] = useState('');
+  const [clerk, setClerk] = useState('');
 
   // Labels can reference fields that live outside UserData (e.g. {legalEntity}
   // is stored on the LegalEntity step result). Merge them into the resolver source.
@@ -137,9 +147,8 @@ export function ComplianceReviewPanel({
     [userData, kycSteps],
   );
 
-  // Steps in InternalReview are still being processed by the API and must not
-  // be accepted/rejected from compliance — only ManualReview is actionable.
-  const isComplianceActionable = step?.status !== 'InternalReview';
+  // Only steps in ManualReview can be accepted/rejected by compliance.
+  const isComplianceActionable = step?.status === 'ManualReview';
 
   useEffect(() => {
     if (!step) return;
@@ -192,7 +201,7 @@ export function ComplianceReviewPanel({
   }
 
   function handleSave(): void {
-    if (!step || !decision) return;
+    if (!step || !decision || !clerk) return;
     const status = decision === 'Akzeptiert' ? 'Completed' : 'Failed';
 
     // Comment: plain text for GS compatibility
@@ -220,7 +229,7 @@ export function ComplianceReviewPanel({
     existingResult.complianceReview = checksData;
     const result = JSON.stringify(existingResult);
 
-    onSave(step.id, status, comment, result);
+    onSave(step.id, status, clerk, step.name, comment, result);
   }
 
   return (
@@ -272,8 +281,14 @@ export function ComplianceReviewPanel({
 
               if (item.type === 'info') {
                 return (
-                  <div key={item.id} className="px-3 py-2 border-b border-dfxGray-300 last:border-0">
-                    <span className="text-sm text-dfxGray-700">{resolveLabel(item.label, labelSource)}</span>
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
+                  >
+                    <span className="text-sm text-dfxBlue-800">{item.label}</span>
+                    <span className="text-sm text-dfxBlue-800">
+                      {item.value ? resolveLabel(item.value, labelSource) : ''}
+                    </span>
                   </div>
                 );
               }
@@ -403,12 +418,31 @@ export function ComplianceReviewPanel({
             </div>
           )}
 
+          {/* Clerk */}
+          <div className="bg-white rounded-lg shadow-sm px-3 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-dfxBlue-800 font-medium">Editor:</span>
+              <select
+                className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+                value={clerk}
+                onChange={(e) => setClerk(e.target.value)}
+              >
+                <option value="">—</option>
+                {clerks.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Save */}
           <div>
             <button
               className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
               onClick={handleSave}
-              disabled={isSaving || !decision}
+              disabled={isSaving || !decision || !clerk}
             >
               {isSaving ? 'Speichern...' : 'Speichern'}
             </button>
@@ -416,7 +450,7 @@ export function ComplianceReviewPanel({
         </>
       ) : (
         <div className="bg-dfxGray-100 border border-dfxGray-300 rounded-lg px-3 py-2 text-sm text-dfxGray-700">
-          Dieser Step ist im Internal Review und kann von Compliance noch nicht akzeptiert oder abgelehnt werden.
+          Steps im Status Manual Review können akzeptiert oder abgelehnt werden.
         </div>
       )}
     </div>

@@ -5,8 +5,9 @@ import { statusBadge } from 'src/util/compliance-helpers';
 interface BankDataReviewPanelProps {
   bankDatas: BankDataInfo[];
   userData: UserDataDetail;
-  onApprove: (bankDataId: number) => Promise<void>;
-  onReject: (bankDataId: number) => Promise<void>;
+  clerks: string[];
+  onApprove: (bankDataId: number, clerk: string) => Promise<void>;
+  onReject: (bankDataId: number, clerk: string) => Promise<void>;
   isSaving: boolean;
 }
 
@@ -79,30 +80,33 @@ function YesNoSelect({ value, onChange }: { value: YesNo; onChange: (v: YesNo) =
 function BankDataEntry({
   entry,
   verifiedName,
+  clerks,
   onApprove,
   onReject,
   isSaving,
 }: {
   entry: BankDataInfo;
   verifiedName: string;
-  onApprove: (id: number) => Promise<void>;
-  onReject: (id: number) => Promise<void>;
+  clerks: string[];
+  onApprove: (id: number, clerk: string) => Promise<void>;
+  onReject: (id: number, clerk: string) => Promise<void>;
   isSaving: boolean;
 }): JSX.Element {
   const [decision, setDecision] = useState<DecisionValue>(
     entry.status === 'Completed' ? 'Akzeptiert' : entry.status === 'Failed' ? 'Abgelehnt' : '',
   );
+  const [clerk, setClerk] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const nameMismatch = verifiedName && entry.name && verifiedName.toLowerCase() !== entry.name.toLowerCase();
 
   async function handleSave(): Promise<void> {
-    if (!decision) return;
+    if (!decision || !clerk) return;
     setIsProcessing(true);
     try {
       if (decision === 'Akzeptiert') {
-        await onApprove(entry.id);
+        await onApprove(entry.id, clerk);
       } else {
-        await onReject(entry.id);
+        await onReject(entry.id, clerk);
       }
     } finally {
       setIsProcessing(false);
@@ -138,13 +142,13 @@ function BankDataEntry({
           </div>
           <div className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300">
             <span className="text-sm text-dfxBlue-800">bankData name</span>
-            <span className={`text-sm ${nameMismatch ? 'text-red-600 font-semibold' : 'text-dfxBlue-800'}`}>
+            <span className={`text-sm ${nameMismatch ? 'text-dfxRed-100 font-semibold' : 'text-dfxBlue-800'}`}>
               {entry.name || '-'}
             </span>
           </div>
           {nameMismatch && (
             <div className="px-3 py-2 border-b border-dfxGray-300 last:border-0">
-              <span className="text-sm text-yellow-700">
+              <span className="text-sm text-dfxYellow-700">
                 Handelt es sich bei &quot;{verifiedName}&quot; und &quot;{entry.name}&quot; um die selbe Person oder ist
                 es ein gemeinschaftliches Ehekonto?
               </span>
@@ -195,12 +199,31 @@ function BankDataEntry({
             </div>
           </div>
 
+          {/* Clerk */}
+          <div className="bg-white rounded-lg shadow-sm px-3 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-dfxBlue-800 font-medium">Editor:</span>
+              <select
+                className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+                value={clerk}
+                onChange={(e) => setClerk(e.target.value)}
+              >
+                <option value="">—</option>
+                {clerks.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Save */}
           <div>
             <button
               className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
               onClick={handleSave}
-              disabled={isSaving || isProcessing || !decision}
+              disabled={isSaving || isProcessing || !decision || !clerk}
             >
               {isProcessing ? 'Speichern...' : 'Speichern'}
             </button>
@@ -219,12 +242,13 @@ function BankDataEntry({
 export function BankDataReviewPanel({
   bankDatas,
   userData,
+  clerks,
   onApprove,
   onReject,
   isSaving,
 }: BankDataReviewPanelProps): JSX.Element {
   // Ident-type bank data is created from KYC ident results and not relevant for compliance review.
-  const pendingEntries = bankDatas.filter((b) => b.type !== 'Ident' && (!b.approved || b.status === 'ManualReview'));
+  const pendingEntries = bankDatas.filter((b) => b.type !== 'Ident' && b.status === 'ManualReview');
   const verifiedName = String(userData.verifiedName ?? '');
 
   if (pendingEntries.length === 0) {
@@ -242,6 +266,7 @@ export function BankDataReviewPanel({
           <BankDataEntry
             entry={entry}
             verifiedName={verifiedName}
+            clerks={clerks}
             onApprove={onApprove}
             onReject={onReject}
             isSaving={isSaving}

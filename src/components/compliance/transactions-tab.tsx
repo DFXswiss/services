@@ -5,20 +5,30 @@ import { ChargebackModal } from 'src/components/compliance/chargeback-modal';
 import { RecallDetailsModal } from 'src/components/compliance/recall-details-modal';
 import { RecallModal } from 'src/components/compliance/recall-modal';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { BankTxInfo, CryptoInputInfo, RecallInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
-import { DetailRow, TransactionDetailRows, formatDate, statusBadge } from 'src/util/compliance-helpers';
+import {
+  BankDataInfo,
+  BankTxInfo,
+  CryptoInputInfo,
+  RecallInfo,
+  TransactionInfo,
+  useCompliance,
+} from 'src/hooks/compliance.hook';
+import { boolBadge, DetailRow, statusBadge, TransactionDetailRows, formatDate } from 'src/util/compliance-helpers';
 
 interface TransactionsTableProps {
   transactions: TransactionInfo[];
   bankTxs: BankTxInfo[];
   cryptoInputs: CryptoInputInfo[];
+  bankDatas: BankDataInfo[];
   userDataId: number;
   expandedBankTxId?: number;
   expandedCryptoInputId?: number;
+  expandedBankDataId?: number;
   expandedTxUid?: string;
   canPerformActions?: boolean;
   onExpandBankTx: (id: number | undefined) => void;
   onExpandCryptoInput: (id: number | undefined) => void;
+  onExpandBankData: (id: number | undefined) => void;
   onExpandTxUid: (uid: string | undefined) => void;
   onStopped?: () => void;
 }
@@ -27,13 +37,16 @@ export function TransactionsTable({
   transactions,
   bankTxs,
   cryptoInputs,
+  bankDatas,
   userDataId,
   expandedBankTxId,
   expandedCryptoInputId,
+  expandedBankDataId,
   expandedTxUid,
   canPerformActions = true,
   onExpandBankTx,
   onExpandCryptoInput,
+  onExpandBankData,
   onExpandTxUid,
   onStopped,
 }: TransactionsTableProps): JSX.Element {
@@ -115,6 +128,7 @@ export function TransactionsTable({
       ?.filter((c): c is CryptoInputInfo & { transactionId: number } => c.transactionId != null)
       .map((c) => [c.transactionId, c]),
   );
+  const bankDataById = new Map(bankDatas?.map((b) => [b.id, b]));
 
   return (
     <div>
@@ -145,6 +159,7 @@ export function TransactionsTable({
             <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">AML Check</th>
             <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Chargeback</th>
             <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Bank TX</th>
+            <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Bank Data</th>
             <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Crypto In</th>
             <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Created</th>
             <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Completed</th>
@@ -155,8 +170,10 @@ export function TransactionsTable({
             transactions.map((tx) => {
               const bankTx = bankTxByTxId.get(tx.id);
               const cryptoInput = cryptoInputByTxId.get(tx.id);
+              const bankData = tx.bankDataId != null ? bankDataById.get(tx.bankDataId) : undefined;
               const isBankTxExpanded = expandedBankTxId === bankTx?.id;
               const isCryptoExpanded = expandedCryptoInputId === cryptoInput?.id;
+              const isBankDataExpanded = expandedBankDataId === bankData?.id;
 
               return (
                 <Fragment key={tx.id}>
@@ -215,6 +232,18 @@ export function TransactionsTable({
                       )}
                     </td>
                     <td className="px-3 py-2 text-sm text-dfxBlue-800 text-center">
+                      {bankData ? (
+                        <button
+                          className="text-dfxBlue-300 underline hover:text-dfxBlue-800"
+                          onClick={() => onExpandBankData(isBankDataExpanded ? undefined : bankData.id)}
+                        >
+                          {bankData.id}
+                        </button>
+                      ) : (
+                        (tx.bankDataId ?? '-')
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-sm text-dfxBlue-800 text-center">
                       {cryptoInput ? (
                         <button
                           className="text-dfxBlue-300 underline hover:text-dfxBlue-800"
@@ -238,7 +267,7 @@ export function TransactionsTable({
 
                   {isBankTxExpanded && bankTx && (
                     <tr key={`bankTx-${bankTx.id}`} className="bg-dfxGray-300/50">
-                      <td colSpan={14} className="px-6 py-3">
+                      <td colSpan={15} className="px-6 py-3">
                         <table className="text-sm text-dfxBlue-800 text-left">
                           <tbody>
                             <DetailRow label="Account Service Ref" value={bankTx.accountServiceRef} />
@@ -251,9 +280,45 @@ export function TransactionsTable({
                     </tr>
                   )}
 
+                  {isBankDataExpanded && bankData && (
+                    <tr key={`bankData-${bankData.id}`} className="bg-dfxGray-300/50">
+                      <td colSpan={15} className="px-6 py-3">
+                        <table className="text-sm text-dfxBlue-800 text-left">
+                          <tbody>
+                            <DetailRow label="IBAN" value={bankData.iban} mono />
+                            <DetailRow label="Name" value={bankData.name} />
+                            <DetailRow label="Type" value={bankData.type} />
+                            {bankData.status && (
+                              <tr>
+                                <td className="pr-3 py-0.5 font-medium whitespace-nowrap">Status:</td>
+                                <td className="py-0.5">{statusBadge(bankData.status)}</td>
+                              </tr>
+                            )}
+                            <tr>
+                              <td className="pr-3 py-0.5 font-medium whitespace-nowrap">Approved:</td>
+                              <td className="py-0.5">{boolBadge(bankData.approved)}</td>
+                            </tr>
+                            {bankData.manualApproved != null && (
+                              <tr>
+                                <td className="pr-3 py-0.5 font-medium whitespace-nowrap">Manual Approved:</td>
+                                <td className="py-0.5">{boolBadge(bankData.manualApproved)}</td>
+                              </tr>
+                            )}
+                            <tr>
+                              <td className="pr-3 py-0.5 font-medium whitespace-nowrap">Active:</td>
+                              <td className="py-0.5">{boolBadge(bankData.active)}</td>
+                            </tr>
+                            <DetailRow label="Comment" value={bankData.comment} />
+                            <DetailRow label="Created" value={formatDate(bankData.created)} />
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  )}
+
                   {isCryptoExpanded && cryptoInput && (
                     <tr key={`ci-${cryptoInput.id}`} className="bg-dfxGray-300/50">
-                      <td colSpan={14} className="px-6 py-3">
+                      <td colSpan={15} className="px-6 py-3">
                         <table className="text-sm text-dfxBlue-800 text-left">
                           <tbody>
                             <DetailRow
@@ -288,7 +353,7 @@ export function TransactionsTable({
 
                   {expandedTxUid === tx.uid && (
                     <tr key={`txDetail-${tx.uid}`} className="bg-dfxGray-300/50">
-                      <td colSpan={14} className="px-6 py-3">
+                      <td colSpan={15} className="px-6 py-3">
                         {txDetailLoading === tx.uid ? (
                           <StyledLoadingSpinner size={SpinnerSize.SM} />
                         ) : txDetailError && !txDetailCache.has(tx.uid) ? (
@@ -299,7 +364,12 @@ export function TransactionsTable({
                             const isStopped = (detail.state as string) === 'Stopped';
                             return (
                               <>
-                                <TransactionDetailRows tx={detail} />
+                                <TransactionDetailRows
+                                  tx={detail}
+                                  amlCheck={tx.amlCheck}
+                                  amlReason={tx.amlReason}
+                                  comment={tx.comment}
+                                />
                                 {(() => {
                                   const canStop = tx.type === 'BuyCrypto' && !tx.isCompleted;
                                   const canChargeback =
@@ -366,7 +436,7 @@ export function TransactionsTable({
             })
           ) : (
             <tr>
-              <td colSpan={14} className="px-3 py-4 text-center text-dfxGray-700">
+              <td colSpan={15} className="px-3 py-4 text-center text-dfxGray-700">
                 No transactions
               </td>
             </tr>

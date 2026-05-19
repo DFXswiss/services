@@ -27,6 +27,9 @@ export type CheckItemType = 'yesno' | 'select' | 'fileLink' | 'conditional' | 'l
 export interface CheckItemConfig {
   id: string;
   label: string;
+  // For type 'info': the right-hand value template (e.g. '{firstname} {surname}').
+  // Resolved via the same placeholder mechanism as `label`.
+  value?: string;
   altLabel?: string;
   altCondition?: (userData: UserDataDetail) => boolean;
   type?: CheckItemType;
@@ -101,12 +104,12 @@ export const reviewTabs: ReviewTabConfig[] = [
     decisionLabel: 'Entscheid:',
     rejectionReasons: [],
     checkItems: [
-      { id: 'infoUserDataId', label: 'UserDataId: {id}', type: 'info' },
-      { id: 'infoName', label: 'Name: {firstname} {surname}', type: 'info' },
-      { id: 'infoAddress', label: 'Adresse: {street} {houseNumber}, {zip} {location}', type: 'info' },
-      { id: 'infoMail', label: 'Mail: {mail}', type: 'info' },
-      { id: 'infoLanguage', label: 'Sprache: {language}', type: 'info' },
-      { id: 'infoStatus', label: 'Status: {status}', type: 'info' },
+      { id: 'infoUserDataId', label: 'UserDataId', value: '{id}', type: 'info' },
+      { id: 'infoName', label: 'Name', value: '{firstname} {surname}', type: 'info' },
+      { id: 'infoAddress', label: 'Adresse', value: '{street} {houseNumber}, {zip} {location}', type: 'info' },
+      { id: 'infoMail', label: 'Mail', value: '{mail}', type: 'info' },
+      { id: 'infoLanguage', label: 'Sprache', value: '{language}', type: 'info' },
+      { id: 'infoStatus', label: 'Status', value: '{status}', type: 'info' },
       { id: 'nationalityPlausible', label: 'Die angegebene Nationalität ist plausibel' },
     ],
   },
@@ -136,11 +139,11 @@ export const reviewTabs: ReviewTabConfig[] = [
       'Kein gültiges Dokument',
     ],
     checkItems: [
-      { id: 'infoUserDataId', label: 'UserDataId: {id}', type: 'info' },
-      { id: 'infoName', label: 'Name: {firstname} {surname}', type: 'info' },
-      { id: 'infoVerifiedName', label: 'VerifiedName: {verifiedName}', type: 'info' },
-      { id: 'infoMail', label: 'Mail: {mail}', type: 'info' },
-      { id: 'infoLanguage', label: 'Sprache: {language}', type: 'info' },
+      { id: 'infoUserDataId', label: 'UserDataId', value: '{id}', type: 'info' },
+      { id: 'infoName', label: 'Name', value: '{firstname} {surname}', type: 'info' },
+      { id: 'infoVerifiedName', label: 'VerifiedName', value: '{verifiedName}', type: 'info' },
+      { id: 'infoMail', label: 'Mail', value: '{mail}', type: 'info' },
+      { id: 'infoLanguage', label: 'Sprache', value: '{language}', type: 'info' },
       { id: 'nameMatch', label: 'Das Dokument lautet auf den Namen "{firstname} {surname}"' },
       { id: 'permitValid', label: 'Die Aufenthaltsbewilligung ist gültig (nicht abgelaufen)' },
       {
@@ -150,6 +153,18 @@ export const reviewTabs: ReviewTabConfig[] = [
         options: ['B', 'C', 'L', 'F', 'N', 'S', 'Andere'],
       },
     ],
+  },
+  {
+    key: 'ident',
+    label: 'Ident',
+    group: 'kyc',
+    stepName: 'Ident',
+    fileTypes: ['Identification'],
+    showResult: false,
+    decisionLabel: '',
+    rejectionReasons: [],
+    checkItems: [],
+    isCustomPanel: true,
   },
   {
     key: 'legalEntity',
@@ -346,18 +361,6 @@ export const reviewTabs: ReviewTabConfig[] = [
     decisionLabel: 'Entscheid:',
     rejectionReasons: [],
     checkItems: [],
-  },
-  {
-    key: 'ident',
-    label: 'Ident',
-    group: 'kyc',
-    stepName: 'Ident',
-    fileTypes: ['Identification'],
-    showResult: false,
-    decisionLabel: '',
-    rejectionReasons: [],
-    checkItems: [],
-    isCustomPanel: true,
   },
   {
     key: 'financialData',
