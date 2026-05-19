@@ -7,6 +7,10 @@ import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
+function formatChf(value: number): string {
+  return value.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
 export default function DashboardFinancialLiquidityScreen(): JSX.Element {
   useAdminGuard();
   useLayoutOptions({ title: 'Financial Liquidity', noMaxWidth: true });
@@ -33,8 +37,18 @@ export default function DashboardFinancialLiquidityScreen(): JSX.Element {
     );
   }
 
+  const totalPlus = latestBalance?.byType.reduce((s, t) => s + t.plusBalanceChf, 0) ?? 0;
+  const totalMinus = latestBalance?.byType.reduce((s, t) => s + t.minusBalanceChf, 0) ?? 0;
+
   return (
     <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
+      <div className="bg-white rounded-lg shadow p-4 inline-block">
+        <div className="text-xs font-medium" style={{ color: '#6b7280' }}>
+          Total Balance
+        </div>
+        <div className="text-xl font-bold mt-1">{`${formatChf(totalPlus - totalMinus)} CHF`}</div>
+      </div>
+
       <div className="bg-white rounded-lg shadow p-4">
         <BalanceBarChart title="Liquidity by Provider" data={latestBalance?.byBlockchain ?? []} />
       </div>

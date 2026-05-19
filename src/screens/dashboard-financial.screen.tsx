@@ -3,6 +3,7 @@ import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
 const pages = [
+  { path: '/dashboard/financial/overview', title: 'Overview', description: 'Total balance, history chart and liquidity' },
   { path: '/dashboard/financial/live', title: 'Live', description: 'Current balances and latest changes' },
   { path: '/dashboard/financial/history', title: 'History', description: 'Balance history over time' },
   { path: '/dashboard/financial/liquidity', title: 'Liquidity', description: 'Balance breakdown by type' },
