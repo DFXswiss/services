@@ -45,7 +45,7 @@ export default function DashboardFinancialLiquidityScreen(): JSX.Element {
 
   return (
     <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
-      <div className="inline-block">
+      <div className="max-w-xs">
         <SummaryCard label="Total Balance" value={formatChfOrDash(totalBalance)} />
       </div>
 
