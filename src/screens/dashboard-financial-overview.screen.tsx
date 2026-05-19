@@ -105,6 +105,9 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
     return { totalPlus: plus, totalMinus: minus, totalBalance: plus - minus };
   }, [latestBalance]);
 
+  // Memoize the array so BalanceBarChart's internal useMemo cache stays stable across renders.
+  const byBlockchain = useMemo(() => latestBalance?.byBlockchain ?? [], [latestBalance]);
+
   return (
     <div className="space-y-4 p-4 w-full self-stretch bg-dfxBlue-800 min-h-screen" style={{ color: '#ffffff' }}>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -141,7 +144,7 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
           </div>
 
           <div className="bg-dfxBlue-700 rounded-lg shadow p-4">
-            <BalanceBarChart title="Liquidity by Provider" data={latestBalance?.byBlockchain ?? []} dark />
+            <BalanceBarChart title="Liquidity by Provider" data={byBlockchain} dark />
           </div>
         </>
       )}
