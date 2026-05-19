@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash';
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { LayoutConfig, useLayoutConfigContext } from '../contexts/layout-config.context';
 
 export function useLayoutOptions({
@@ -14,7 +14,7 @@ export function useLayoutOptions({
   const { setConfig } = useLayoutConfigContext();
   const prevConfig = useRef<LayoutConfig>();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const newConfig: LayoutConfig = {
       title,
       backButton,
@@ -36,7 +36,7 @@ export function useLayoutOptions({
     }
   }, [title, backButton, textStart, noPadding, smallMenu, onBack, setConfig]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     return () => setConfig({});
   }, [setConfig]);
 }

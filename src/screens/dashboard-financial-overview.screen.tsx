@@ -13,12 +13,16 @@ import { getFromDateByTimeframe, Timeframe, TimeRange } from 'src/util/chart';
 import { formatChfOrDash } from 'src/util/utils';
 
 const TIMEFRAME_OPTIONS = [
+  Timeframe.DAY,
+  Timeframe.THREE_DAYS,
   Timeframe.WEEK,
   Timeframe.MONTH,
   Timeframe.QUARTER,
   Timeframe.YEAR,
   Timeframe.ALL,
 ] as const;
+
+const HOURLY_SAMPLE_TIMEFRAMES = new Set<Timeframe>([Timeframe.DAY, Timeframe.THREE_DAYS]);
 
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -29,7 +33,7 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { getLatestBalance, getFinancialLog } = useDashboard();
 
-  const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.WEEK);
+  const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.THREE_DAYS);
   const [latestBalance, setLatestBalance] = useState<LatestBalanceResponse>();
   const [logEntries, setLogEntries] = useState<FinancialLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,13 +43,14 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
 
     const fromTimestamp = getFromDateByTimeframe(timeframe);
     const from = fromTimestamp > 0 ? new Date(fromTimestamp).toISOString() : undefined;
+    const dailySample = !HOURLY_SAMPLE_TIMEFRAMES.has(timeframe);
 
     function load(initial: boolean) {
       if (initial) setIsLoading(true);
       getLatestBalance()
         .then(setLatestBalance)
         .catch(() => undefined);
-      getFinancialLog(from, true)
+      getFinancialLog(from, dailySample)
         .then((logData) => setLogEntries(logData.entries))
         .catch(() => undefined)
         .finally(() => {
