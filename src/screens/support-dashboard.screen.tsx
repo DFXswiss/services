@@ -229,6 +229,12 @@ export default function SupportDashboardScreen(): JSX.Element {
             {translate('screens/compliance', 'Notes')}
           </button>
           <button
+            className="px-3 py-2 bg-white border border-dfxGray-400 text-dfxBlue-800 rounded-lg text-sm hover:bg-dfxGray-300 transition-colors"
+            onClick={() => navigate('/templates')}
+          >
+            {translate('screens/templates', 'Templates')}
+          </button>
+          <button
             className="px-4 py-2 bg-dfxBlue-400 text-white rounded-lg text-sm hover:bg-dfxBlue-800 transition-colors"
             onClick={() => navigate('/support/dashboard/create')}
           >
