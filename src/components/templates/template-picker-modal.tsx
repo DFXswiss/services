@@ -9,17 +9,24 @@ import {
   useTemplates,
 } from 'src/hooks/templates.hook';
 import {
+  DetectedToken,
+  detectPlaceholders,
   getNonArrayMissingPlaceholders,
   requiresArraySelection,
   resolvePlaceholders,
   TokenContext,
 } from 'src/util/template-placeholders';
+import { TemplateArrayPickerModal } from './template-array-picker-modal';
 
 interface Props {
   isOpen: boolean;
   context: TokenContext;
   onClose: () => void;
   onInsert: (text: string) => void;
+  /** Override für das Action-Button-Label. Wird im copyMode ignoriert. */
+  actionLabel?: string;
+  /** Aktiviert die State-Machine für den Copy-Workflow (Customer-Search). */
+  copyMode?: boolean;
 }
 
 const ARRAY_MARKER_VALUE = '[Auswahl beim Einfügen]';
@@ -44,7 +51,14 @@ function pickContent(
   return { text: template.contents.de, usedFallback: lang !== 'de' };
 }
 
-export function TemplatePickerModal({ isOpen, context, onClose, onInsert }: Readonly<Props>): JSX.Element {
+export function TemplatePickerModal({
+  isOpen,
+  context,
+  onClose,
+  onInsert,
+  actionLabel,
+  copyMode = false,
+}: Readonly<Props>): JSX.Element {
   const { listTemplates } = useTemplates();
 
   const [templates, setTemplates] = useState<SupportIssueTemplateInfo[]>([]);
@@ -55,6 +69,11 @@ export function TemplatePickerModal({ isOpen, context, onClose, onInsert }: Read
 
   const customerLang = detectCustomerLanguage(context);
   const [activeLang, setActiveLang] = useState<TemplateLanguage>(customerLang);
+
+  // --- copyMode state machine ---
+  const [selections, setSelections] = useState<{ transactionId?: number }>({});
+  const [editedText, setEditedText] = useState<string>();
+  const [arrayPickerOpen, setArrayPickerOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) setActiveLang(customerLang);
@@ -73,6 +92,23 @@ export function TemplatePickerModal({ isOpen, context, onClose, onInsert }: Read
       .finally(() => setIsLoading(false));
   }, [isOpen, listTemplates]);
 
+  // Reset transient copyMode state when template or language changes
+  useEffect(() => {
+    setSelections({});
+    setEditedText(undefined);
+    setArrayPickerOpen(false);
+  }, [selectedId, activeLang]);
+
+  // On close: reset everything so a fresh open starts clean
+  useEffect(() => {
+    if (isOpen) return;
+    setSelectedId(undefined);
+    setSearch('');
+    setSelections({});
+    setEditedText(undefined);
+    setArrayPickerOpen(false);
+  }, [isOpen]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return templates;
@@ -86,20 +122,49 @@ export function TemplatePickerModal({ isOpen, context, onClose, onInsert }: Read
 
   const selected = templates.find((t) => t.id === selectedId);
   const picked = selected ? pickContent(selected, activeLang) : undefined;
-  const effectiveContent = picked?.text ?? '';
+  const pickedText = picked?.text ?? '';
 
-  const needsArraySelection = selected ? requiresArraySelection(effectiveContent, context) : false;
+  // --- Insert-mode (default) computed values ---
+  const needsArraySelection = picked ? requiresArraySelection(pickedText, context) : false;
+  const insertPreview = picked ? resolvePlaceholders(pickedText, context) : '';
+  const insertPreviewWithMarker = needsArraySelection
+    ? insertPreview.replace(ARRAY_TOKEN_REGEX, ARRAY_MARKER_VALUE)
+    : insertPreview;
+  const nonArrayMissing = picked ? getNonArrayMissingPlaceholders(pickedText, context) : [];
 
-  const preview = selected ? resolvePlaceholders(effectiveContent, context) : '';
-  const previewWithMarker = needsArraySelection ? preview.replace(ARRAY_TOKEN_REGEX, ARRAY_MARKER_VALUE) : preview;
+  // --- copyMode computed values ---
+  const baseResolved = useMemo(
+    () => (picked ? resolvePlaceholders(picked.text, context, selections) : ''),
+    [picked?.text, context, selections],
+  );
+  const currentText = editedText ?? baseResolved;
+  const remainingTokens = useMemo(() => detectPlaceholders(currentText), [currentText]);
+  const hasArrayTokens = remainingTokens.some((t) => t.source === 'transaction' && !t.selector);
+  // Array-Pick nur anbieten, solange keine TX gewählt wurde — sonst nützt eine erneute Auswahl nichts.
+  const canPickArray = hasArrayTokens && (context.transactions?.length ?? 0) > 1 && selections.transactionId == null;
+  const inEditMode = editedText !== undefined || (remainingTokens.length > 0 && !canPickArray);
 
-  const nonArrayMissing = selected ? getNonArrayMissingPlaceholders(effectiveContent, context) : [];
-
-  function handleInsert(): void {
-    if (!selected || !picked) return;
+  function handleAction(): void {
+    if (!picked) return;
+    if (copyMode) {
+      if (canPickArray && !inEditMode) {
+        setArrayPickerOpen(true);
+        return;
+      }
+      if (remainingTokens.length > 0) return; // safety — button is disabled
+      onInsert(currentText);
+      onClose();
+      return;
+    }
     onInsert(picked.text);
     onClose();
   }
+
+  const copyButtonLabel = canPickArray && !inEditMode ? 'Ausfüllen' : 'Kopieren';
+  const copyButtonDisabled = !(canPickArray && !inEditMode) && remainingTokens.length > 0;
+  const insertButtonLabel = actionLabel ?? (needsArraySelection ? 'Ausfüllen' : 'Einfügen');
+  const finalButtonLabel = copyMode ? copyButtonLabel : insertButtonLabel;
+  const finalButtonDisabled = !selected || (copyMode && copyButtonDisabled);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} variant="dialog" maxWidthClass="max-w-6xl">
@@ -150,81 +215,31 @@ export function TemplatePickerModal({ isOpen, context, onClose, onInsert }: Read
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
           <div className="w-1/4 min-w-[200px] max-w-[280px] border-r border-dfxGray-300 overflow-auto">
-            {isLoading ? (
-              <div className="p-4 text-sm text-dfxGray-700 text-center">Lade...</div>
-            ) : filtered.length === 0 ? (
-              <div className="p-4 text-sm text-dfxGray-700 text-center">Keine Vorlagen gefunden</div>
-            ) : (
-              <ul>
-                {filtered.map((t) => {
-                  const hasActive = !!t.contents[activeLang];
-                  return (
-                    <li key={t.id}>
-                      <button
-                        type="button"
-                        className={`w-full text-left px-3 py-2 text-sm border-b border-dfxGray-300 transition-colors ${
-                          selectedId === t.id
-                            ? 'bg-dfxBlue-300/20 text-dfxBlue-800 font-semibold'
-                            : 'text-dfxBlue-800 hover:bg-dfxGray-300'
-                        }`}
-                        onClick={() => setSelectedId(t.id)}
-                      >
-                        <div className="truncate flex items-center gap-1">
-                          {t.name}
-                          {!hasActive && (
-                            <span className="text-[10px] text-dfxGray-700" title="Variante in dieser Sprache fehlt">
-                              (kein {activeLang.toUpperCase()})
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-dfxGray-700 truncate">
-                          {t.contents[activeLang] ?? t.contents.de}
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            <TemplateListSection
+              isLoading={isLoading}
+              templates={filtered}
+              selectedId={selectedId}
+              activeLang={activeLang}
+              onSelect={setSelectedId}
+            />
           </div>
           <div className="flex-1 min-w-0 p-4 overflow-auto">
-            {selected && picked ? (
-              <>
-                <div className="text-xs text-dfxGray-700 mb-2 flex items-center gap-2">
-                  Vorschau ({TEMPLATE_LANGUAGE_LABELS[activeLang]}):
-                  {picked.usedFallback && (
-                    <span className="text-dfxRed-150">
-                      ⚠ Variante in {TEMPLATE_LANGUAGE_LABELS[activeLang]} fehlt – Deutsch wird verwendet.
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-dfxBlue-800 whitespace-pre-wrap bg-dfxGray-300/30 rounded p-3 min-h-[150px]">
-                  {previewWithMarker}
-                </div>
-                {needsArraySelection && (
-                  <div className="text-xs text-dfxGray-700 mt-2">
-                    Diese Vorlage referenziert eine Transaktion – beim Einfügen wird ein Auswahl-Dialog geöffnet.
-                  </div>
-                )}
-                {nonArrayMissing.length > 0 && (
-                  <div className="text-xs text-dfxGray-800 mt-2 p-2 border border-dashed border-dfxGray-700 rounded bg-dfxGray-300/30">
-                    <div className="font-semibold mb-1">Es fehlen Werte für:</div>
-                    <div className="flex flex-wrap gap-1">
-                      {nonArrayMissing.map((t) => (
-                        <span
-                          key={t.fullKey}
-                          className="font-mono px-1 py-0.5 bg-white rounded border border-dfxGray-400"
-                        >
-                          ${t.fullKey}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-1">
-                      Diese Platzhalter bleiben im eingefügten Text und müssen manuell ersetzt werden.
-                    </div>
-                  </div>
-                )}
-              </>
+            {picked ? (
+              <PreviewSection
+                picked={picked}
+                activeLang={activeLang}
+                copyMode={copyMode}
+                inEditMode={inEditMode}
+                editedText={editedText}
+                onEditChange={setEditedText}
+                currentText={currentText}
+                previewWithMarker={insertPreviewWithMarker}
+                remainingTokens={remainingTokens}
+                needsArraySelection={needsArraySelection}
+                nonArrayMissing={nonArrayMissing}
+                canPickArray={canPickArray}
+                hasTxSelection={selections.transactionId != null}
+              />
             ) : (
               <div className="text-sm text-dfxGray-700">Bitte links eine Vorlage auswählen.</div>
             )}
@@ -242,13 +257,193 @@ export function TemplatePickerModal({ isOpen, context, onClose, onInsert }: Read
           <button
             type="button"
             className="px-3 py-1.5 text-xs font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors disabled:opacity-50"
-            onClick={handleInsert}
-            disabled={!selected}
+            onClick={handleAction}
+            disabled={finalButtonDisabled}
           >
-            Einfügen
+            {finalButtonLabel}
           </button>
         </div>
       </div>
+
+      {copyMode && (
+        <TemplateArrayPickerModal
+          isOpen={arrayPickerOpen}
+          transactions={context.transactions ?? []}
+          onSelect={(transactionId) => {
+            setSelections({ transactionId });
+            setArrayPickerOpen(false);
+          }}
+          onCancel={() => setArrayPickerOpen(false)}
+        />
+      )}
     </Modal>
+  );
+}
+
+// ----- Sub-components -----
+
+interface TemplateListSectionProps {
+  isLoading: boolean;
+  templates: SupportIssueTemplateInfo[];
+  selectedId: number | undefined;
+  activeLang: TemplateLanguage;
+  onSelect: (id: number) => void;
+}
+
+function TemplateListSection({
+  isLoading,
+  templates,
+  selectedId,
+  activeLang,
+  onSelect,
+}: Readonly<TemplateListSectionProps>): JSX.Element {
+  if (isLoading) {
+    return <div className="p-4 text-sm text-dfxGray-700 text-center">Lade...</div>;
+  }
+  if (templates.length === 0) {
+    return <div className="p-4 text-sm text-dfxGray-700 text-center">Keine Vorlagen gefunden</div>;
+  }
+  return (
+    <ul>
+      {templates.map((t) => {
+        const hasActive = !!t.contents[activeLang];
+        return (
+          <li key={t.id}>
+            <button
+              type="button"
+              className={`w-full text-left px-3 py-2 text-sm border-b border-dfxGray-300 transition-colors ${
+                selectedId === t.id
+                  ? 'bg-dfxBlue-300/20 text-dfxBlue-800 font-semibold'
+                  : 'text-dfxBlue-800 hover:bg-dfxGray-300'
+              }`}
+              onClick={() => onSelect(t.id)}
+            >
+              <div className="truncate flex items-center gap-1">
+                {t.name}
+                {!hasActive && (
+                  <span className="text-[10px] text-dfxGray-700" title="Variante in dieser Sprache fehlt">
+                    (kein {activeLang.toUpperCase()})
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-dfxGray-700 truncate">{t.contents[activeLang] ?? t.contents.de}</div>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+interface PreviewSectionProps {
+  picked: { text: string; usedFallback: boolean };
+  activeLang: TemplateLanguage;
+  copyMode: boolean;
+  inEditMode: boolean;
+  editedText: string | undefined;
+  onEditChange: (text: string) => void;
+  currentText: string;
+  previewWithMarker: string;
+  remainingTokens: DetectedToken[];
+  needsArraySelection: boolean;
+  nonArrayMissing: DetectedToken[];
+  canPickArray: boolean;
+  hasTxSelection: boolean;
+}
+
+function PreviewSection(props: Readonly<PreviewSectionProps>): JSX.Element {
+  const { picked, activeLang, copyMode } = props;
+  return (
+    <>
+      <div className="text-xs text-dfxGray-700 mb-2 flex items-center gap-2">
+        Vorschau ({TEMPLATE_LANGUAGE_LABELS[activeLang]}):
+        {picked.usedFallback && (
+          <span className="text-dfxRed-150">
+            ⚠ Variante in {TEMPLATE_LANGUAGE_LABELS[activeLang]} fehlt – Deutsch wird verwendet.
+          </span>
+        )}
+      </div>
+      {copyMode ? <CopyModeContent {...props} /> : <InsertModeContent {...props} />}
+    </>
+  );
+}
+
+function CopyModeContent({
+  inEditMode,
+  editedText,
+  onEditChange,
+  currentText,
+  remainingTokens,
+  canPickArray,
+  hasTxSelection,
+}: Readonly<PreviewSectionProps>): JSX.Element {
+  return (
+    <>
+      {inEditMode && remainingTokens.length > 0 && (
+        <div className="text-xs text-dfxRed-150 mb-2 p-2 border border-dashed border-dfxRed-150 rounded bg-dfxRed-100/10">
+          <div className="font-semibold mb-1">
+            {hasTxSelection && editedText === undefined
+              ? 'Die gewählte Transaktion enthält keinen Wert für folgende Platzhalter:'
+              : `Noch ${remainingTokens.length} Platzhalter offen:`}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {remainingTokens.map((t) => (
+              <span key={t.fullKey} className="font-mono px-1 py-0.5 bg-white rounded border border-dfxRed-150">
+                ${t.fullKey}
+              </span>
+            ))}
+          </div>
+          <div className="mt-1">Bitte unten manuell mit echten Werten ersetzen.</div>
+        </div>
+      )}
+      {inEditMode ? (
+        <textarea
+          className="w-full text-sm text-dfxBlue-800 whitespace-pre-wrap bg-white border border-dfxGray-400 rounded p-3 min-h-[200px] resize-y"
+          value={currentText}
+          onChange={(e) => onEditChange(e.target.value)}
+        />
+      ) : (
+        <div className="text-sm text-dfxBlue-800 whitespace-pre-wrap bg-dfxGray-300/30 rounded p-3 min-h-[150px]">
+          {currentText}
+        </div>
+      )}
+      {canPickArray && !inEditMode && (
+        <div className="text-xs text-dfxGray-700 mt-2">
+          Diese Vorlage referenziert eine Transaktion – beim Ausfüllen wird ein Auswahl-Dialog geöffnet.
+        </div>
+      )}
+    </>
+  );
+}
+
+function InsertModeContent({
+  previewWithMarker,
+  needsArraySelection,
+  nonArrayMissing,
+}: Readonly<PreviewSectionProps>): JSX.Element {
+  return (
+    <>
+      <div className="text-sm text-dfxBlue-800 whitespace-pre-wrap bg-dfxGray-300/30 rounded p-3 min-h-[150px]">
+        {previewWithMarker}
+      </div>
+      {needsArraySelection && (
+        <div className="text-xs text-dfxGray-700 mt-2">
+          Diese Vorlage referenziert eine Transaktion – beim Einfügen wird ein Auswahl-Dialog geöffnet.
+        </div>
+      )}
+      {nonArrayMissing.length > 0 && (
+        <div className="text-xs text-dfxGray-800 mt-2 p-2 border border-dashed border-dfxGray-700 rounded bg-dfxGray-300/30">
+          <div className="font-semibold mb-1">Es fehlen Werte für:</div>
+          <div className="flex flex-wrap gap-1">
+            {nonArrayMissing.map((t) => (
+              <span key={t.fullKey} className="font-mono px-1 py-0.5 bg-white rounded border border-dfxGray-400">
+                ${t.fullKey}
+              </span>
+            ))}
+          </div>
+          <div className="mt-1">Diese Platzhalter bleiben im eingefügten Text und müssen manuell ersetzt werden.</div>
+        </div>
+      )}
+    </>
   );
 }

@@ -181,7 +181,7 @@ export function TemplateList({ templates, emptyMessage, onChange }: Readonly<Pro
       <ConfirmDialog
         isOpen={deleteId != null}
         title="Vorlage löschen"
-        message="Möchtest du diese Vorlage wirklich löschen?"
+        message={`Möchtest Du die Vorlage '${templates.find((t) => t.id === deleteId)?.name ?? ''}' wirklich löschen?`}
         confirmLabel="Löschen"
         cancelLabel="Abbrechen"
         destructive

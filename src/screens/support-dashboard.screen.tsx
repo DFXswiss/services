@@ -1,13 +1,15 @@
 import { Department, SupportIssueInternalState, SupportIssueType, useAuthContext, UserRole } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { TemplatePickerModal } from 'src/components/templates/template-picker-modal';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useClipboard } from 'src/hooks/clipboard.hook';
+import { TransactionInfo, UserDataDetail, UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { CustomerAuthor, SupportIssueListItem, useSupportDashboard } from 'src/hooks/support-dashboard.hook';
-import { UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
 
@@ -33,14 +35,21 @@ export default function SupportDashboardScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { session } = useAuthContext();
   const { getIssueList, getIssueCounts, getIssueActivity } = useSupportDashboard();
-  const { search: searchCustomers } = useCompliance();
+  const { search: searchCustomers, getUserData } = useCompliance();
   const { navigate } = useNavigation();
+  const { copy } = useClipboard();
 
   const [customerSearchKey, setCustomerSearchKey] = useState('');
   const [customerSearchResults, setCustomerSearchResults] = useState<UserSearchResult[]>();
   const [customerSearchLoading, setCustomerSearchLoading] = useState(false);
   const [customerSearchError, setCustomerSearchError] = useState<string>();
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
+
+  // Template picker (copy-mode) state
+  const [templateUser, setTemplateUser] = useState<UserSearchResult>();
+  const [templateUserData, setTemplateUserData] = useState<UserDataDetail>();
+  const [templateTransactions, setTemplateTransactions] = useState<TransactionInfo[]>([]);
+  const [templateLoadingUserId, setTemplateLoadingUserId] = useState<number>();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -196,6 +205,33 @@ export default function SupportDashboardScreen(): JSX.Element {
       .finally(() => setCustomerSearchLoading(false));
   }
 
+  async function openTemplateForUser(user: UserSearchResult): Promise<void> {
+    if (templateLoadingUserId != null || templateUser != null) return;
+    setTemplateLoadingUserId(user.id);
+    setCustomerSearchError(undefined);
+    try {
+      const data = await getUserData(user.id);
+      setTemplateUserData(data.userData);
+      setTemplateTransactions(data.transactions ?? []);
+      setTemplateUser(user);
+    } catch (e: unknown) {
+      setCustomerSearchError(e instanceof Error ? e.message : 'Failed to load user data for templates');
+    } finally {
+      setTemplateLoadingUserId(undefined);
+    }
+  }
+
+  function closeTemplatePicker(): void {
+    setTemplateUser(undefined);
+    setTemplateUserData(undefined);
+    setTemplateTransactions([]);
+  }
+
+  function handleTemplateInsert(text: string): void {
+    copy(text);
+    closeTemplatePicker();
+  }
+
   const currentTab = activeTab === 'open' ? null : tabs[activeTab];
   const displayedIssues = currentTab?.issues ?? [];
   const displayedTotal = currentTab?.total ?? 0;
@@ -286,6 +322,9 @@ export default function SupportDashboardScreen(): JSX.Element {
                       <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800 break-all">
                         {translate('screens/compliance', 'Email')}
                       </th>
+                      <th className="px-3 py-2 text-right font-semibold text-dfxBlue-800 w-0 whitespace-nowrap">
+                        Aktion
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -299,6 +338,20 @@ export default function SupportDashboardScreen(): JSX.Element {
                         <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.accountType ?? '-'}</td>
                         <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.name ?? '-'}</td>
                         <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white break-all">{u.mail ?? '-'}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            className="px-2 py-1 text-xs font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors disabled:opacity-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void openTemplateForUser(u);
+                            }}
+                            disabled={templateLoadingUserId != null}
+                            title="Template ausfüllen und in Zwischenablage kopieren"
+                          >
+                            {templateLoadingUserId === u.id ? '…' : 'Template'}
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -411,6 +464,14 @@ export default function SupportDashboardScreen(): JSX.Element {
           )}
         </>
       )}
+
+      <TemplatePickerModal
+        isOpen={templateUser != null}
+        context={{ userData: templateUserData, transactions: templateTransactions }}
+        copyMode
+        onClose={closeTemplatePicker}
+        onInsert={handleTemplateInsert}
+      />
     </div>
   );
 }
