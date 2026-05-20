@@ -50,7 +50,7 @@ export function TemplateList({ templates, emptyMessage, onChange }: Readonly<Pro
         name: editName.trim(),
         contents: {
           de: editContents.de.trim(),
-          en: editContents.en?.trim() || undefined,
+          en: editContents.en?.trim() ?? '',
         },
       });
       setEditingId(undefined);
@@ -96,13 +96,10 @@ export function TemplateList({ templates, emptyMessage, onChange }: Readonly<Pro
                 <span>·</span>
                 <span>{template.authorMail}</span>
                 <span>·</span>
-                <span>{formatDateTime(template.created)}</span>
-                {template.updated && template.updated !== template.created && (
-                  <>
-                    <span>·</span>
-                    <span title={`Updated: ${formatDateTime(template.updated)}`}>(bearbeitet)</span>
-                  </>
-                )}
+                <span>
+                  {formatDateTime(template.updated ?? template.created)}
+                  {template.updated && template.updated !== template.created && ' (bearbeitet)'}
+                </span>
               </div>
               {canModify && !isEditing && (
                 <div className="flex gap-1">
