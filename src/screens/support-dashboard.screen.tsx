@@ -1,7 +1,7 @@
 import { Department, SupportIssueInternalState, SupportIssueType, useAuthContext, UserRole } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { TemplatePickerModal } from 'src/components/templates/template-picker-modal';
+import { TemplatePickerModal } from 'src/components/support-templates/template-picker-modal';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useClipboard } from 'src/hooks/clipboard.hook';

@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { TemplateContents, TemplateLanguage, TEMPLATE_LANGUAGES } from 'src/hooks/templates.hook';
+import { TemplateContents, TemplateLanguage, TEMPLATE_LANGUAGES } from 'src/hooks/support-templates.hook';
 
 export interface BilingualContentEditorHandle {
   insertAtActive: (text: string) => void;

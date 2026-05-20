@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { TemplateContents, useTemplates } from 'src/hooks/templates.hook';
+import { TemplateContents, useTemplates } from 'src/hooks/support-templates.hook';
 import { BilingualContentEditor, BilingualContentEditorHandle } from './bilingual-content-editor';
 import { TokenPickerPanel } from './token-picker-panel';
 

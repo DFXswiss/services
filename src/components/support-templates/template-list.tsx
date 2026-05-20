@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { MdDelete, MdEdit } from 'react-icons/md';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import {
   SupportIssueTemplateInfo,
@@ -6,7 +7,7 @@ import {
   TEMPLATE_LANGUAGES,
   TEMPLATE_LANGUAGE_LABELS,
   useTemplates,
-} from 'src/hooks/templates.hook';
+} from 'src/hooks/support-templates.hook';
 import { formatDateTime } from 'src/util/compliance-helpers';
 import { BilingualContentEditor, BilingualContentEditorHandle } from './bilingual-content-editor';
 import { TokenPickerPanel } from './token-picker-panel';
@@ -105,19 +106,19 @@ export function TemplateList({ templates, emptyMessage, onChange }: Readonly<Pro
                 <div className="flex gap-1">
                   <button
                     type="button"
-                    className="px-2 py-0.5 text-xs text-dfxBlue-800 hover:bg-dfxGray-300 rounded transition-colors"
+                    className="p-1 text-dfxBlue-800 hover:bg-dfxGray-300 rounded transition-colors"
                     onClick={() => startEdit(template)}
                     title="Edit"
                   >
-                    ✏️
+                    <MdEdit size={16} />
                   </button>
                   <button
                     type="button"
-                    className="px-2 py-0.5 text-xs text-dfxBlue-800 hover:bg-dfxRed-100/20 rounded transition-colors"
+                    className="p-1 text-dfxRed-100 hover:bg-dfxRed-100/20 rounded transition-colors"
                     onClick={() => setDeleteId(template.id)}
                     title="Delete"
                   >
-                    🗑️
+                    <MdDelete size={16} />
                   </button>
                 </div>
               )}

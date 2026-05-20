@@ -8,7 +8,7 @@ import {
   TemplateLanguage,
   useTemplateOnlyOwn,
   useTemplates,
-} from 'src/hooks/templates.hook';
+} from 'src/hooks/support-templates.hook';
 import {
   DetectedToken,
   detectPlaceholders,

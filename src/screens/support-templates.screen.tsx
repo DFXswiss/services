@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { TemplateComposer } from 'src/components/templates/template-composer';
-import { TemplateList } from 'src/components/templates/template-list';
+import { TemplateComposer } from 'src/components/support-templates/template-composer';
+import { TemplateList } from 'src/components/support-templates/template-list';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { SupportIssueTemplateInfo, useTemplateOnlyOwn, useTemplates } from 'src/hooks/templates.hook';
+import { SupportIssueTemplateInfo, useTemplateOnlyOwn, useTemplates } from 'src/hooks/support-templates.hook';
 
 export default function TemplatesScreen(): JSX.Element {
   useSupportDashboardGuard();
