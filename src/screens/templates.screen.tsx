@@ -4,7 +4,7 @@ import { TemplateList } from 'src/components/templates/template-list';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { SupportIssueTemplateInfo, useTemplates } from 'src/hooks/templates.hook';
+import { SupportIssueTemplateInfo, useTemplateOnlyOwn, useTemplates } from 'src/hooks/templates.hook';
 
 export default function TemplatesScreen(): JSX.Element {
   useSupportDashboardGuard();
@@ -17,6 +17,9 @@ export default function TemplatesScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [showCompose, setShowCompose] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [onlyOwn, setOnlyOwn] = useTemplateOnlyOwn();
+
+  const visibleTemplates = onlyOwn ? templates.filter((t) => t.isOwn) : templates;
 
   useLayoutOptions({ title: 'Vorlagen', backButton: true, noMaxWidth: true });
 
@@ -142,6 +145,15 @@ export default function TemplatesScreen(): JSX.Element {
 
       <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1 text-xs text-dfxBlue-800 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="cursor-pointer"
+              checked={onlyOwn}
+              onChange={(e) => setOnlyOwn(e.target.checked)}
+            />
+            Nur eigene
+          </label>
           <input
             type="text"
             className="px-3 py-1.5 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800 flex-1 min-w-[200px]"
@@ -187,7 +199,11 @@ export default function TemplatesScreen(): JSX.Element {
       {isLoading ? (
         <div className="bg-white rounded-lg shadow-sm p-4 text-center text-dfxGray-700 text-sm">Lade...</div>
       ) : (
-        <TemplateList templates={templates} emptyMessage="Keine Vorlagen gefunden" onChange={loadTemplates} />
+        <TemplateList
+          templates={visibleTemplates}
+          emptyMessage={onlyOwn ? 'Du hast noch keine eigenen Vorlagen.' : 'Keine Vorlagen gefunden'}
+          onChange={loadTemplates}
+        />
       )}
     </div>
   );

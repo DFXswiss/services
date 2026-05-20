@@ -6,6 +6,7 @@ import {
   TEMPLATE_LANGUAGES,
   TEMPLATE_LANGUAGE_LABELS,
   TemplateLanguage,
+  useTemplateOnlyOwn,
   useTemplates,
 } from 'src/hooks/templates.hook';
 import {
@@ -70,6 +71,8 @@ export function TemplatePickerModal({
   const customerLang = detectCustomerLanguage(context);
   const [activeLang, setActiveLang] = useState<TemplateLanguage>(customerLang);
 
+  const [onlyOwn, setOnlyOwn] = useTemplateOnlyOwn();
+
   // --- copyMode state machine ---
   const [selections, setSelections] = useState<{ transactionId?: number }>({});
   const [editedText, setEditedText] = useState<string>();
@@ -99,7 +102,8 @@ export function TemplatePickerModal({
     setArrayPickerOpen(false);
   }, [selectedId, activeLang]);
 
-  // On close: reset everything so a fresh open starts clean
+  // On close: reset transient state so a fresh open starts clean.
+  // `onlyOwn` is intentionally kept across openings — it's a user preference.
   useEffect(() => {
     if (isOpen) return;
     setSelectedId(undefined);
@@ -111,14 +115,15 @@ export function TemplatePickerModal({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return templates;
-    return templates.filter(
+    const scoped = onlyOwn ? templates.filter((t) => t.isOwn) : templates;
+    if (!q) return scoped;
+    return scoped.filter(
       (t) =>
         t.name.toLowerCase().includes(q) ||
         t.contents.de.toLowerCase().includes(q) ||
         (t.contents.en?.toLowerCase().includes(q) ?? false),
     );
-  }, [templates, search]);
+  }, [templates, search, onlyOwn]);
 
   const selected = templates.find((t) => t.id === selectedId);
   const picked = selected ? pickContent(selected, activeLang) : undefined;
@@ -170,7 +175,19 @@ export function TemplatePickerModal({
     <Modal isOpen={isOpen} onClose={onClose} variant="dialog" maxWidthClass="max-w-6xl">
       <div className="bg-white rounded-lg shadow-lg flex flex-col max-h-[85vh] w-full">
         <div className="flex items-center justify-between p-4 border-b border-dfxGray-300">
-          <h2 className="text-dfxBlue-800 font-semibold">Vorlage auswählen</h2>
+          <h2 className="text-dfxBlue-800 font-semibold flex items-center gap-2">
+            <span>Vorlage auswählen</span>
+            <label className="flex items-center gap-1 text-xs font-normal text-dfxBlue-800 cursor-pointer select-none">
+              <span>(</span>
+              <input
+                type="checkbox"
+                className="cursor-pointer"
+                checked={onlyOwn}
+                onChange={(e) => setOnlyOwn(e.target.checked)}
+              />
+              <span>Nur eigene)</span>
+            </label>
+          </h2>
           <button
             type="button"
             className="text-dfxGray-700 hover:text-dfxBlue-800 text-xl leading-none"

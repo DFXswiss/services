@@ -1,5 +1,5 @@
 import { useApi } from '@dfx.swiss/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export type TemplateLanguage = 'de' | 'en';
 
@@ -74,4 +74,43 @@ export function useTemplates(): UseTemplates {
   }
 
   return useMemo(() => ({ listTemplates, createTemplate, updateTemplate, deleteTemplate }), [call]);
+}
+
+const ONLY_OWN_STORAGE_KEY = 'support.template.onlyOwn';
+
+/**
+ * Persistent toggle "Nur eigene Vorlagen anzeigen" — geteilt zwischen Liste und Picker
+ * via localStorage. Default ist `true`.
+ */
+export function useTemplateOnlyOwn(): [boolean, (value: boolean) => void] {
+  const [onlyOwn, setOnlyOwnState] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(ONLY_OWN_STORAGE_KEY);
+      return stored === null ? true : stored === 'true';
+    } catch {
+      return true;
+    }
+  });
+
+  // Sync state across components/tabs when localStorage changes
+  useEffect(() => {
+    function handleStorage(e: StorageEvent): void {
+      if (e.key === ONLY_OWN_STORAGE_KEY && e.newValue !== null) {
+        setOnlyOwnState(e.newValue === 'true');
+      }
+    }
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  function setOnlyOwn(value: boolean): void {
+    setOnlyOwnState(value);
+    try {
+      localStorage.setItem(ONLY_OWN_STORAGE_KEY, String(value));
+    } catch {
+      // localStorage unavailable (private mode etc.) — fall back to in-memory only
+    }
+  }
+
+  return [onlyOwn, setOnlyOwn];
 }
