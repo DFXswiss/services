@@ -1,6 +1,9 @@
 import { useApi } from '@dfx.swiss/react';
 import { useEffect, useMemo, useState } from 'react';
 
+export const TEMPLATE_NAME_MAX_LENGTH = 256;
+export const TEMPLATE_CONTENT_MAX_LENGTH = 8000;
+
 export type TemplateLanguage = 'de' | 'en';
 
 export const TEMPLATE_LANGUAGES: TemplateLanguage[] = ['de', 'en'];

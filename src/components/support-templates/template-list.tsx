@@ -7,11 +7,13 @@ import {
   TEMPLATE_GROUP_LABELS,
   TEMPLATE_LANGUAGES,
   TEMPLATE_LANGUAGE_LABELS,
+  TEMPLATE_NAME_MAX_LENGTH,
   groupTemplatesByOwnership,
   useTemplates,
 } from 'src/hooks/support-templates.hook';
 import { formatDateTime } from 'src/util/compliance-helpers';
 import { BilingualContentEditor, BilingualContentEditorHandle } from './bilingual-content-editor';
+import { CharRemainingHint } from './char-remaining-hint';
 import { TokenPickerPanel } from './token-picker-panel';
 
 interface Props {
@@ -135,14 +137,17 @@ export function TemplateList({ templates, emptyMessage, onChange }: Readonly<Pro
         </div>
         {isEditing ? (
           <>
-            <input
-              type="text"
-              className="w-full px-3 py-2 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              placeholder="Name der Vorlage"
-              maxLength={256}
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                type="text"
+                className="w-full px-3 py-2 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Name der Vorlage"
+                maxLength={TEMPLATE_NAME_MAX_LENGTH}
+              />
+              <CharRemainingHint value={editName} max={TEMPLATE_NAME_MAX_LENGTH} />
+            </div>
             <BilingualContentEditor ref={editorRef} contents={editContents} onChange={setEditContents} />
             <div className="flex items-center justify-between">
               <button

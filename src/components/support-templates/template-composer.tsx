@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
-import { TemplateContents, useTemplates } from 'src/hooks/support-templates.hook';
+import { TEMPLATE_NAME_MAX_LENGTH, TemplateContents, useTemplates } from 'src/hooks/support-templates.hook';
 import { BilingualContentEditor, BilingualContentEditorHandle } from './bilingual-content-editor';
+import { CharRemainingHint } from './char-remaining-hint';
 import { TokenPickerPanel } from './token-picker-panel';
 
 interface Props {
@@ -44,15 +45,18 @@ export function TemplateComposer({ onCreated }: Readonly<Props>): JSX.Element {
 
   return (
     <div className="flex flex-col gap-2">
-      <input
-        type="text"
-        className="w-full px-3 py-2 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Name der Vorlage"
-        maxLength={256}
-        disabled={isSubmitting}
-      />
+      <div className="flex flex-col gap-1">
+        <input
+          type="text"
+          className="w-full px-3 py-2 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name der Vorlage"
+          maxLength={TEMPLATE_NAME_MAX_LENGTH}
+          disabled={isSubmitting}
+        />
+        <CharRemainingHint value={name} max={TEMPLATE_NAME_MAX_LENGTH} />
+      </div>
       <BilingualContentEditor
         ref={editorRef}
         contents={contents}

@@ -1,5 +1,11 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { TemplateContents, TemplateLanguage, TEMPLATE_LANGUAGES } from 'src/hooks/support-templates.hook';
+import {
+  TEMPLATE_CONTENT_MAX_LENGTH,
+  TEMPLATE_LANGUAGES,
+  TemplateContents,
+  TemplateLanguage,
+} from 'src/hooks/support-templates.hook';
+import { CharRemainingHint } from './char-remaining-hint';
 
 export interface BilingualContentEditorHandle {
   insertAtActive: (text: string) => void;
@@ -94,8 +100,10 @@ export const BilingualContentEditor = forwardRef<BilingualContentEditorHandle, P
               onChange={(e) => updateLang(lang, e.target.value)}
               onFocus={() => setActiveLang(lang)}
               placeholder={lang === 'de' ? placeholderDe : placeholderEn}
+              maxLength={TEMPLATE_CONTENT_MAX_LENGTH}
               disabled={disabled}
             />
+            <CharRemainingHint value={value} max={TEMPLATE_CONTENT_MAX_LENGTH} />
           </div>
         );
       })}
