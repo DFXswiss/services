@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { MdClose } from 'react-icons/md';
 import { TemplateComposer } from 'src/components/support-templates/template-composer';
 import { TemplateList } from 'src/components/support-templates/template-list';
 import { ErrorHint } from 'src/components/error-hint';
@@ -172,10 +173,11 @@ export default function TemplatesScreen(): JSX.Element {
           {submittedSearch && (
             <button
               type="button"
-              className="px-3 py-1.5 text-xs font-medium bg-dfxGray-300 text-dfxBlue-800 rounded hover:bg-dfxGray-400 transition-colors"
+              className="p-1.5 text-dfxBlue-800 bg-dfxGray-300 rounded hover:bg-dfxGray-400 transition-colors"
               onClick={resetSearch}
+              title="Suche zurücksetzen"
             >
-              ✕
+              <MdClose size={16} />
             </button>
           )}
           <button

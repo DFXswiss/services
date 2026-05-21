@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { MdWarning } from 'react-icons/md';
 import { ErrorHint } from 'src/components/error-hint';
 import { Modal } from 'src/components/modal';
 import {
@@ -375,8 +376,9 @@ function PreviewSection(props: Readonly<PreviewSectionProps>): JSX.Element {
       <div className="text-xs text-dfxGray-700 mb-2 flex items-center gap-2">
         Vorschau ({TEMPLATE_LANGUAGE_LABELS[activeLang]}):
         {picked.usedFallback && (
-          <span className="text-dfxRed-150">
-            ⚠ Variante in {TEMPLATE_LANGUAGE_LABELS[activeLang]} fehlt – Deutsch wird verwendet.
+          <span className="text-dfxRed-150 inline-flex items-center gap-1">
+            <MdWarning size={14} />
+            Variante in {TEMPLATE_LANGUAGE_LABELS[activeLang]} fehlt – Deutsch wird verwendet.
           </span>
         )}
       </div>
