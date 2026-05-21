@@ -4,9 +4,11 @@ import { ErrorHint } from 'src/components/error-hint';
 import { Modal } from 'src/components/modal';
 import {
   SupportIssueTemplateInfo,
+  TEMPLATE_GROUP_LABELS,
   TEMPLATE_LANGUAGES,
   TEMPLATE_LANGUAGE_LABELS,
   TemplateLanguage,
+  groupTemplatesByOwnership,
   useTemplateOnlyOwn,
   useTemplates,
 } from 'src/hooks/support-templates.hook';
@@ -321,34 +323,47 @@ function TemplateListSection({
   if (templates.length === 0) {
     return <div className="p-4 text-sm text-dfxGray-700 text-center">Keine Vorlagen gefunden</div>;
   }
+  const { own, foreign } = groupTemplatesByOwnership(templates);
+  const showSectionHeaders = own.length > 0 && foreign.length > 0;
+  function renderItem(t: SupportIssueTemplateInfo): JSX.Element {
+    const hasActive = !!t.contents[activeLang];
+    return (
+      <li key={t.id}>
+        <button
+          type="button"
+          className={`w-full text-left px-3 py-2 text-sm border-b border-dfxGray-300 transition-colors ${
+            selectedId === t.id
+              ? 'bg-dfxBlue-300/20 text-dfxBlue-800 font-semibold'
+              : 'text-dfxBlue-800 hover:bg-dfxGray-300'
+          }`}
+          onClick={() => onSelect(t.id)}
+        >
+          <div className="truncate flex items-center gap-1">
+            {t.name}
+            {!hasActive && (
+              <span className="text-[10px] text-dfxGray-700" title="Variante in dieser Sprache fehlt">
+                (kein {activeLang.toUpperCase()})
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-dfxGray-700 truncate">{t.contents[activeLang] ?? t.contents.de}</div>
+        </button>
+      </li>
+    );
+  }
+  function renderSectionHeader(label: string): JSX.Element {
+    return (
+      <li className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-dfxGray-700 bg-dfxGray-300/40 border-b border-dfxGray-400">
+        {label}
+      </li>
+    );
+  }
   return (
     <ul>
-      {templates.map((t) => {
-        const hasActive = !!t.contents[activeLang];
-        return (
-          <li key={t.id}>
-            <button
-              type="button"
-              className={`w-full text-left px-3 py-2 text-sm border-b border-dfxGray-300 transition-colors ${
-                selectedId === t.id
-                  ? 'bg-dfxBlue-300/20 text-dfxBlue-800 font-semibold'
-                  : 'text-dfxBlue-800 hover:bg-dfxGray-300'
-              }`}
-              onClick={() => onSelect(t.id)}
-            >
-              <div className="truncate flex items-center gap-1">
-                {t.name}
-                {!hasActive && (
-                  <span className="text-[10px] text-dfxGray-700" title="Variante in dieser Sprache fehlt">
-                    (kein {activeLang.toUpperCase()})
-                  </span>
-                )}
-              </div>
-              <div className="text-xs text-dfxGray-700 truncate">{t.contents[activeLang] ?? t.contents.de}</div>
-            </button>
-          </li>
-        );
-      })}
+      {showSectionHeaders && renderSectionHeader(TEMPLATE_GROUP_LABELS.own)}
+      {own.map(renderItem)}
+      {showSectionHeaders && renderSectionHeader(TEMPLATE_GROUP_LABELS.foreign)}
+      {foreign.map(renderItem)}
     </ul>
   );
 }

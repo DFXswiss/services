@@ -114,3 +114,18 @@ export function useTemplateOnlyOwn(): [boolean, (value: boolean) => void] {
 
   return [onlyOwn, setOnlyOwn];
 }
+
+export const TEMPLATE_GROUP_LABELS = {
+  own: 'Meine Vorlagen',
+  foreign: 'Andere Vorlagen',
+} as const;
+
+export function groupTemplatesByOwnership(templates: SupportIssueTemplateInfo[]): {
+  own: SupportIssueTemplateInfo[];
+  foreign: SupportIssueTemplateInfo[];
+} {
+  const byName = (a: SupportIssueTemplateInfo, b: SupportIssueTemplateInfo): number => a.name.localeCompare(b.name);
+  const own = templates.filter((t) => t.isOwn).sort(byName);
+  const foreign = templates.filter((t) => !t.isOwn).sort(byName);
+  return { own, foreign };
+}
