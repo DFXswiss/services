@@ -92,11 +92,21 @@ export function TemplatePickerModal({
     listTemplates()
       .then((items) => {
         setTemplates(items);
-        if (items.length > 0 && selectedId == null) setSelectedId(items[0].id);
+        const initial = onlyOwn ? items.filter((t) => t.isOwn) : items;
+        if (initial.length > 0 && selectedId == null) setSelectedId(initial[0].id);
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Failed to load templates'))
       .finally(() => setIsLoading(false));
   }, [isOpen, listTemplates]);
+
+  // Drop the current selection if the onlyOwn toggle hides it; re-pick first of the visible set.
+  useEffect(() => {
+    if (!isOpen || templates.length === 0) return;
+    const visible = onlyOwn ? templates.filter((t) => t.isOwn) : templates;
+    if (selectedId != null && !visible.some((t) => t.id === selectedId)) {
+      setSelectedId(visible[0]?.id);
+    }
+  }, [isOpen, onlyOwn, templates, selectedId]);
 
   // Reset transient copyMode state when template or language changes
   useEffect(() => {
