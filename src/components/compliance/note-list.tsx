@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MdDelete, MdEdit } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { SupportNoteInfo, useCompliance } from 'src/hooks/compliance.hook';
@@ -101,19 +102,19 @@ export function NoteList({ notes, showUserDataIdLink, emptyMessage, onChange }: 
                 <div className="flex gap-1">
                   <button
                     type="button"
-                    className="px-2 py-0.5 text-xs text-dfxBlue-800 hover:bg-dfxGray-300 rounded transition-colors"
+                    className="p-1 text-dfxBlue-800 hover:bg-dfxGray-300 rounded transition-colors"
                     onClick={() => startEdit(note)}
                     title="Edit"
                   >
-                    ✏️
+                    <MdEdit size={16} />
                   </button>
                   <button
                     type="button"
-                    className="px-2 py-0.5 text-xs text-dfxBlue-800 hover:bg-dfxRed-100/20 rounded transition-colors"
+                    className="p-1 text-dfxRed-100 hover:bg-dfxRed-100/20 rounded transition-colors"
                     onClick={() => setDeleteId(note.id)}
                     title="Delete"
                   >
-                    🗑️
+                    <MdDelete size={16} />
                   </button>
                 </div>
               )}
