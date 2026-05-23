@@ -2,9 +2,18 @@ import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { RealUnitTraceTimeChart } from 'src/components/dashboard/realunit-trace-time-chart';
+import { SummaryCard } from 'src/components/dashboard/summary-card';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { LogQueryResult, ParsedTrace, parseTrace, useRealunitTracing } from 'src/hooks/realunit-tracing.hook';
+
+// Dark-theme palette — matches dashboard-financial-overview.screen.tsx
+const LABEL_COLOR = '#9AA5B8';
+const TEXT_COLOR = '#ffffff';
+const BORDER_COLOR = '#0A355C';
+const BUTTON_BG = '#082948';
+const BUTTON_BG_ACTIVE = '#3b82f6';
+const SUBTLE_TEXT = '#D6DBE2';
 
 // KQL granularity is hours; entries with `tightenToMs` are filtered client-side to a tighter window.
 // `binMs` is the time-chart bucket width, chosen for ~30-100 buckets per range.
@@ -45,7 +54,7 @@ function statusColor(status: number): string {
 function durationColor(ms: number): string {
   if (ms >= VERY_SLOW_MS) return '#ef4444';
   if (ms >= SLOW_MS) return '#f59e0b';
-  return '#111827';
+  return SUBTLE_TEXT;
 }
 
 function formatMs(ms: number): string {
@@ -67,25 +76,6 @@ function rowsToTraces(result: LogQueryResult): ParsedTrace[] {
   return result.rows
     .map((row) => parseTrace(String(row[tsIdx]), String(row[msgIdx])))
     .filter((t): t is ParsedTrace => t !== null);
-}
-
-interface SummaryCardProps {
-  label: string;
-  value: string;
-  color?: string;
-}
-
-function SummaryCard({ label, value, color }: SummaryCardProps) {
-  return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <div className="text-xs font-medium" style={{ color: '#6b7280' }}>
-        {label}
-      </div>
-      <div className="text-2xl font-bold mt-1" style={{ color: color ?? '#111827' }}>
-        {value}
-      </div>
-    </div>
-  );
 }
 
 interface EndpointStat {
@@ -216,30 +206,43 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
 
   if (isInitialLoading) {
     return (
-      <div className="flex justify-center items-center w-full h-96">
+      <div className="flex justify-center items-center w-full self-stretch bg-dfxBlue-800 min-h-screen">
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
+    <div
+      className="space-y-4 p-4 w-full self-stretch bg-dfxBlue-800 min-h-screen"
+      style={{ color: TEXT_COLOR }}
+    >
+      {/* Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <SummaryCard label="Total Calls" value={String(stats.total)} dark />
+        <SummaryCard label="5xx Errors" value={String(stats.errors5xx)} color={stats.errors5xx > 0 ? '#ef4444' : undefined} dark />
+        <SummaryCard label="4xx Responses" value={String(stats.errors4xx)} color={stats.errors4xx > 0 ? '#f59e0b' : undefined} dark />
+        <SummaryCard label={`Slow (≥${SLOW_MS}ms)`} value={String(stats.slow)} color={stats.slow > 0 ? '#f59e0b' : undefined} dark />
+      </div>
+
       {/* Toolbar */}
-      <div className="bg-white rounded-lg shadow p-3 flex items-center gap-4 flex-wrap">
-        <div className="flex gap-1">
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex gap-2">
           {TIME_RANGES.map((r, i) => (
             <button
               key={r.label}
               onClick={() => setRangeIdx(i)}
-              className={`px-3 py-1 rounded text-sm font-medium ${
-                i === rangeIdx ? 'bg-gray-900 text-white' : 'bg-gray-100 hover:bg-gray-200'
-              }`}
+              className="px-4 py-1.5 rounded text-sm font-medium transition-colors"
+              style={{
+                background: i === rangeIdx ? BUTTON_BG_ACTIVE : BUTTON_BG,
+                color: i === rangeIdx ? TEXT_COLOR : SUBTLE_TEXT,
+              }}
             >
               {r.label}
             </button>
           ))}
         </div>
-        <div className="text-xs ml-auto flex items-center gap-3" style={{ color: '#6b7280' }}>
+        <div className="text-xs ml-auto flex items-center gap-3" style={{ color: LABEL_COLOR }}>
           {fetchError ? (
             <span style={{ color: '#ef4444' }}>Fetch failed: {fetchError}</span>
           ) : (
@@ -253,32 +256,27 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
         </div>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard label="Total Calls" value={String(stats.total)} />
-        <SummaryCard label="5xx Errors" value={String(stats.errors5xx)} color={stats.errors5xx > 0 ? '#ef4444' : undefined} />
-        <SummaryCard label="4xx Responses" value={String(stats.errors4xx)} color={stats.errors4xx > 0 ? '#f59e0b' : undefined} />
-        <SummaryCard label={`Slow (≥${SLOW_MS}ms)`} value={String(stats.slow)} color={stats.slow > 0 ? '#f59e0b' : undefined} />
-      </div>
-
       {/* Calls over time — gated on lastFetched so we don't paint with a Date.now() fallback */}
       {lastFetched && (
-        <RealUnitTraceTimeChart
-          traces={traces}
-          windowMs={TIME_RANGES[rangeIdx].tightenToMs ?? TIME_RANGES[rangeIdx].hours * 60 * 60 * 1000}
-          binMs={TIME_RANGES[rangeIdx].binMs}
-          endTime={lastFetched.getTime()}
-        />
+        <div className="bg-dfxBlue-700 rounded-lg shadow p-4">
+          <RealUnitTraceTimeChart
+            traces={traces}
+            windowMs={TIME_RANGES[rangeIdx].tightenToMs ?? TIME_RANGES[rangeIdx].hours * 60 * 60 * 1000}
+            binMs={TIME_RANGES[rangeIdx].binMs}
+            endTime={lastFetched.getTime()}
+            dark
+          />
+        </div>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Top Endpoints */}
-        <div className="bg-white rounded-lg shadow p-4 xl:col-span-2">
+        <div className="bg-dfxBlue-700 rounded-lg shadow p-4 xl:col-span-2">
           <div className="text-lg font-semibold mb-3">Top Endpoints</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ color: '#6b7280' }} className="text-left">
+                <tr style={{ color: LABEL_COLOR }} className="text-left">
                   <th className="py-1 pr-3 font-medium">Endpoint</th>
                   <th className="py-1 pr-3 font-medium text-right">Count</th>
                   <th className="py-1 pr-3 font-medium text-right">Errors</th>
@@ -288,13 +286,13 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
               </thead>
               <tbody>
                 {endpoints.map((e) => (
-                  <tr key={e.key} className="border-t" style={{ borderColor: '#f3f4f6' }}>
+                  <tr key={e.key} className="border-t" style={{ borderColor: BORDER_COLOR }}>
                     <td className="py-1 pr-3 font-mono text-xs">
                       <span className="font-semibold mr-2">{e.method}</span>
                       {e.pathPattern}
                     </td>
                     <td className="py-1 pr-3 text-right">{e.count}</td>
-                    <td className="py-1 pr-3 text-right" style={{ color: e.errors > 0 ? '#f59e0b' : '#6b7280' }}>
+                    <td className="py-1 pr-3 text-right" style={{ color: e.errors > 0 ? '#f59e0b' : LABEL_COLOR }}>
                       {e.errors}
                     </td>
                     <td className="py-1 pr-3 text-right" style={{ color: durationColor(e.median) }}>
@@ -307,7 +305,7 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
                 ))}
                 {endpoints.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-4 text-center" style={{ color: '#6b7280' }}>
+                    <td colSpan={5} className="py-4 text-center" style={{ color: LABEL_COLOR }}>
                       No traces in window
                     </td>
                   </tr>
@@ -318,11 +316,11 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
         </div>
 
         {/* Top IPs */}
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-dfxBlue-700 rounded-lg shadow p-4">
           <div className="text-lg font-semibold mb-3">Top IPs</div>
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ color: '#6b7280' }} className="text-left">
+              <tr style={{ color: LABEL_COLOR }} className="text-left">
                 <th className="py-1 pr-3 font-medium">IP</th>
                 <th className="py-1 pr-3 font-medium text-right">Calls</th>
                 <th className="py-1 pr-3 font-medium text-right">Last seen</th>
@@ -330,17 +328,17 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
             </thead>
             <tbody>
               {ips.map((ip) => (
-                <tr key={ip.ip} className="border-t" style={{ borderColor: '#f3f4f6' }}>
+                <tr key={ip.ip} className="border-t" style={{ borderColor: BORDER_COLOR }}>
                   <td className="py-1 pr-3 font-mono text-xs">{ip.ip}</td>
                   <td className="py-1 pr-3 text-right">{ip.count}</td>
-                  <td className="py-1 pr-3 text-right text-xs" style={{ color: '#6b7280' }}>
+                  <td className="py-1 pr-3 text-right text-xs" style={{ color: LABEL_COLOR }}>
                     {formatTime(ip.lastSeen)}
                   </td>
                 </tr>
               ))}
               {ips.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="py-4 text-center" style={{ color: '#6b7280' }}>
+                  <td colSpan={3} className="py-4 text-center" style={{ color: LABEL_COLOR }}>
                     -
                   </td>
                 </tr>
@@ -351,12 +349,12 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-dfxBlue-700 rounded-lg shadow p-4">
         <div className="text-lg font-semibold mb-3">Recent Activity (last {recent.length})</div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ color: '#6b7280' }} className="text-left">
+              <tr style={{ color: LABEL_COLOR }} className="text-left">
                 <th className="py-1 pr-3 font-medium">Time</th>
                 <th className="py-1 pr-3 font-medium">Method</th>
                 <th className="py-1 pr-3 font-medium">URL</th>
@@ -371,7 +369,7 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
                 <tr
                   key={`${t.timestamp}-${t.method}-${t.url}-${t.status}`}
                   className="border-t"
-                  style={{ borderColor: '#f3f4f6' }}
+                  style={{ borderColor: BORDER_COLOR }}
                 >
                   <td className="py-1 pr-3 font-mono text-xs whitespace-nowrap">{formatTime(t.timestamp)}</td>
                   <td className="py-1 pr-3 font-mono text-xs font-semibold">{t.method}</td>
@@ -389,14 +387,14 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
                     {formatMs(t.durationMs)}
                   </td>
                   <td className="py-1 pr-3 text-xs">{t.client}</td>
-                  <td className="py-1 pr-3 font-mono text-xs" style={{ color: '#6b7280' }}>
+                  <td className="py-1 pr-3 font-mono text-xs" style={{ color: LABEL_COLOR }}>
                     {t.ip}
                   </td>
                 </tr>
               ))}
               {recent.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-4 text-center" style={{ color: '#6b7280' }}>
+                  <td colSpan={7} className="py-4 text-center" style={{ color: LABEL_COLOR }}>
                     No traces yet
                   </td>
                 </tr>

@@ -8,6 +8,7 @@ interface Props {
   windowMs: number;
   binMs: number;
   endTime: number;
+  dark?: boolean;
 }
 
 interface Bucket {
@@ -31,7 +32,7 @@ function bucketize(traces: ParsedTrace[], startTime: number, endTime: number, bi
   return buckets;
 }
 
-export function RealUnitTraceTimeChart({ traces, windowMs, binMs, endTime }: Props): JSX.Element {
+export function RealUnitTraceTimeChart({ traces, windowMs, binMs, endTime, dark }: Props): JSX.Element {
   const series = useMemo(() => {
     const startTime = endTime - windowMs;
     const buckets = bucketize(traces, startTime, endTime, binMs);
@@ -54,11 +55,12 @@ export function RealUnitTraceTimeChart({ traces, windowMs, binMs, endTime }: Pro
         animations: { enabled: false },
         background: '0',
       },
+      theme: { mode: dark ? 'dark' : 'light' },
       stroke: { width: 1.5, curve: 'smooth' },
       colors: ['#22c55e', '#ef4444'],
       dataLabels: { enabled: false },
       fill: { type: 'gradient', gradient: { opacityFrom: 0.45, opacityTo: 0.05 } },
-      grid: { borderColor: '#e5e7eb' },
+      grid: { borderColor: dark ? '#0A355C' : '#e5e7eb' },
       xaxis: {
         type: 'datetime',
         labels: { datetimeUTC: false, format: 'HH:mm' },
@@ -76,12 +78,12 @@ export function RealUnitTraceTimeChart({ traces, windowMs, binMs, endTime }: Pro
       },
       legend: { position: 'bottom' },
     }),
-    [endTime, windowMs],
+    [endTime, windowMs, dark],
   );
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <div className="text-lg font-semibold mb-2">Calls over time</div>
+    <div>
+      <div className="text-sm font-semibold mb-2">Calls over time</div>
       <Chart type="area" height={260} options={options} series={series} />
     </div>
   );
