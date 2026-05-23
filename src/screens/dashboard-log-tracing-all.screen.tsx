@@ -54,7 +54,7 @@ function rowsToGenericTraces(result: LogQueryResult): GenericTrace[] {
   const tsIdx = colIdx(result, 'timestamp');
   const sevIdx = colIdx(result, 'severityLevel');
   const msgIdx = colIdx(result, 'message');
-  const opIdx = colIdx(result, 'operationId');
+  const opIdx = colIdx(result, 'operation_Id');
   if (tsIdx === -1 || sevIdx === -1 || msgIdx === -1) return [];
   return result.rows.map((row) => {
     const sevRaw = row[sevIdx];
