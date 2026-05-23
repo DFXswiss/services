@@ -141,6 +141,8 @@ function aggregateIps(traces: ParsedTrace[]): IpStat[] {
 }
 
 export default function DashboardLogTracingRealunitScreen(): JSX.Element {
+  // Backend /gs/debug/logs is RoleGuard(DEBUG); additionalRoles allows
+  // ADMIN+SUPER_ADMIN, but not REALUNIT — so admin-only is the right gate.
   useAdminGuard();
   useLayoutOptions({ title: 'RealUnit Tracing', noMaxWidth: true });
 

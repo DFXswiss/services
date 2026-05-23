@@ -50,9 +50,9 @@ export function LogTraceTimeChart({ traces, windowMs, binMs, endTime, dark }: Pr
         type: 'area',
         stacked: true,
         toolbar: { show: false },
-        // Disable animations: this chart re-renders every 5s; animations make
-        // the refresh feel jittery.
-        animations: { enabled: false },
+        // Re-enabled: pulses are rare enough at the every-60s refresh cadence
+        // that a smooth transition is preferable to an instant snap.
+        animations: { enabled: true },
         background: '0',
       },
       theme: { mode: dark ? 'dark' : 'light' },
