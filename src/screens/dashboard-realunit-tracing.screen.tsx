@@ -5,10 +5,10 @@ import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { LogQueryResult, ParsedTrace, parseTrace, useRealunitTracing } from 'src/hooks/realunit-tracing.hook';
 
-// KQL granularity is hours; we tighten client-side for the 15 min window.
-const TIME_RANGES: { label: string; hours: number }[] = [
+// KQL granularity is hours; entries with `tightenToMs` are filtered client-side to a tighter window.
+const TIME_RANGES: { label: string; hours: number; tightenToMs?: number }[] = [
   { label: '1 h', hours: 1 },
-  { label: '15 min', hours: 1 },
+  { label: '15 min', hours: 1, tightenToMs: 15 * 60 * 1000 },
   { label: '6 h', hours: 6 },
   { label: '24 h', hours: 24 },
 ];
@@ -26,7 +26,7 @@ function median(values: number[]): number {
 function percentile(values: number[], p: number): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
-  const rank = ((p / 100) * (sorted.length - 1));
+  const rank = (p / 100) * (sorted.length - 1);
   const lo = Math.floor(rank);
   const hi = Math.ceil(rank);
   if (lo === hi) return sorted[lo];
@@ -137,7 +137,10 @@ function aggregateIps(traces: ParsedTrace[]): IpStat[] {
     .map(([ip, arr]) => ({
       ip,
       count: arr.length,
-      lastSeen: arr.reduce((max, t) => (t.timestamp > max ? t.timestamp : max), arr[0].timestamp),
+      lastSeen: arr.reduce(
+        (max, t) => (new Date(t.timestamp).getTime() > new Date(max).getTime() ? t.timestamp : max),
+        arr[0].timestamp,
+      ),
     }))
     .sort((a, b) => b.count - a.count);
 }
@@ -167,8 +170,8 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
         const result = await getRealunitTraces(range.hours);
         if (cancelled) return;
         const parsed = rowsToTraces(result);
-        // '15 min' shares the 1h API window with '1 h'; tighten client-side.
-        const cutoff = range.label === '15 min' ? Date.now() - 15 * 60 * 1000 : 0;
+        // Ranges with `tightenToMs` reuse a coarser KQL window and are filtered client-side.
+        const cutoff = range.tightenToMs ? Date.now() - range.tightenToMs : 0;
         setTraces(cutoff ? parsed.filter((t) => new Date(t.timestamp).getTime() >= cutoff) : parsed);
         setLastFetched(new Date());
         setFetchError(null);
