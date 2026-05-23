@@ -23,7 +23,10 @@ const TIME_RANGES: { label: string; hours: number; tightenToMs?: number; binMs: 
   { label: '6 h', hours: 6, binMs: 5 * 60 * 1000 },
   { label: '24 h', hours: 24, binMs: 15 * 60 * 1000 },
 ];
-const REFRESH_MS = 5000;
+// 60s rather than tighter: at this rate, the /gs/debug/logs audit log (one entry
+// per poll, ~60/h) is small enough vs real RealUnitTrace volume that audit
+// entries don't crowd real traces out of the 200-row TRACES_BY_MESSAGE response.
+const REFRESH_MS = 60_000;
 const SLOW_MS = 2000;
 const VERY_SLOW_MS = 5000;
 
