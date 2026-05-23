@@ -1,16 +1,18 @@
 import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
+import { RealUnitTraceTimeChart } from 'src/components/dashboard/realunit-trace-time-chart';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { LogQueryResult, ParsedTrace, parseTrace, useRealunitTracing } from 'src/hooks/realunit-tracing.hook';
 
 // KQL granularity is hours; entries with `tightenToMs` are filtered client-side to a tighter window.
-const TIME_RANGES: { label: string; hours: number; tightenToMs?: number }[] = [
-  { label: '1 h', hours: 1 },
-  { label: '15 min', hours: 1, tightenToMs: 15 * 60 * 1000 },
-  { label: '6 h', hours: 6 },
-  { label: '24 h', hours: 24 },
+// `binMs` is the time-chart bucket width, chosen for ~30-100 buckets per range.
+const TIME_RANGES: { label: string; hours: number; tightenToMs?: number; binMs: number }[] = [
+  { label: '1 h', hours: 1, binMs: 60 * 1000 },
+  { label: '15 min', hours: 1, tightenToMs: 15 * 60 * 1000, binMs: 30 * 1000 },
+  { label: '6 h', hours: 6, binMs: 5 * 60 * 1000 },
+  { label: '24 h', hours: 24, binMs: 15 * 60 * 1000 },
 ];
 const REFRESH_MS = 5000;
 const SLOW_MS = 2000;
@@ -258,6 +260,14 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
         <SummaryCard label="4xx Responses" value={String(stats.errors4xx)} color={stats.errors4xx > 0 ? '#f59e0b' : undefined} />
         <SummaryCard label={`Slow (≥${SLOW_MS}ms)`} value={String(stats.slow)} color={stats.slow > 0 ? '#f59e0b' : undefined} />
       </div>
+
+      {/* Calls over time */}
+      <RealUnitTraceTimeChart
+        traces={traces}
+        windowMs={TIME_RANGES[rangeIdx].tightenToMs ?? TIME_RANGES[rangeIdx].hours * 60 * 60 * 1000}
+        binMs={TIME_RANGES[rangeIdx].binMs}
+        endTime={lastFetched ? lastFetched.getTime() : Date.now()}
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Top Endpoints */}
