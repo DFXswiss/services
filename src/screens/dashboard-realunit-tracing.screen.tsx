@@ -261,13 +261,15 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
         <SummaryCard label={`Slow (≥${SLOW_MS}ms)`} value={String(stats.slow)} color={stats.slow > 0 ? '#f59e0b' : undefined} />
       </div>
 
-      {/* Calls over time */}
-      <RealUnitTraceTimeChart
-        traces={traces}
-        windowMs={TIME_RANGES[rangeIdx].tightenToMs ?? TIME_RANGES[rangeIdx].hours * 60 * 60 * 1000}
-        binMs={TIME_RANGES[rangeIdx].binMs}
-        endTime={lastFetched ? lastFetched.getTime() : Date.now()}
-      />
+      {/* Calls over time — gated on lastFetched so we don't paint with a Date.now() fallback */}
+      {lastFetched && (
+        <RealUnitTraceTimeChart
+          traces={traces}
+          windowMs={TIME_RANGES[rangeIdx].tightenToMs ?? TIME_RANGES[rangeIdx].hours * 60 * 60 * 1000}
+          binMs={TIME_RANGES[rangeIdx].binMs}
+          endTime={lastFetched.getTime()}
+        />
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Top Endpoints */}

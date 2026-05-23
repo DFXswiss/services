@@ -32,9 +32,8 @@ function bucketize(traces: ParsedTrace[], startTime: number, endTime: number, bi
 }
 
 export function RealUnitTraceTimeChart({ traces, windowMs, binMs, endTime }: Props): JSX.Element {
-  const startTime = endTime - windowMs;
-
   const series = useMemo(() => {
+    const startTime = endTime - windowMs;
     const buckets = bucketize(traces, startTime, endTime, binMs);
     const normalData = buckets.map((b, i) => [startTime + i * binMs, b.normal] as [number, number]);
     const errorData = buckets.map((b, i) => [startTime + i * binMs, b.errors] as [number, number]);
@@ -42,7 +41,7 @@ export function RealUnitTraceTimeChart({ traces, windowMs, binMs, endTime }: Pro
       { name: '2xx / 3xx', data: normalData },
       { name: '4xx / 5xx', data: errorData },
     ];
-  }, [traces, startTime, endTime, binMs]);
+  }, [traces, endTime, windowMs, binMs]);
 
   const options: ApexOptions = useMemo(
     () => ({
@@ -63,7 +62,7 @@ export function RealUnitTraceTimeChart({ traces, windowMs, binMs, endTime }: Pro
       xaxis: {
         type: 'datetime',
         labels: { datetimeUTC: false, format: 'HH:mm' },
-        min: startTime,
+        min: endTime - windowMs,
         max: endTime,
       },
       yaxis: {
@@ -77,7 +76,7 @@ export function RealUnitTraceTimeChart({ traces, windowMs, binMs, endTime }: Pro
       },
       legend: { position: 'bottom' },
     }),
-    [startTime, endTime],
+    [endTime, windowMs],
   );
 
   return (
