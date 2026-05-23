@@ -1,7 +1,7 @@
 import { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
-import { ParsedTrace } from 'src/hooks/realunit-tracing.hook';
+import { ParsedTrace } from 'src/hooks/log-tracing.hook';
 
 interface Props {
   traces: ParsedTrace[];
@@ -32,7 +32,7 @@ function bucketize(traces: ParsedTrace[], startTime: number, endTime: number, bi
   return buckets;
 }
 
-export function RealUnitTraceTimeChart({ traces, windowMs, binMs, endTime, dark }: Props): JSX.Element {
+export function LogTraceTimeChart({ traces, windowMs, binMs, endTime, dark }: Props): JSX.Element {
   const series = useMemo(() => {
     const startTime = endTime - windowMs;
     const buckets = bucketize(traces, startTime, endTime, binMs);

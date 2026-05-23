@@ -53,7 +53,7 @@ export function parseTrace(timestamp: string, message: string): ParsedTrace | nu
   };
 }
 
-export function useRealunitTracing() {
+export function useLogTracing() {
   const { call } = useApi();
 
   async function getRealunitTraces(hours: number): Promise<LogQueryResult> {

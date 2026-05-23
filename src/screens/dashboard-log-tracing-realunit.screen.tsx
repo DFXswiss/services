@@ -1,11 +1,11 @@
 import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
-import { RealUnitTraceTimeChart } from 'src/components/dashboard/realunit-trace-time-chart';
+import { LogTraceTimeChart } from 'src/components/dashboard/log-trace-time-chart';
 import { SummaryCard } from 'src/components/dashboard/summary-card';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { LogQueryResult, ParsedTrace, parseTrace, useRealunitTracing } from 'src/hooks/realunit-tracing.hook';
+import { LogQueryResult, ParsedTrace, parseTrace, useLogTracing } from 'src/hooks/log-tracing.hook';
 
 // Dark-theme palette — matches dashboard-financial-overview.screen.tsx
 const LABEL_COLOR = '#9AA5B8';
@@ -140,12 +140,12 @@ function aggregateIps(traces: ParsedTrace[]): IpStat[] {
     .sort((a, b) => b.count - a.count);
 }
 
-export default function DashboardRealunitTracingScreen(): JSX.Element {
+export default function DashboardLogTracingRealunitScreen(): JSX.Element {
   useAdminGuard();
   useLayoutOptions({ title: 'RealUnit Tracing', noMaxWidth: true });
 
   const { isLoggedIn } = useSessionContext();
-  const { getRealunitTraces } = useRealunitTracing();
+  const { getRealunitTraces } = useLogTracing();
 
   const [rangeIdx, setRangeIdx] = useState(0); // default: 1h (first option)
   const [traces, setTraces] = useState<ParsedTrace[]>([]);
@@ -262,7 +262,7 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
       {/* Calls over time — gated on lastFetched so we don't paint with a Date.now() fallback */}
       {lastFetched && (
         <div className="bg-dfxBlue-700 rounded-lg shadow p-4">
-          <RealUnitTraceTimeChart
+          <LogTraceTimeChart
             traces={traces}
             windowMs={TIME_RANGES[rangeIdx].tightenToMs ?? TIME_RANGES[rangeIdx].hours * 60 * 60 * 1000}
             binMs={TIME_RANGES[rangeIdx].binMs}
