@@ -1,13 +1,14 @@
 import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { LogQueryResult, ParsedTrace, parseTrace, useRealunitTracing } from 'src/hooks/realunit-tracing.hook';
 
+// KQL granularity is hours; we tighten client-side for the 15 min window.
 const TIME_RANGES: { label: string; hours: number }[] = [
-  { label: '15 min', hours: 1 }, // API minimum is 1h; we filter client-side for 15 min
   { label: '1 h', hours: 1 },
+  { label: '15 min', hours: 1 },
   { label: '6 h', hours: 6 },
   { label: '24 h', hours: 24 },
 ];
@@ -25,8 +26,11 @@ function median(values: number[]): number {
 function percentile(values: number[], p: number): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
-  const idx = Math.min(sorted.length - 1, Math.floor((sorted.length * p) / 100));
-  return sorted[idx];
+  const rank = ((p / 100) * (sorted.length - 1));
+  const lo = Math.floor(rank);
+  const hi = Math.ceil(rank);
+  if (lo === hi) return sorted[lo];
+  return Math.round(sorted[lo] + (sorted[hi] - sorted[lo]) * (rank - lo));
 }
 
 function statusColor(status: number): string {
@@ -145,39 +149,47 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { getRealunitTraces } = useRealunitTracing();
 
-  const [rangeIdx, setRangeIdx] = useState(1); // default: 1h
+  const [rangeIdx, setRangeIdx] = useState(0); // default: 1h (first option)
   const [traces, setTraces] = useState<ParsedTrace[]>([]);
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const inflight = useRef(false);
-
-  const fetchTraces = useCallback(async () => {
-    if (inflight.current) return;
-    inflight.current = true;
-    try {
-      const range = TIME_RANGES[rangeIdx];
-      const result = await getRealunitTraces(range.hours);
-      const parsed = rowsToTraces(result);
-      const cutoff = rangeIdx === 0 ? Date.now() - 15 * 60 * 1000 : 0;
-      setTraces(cutoff ? parsed.filter((t) => new Date(t.timestamp).getTime() >= cutoff) : parsed);
-      setLastFetched(new Date());
-      setFetchError(null);
-    } catch (e) {
-      setFetchError(e instanceof Error ? e.message : 'unknown error');
-    } finally {
-      setIsInitialLoading(false);
-      inflight.current = false;
-    }
-  }, [getRealunitTraces, rangeIdx]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    setIsInitialLoading(true);
-    fetchTraces();
-    const interval = setInterval(fetchTraces, REFRESH_MS);
-    return () => clearInterval(interval);
-  }, [isLoggedIn, fetchTraces]);
+    let cancelled = false;
+
+    const run = async () => {
+      setIsRefreshing(true);
+      try {
+        const range = TIME_RANGES[rangeIdx];
+        const result = await getRealunitTraces(range.hours);
+        if (cancelled) return;
+        const parsed = rowsToTraces(result);
+        // '15 min' shares the 1h API window with '1 h'; tighten client-side.
+        const cutoff = range.label === '15 min' ? Date.now() - 15 * 60 * 1000 : 0;
+        setTraces(cutoff ? parsed.filter((t) => new Date(t.timestamp).getTime() >= cutoff) : parsed);
+        setLastFetched(new Date());
+        setFetchError(null);
+      } catch (e) {
+        if (cancelled) return;
+        setFetchError(e instanceof Error ? e.message : 'unknown error');
+      } finally {
+        if (!cancelled) {
+          setIsInitialLoading(false);
+          setIsRefreshing(false);
+        }
+      }
+    };
+
+    run();
+    const interval = setInterval(run, REFRESH_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isLoggedIn, rangeIdx, getRealunitTraces]);
 
   const stats = useMemo(() => {
     const total = traces.length;
@@ -190,7 +202,10 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
   const endpoints = useMemo(() => aggregateEndpoints(traces).slice(0, 12), [traces]);
   const ips = useMemo(() => aggregateIps(traces).slice(0, 10), [traces]);
   const recent = useMemo(
-    () => [...traces].sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 30),
+    () =>
+      [...traces]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 30),
     [traces],
   );
 
@@ -229,6 +244,7 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
             </span>
           )}
           <span>last update {lastFetched ? lastFetched.toLocaleTimeString('de-CH') : '-'}</span>
+          {isRefreshing && <span>loading…</span>}
         </div>
       </div>
 
@@ -336,8 +352,12 @@ export default function DashboardRealunitTracingScreen(): JSX.Element {
               </tr>
             </thead>
             <tbody>
-              {recent.map((t, i) => (
-                <tr key={`${t.timestamp}-${i}`} className="border-t" style={{ borderColor: '#f3f4f6' }}>
+              {recent.map((t) => (
+                <tr
+                  key={`${t.timestamp}-${t.method}-${t.url}-${t.status}`}
+                  className="border-t"
+                  style={{ borderColor: '#f3f4f6' }}
+                >
                   <td className="py-1 pr-3 font-mono text-xs whitespace-nowrap">{formatTime(t.timestamp)}</td>
                   <td className="py-1 pr-3 font-mono text-xs font-semibold">{t.method}</td>
                   <td className="py-1 pr-3 font-mono text-xs break-all">{t.url}</td>

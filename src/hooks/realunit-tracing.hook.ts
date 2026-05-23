@@ -20,11 +20,10 @@ export interface ParsedTrace {
   durationMs: number;
   client: string;
   ip: string;
-  raw: string;
 }
 
 const TRACE_HEADLINE_RE =
-  /^\[RealUnitTrace\]\s+([A-Z]+)\s+(\S+)\s+→\s+(\d{3})\s+\((\d+)ms\)\s+client=(\S+)\s+ip=(\S+)/;
+  /^\[RealUnitTrace\]\s+([A-Z]+)\s+(\S+)\s+→\s+(\d{3})\s+\((\d+)ms\)\s+client=(\S+?)\s+ip=(\S+)/;
 
 function normalizePath(url: string): string {
   const path = url.split('?')[0];
@@ -32,7 +31,7 @@ function normalizePath(url: string): string {
     .split('/')
     .map((seg) => {
       if (/^0x[a-f0-9]{40}$/i.test(seg)) return ':address';
-      if (/^[a-f0-9]{8}-[a-f0-9]{4}-/i.test(seg)) return ':uuid';
+      if (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(seg)) return ':uuid';
       if (/^\d+$/.test(seg)) return ':id';
       return seg;
     })
@@ -51,7 +50,6 @@ export function parseTrace(timestamp: string, message: string): ParsedTrace | nu
     durationMs: parseInt(m[4], 10),
     client: m[5],
     ip: m[6],
-    raw: message,
   };
 }
 
