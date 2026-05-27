@@ -7,9 +7,17 @@ interface ModalProps extends PropsWithChildren {
   onClose?: () => void;
   variant?: 'fullscreen' | 'dialog';
   className?: string;
+  maxWidthClass?: string;
 }
 
-export function Modal({ isOpen, onClose, children, variant = 'fullscreen', className = '' }: ModalProps): JSX.Element | null {
+export function Modal({
+  isOpen,
+  onClose,
+  children,
+  variant = 'fullscreen',
+  className = '',
+  maxWidthClass = 'max-w-screen-md',
+}: ModalProps): JSX.Element | null {
   const [mounted, setMounted] = useState(false);
   const [topOffset, setTopOffset] = useState(0);
   const { modalRootRef, rootRef } = useLayoutContext();
@@ -61,7 +69,7 @@ export function Modal({ isOpen, onClose, children, variant = 'fullscreen', class
         onClick={(e) => e.target === e.currentTarget && onClose?.()}
       >
         <div className="flex min-h-full items-center justify-center p-4">
-          <div className="w-full max-w-screen-md flex flex-col">{children}</div>
+          <div className={`w-full ${maxWidthClass} flex flex-col`}>{children}</div>
         </div>
       </div>,
       rootRef.current,
@@ -74,7 +82,7 @@ export function Modal({ isOpen, onClose, children, variant = 'fullscreen', class
       style={{ top: topOffset }}
     >
       <div className="flex flex-grow justify-center h-full">
-        <div className="w-full max-w-screen-md flex flex-grow flex-col p-4">{children}</div>
+        <div className={`w-full ${maxWidthClass} flex flex-grow flex-col p-4`}>{children}</div>
       </div>
     </div>,
     rootRef.current,

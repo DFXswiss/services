@@ -78,6 +78,7 @@ const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.sc
 const SupportDashboardIssueScreen = lazy(() => import('./screens/support-dashboard-issue.screen'));
 const SupportDashboardCreateScreen = lazy(() => import('./screens/support-dashboard-create.screen'));
 const NotesScreen = lazy(() => import('./screens/notes.screen'));
+const TemplatesScreen = lazy(() => import('./screens/support-templates.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
 const RealunitHoldersScreen = lazy(() => import('./screens/realunit-holders.screen'));
 const RealunitQuotesScreen = lazy(() => import('./screens/realunit-quotes.screen'));
@@ -94,6 +95,7 @@ const DashboardFinancialHistoryScreen = lazy(() => import('./screens/dashboard-f
 const DashboardFinancialLiveScreen = lazy(() => import('./screens/dashboard-financial-live.screen'));
 const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-financial-expenses.screen'));
 const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard-financial-liquidity.screen'));
+const DashboardRealunitTracingScreen = lazy(() => import('./screens/dashboard-realunit-tracing.screen'));
 const SitemapScreen = lazy(() => import('./screens/sitemap.screen'));
 
 setupLanguages();
@@ -465,6 +467,10 @@ export const Routes = [
         element: withSuspense(<NotesScreen />),
       },
       {
+        path: 'templates',
+        element: withSuspense(<TemplatesScreen />),
+      },
+      {
         path: 'realunit',
         element: (
           <RealunitContextProvider>
@@ -542,6 +548,10 @@ export const Routes = [
                 element: withSuspense(<DashboardFinancialLiquidityScreen />),
               },
             ],
+          },
+          {
+            path: 'realunit-tracing',
+            element: withSuspense(<DashboardRealunitTracingScreen />),
           },
         ],
       },

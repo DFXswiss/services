@@ -31,6 +31,7 @@ export interface SupportIssueInternalAccountData {
   annualVolume: number;
   kycHash: string;
   country?: { name: string };
+  language?: { name?: string; symbol?: string };
 }
 
 export interface SupportIssueInternalTransactionData {
