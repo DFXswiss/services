@@ -95,7 +95,9 @@ const DashboardFinancialHistoryScreen = lazy(() => import('./screens/dashboard-f
 const DashboardFinancialLiveScreen = lazy(() => import('./screens/dashboard-financial-live.screen'));
 const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-financial-expenses.screen'));
 const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard-financial-liquidity.screen'));
-const DashboardRealunitTracingScreen = lazy(() => import('./screens/dashboard-realunit-tracing.screen'));
+const DashboardLogTracingScreen = lazy(() => import('./screens/dashboard-log-tracing.screen'));
+const DashboardLogTracingRealunitScreen = lazy(() => import('./screens/dashboard-log-tracing-realunit.screen'));
+const DashboardLogTracingAllScreen = lazy(() => import('./screens/dashboard-log-tracing-all.screen'));
 const SitemapScreen = lazy(() => import('./screens/sitemap.screen'));
 
 setupLanguages();
@@ -550,8 +552,21 @@ export const Routes = [
             ],
           },
           {
-            path: 'realunit-tracing',
-            element: withSuspense(<DashboardRealunitTracingScreen />),
+            path: 'log-tracing',
+            children: [
+              {
+                index: true,
+                element: withSuspense(<DashboardLogTracingScreen />),
+              },
+              {
+                path: 'realunit',
+                element: withSuspense(<DashboardLogTracingRealunitScreen />),
+              },
+              {
+                path: 'all',
+                element: withSuspense(<DashboardLogTracingAllScreen />),
+              },
+            ],
           },
         ],
       },

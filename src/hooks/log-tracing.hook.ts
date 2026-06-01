@@ -53,7 +53,33 @@ export function parseTrace(timestamp: string, message: string): ParsedTrace | nu
   };
 }
 
-export function useRealunitTracing() {
+export interface GenericTrace {
+  timestamp: string;
+  severityLevel: number; // 0 verbose, 1 info, 2 warn, 3 error, 4 critical
+  context: string; // extracted from "[Context]" prefix, '' if none
+  message: string; // remainder after the prefix
+  operationId: string;
+}
+
+const CONTEXT_PREFIX_RE = /^\[([^\]]+)\]\s+([\s\S]*)$/;
+
+export function parseGenericTrace(
+  timestamp: string,
+  severityLevel: number,
+  message: string,
+  operationId: string,
+): GenericTrace {
+  const m = message.match(CONTEXT_PREFIX_RE);
+  return {
+    timestamp,
+    severityLevel,
+    context: m?.[1] ?? '',
+    message: m?.[2] ?? message,
+    operationId,
+  };
+}
+
+export function useLogTracing() {
   const { call } = useApi();
 
   async function getRealunitTraces(hours: number): Promise<LogQueryResult> {
@@ -68,5 +94,13 @@ export function useRealunitTracing() {
     });
   }
 
-  return useMemo(() => ({ getRealunitTraces }), [call]);
+  async function getAllTraces(hours: number): Promise<LogQueryResult> {
+    return call<LogQueryResult>({
+      url: 'gs/debug/logs',
+      method: 'POST',
+      data: { template: 'all-traces', hours },
+    });
+  }
+
+  return useMemo(() => ({ getRealunitTraces, getAllTraces }), [call]);
 }

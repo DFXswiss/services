@@ -52,6 +52,7 @@ const sections: PageSection[] = [
     title: 'Payment Links & Invoices',
     pages: [
       { path: '/pl', label: 'Payment Link' },
+      { path: '/pl/assign', label: 'Payment Link Assign' },
       { path: '/pl/pos', label: 'Payment Link POS' },
       { path: '/pl/result', label: 'Payment Link Result' },
       { path: '/payment-link', label: 'Payment Link (Legacy)' },
@@ -95,6 +96,8 @@ const sections: PageSection[] = [
       { path: '/compliance/custody-orders', label: 'Custody Orders' },
       { path: '/compliance/recalls', label: 'Recalls' },
       { path: '/compliance/mros', label: 'MROS Reports' },
+      { path: '/compliance/mros/create', label: 'Create MROS Report' },
+      { path: '/compliance/call-queues', label: 'Call Queues' },
     ],
   },
   {
@@ -102,6 +105,8 @@ const sections: PageSection[] = [
     pages: [
       { path: '/support/dashboard', label: 'Support Dashboard' },
       { path: '/support/dashboard/create', label: 'Create Issue' },
+      { path: '/notes', label: 'Notes' },
+      { path: '/templates', label: 'Support Templates' },
     ],
   },
   {
@@ -114,14 +119,18 @@ const sections: PageSection[] = [
     ],
   },
   {
-    title: 'Financial Dashboard',
+    title: 'Dashboard',
     pages: [
       { path: '/dashboard', label: 'Dashboard' },
       { path: '/dashboard/financial', label: 'Financial' },
+      { path: '/dashboard/financial/overview', label: 'Financial Overview' },
       { path: '/dashboard/financial/live', label: 'Financial Live' },
       { path: '/dashboard/financial/history', label: 'Financial History' },
       { path: '/dashboard/financial/history/expenses', label: 'Expenses' },
       { path: '/dashboard/financial/liquidity', label: 'Liquidity' },
+      { path: '/dashboard/log-tracing', label: 'Log Tracing' },
+      { path: '/dashboard/log-tracing/realunit', label: 'RealUnit Tracing' },
+      { path: '/dashboard/log-tracing/all', label: 'All Logs' },
     ],
   },
   {
