@@ -118,6 +118,7 @@ const sections: PageSection[] = [
     pages: [
       { path: '/dashboard', label: 'Dashboard' },
       { path: '/dashboard/financial', label: 'Financial' },
+      { path: '/dashboard/financial/overview', label: 'Financial Overview' },
       { path: '/dashboard/financial/live', label: 'Financial Live' },
       { path: '/dashboard/financial/history', label: 'Financial History' },
       { path: '/dashboard/financial/history/expenses', label: 'Expenses' },
