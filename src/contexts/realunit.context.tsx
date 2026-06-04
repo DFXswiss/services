@@ -142,9 +142,13 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
   }, [transactions.length]);
 
   const fetchStats = useCallback(() => {
-    getStats().then((statsData) => {
-      setStats(statsData);
-    });
+    getStats()
+      .then((statsData) => {
+        setStats(statsData);
+      })
+      .catch(() => {
+        setStats(undefined);
+      });
   }, [setStats]);
 
   const context = useMemo(
