@@ -1100,7 +1100,22 @@
     "Date": "Datum",
     "Confirm Payment Received": "Zahlungseingang bestätigen",
     "Are you sure you want to confirm the payment receipt?": "Möchten Sie den Zahlungseingang wirklich bestätigen?",
-    "Payment confirmed successfully": "Zahlungseingang erfolgreich bestätigt"
+    "Payment confirmed successfully": "Zahlungseingang erfolgreich bestätigt",
+    "Key Figures": "Kennzahlen",
+    "New accounts": "Neue Konten",
+    "Completed registrations": "Abgeschlossene Registrierungen",
+    "KYC conversion": "KYC-Conversion",
+    "Trading volume": "Handelsvolumen",
+    "Buy volume": "Kaufvolumen",
+    "Sell volume": "Verkaufsvolumen",
+    "KYC funnel": "KYC-Funnel",
+    "Last 30 days": "Letzte 30 Tage",
+    "Last 7 days": "Letzte 7 Tage",
+    "ContactData": "Kontaktdaten",
+    "PersonalData": "Persönliche Daten",
+    "NationalityData": "Nationalität",
+    "Ident": "Identifikation",
+    "FinancialData": "Finanzdaten"
   },
   "screens/blockchain": {
     "Transaction signing": "Transaktionssignierung",

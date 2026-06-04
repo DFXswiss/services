@@ -9,6 +9,7 @@ import {
   RealUnitQuote,
   RealUnitTransaction,
   RealunitContextInterface,
+  RealunitStats,
   TokenInfo,
   TokenPrice,
 } from 'src/dto/realunit.dto';
@@ -41,6 +42,7 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
   const [transactions, setTransactions] = useState<RealUnitTransaction[]>([]);
   const [quotesLoading, setQuotesLoading] = useState(false);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [stats, setStats] = useState<RealunitStats | undefined>();
 
   const {
     getAccountSummary,
@@ -52,6 +54,7 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
     getAdminQuotes,
     getAdminTransactions,
     confirmPayment,
+    getStats,
   } = useRealunitApi();
 
   const fetchAccountSummary = useCallback(
@@ -138,6 +141,12 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       .finally(() => setTransactionsLoading(false));
   }, [transactions.length]);
 
+  const fetchStats = useCallback(() => {
+    getStats().then((statsData) => {
+      setStats(statsData);
+    });
+  }, [setStats]);
+
   const context = useMemo(
     () => ({
       accountSummary,
@@ -154,6 +163,8 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       transactions,
       quotesLoading,
       transactionsLoading,
+      stats,
+      fetchStats,
       fetchAccountSummary,
       fetchAccountHistory,
       fetchHolders,
@@ -180,6 +191,8 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       transactions,
       quotesLoading,
       transactionsLoading,
+      stats,
+      fetchStats,
       fetchAccountSummary,
       fetchAccountHistory,
       fetchHolders,
