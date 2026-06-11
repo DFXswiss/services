@@ -23,6 +23,7 @@ import {
   removeNullFields,
   delay,
   isAbsoluteUrl,
+  isSafeRedirectUri,
   blankedAddress,
   formatBytes,
   formatUnits,
@@ -126,6 +127,66 @@ describe('utils', () => {
     it('should return false for relative URLs', () => {
       expect(isAbsoluteUrl('/path/to/page')).toBe(false);
       expect(isAbsoluteUrl('path/to/page')).toBe(false);
+    });
+  });
+
+  describe('isSafeRedirectUri', () => {
+    it('should allow HTTPS URIs', () => {
+      expect(isSafeRedirectUri('https://example.com')).toBe(true);
+      expect(isSafeRedirectUri('https://example.com/path?param=value')).toBe(true);
+    });
+
+    it('should allow custom deep link schemes', () => {
+      expect(isSafeRedirectUri('myapp://x')).toBe(true);
+      expect(isSafeRedirectUri('mywallet://callback?status=done')).toBe(true);
+      expect(isSafeRedirectUri('bitcoin:bc1q0000000000000000000000000000000000000000')).toBe(true);
+    });
+
+    it('should allow HTTP only for localhost', () => {
+      expect(isSafeRedirectUri('http://localhost:3001/x')).toBe(true);
+      expect(isSafeRedirectUri('http://127.0.0.1:3001/x')).toBe(true);
+      expect(isSafeRedirectUri('http://evil.com')).toBe(false);
+    });
+
+    it('should block browser-executable schemes', () => {
+      expect(isSafeRedirectUri('javascript:alert(1)')).toBe(false);
+      expect(isSafeRedirectUri('JaVaScRiPt:alert(1)')).toBe(false);
+      expect(isSafeRedirectUri('data:text/html,<script>alert(1)</script>')).toBe(false);
+      expect(isSafeRedirectUri('blob:https://example.com/uuid')).toBe(false);
+      expect(isSafeRedirectUri('file:///etc/passwd')).toBe(false);
+      expect(isSafeRedirectUri('vbscript:msgbox(1)')).toBe(false);
+      expect(isSafeRedirectUri('about:blank')).toBe(false);
+    });
+
+    it('should block resource-exposing and external-handler schemes', () => {
+      expect(isSafeRedirectUri('view-source:https://evil.com')).toBe(false);
+      expect(isSafeRedirectUri('intent://x#Intent;scheme=javascript;end')).toBe(false);
+      expect(isSafeRedirectUri('ws://evil.com')).toBe(false);
+      expect(isSafeRedirectUri('wss://evil.com')).toBe(false);
+      expect(isSafeRedirectUri('ftp://evil.com')).toBe(false);
+      expect(isSafeRedirectUri('tel:+1234')).toBe(false);
+      expect(isSafeRedirectUri('sms:+1234')).toBe(false);
+      expect(isSafeRedirectUri('mailto:a@evil.com?body=phish')).toBe(false);
+      expect(isSafeRedirectUri('filesystem:https://evil.com/x')).toBe(false);
+      expect(isSafeRedirectUri('chrome://settings')).toBe(false);
+    });
+
+    it('should block userinfo and subdomain localhost bypasses', () => {
+      expect(isSafeRedirectUri('http://localhost@evil.com')).toBe(false);
+      expect(isSafeRedirectUri('http://127.0.0.1.evil.com')).toBe(false);
+      expect(isSafeRedirectUri('http://localhost.evil.com')).toBe(false);
+    });
+
+    it('should block control-character and whitespace scheme tricks', () => {
+      expect(isSafeRedirectUri('java\tscript:alert(1)')).toBe(false);
+      expect(isSafeRedirectUri('java\nscript:alert(1)')).toBe(false);
+      expect(isSafeRedirectUri('  javascript:alert(1)')).toBe(false);
+    });
+
+    it('should block non-parsable URIs', () => {
+      expect(isSafeRedirectUri('')).toBe(false);
+      expect(isSafeRedirectUri('not a uri')).toBe(false);
+      expect(isSafeRedirectUri('example.com/path')).toBe(false);
     });
   });
 
