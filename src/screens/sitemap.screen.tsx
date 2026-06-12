@@ -139,7 +139,7 @@ const sections: PageSection[] = [
       { path: '/ledger', label: 'Ledger' },
       { path: '/ledger/accounts', label: 'Accounts' },
       { path: '/ledger/reconciliation', label: 'Reconciliation' },
-      { path: '/ledger/suspense', label: 'Suspense' },
+      { path: '/ledger/suspense', label: 'Suspense Account' },
       { path: '/ledger/margin', label: 'Realized Margin' },
     ],
   },

@@ -99,7 +99,7 @@ export default function LedgerReconciliationScreen(): JSX.Element {
                   </td>
                   <td
                     className={`px-4 py-2 text-right font-mono ${
-                      account.difference === 0 ? 'text-dfxBlue-800' : 'text-dfxRed-150'
+                      account.status !== 'ok' ? 'text-dfxRed-150' : 'text-dfxBlue-800'
                     }`}
                   >
                     {formatNative8(account.difference)}

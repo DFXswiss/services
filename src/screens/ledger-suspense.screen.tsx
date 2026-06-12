@@ -19,7 +19,7 @@ export default function LedgerSuspenseScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { getSuspense } = useLedger();
 
-  useLayoutOptions({ title: translate('screens/ledger', 'Suspense'), backButton: true, noMaxWidth: true });
+  useLayoutOptions({ title: translate('screens/ledger', 'Suspense Account'), backButton: true, noMaxWidth: true });
 
   const [legs, setLegs] = useState<SuspenseLegDto[]>([]);
   const [totalChf, setTotalChf] = useState<number>();
