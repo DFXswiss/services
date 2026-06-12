@@ -10,7 +10,7 @@ import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useLedger } from 'src/hooks/ledger.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { formatChf2OrDash } from 'src/util/ledger';
+import { formatChf2OrDash, summarizeLedger } from 'src/util/ledger';
 
 export default function LedgerScreen(): JSX.Element {
   useAdminGuard();
@@ -41,15 +41,7 @@ export default function LedgerScreen(): JSX.Element {
       .finally(() => setIsLoading(false));
   }, [isLoggedIn]);
 
-  const { totalAssets, totalLiabilities, netEquity } = useMemo(() => {
-    let assets = 0;
-    let liabilities = 0;
-    for (const account of accounts) {
-      if (account.type === 'Asset' || account.type === 'Transit') assets += account.balanceChf;
-      else if (account.type === 'Liability' || account.type === 'Suspense') liabilities += account.balanceChf;
-    }
-    return { totalAssets: assets, totalLiabilities: liabilities, netEquity: assets - liabilities };
-  }, [accounts]);
+  const { totalAssets, totalLiabilities, netEquity } = useMemo(() => summarizeLedger(accounts), [accounts]);
 
   return (
     <div className="w-full space-y-4">
@@ -57,7 +49,7 @@ export default function LedgerScreen(): JSX.Element {
         <SummaryCard label={translate('screens/ledger', 'Total Assets')} value={formatChf2OrDash(totalAssets)} />
         <SummaryCard
           label={translate('screens/ledger', 'Total Liabilities')}
-          value={formatChf2OrDash(totalLiabilities)}
+          value={formatChf2OrDash(-totalLiabilities)}
           color="#ef4444"
         />
         <SummaryCard

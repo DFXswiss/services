@@ -15,7 +15,7 @@ import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useLedger } from 'src/hooks/ledger.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { formatChf2OrDash, formatDate, formatNative, isBlockchainReference } from 'src/util/ledger';
+import { formatChf2OrDash, formatDate, formatNative } from 'src/util/ledger';
 
 // Mirrors LEGS_PAGE_SIZE in the API (ledger-query.service.ts). The legs endpoint is 0-indexed and caps each
 // page at this size; the screen pages explicitly so accounts with >100 legs are never silently truncated.
@@ -178,18 +178,9 @@ export default function LedgerAccountDetailScreen(): JSX.Element {
                   <td className="px-3 py-1.5 whitespace-nowrap text-dfxBlue-800">{formatDate(leg.bookingDate)}</td>
                   <td className="px-3 py-1.5 text-left text-dfxBlue-800">
                     <span className="text-xs text-dfxGray-700">{leg.sourceType}</span>{' '}
-                    {isBlockchainReference(leg.sourceId) ? (
-                      <a
-                        href={`https://blockchair.com/search?q=${leg.sourceId}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-mono text-xs text-dfxBlue-600 hover:underline"
-                      >
-                        {leg.sourceId.slice(0, 10)}…
-                      </a>
-                    ) : (
-                      <span className="font-mono text-xs">{leg.sourceId}</span>
-                    )}
+                    {/* sourceId is always a DB row-id / composite (api ledger-tx.entity), never a blockchain
+                        tx-hash — the API DTO carries no blockchain reference, so no explorer link is rendered. */}
+                    <span className="font-mono text-xs">{leg.sourceId}</span>
                     {leg.reversalOf !== undefined && (
                       <span className="ml-1 rounded bg-dfxRed-100 px-1 text-xs text-dfxRed-150">
                         {translate('screens/ledger', 'Reversal')}

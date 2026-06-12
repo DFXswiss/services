@@ -1,3 +1,4 @@
+import { LedgerAccountBalanceDto } from 'src/dto/ledger.dto';
 import {
   decimalsFor,
   formatChf2,
@@ -5,11 +6,11 @@ import {
   formatNative,
   formatNative8,
   formatNativeOrDash,
-  isBlockchainReference,
   isFiat,
   reconAmpel,
   reconStatusAmpel,
   stalenessAmpel,
+  summarizeLedger,
 } from 'src/util/ledger';
 
 describe('ledger util', () => {
@@ -75,16 +76,56 @@ describe('ledger util', () => {
     });
   });
 
-  describe('isBlockchainReference', () => {
-    it('detects a 64-char hex string', () => {
-      expect(isBlockchainReference('a'.repeat(64))).toBe(true);
-      expect(isBlockchainReference('0123456789abcdef'.repeat(4))).toBe(true);
+  describe('summarizeLedger', () => {
+    // The API serializes balanceChf as a signed SUM(leg.amountChf) (Dr +, Cr −): Liability/Suspense
+    // accounts carry a NEGATIVE balanceChf. Net equity is the signed sum (assets + liabilities),
+    // matching the API authority journalEquityAt (signed Σ over balance-account types, design §7.6).
+    const account = (type: LedgerAccountBalanceDto['type'], balanceChf: number): LedgerAccountBalanceDto => ({
+      accountId: 1,
+      name: `${type}/x`,
+      type,
+      currency: 'CHF',
+      balanceNative: balanceChf,
+      balanceChf,
     });
 
-    it('rejects non-64-hex strings', () => {
-      expect(isBlockchainReference('a'.repeat(63))).toBe(false);
-      expect(isBlockchainReference('z'.repeat(64))).toBe(false);
-      expect(isBlockchainReference('123')).toBe(false);
+    it('sums assets, signed liabilities, and net equity (design §7.6 worked example)', () => {
+      const summary = summarizeLedger([account('Asset', 100_000), account('Liability', -32_000)]);
+      expect(summary.totalAssets).toBe(100_000);
+      // signed credit balance stays negative; the screen displays its magnitude (-totalLiabilities)
+      expect(summary.totalLiabilities).toBe(-32_000);
+      // equity = assets + liabilities = 100'000 + (−32'000) = 68'000, NOT assets − liabilities (132'000)
+      expect(summary.netEquity).toBe(68_000);
+    });
+
+    it('groups Transit into assets and Suspense into liabilities', () => {
+      const summary = summarizeLedger([
+        account('Asset', 80_000),
+        account('Transit', 20_000),
+        account('Liability', -25_000),
+        account('Suspense', -7_000),
+      ]);
+      expect(summary.totalAssets).toBe(100_000);
+      expect(summary.totalLiabilities).toBe(-32_000);
+      expect(summary.netEquity).toBe(68_000);
+    });
+
+    it('ignores income/expense/equity/rounding accounts in the asset/liability split', () => {
+      const summary = summarizeLedger([
+        account('Asset', 100_000),
+        account('Liability', -32_000),
+        account('Income', -50_000),
+        account('Expense', 10_000),
+        account('Equity', -68_000),
+        account('Rounding', 1),
+      ]);
+      expect(summary.totalAssets).toBe(100_000);
+      expect(summary.totalLiabilities).toBe(-32_000);
+      expect(summary.netEquity).toBe(68_000);
+    });
+
+    it('returns zeros for an empty account list', () => {
+      expect(summarizeLedger([])).toEqual({ totalAssets: 0, totalLiabilities: 0, netEquity: 0 });
     });
   });
 

@@ -1,13 +1,14 @@
 import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
+import { AgeBadge } from 'src/components/dashboard/age-badge';
 import { ReconAmpel } from 'src/components/ledger/recon-ampel';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { AccountReconResultDto } from 'src/dto/ledger.dto';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useLedger } from 'src/hooks/ledger.hook';
-import { formatAge, formatDate, formatNative8, reconStatusAmpel } from 'src/util/ledger';
+import { formatDate, formatNative8, reconStatusAmpel } from 'src/util/ledger';
 
 export default function LedgerReconciliationScreen(): JSX.Element {
   useAdminGuard();
@@ -103,7 +104,9 @@ export default function LedgerReconciliationScreen(): JSX.Element {
                   >
                     {formatNative8(account.difference)}
                   </td>
-                  <td className="px-4 py-2 text-left text-dfxGray-700">{formatAge(account.feedAge)}</td>
+                  <td className="px-4 py-2 text-left text-dfxGray-700">
+                    <AgeBadge timestamp={account.feedTimestamp} />
+                  </td>
                   <td className="px-4 py-2 text-left text-dfxBlue-800">
                     {translate('screens/ledger', account.status)}
                   </td>

@@ -9,7 +9,8 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useLedger } from 'src/hooks/ledger.hook';
 import { formatChf2, formatChf2OrDash, formatDate, formatNative } from 'src/util/ledger';
 
-const SEVEN_DAYS_SECONDS = 7 * 24 * 60 * 60;
+// SuspenseLegDto.age is delivered by the API in DAYS (ledger-query.service.ts -> Util.daysDiff).
+const SEVEN_DAYS = 7;
 
 export default function LedgerSuspenseScreen(): JSX.Element {
   useAdminGuard();
@@ -41,10 +42,6 @@ export default function LedgerSuspenseScreen(): JSX.Element {
 
   // Sorted by age descending (oldest first), §9.4.
   const sortedLegs = useMemo(() => legs.slice().sort((a, b) => b.age - a.age), [legs]);
-
-  function ageDays(seconds: number): string {
-    return (seconds / (24 * 60 * 60)).toLocaleString('de-CH', { maximumFractionDigits: 1 });
-  }
 
   return (
     <div className="w-full space-y-4">
@@ -86,7 +83,7 @@ export default function LedgerSuspenseScreen(): JSX.Element {
             </thead>
             <tbody>
               {sortedLegs.map((leg) => {
-                const isOld = leg.age > SEVEN_DAYS_SECONDS;
+                const isOld = leg.age > SEVEN_DAYS;
                 return (
                   <tr
                     key={leg.legId}
@@ -109,7 +106,7 @@ export default function LedgerSuspenseScreen(): JSX.Element {
                     <td
                       className={`px-4 py-2 text-right font-mono ${isOld ? 'font-semibold text-dfxRed-150' : 'text-dfxBlue-800'}`}
                     >
-                      {ageDays(leg.age)}
+                      {leg.age.toLocaleString('de-CH', { maximumFractionDigits: 1 })}
                     </td>
                   </tr>
                 );

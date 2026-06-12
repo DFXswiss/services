@@ -1,4 +1,4 @@
-import { AccountReconStatus, AccountType, ReconStatus, Staleness } from 'src/dto/ledger.dto';
+import { AccountReconStatus, AccountType, LedgerAccountBalanceDto, ReconStatus, Staleness } from 'src/dto/ledger.dto';
 
 // Fiat currencies are shown with 2 decimals, everything else (crypto) with 8 (§9.4).
 const FIAT_CURRENCIES = new Set(['CHF', 'EUR', 'USD', 'GBP']);
@@ -49,18 +49,6 @@ export function formatDate(value?: string): string {
     minute: '2-digit',
     timeZone: 'UTC',
   });
-}
-
-export function formatAge(seconds?: number): string {
-  if (seconds === undefined) return '-';
-  const s = Math.max(0, Math.floor(seconds));
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  const d = Math.floor(h / 24);
-  return `${d}d`;
 }
 
 // Account-type display order for grouping (§9.4 — grouped by type).
@@ -134,9 +122,29 @@ export const AMPEL_HEX: Record<AmpelColor, string> = {
   gray: '#9ca3af',
 };
 
-// A blockchain-tx reference is a 64-char hex string (§9.4 — link to explorer).
-const HEX64 = /^[0-9a-fA-F]{64}$/;
+export interface LedgerSummary {
+  // signed Σ balanceChf over ASSET + TRANSIT (Dr +), i.e. the natural debit total (positive)
+  totalAssets: number;
+  // signed Σ balanceChf over LIABILITY + SUSPENSE (Cr −), i.e. the natural credit total (negative)
+  totalLiabilities: number;
+  // signed equity = assets + liabilities, mirroring the API authority journalEquityAt
+  // (signed Σ amountChf over balance-account types, ledger-query.service.ts:452-471, design §7.6).
+  // Liabilities already carry their negative credit sign, so this is an addition, NOT a subtraction.
+  netEquity: number;
+}
 
-export function isBlockchainReference(value: string): boolean {
-  return HEX64.test(value);
+// Summarizes account balances for the ledger dashboard cards.
+// The API serializes balanceChf as an UNWEIGHTED signed SUM(leg.amountChf) (Dr +, Cr −,
+// ledger-leg.entity.ts:24 + ledger-dto.mapper.ts:56). Liability/Suspense accounts therefore carry a
+// NEGATIVE balanceChf (credit balance). Net equity is the signed sum (assets + liabilities), never
+// assets − liabilities (which would double-count the liabilities). For display, the magnitude of the
+// liabilities is -totalLiabilities (see ledger.screen.tsx).
+export function summarizeLedger(accounts: LedgerAccountBalanceDto[]): LedgerSummary {
+  let totalAssets = 0;
+  let totalLiabilities = 0;
+  for (const account of accounts) {
+    if (account.type === 'Asset' || account.type === 'Transit') totalAssets += account.balanceChf;
+    else if (account.type === 'Liability' || account.type === 'Suspense') totalLiabilities += account.balanceChf;
+  }
+  return { totalAssets, totalLiabilities, netEquity: totalAssets + totalLiabilities };
 }
