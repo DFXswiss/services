@@ -45,8 +45,8 @@ export default function LedgerScreen(): JSX.Element {
     let assets = 0;
     let liabilities = 0;
     for (const account of accounts) {
-      if (account.type === 'ASSET' || account.type === 'TRANSIT') assets += account.balanceChf;
-      else if (account.type === 'LIABILITY' || account.type === 'SUSPENSE') liabilities += account.balanceChf;
+      if (account.type === 'Asset' || account.type === 'Transit') assets += account.balanceChf;
+      else if (account.type === 'Liability' || account.type === 'Suspense') liabilities += account.balanceChf;
     }
     return { totalAssets: assets, totalLiabilities: liabilities, netEquity: assets - liabilities };
   }, [accounts]);

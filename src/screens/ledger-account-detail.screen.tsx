@@ -1,5 +1,11 @@
 import { useSessionContext } from '@dfx.swiss/react';
-import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import {
+  SpinnerSize,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonSize,
+  StyledLoadingSpinner,
+} from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { SummaryCard } from 'src/components/dashboard/summary-card';
@@ -9,7 +15,11 @@ import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useLedger } from 'src/hooks/ledger.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { formatChf2OrDash, formatDate, formatNative, formatNativeOrDash, isBlockchainReference } from 'src/util/ledger';
+import { formatChf2OrDash, formatDate, formatNative, isBlockchainReference } from 'src/util/ledger';
+
+// Mirrors LEGS_PAGE_SIZE in the API (ledger-query.service.ts). The legs endpoint is 0-indexed and caps each
+// page at this size; the screen pages explicitly so accounts with >100 legs are never silently truncated.
+const LEGS_PAGE_SIZE = 100;
 
 interface FlowGroup {
   counterAccountId?: number;
@@ -32,6 +42,7 @@ export default function LedgerAccountDetailScreen(): JSX.Element {
   const numericAccountId = accountId ? Number(accountId) : undefined;
 
   const [data, setData] = useState<LedgerLegsResponseDto>();
+  const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
 
@@ -41,16 +52,21 @@ export default function LedgerAccountDetailScreen(): JSX.Element {
     noMaxWidth: true,
   });
 
+  // Reset to the first page whenever the account changes, so a stale page index never points past a smaller account.
+  useEffect(() => {
+    setPage(0);
+  }, [numericAccountId]);
+
   useEffect(() => {
     if (!isLoggedIn || numericAccountId === undefined || Number.isNaN(numericAccountId)) return;
 
     setIsLoading(true);
     setError(undefined);
-    getAccountDetail(numericAccountId)
+    getAccountDetail(numericAccountId, undefined, undefined, page)
       .then(setData)
       .catch(() => setError(translate('screens/ledger', 'Failed to load data')))
       .finally(() => setIsLoading(false));
-  }, [isLoggedIn, numericAccountId]);
+  }, [isLoggedIn, numericAccountId, page]);
 
   const groups = useMemo((): FlowGroup[] => {
     if (!data) return [];
@@ -76,7 +92,9 @@ export default function LedgerAccountDetailScreen(): JSX.Element {
     return Array.from(byCounter.values());
   }, [data]);
 
-  if (isLoading) {
+  // Full-screen spinner only on the initial load (no data yet). Page changes keep the previous page visible
+  // and show an inline spinner in the pagination bar instead, so the controls never disappear under the user.
+  if (isLoading && !data) {
     return (
       <div className="flex justify-center items-center w-full h-96">
         <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -90,6 +108,12 @@ export default function LedgerAccountDetailScreen(): JSX.Element {
 
   const currency = data.currency;
 
+  const pageCount = Math.max(1, Math.ceil(data.total / LEGS_PAGE_SIZE));
+  const firstEntry = data.total === 0 ? 0 : page * LEGS_PAGE_SIZE + 1;
+  const lastEntry = page * LEGS_PAGE_SIZE + data.legs.length;
+  const canPrev = page > 0 && !isLoading;
+  const canNext = lastEntry < data.total && !isLoading;
+
   return (
     <div className="w-full space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -102,7 +126,7 @@ export default function LedgerAccountDetailScreen(): JSX.Element {
           value={formatNative(data.closingBalance, currency)}
         />
         <SummaryCard label={translate('screens/ledger', 'Currency')} value={currency} />
-        <SummaryCard label={translate('screens/ledger', 'Entries')} value={String(data.legs.length)} />
+        <SummaryCard label={translate('screens/ledger', 'Entries')} value={String(data.total)} />
       </div>
 
       {groups.map((group) => (
@@ -190,8 +214,32 @@ export default function LedgerAccountDetailScreen(): JSX.Element {
       ))}
 
       {groups.length === 0 && (
-        <div className="text-dfxGray-700">
-          {translate('screens/ledger', 'No entries in this period')} ({formatNativeOrDash(data.total, currency)})
+        <div className="text-dfxGray-700">{translate('screens/ledger', 'No entries in this period')}</div>
+      )}
+
+      {data.total > 0 && (
+        <div className="flex items-center justify-between border-t border-dfxGray-300 pt-3">
+          <span className="text-xs text-dfxGray-700">
+            {translate('screens/ledger', 'Showing')} {firstEntry}–{lastEntry} {translate('screens/ledger', 'of')}{' '}
+            {data.total} ({translate('screens/ledger', 'Page')} {page + 1}/{pageCount})
+          </span>
+          <div className="flex items-center gap-2">
+            {isLoading && <StyledLoadingSpinner size={SpinnerSize.SM} />}
+            <StyledButton
+              label={translate('general/actions', 'Previous')}
+              size={StyledButtonSize.SMALL}
+              color={StyledButtonColor.GRAY_OUTLINE}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={!canPrev}
+            />
+            <StyledButton
+              label={translate('general/actions', 'Next')}
+              size={StyledButtonSize.SMALL}
+              color={StyledButtonColor.GRAY_OUTLINE}
+              onClick={() => setPage((p) => p + 1)}
+              disabled={!canNext}
+            />
+          </div>
         </div>
       )}
     </div>

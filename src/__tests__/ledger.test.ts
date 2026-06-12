@@ -3,6 +3,7 @@ import {
   formatChf2,
   formatChf2OrDash,
   formatNative,
+  formatNative8,
   formatNativeOrDash,
   isBlockchainReference,
   isFiat,
@@ -45,6 +46,19 @@ describe('ledger util', () => {
     it('renders dash for undefined values', () => {
       expect(formatNativeOrDash(undefined, 'BTC')).toBe('-');
       expect(formatNativeOrDash(0, 'BTC')).toBe('0.00000000');
+    });
+  });
+
+  describe('formatNative8', () => {
+    it('always uses 8 decimals (unit-neutral, no truncation of sub-cent diffs)', () => {
+      expect(formatNative8(1.23456789)).toBe('1.23456789');
+      // a diff that only lives in decimals 3-8 must NOT collapse to 0 (the reconciliation-screen bug)
+      expect(formatNative8(0.00000123)).toBe('0.00000123');
+      expect(formatNative8(0)).toBe('0.00000000');
+    });
+
+    it('keeps de-CH grouping for large native balances', () => {
+      expect(formatNative8(15000)).toMatch(/^15.000\.00000000$/);
     });
   });
 

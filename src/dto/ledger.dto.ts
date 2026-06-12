@@ -1,7 +1,9 @@
 // DTOs mirror the read-only ledger API (§8 of the ledger design).
 // Endpoints live under /v1/dashboard/accounting/ledger/* (ADMIN-only).
 
-export type AccountType = 'ASSET' | 'TRANSIT' | 'LIABILITY' | 'INCOME' | 'EXPENSE' | 'EQUITY' | 'ROUNDING' | 'SUSPENSE';
+// Values mirror the API's AccountType string enum (api: accounting/entities/ledger-account.entity.ts) 1:1,
+// since the ledger mapper serializes the enum value verbatim (no naming-strategy transform).
+export type AccountType = 'Asset' | 'Transit' | 'Liability' | 'Income' | 'Expense' | 'Equity' | 'Rounding' | 'Suspense';
 
 export type ReconStatus = 'ok' | 'diff' | 'stale' | 'unverified' | 'placeholder';
 

@@ -21,6 +21,13 @@ export function formatNativeOrDash(value: number | undefined, currency: string):
   return value !== undefined ? formatNative(value, currency) : '-';
 }
 
+// Unit-neutral native formatting at full precision (8 decimals, de-CH). Used by the reconciliation screen,
+// where balances are per-asset NATIVE (BTC/ETH/…, §7) but the API does not expose a per-account currency.
+// 8 decimals is the crypto default (§9.4): never truncates a real diff in decimals 3-8 to a phantom 0.00.
+export function formatNative8(value: number): string {
+  return value.toLocaleString('de-CH', { minimumFractionDigits: 8, maximumFractionDigits: 8 });
+}
+
 // CHF valuation formatting: de-CH, 2 decimals.
 export function formatChf2(value: number): string {
   return value.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -58,14 +65,14 @@ export function formatAge(seconds?: number): string {
 
 // Account-type display order for grouping (§9.4 — grouped by type).
 export const ACCOUNT_TYPE_ORDER: AccountType[] = [
-  'ASSET',
-  'TRANSIT',
-  'LIABILITY',
-  'INCOME',
-  'EXPENSE',
-  'EQUITY',
-  'ROUNDING',
-  'SUSPENSE',
+  'Asset',
+  'Transit',
+  'Liability',
+  'Income',
+  'Expense',
+  'Equity',
+  'Rounding',
+  'Suspense',
 ];
 
 export type AmpelColor = 'green' | 'red' | 'orange' | 'gray';

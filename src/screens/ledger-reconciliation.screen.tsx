@@ -7,7 +7,7 @@ import { AccountReconResultDto } from 'src/dto/ledger.dto';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useLedger } from 'src/hooks/ledger.hook';
-import { formatAge, formatChf2, formatDate, reconStatusAmpel } from 'src/util/ledger';
+import { formatAge, formatDate, formatNative8, reconStatusAmpel } from 'src/util/ledger';
 
 export default function LedgerReconciliationScreen(): JSX.Element {
   useAdminGuard();
@@ -61,10 +61,10 @@ export default function LedgerReconciliationScreen(): JSX.Element {
                   {translate('screens/ledger', 'Account')}
                 </th>
                 <th className="px-4 py-3 text-right font-semibold text-dfxBlue-800">
-                  {translate('screens/ledger', 'Ledger (CHF)')}
+                  {translate('screens/ledger', 'Ledger (native)')}
                 </th>
                 <th className="px-4 py-3 text-right font-semibold text-dfxBlue-800">
-                  {translate('screens/ledger', 'Feed (CHF)')}
+                  {translate('screens/ledger', 'Feed (native)')}
                 </th>
                 <th className="px-4 py-3 text-right font-semibold text-dfxBlue-800">
                   {translate('screens/ledger', 'Difference')}
@@ -91,17 +91,17 @@ export default function LedgerReconciliationScreen(): JSX.Element {
                   </td>
                   <td className="px-4 py-2 text-left text-dfxBlue-800">{account.accountName}</td>
                   <td className="px-4 py-2 text-right font-mono text-dfxBlue-800">
-                    {formatChf2(account.ledgerBalance)}
+                    {formatNative8(account.ledgerBalance)}
                   </td>
                   <td className="px-4 py-2 text-right font-mono text-dfxBlue-800">
-                    {formatChf2(account.externalFeedBalance)}
+                    {formatNative8(account.externalFeedBalance)}
                   </td>
                   <td
                     className={`px-4 py-2 text-right font-mono ${
                       account.difference === 0 ? 'text-dfxBlue-800' : 'text-dfxRed-150'
                     }`}
                   >
-                    {formatChf2(account.difference)}
+                    {formatNative8(account.difference)}
                   </td>
                   <td className="px-4 py-2 text-left text-dfxGray-700">{formatAge(account.feedAge)}</td>
                   <td className="px-4 py-2 text-left text-dfxBlue-800">
