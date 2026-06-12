@@ -98,6 +98,12 @@ const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard
 const DashboardLogTracingScreen = lazy(() => import('./screens/dashboard-log-tracing.screen'));
 const DashboardLogTracingRealunitScreen = lazy(() => import('./screens/dashboard-log-tracing-realunit.screen'));
 const DashboardLogTracingAllScreen = lazy(() => import('./screens/dashboard-log-tracing-all.screen'));
+const LedgerScreen = lazy(() => import('./screens/ledger.screen'));
+const LedgerAccountsScreen = lazy(() => import('./screens/ledger-accounts.screen'));
+const LedgerAccountDetailScreen = lazy(() => import('./screens/ledger-account-detail.screen'));
+const LedgerReconciliationScreen = lazy(() => import('./screens/ledger-reconciliation.screen'));
+const LedgerSuspenseScreen = lazy(() => import('./screens/ledger-suspense.screen'));
+const LedgerMarginScreen = lazy(() => import('./screens/ledger-margin.screen'));
 const SitemapScreen = lazy(() => import('./screens/sitemap.screen'));
 
 setupLanguages();
@@ -567,6 +573,35 @@ export const Routes = [
                 element: withSuspense(<DashboardLogTracingAllScreen />),
               },
             ],
+          },
+        ],
+      },
+      {
+        path: 'ledger',
+        children: [
+          {
+            index: true,
+            element: withSuspense(<LedgerScreen />),
+          },
+          {
+            path: 'accounts',
+            element: withSuspense(<LedgerAccountsScreen />),
+          },
+          {
+            path: 'accounts/:accountId',
+            element: withSuspense(<LedgerAccountDetailScreen />),
+          },
+          {
+            path: 'reconciliation',
+            element: withSuspense(<LedgerReconciliationScreen />),
+          },
+          {
+            path: 'suspense',
+            element: withSuspense(<LedgerSuspenseScreen />),
+          },
+          {
+            path: 'margin',
+            element: withSuspense(<LedgerMarginScreen />),
           },
         ],
       },
