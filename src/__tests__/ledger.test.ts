@@ -1,8 +1,12 @@
 import { LedgerAccountBalanceDto } from 'src/dto/ledger.dto';
 import {
+  ACCOUNT_TYPE_ORDER,
+  AMPEL_HEX,
+  AmpelColor,
   decimalsFor,
   formatChf2,
   formatChf2OrDash,
+  formatDate,
   formatNative,
   formatNative8,
   formatNativeOrDash,
@@ -147,11 +151,78 @@ describe('ledger util', () => {
       expect(reconStatusAmpel('unverified')).toBe('gray');
     });
 
+    it('reconStatusAmpel defaults to gray for unknown values (defensive branch)', () => {
+      // Cast to any to reach the default branch — ensures the guard does not silently pass
+      expect(reconStatusAmpel('unknown_future_status' as any)).toBe('gray');
+    });
+
     it('maps staleness to ampel color', () => {
       expect(stalenessAmpel('fresh')).toBe('green');
       expect(stalenessAmpel('stale')).toBe('orange');
       expect(stalenessAmpel('missing')).toBe('red');
       expect(stalenessAmpel('placeholder')).toBe('gray');
+    });
+
+    it('stalenessAmpel defaults to gray for unknown values (defensive branch)', () => {
+      expect(stalenessAmpel('unknown_staleness' as any)).toBe('gray');
+    });
+  });
+
+  describe('formatDate', () => {
+    it('returns dash for undefined', () => {
+      expect(formatDate(undefined)).toBe('-');
+    });
+
+    it('returns dash for empty string', () => {
+      expect(formatDate('')).toBe('-');
+    });
+
+    it('returns dash for an unparseable string', () => {
+      expect(formatDate('not-a-date')).toBe('-');
+    });
+
+    it('formats a valid ISO date string in de-CH locale (UTC)', () => {
+      // 2024-03-15T10:30:00Z → 15.03.2024, 10:30 (de-CH, UTC)
+      const result = formatDate('2024-03-15T10:30:00Z');
+      expect(result).toMatch(/15\.03\.2024/);
+      expect(result).toMatch(/10:30/);
+    });
+
+    it('formats midnight UTC correctly', () => {
+      const result = formatDate('2024-01-01T00:00:00Z');
+      expect(result).toMatch(/01\.01\.2024/);
+      expect(result).toMatch(/00:00/);
+    });
+  });
+
+  describe('ACCOUNT_TYPE_ORDER', () => {
+    it('contains all 8 account types in the correct display order', () => {
+      expect(ACCOUNT_TYPE_ORDER).toEqual([
+        'Asset',
+        'Transit',
+        'Liability',
+        'Income',
+        'Expense',
+        'Equity',
+        'Rounding',
+        'Suspense',
+      ]);
+    });
+  });
+
+  describe('AMPEL_HEX', () => {
+    it('maps every AmpelColor to a hex color string', () => {
+      const colors: AmpelColor[] = ['green', 'red', 'orange', 'gray'];
+      for (const color of colors) {
+        expect(AMPEL_HEX[color]).toMatch(/^#[0-9a-f]{6}$/i);
+      }
+    });
+
+    it('maps green to success, red to error, orange to warning, gray to neutral', () => {
+      expect(AMPEL_HEX.green).toBe('#22c55e');
+      expect(AMPEL_HEX.red).toBe('#ef4444');
+      expect(AMPEL_HEX.orange).toBe('#f97316');
+      expect(AMPEL_HEX.gray).toBe('#9ca3af');
     });
   });
 });
