@@ -391,15 +391,22 @@ export interface RecommendationGraphNode {
   tradeApprovalDate?: string;
 }
 
+export enum RecommendationGraphEdgeKind {
+  RECOMMENDATION = 'Recommendation',
+  USED_REF = 'UsedRef',
+}
+
 export interface RecommendationGraphEdge {
   id: number;
+  kind: RecommendationGraphEdgeKind;
   recommenderId: number;
   recommendedId: number;
-  method: string;
-  type: string;
+  method?: string;
+  type?: string;
   isConfirmed?: boolean;
   confirmationDate?: string;
-  created: string;
+  refCode?: string;
+  created?: string;
 }
 
 export interface RecommendationGraph {
@@ -450,6 +457,7 @@ export interface UserInfo {
   ref?: string;
   usedRef?: string;
   refUserName?: string;
+  refUserDataId?: number;
   role: string;
   status: string;
   walletName?: string;

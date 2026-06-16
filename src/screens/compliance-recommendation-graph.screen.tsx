@@ -17,7 +17,12 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { RecommendationGraph, RecommendationGraphNode, useCompliance } from 'src/hooks/compliance.hook';
+import {
+  RecommendationGraph,
+  RecommendationGraphEdgeKind,
+  RecommendationGraphNode,
+  useCompliance,
+} from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
@@ -48,9 +53,7 @@ function UserNode({ data }: { data: RecommendationGraphNode & { isRoot: boolean;
           <span className="text-xs px-1.5 py-0.5 rounded bg-dfxGray-300 text-dfxBlue-800">L{data.kycLevel}</span>
         )}
       </div>
-      {data.childCount > 0 && (
-        <div className="text-xs text-dfxGray-700 mt-1">{data.childCount} recommendations</div>
-      )}
+      {data.childCount > 0 && <div className="text-xs text-dfxGray-700 mt-1">{data.childCount} referrals</div>}
       <Handle type="source" position={Position.Bottom} className="!bg-dfxGray-700" />
     </div>
   );
@@ -147,15 +150,21 @@ function layoutGraph(graph: RecommendationGraph): { nodes: Node[]; edges: Edge[]
     });
   }
 
-  const edges: Edge[] = graph.edges.map((e) => ({
-    id: `e-${e.id}`,
-    source: String(e.recommenderId),
-    target: String(e.recommendedId),
-    markerEnd: { type: MarkerType.ArrowClosed },
-    style: { stroke: e.isConfirmed ? '#22c55e' : e.isConfirmed === false ? '#ef4444' : '#9ca3af' },
-    label: e.method,
-    labelStyle: { fontSize: 10, fill: '#6b7280' },
-  }));
+  const edges: Edge[] = graph.edges.map((e) => {
+    const isRef = e.kind === RecommendationGraphEdgeKind.USED_REF;
+    return {
+      id: `e-${e.id}`,
+      source: String(e.recommenderId),
+      target: String(e.recommendedId),
+      markerEnd: { type: MarkerType.ArrowClosed },
+      animated: isRef,
+      style: isRef
+        ? { stroke: '#3b82f6', strokeDasharray: '6 4' }
+        : { stroke: e.isConfirmed ? '#22c55e' : e.isConfirmed === false ? '#ef4444' : '#9ca3af' },
+      label: isRef ? `Ref-Code${e.refCode ? ` ${e.refCode}` : ''}` : e.method,
+      labelStyle: { fontSize: 10, fill: isRef ? '#3b82f6' : '#6b7280' },
+    };
+  });
 
   return { nodes, edges };
 }
@@ -217,6 +226,9 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
         </span>
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded border-2 border-dfxGray-300 bg-white inline-block" /> No approval
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-6 border-t-2 border-dashed border-blue-500 inline-block" /> Ref-Code
         </span>
       </div>
 

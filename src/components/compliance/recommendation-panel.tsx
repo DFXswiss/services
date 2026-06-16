@@ -1,15 +1,23 @@
 import { NavigateFunction } from 'react-router-dom';
-import { KycStepInfo } from 'src/hooks/compliance.hook';
+import { KycStepInfo, UserInfo } from 'src/hooks/compliance.hook';
 import { formatDate, statusBadge } from 'src/util/compliance-helpers';
 
 interface RecommendationPanelProps {
   kycSteps: KycStepInfo[];
+  users: UserInfo[];
   userDataId: string;
   navigate: NavigateFunction;
 }
 
-export function RecommendationPanel({ kycSteps, userDataId, navigate }: RecommendationPanelProps): JSX.Element {
+export function RecommendationPanel({ kycSteps, users, userDataId, navigate }: RecommendationPanelProps): JSX.Element {
   const recommendations = kycSteps?.filter((s) => s.name === 'Recommendation') || [];
+
+  // classic ref-code referrers (user.usedRef), deduplicated by code
+  const referrers = Array.from(
+    new Map(
+      (users ?? []).filter((u) => u.usedRef && u.usedRef !== '000-000').map((u) => [u.usedRef, u]),
+    ).values(),
+  );
 
   return (
     <div>
@@ -22,6 +30,21 @@ export function RecommendationPanel({ kycSteps, userDataId, navigate }: Recommen
           View Network
         </button>
       </div>
+      {referrers.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
+          <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
+          {referrers.map((u) => (
+            <button
+              key={u.usedRef}
+              className="block text-dfxBlue-800 hover:underline disabled:cursor-default disabled:no-underline"
+              disabled={!u.refUserDataId}
+              onClick={() => u.refUserDataId && navigate(`/compliance/user/${u.refUserDataId}`)}
+            >
+              {u.refUserName ?? '-'} {u.refUserDataId ? `#${u.refUserDataId}` : ''} ({u.usedRef})
+            </button>
+          ))}
+        </div>
+      )}
       <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto scroll-shadow">
         {recommendations.length > 0 ? (
           <table className="w-full border-collapse">
