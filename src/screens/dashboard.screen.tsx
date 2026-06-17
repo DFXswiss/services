@@ -21,11 +21,11 @@ export default function DashboardScreen(): JSX.Element {
       </div>
       <div
         className="bg-white rounded-lg shadow p-6 cursor-pointer hover:bg-gray-50"
-        onClick={() => navigate('/dashboard/realunit-tracing')}
+        onClick={() => navigate('/dashboard/log-tracing')}
       >
-        <div className="text-lg font-semibold">RealUnit Tracing</div>
+        <div className="text-lg font-semibold">Log Tracing</div>
         <div className="text-sm mt-1" style={{ color: '#6b7280' }}>
-          Live API-call tracing for the RealUnit wallet (test phase)
+          Live tracing of API calls — RealUnit dashboard and all logs
         </div>
       </div>
     </div>
