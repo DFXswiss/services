@@ -3,6 +3,7 @@ import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { BalanceBarChart } from 'src/components/dashboard/latest-balance-bar-chart';
 import { SummaryCard } from 'src/components/dashboard/summary-card';
+import { useThemeContext } from 'src/contexts/theme.context';
 import { LatestBalanceResponse } from 'src/dto/dashboard.dto';
 import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
@@ -15,6 +16,7 @@ export default function DashboardFinancialLiveScreen(): JSX.Element {
 
   const { isLoggedIn } = useSessionContext();
   const { getLatestBalance } = useDashboard();
+  const { isDark, tokens } = useThemeContext();
 
   const [latestBalance, setLatestBalance] = useState<LatestBalanceResponse>();
   const [isLoading, setIsLoading] = useState(true);
@@ -48,19 +50,20 @@ export default function DashboardFinancialLiveScreen(): JSX.Element {
   }
 
   return (
-    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
+    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: tokens.textPrimary }}>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard label="Total Balance" value={formatChfOrDash(totalBalance)} />
-        <SummaryCard label="Plus Balance" value={formatChfOrDash(totalPlus)} color="#22c55e" />
-        <SummaryCard label="Minus Balance" value={formatChfOrDash(totalMinus)} color="#ef4444" />
+        <SummaryCard label="Total Balance" value={formatChfOrDash(totalBalance)} dark={isDark} />
+        <SummaryCard label="Plus Balance" value={formatChfOrDash(totalPlus)} color="#22c55e" dark={isDark} />
+        <SummaryCard label="Minus Balance" value={formatChfOrDash(totalMinus)} color="#ef4444" dark={isDark} />
         <SummaryCard
           label="Timestamp"
           value={latestBalance ? new Date(latestBalance.timestamp).toLocaleString('de-CH') : '-'}
+          dark={isDark}
         />
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <BalanceBarChart title="Balance by Type" data={latestBalance?.byType ?? []} />
+      <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+        <BalanceBarChart title="Balance by Type" data={latestBalance?.byType ?? []} dark={isDark} />
       </div>
     </div>
   );

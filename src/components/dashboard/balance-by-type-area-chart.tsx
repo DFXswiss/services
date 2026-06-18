@@ -7,6 +7,7 @@ import { TimeRange } from 'src/util/chart';
 interface Props {
   entries: FinancialLogEntry[];
   timeRange?: TimeRange;
+  dark?: boolean;
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -31,7 +32,7 @@ function useFinancialTypes(entries: FinancialLogEntry[]) {
   }, [entries]);
 }
 
-function makeOptions(financialTypes: string[], timeRange?: TimeRange): ApexOptions {
+function makeOptions(financialTypes: string[], timeRange?: TimeRange, dark?: boolean): ApexOptions {
   return {
     chart: {
       type: 'area',
@@ -40,10 +41,11 @@ function makeOptions(financialTypes: string[], timeRange?: TimeRange): ApexOptio
       zoom: { enabled: true },
       background: '0',
     },
+    theme: { mode: dark ? 'dark' : 'light' },
     stroke: { width: 1, curve: 'smooth' },
     colors: financialTypes.map((t) => TYPE_COLORS[t] ?? DEFAULT_COLOR),
     dataLabels: { enabled: false },
-    grid: { borderColor: '#e5e7eb' },
+    grid: { borderColor: dark ? '#0A355C' : '#e5e7eb' },
     xaxis: {
       type: 'datetime',
       labels: { datetimeUTC: false, format: 'dd MMM yy' },
@@ -64,9 +66,9 @@ function makeOptions(financialTypes: string[], timeRange?: TimeRange): ApexOptio
   };
 }
 
-export function BalanceByTypePlusChart({ entries, timeRange }: Props) {
+export function BalanceByTypePlusChart({ entries, timeRange, dark }: Props) {
   const financialTypes = useFinancialTypes(entries);
-  const options = useMemo(() => makeOptions(financialTypes, timeRange), [financialTypes, timeRange]);
+  const options = useMemo(() => makeOptions(financialTypes, timeRange, dark), [financialTypes, timeRange, dark]);
 
   const series = useMemo(() => financialTypes.map((type) => ({
     name: type,
@@ -81,9 +83,9 @@ export function BalanceByTypePlusChart({ entries, timeRange }: Props) {
   );
 }
 
-export function BalanceByTypeMinusChart({ entries, timeRange }: Props) {
+export function BalanceByTypeMinusChart({ entries, timeRange, dark }: Props) {
   const financialTypes = useFinancialTypes(entries);
-  const options = useMemo(() => makeOptions(financialTypes, timeRange), [financialTypes, timeRange]);
+  const options = useMemo(() => makeOptions(financialTypes, timeRange, dark), [financialTypes, timeRange, dark]);
 
   const series = useMemo(() => financialTypes.map((type) => ({
     name: type,
@@ -98,9 +100,9 @@ export function BalanceByTypeMinusChart({ entries, timeRange }: Props) {
   );
 }
 
-export function BalanceByTypeTotalChart({ entries, timeRange }: Props) {
+export function BalanceByTypeTotalChart({ entries, timeRange, dark }: Props) {
   const financialTypes = useFinancialTypes(entries);
-  const options = useMemo(() => makeOptions(financialTypes, timeRange), [financialTypes, timeRange]);
+  const options = useMemo(() => makeOptions(financialTypes, timeRange, dark), [financialTypes, timeRange, dark]);
 
   const series = useMemo(() => financialTypes.map((type) => ({
     name: type,

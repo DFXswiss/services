@@ -11,6 +11,7 @@ import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
 import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
+import { ThemeContextProvider } from './contexts/theme.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
 import ComplianceUserScreen from './screens/compliance-user.screen';
@@ -599,25 +600,27 @@ function App({ routerFactory, params }: AppProps) {
 
   return (
     <WindowContextProvider>
-      <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
-        <BalanceContextProvider>
-          <OrderUIContextProvider>
-            <AppHandlingContextProvider
-              isWidget={params != null}
-              service={params?.service}
-              closeCallback={params?.onClose}
-              params={params}
-              router={router}
-            >
-              <SettingsContextProvider>
-                <WalletContextProvider router={router}>
-                  <RouterProvider router={router} />
-                </WalletContextProvider>
-              </SettingsContextProvider>
-            </AppHandlingContextProvider>
-          </OrderUIContextProvider>
-        </BalanceContextProvider>
-      </DfxContextProvider>
+      <ThemeContextProvider>
+        <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
+          <BalanceContextProvider>
+            <OrderUIContextProvider>
+              <AppHandlingContextProvider
+                isWidget={params != null}
+                service={params?.service}
+                closeCallback={params?.onClose}
+                params={params}
+                router={router}
+              >
+                <SettingsContextProvider>
+                  <WalletContextProvider router={router}>
+                    <RouterProvider router={router} />
+                  </WalletContextProvider>
+                </SettingsContextProvider>
+              </AppHandlingContextProvider>
+            </OrderUIContextProvider>
+          </BalanceContextProvider>
+        </DfxContextProvider>
+      </ThemeContextProvider>
     </WindowContextProvider>
   );
 }
