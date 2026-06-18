@@ -40,7 +40,6 @@ import { BankAccountSelector } from 'src/components/order/bank-account-selector'
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
-import { addressLabel } from 'src/config/labels';
 import { Urls } from 'src/config/urls';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -54,6 +53,7 @@ import { CloseType, useAppHandlingContext } from '../contexts/app-handling.conte
 import { AssetBalance } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
+import { AddressItem, useAddressItems } from '../hooks/address-items.hook';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
@@ -68,19 +68,13 @@ enum Side {
   GET = 'GET',
 }
 
-interface Address {
-  address: string;
-  label: string;
-  chain?: Blockchain;
-}
-
 interface FormData {
   bankAccount: BankAccount;
   currency: Fiat;
   asset: Asset;
   amount: string;
   targetAmount: string;
-  address: Address;
+  address: AddressItem;
 }
 
 interface CustomAmountError {
@@ -126,6 +120,11 @@ export default function SellScreen(): JSX.Element {
   const { toString } = useBlockchain();
   const { rootRef } = useLayoutContext();
 
+  const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
+  const sourceBlockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+
+  const { addressItems } = useAddressItems({ availableBlockchains: sourceBlockchains });
+
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<CustomAmountError>();
   const [errorMessage, setErrorMessage] = useState<string>();
@@ -153,31 +152,15 @@ export default function SellScreen(): JSX.Element {
   const availableBalance = selectedAsset && findBalance(selectedAsset);
 
   useEffect(() => {
-    availableAssets && getBalances(availableAssets, selectedAddress?.address, selectedAddress?.chain).then(setBalances);
-  }, [getBalances, availableAssets]);
+    if (availableAssets && selectedAddress?.address) {
+      getBalances(availableAssets, selectedAddress.address, selectedAddress.chain).then(setBalances);
+    }
+  }, [getBalances, availableAssets, selectedAddress]);
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
     setValue(field, value, { shouldValidate: true });
   }
-
-  const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
-  const blockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
-
-  const addressItems: Address[] =
-    session?.address && blockchains?.length
-      ? [
-          ...blockchains.map((b) => ({
-            address: addressLabel(session),
-            label: toString(b),
-            chain: b,
-          })),
-          {
-            address: translate('screens/buy', 'Switch address'),
-            label: translate('screens/buy', 'Login with a different address'),
-          },
-        ]
-      : [];
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
@@ -595,11 +578,11 @@ export default function SellScreen(): JSX.Element {
                   </div>
                 </StyledHorizontalStack>
                 {!hideTargetSelection && (
-                  <StyledDropdown<Address>
+                  <StyledDropdown<AddressItem>
                     rootRef={rootRef}
                     name="address"
                     items={addressItems}
-                    labelFunc={(item) => blankedAddress(item.address, { width })}
+                    labelFunc={(item) => blankedAddress(item.addressLabel, { width })}
                     descriptionFunc={(item) => item.label}
                     full
                     forceEnable
