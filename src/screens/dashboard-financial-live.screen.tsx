@@ -39,6 +39,9 @@ export default function DashboardFinancialLiveScreen(): JSX.Element {
     return { totalPlus: plus, totalMinus: minus, totalBalance: plus - minus };
   }, [latestBalance]);
 
+  // Memoize the array so BalanceBarChart's internal useMemo cache stays stable across renders.
+  const byType = useMemo(() => latestBalance?.byType ?? [], [latestBalance]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center w-full h-96">
@@ -60,7 +63,7 @@ export default function DashboardFinancialLiveScreen(): JSX.Element {
       </div>
 
       <div className="bg-white rounded-lg shadow p-4">
-        <BalanceBarChart title="Balance by Type" data={latestBalance?.byType ?? []} />
+        <BalanceBarChart title="Balance by Type" data={byType} />
       </div>
     </div>
   );

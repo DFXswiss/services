@@ -1,7 +1,8 @@
 import { ApexOptions } from 'apexcharts';
-import { useMemo } from 'react';
-import Chart from 'react-apexcharts';
+import { lazy, Suspense, useMemo } from 'react';
 import { BalanceByGroup } from 'src/dto/dashboard.dto';
+
+const Chart = lazy(() => import('react-apexcharts'));
 
 interface BalanceBarChartProps {
   title: string;
@@ -45,9 +46,14 @@ export function BalanceBarChart({ title, data, dark }: BalanceBarChartProps) {
 }
 
 function SimpleBarChart({ title, data, dark }: { title: string; data: BalanceByGroup[]; dark?: boolean }) {
-  const categories = data.map((i) => i.name);
-  const values = data.map((i) => Math.round(i.netBalanceChf));
-  const colors = data.map((i) => (i.netBalanceChf >= 0 ? '#22c55e' : '#ef4444'));
+  const { categories, values, colors } = useMemo(
+    () => ({
+      categories: data.map((i) => i.name),
+      values: data.map((i) => Math.round(i.netBalanceChf)),
+      colors: data.map((i) => (i.netBalanceChf >= 0 ? '#22c55e' : '#ef4444')),
+    }),
+    [data],
+  );
 
   const options = useMemo((): ApexOptions => ({
     chart: { type: 'bar', toolbar: { show: false }, background: '0' },
@@ -70,7 +76,9 @@ function SimpleBarChart({ title, data, dark }: { title: string; data: BalanceByG
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">{title}</h3>
-      <Chart type="bar" height={300} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 300 }} />}>
+        <Chart type="bar" height={300} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }
@@ -120,7 +128,9 @@ function StackedBarChart({ title, data, dark }: { title: string; data: BalanceBy
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">{title}</h3>
-      <Chart type="bar" height={400} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 400 }} />}>
+        <Chart type="bar" height={400} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }
