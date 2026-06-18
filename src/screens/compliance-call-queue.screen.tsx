@@ -32,8 +32,10 @@ export default function ComplianceCallQueueScreen(): JSX.Element {
   const showIp = queue === CallQueue.MANUAL_CHECK_IP_PHONE || queue === CallQueue.MANUAL_CHECK_IP_COUNTRY_PHONE;
   const showCountry = queue === CallQueue.MANUAL_CHECK_IP_COUNTRY_PHONE || queue === CallQueue.UNAVAILABLE_SUSPICIOUS;
   const showStatus = queue === CallQueue.UNAVAILABLE_SUSPICIOUS;
+  const showPhoneCallTimes =
+    queue === CallQueue.MANUAL_CHECK_PHONE || queue === CallQueue.MANUAL_CHECK_IP_COUNTRY_PHONE;
 
-  const columnCount = 5 + [isTxQueue, showIp, showCountry, showStatus].filter(Boolean).length;
+  const columnCount = 5 + [isTxQueue, showIp, showCountry, showStatus, showPhoneCallTimes].filter(Boolean).length;
 
   useEffect(() => {
     if (!isLoggedIn || !queue) return;
@@ -99,6 +101,11 @@ export default function ComplianceCallQueueScreen(): JSX.Element {
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'Date')}
               </th>
+              {showPhoneCallTimes && (
+                <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                  {translate('screens/compliance', 'Phone Call Times')}
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -134,6 +141,9 @@ export default function ComplianceCallQueueScreen(): JSX.Element {
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                     {new Date(item.date).toLocaleDateString('de-CH')}
                   </td>
+                  {showPhoneCallTimes && (
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{item.phoneCallTimes || '-'}</td>
+                  )}
                 </tr>
               ))
             ) : (
