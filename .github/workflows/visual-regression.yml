@@ -1,0 +1,67 @@
+name: Visual Regression
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  visual:
+    name: Storybook visual regression
+    if: github.head_ref != 'develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Run visual regression tests
+        run: npm run test:visual
+
+      - name: Stage baseline candidates from actuals
+        # On failure Playwright writes `<name>-actual.png` files for missing or
+        # diverging snapshots. Re-shape them into the snapshot directory layout
+        # so the maintainer can drop the artifact straight into the repo.
+        if: failure()
+        run: |
+          set -e
+          mkdir -p baseline-candidates/modal-visual.spec.ts
+          find e2e/storybook/test-results -name '*-actual.png' -print0 | while IFS= read -r -d '' src; do
+            base=$(basename "$src" -actual.png)
+            cp "$src" "baseline-candidates/modal-visual.spec.ts/${base}.png"
+          done
+
+      - name: Upload diff + baseline-candidates on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-diff
+          path: |
+            e2e/storybook/test-results/
+            baseline-candidates/
+          retention-days: 14

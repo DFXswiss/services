@@ -24,6 +24,9 @@ test-results/
 /widget
 /dist
 
+# storybook
+/storybook-static
+
 # misc
 .DS_Store
 *.pem
