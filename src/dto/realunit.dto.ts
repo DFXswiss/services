@@ -116,6 +116,25 @@ export interface RealUnitTransaction {
   userAddress?: string;
 }
 
+export interface RealunitStatsPeriod {
+  total: number;
+  last30Days: number;
+  last7Days: number;
+}
+
+export interface RealunitStats {
+  updated: string;
+  growth: { accounts: RealunitStatsPeriod; wallets: RealunitStatsPeriod };
+  kycFunnel: { step: string; reached: RealunitStatsPeriod; completed: RealunitStatsPeriod }[];
+  registration: { started: RealunitStatsPeriod; inReview: RealunitStatsPeriod; completed: RealunitStatsPeriod };
+  trading: {
+    buyVolumeChf: RealunitStatsPeriod;
+    buyCount: RealunitStatsPeriod;
+    sellVolumeChf: RealunitStatsPeriod;
+    sellCount: RealunitStatsPeriod;
+  };
+}
+
 export interface RealunitContextInterface {
   accountSummary?: AccountSummary;
   history?: AccountHistory;
@@ -131,6 +150,8 @@ export interface RealunitContextInterface {
   transactions: RealUnitTransaction[];
   quotesLoading: boolean;
   transactionsLoading: boolean;
+  stats?: RealunitStats;
+  fetchStats: () => void;
   fetchAccountSummary: (address: string) => void;
   fetchAccountHistory: (address: string, cursor?: string, direction?: PaginationDirection) => void;
   fetchHolders: (cursor?: string, direction?: PaginationDirection) => void;

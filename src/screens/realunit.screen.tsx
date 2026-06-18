@@ -8,6 +8,8 @@ import {
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
+import { SummaryCard } from 'src/components/dashboard/summary-card';
+import { KpiFunnelChart } from 'src/components/realunit/kpi-funnel-chart';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -15,7 +17,7 @@ import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, formatChf } from 'src/util/utils';
 export default function RealunitScreen(): JSX.Element {
   useRealunitGuard();
 
@@ -34,6 +36,8 @@ export default function RealunitScreen(): JSX.Element {
     transactions,
     quotesLoading,
     transactionsLoading,
+    stats,
+    fetchStats,
     fetchHolders,
     fetchPriceHistory,
     fetchTokenInfo,
@@ -49,11 +53,23 @@ export default function RealunitScreen(): JSX.Element {
     if (!priceHistory.length) fetchPriceHistory();
     if (!quotes.length) fetchQuotes();
     if (!transactions.length) fetchTransactions();
-  }, [fetchHolders, fetchTokenInfo, fetchQuotes, fetchTransactions]);
+    if (!stats) fetchStats();
+  }, [fetchHolders, fetchTokenInfo, fetchQuotes, fetchTransactions, fetchStats]);
 
   const topHolders = holders.slice(0, 3);
   const topQuotes = quotes.slice(0, 3);
   const topTransactions = transactions.slice(0, 3);
+
+  const kycConversionRate = (): string => {
+    if (!stats) return '-';
+    const reachedContactData = stats.kycFunnel.find((entry) => entry.step === 'ContactData')?.reached.total ?? 0;
+    const completedIdent = stats.kycFunnel.find((entry) => entry.step === 'Ident')?.completed.total ?? 0;
+    if (!reachedContactData) return '-';
+    return `${((completedIdent / reachedContactData) * 100).toFixed(1)}%`;
+  };
+
+  const tradingVolumeChf30Days = (): number =>
+    stats ? stats.trading.buyVolumeChf.last30Days + stats.trading.sellVolumeChf.last30Days : 0;
 
   const displayType = (type: string): string => {
     switch (type) {
@@ -77,6 +93,40 @@ export default function RealunitScreen(): JSX.Element {
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <div className="w-full">
+          <div className="mb-6">
+            <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Key Figures')}</h2>
+            {stats ? (
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <SummaryCard
+                    label={`${translate('screens/realunit', 'New accounts')} (${translate(
+                      'screens/realunit',
+                      'Last 30 days',
+                    )})`}
+                    value={stats.growth.accounts.last30Days.toLocaleString()}
+                  />
+                  <SummaryCard
+                    label={translate('screens/realunit', 'Completed registrations')}
+                    value={stats.registration.completed.total.toLocaleString()}
+                  />
+                  <SummaryCard label={translate('screens/realunit', 'KYC conversion')} value={kycConversionRate()} />
+                  <SummaryCard
+                    label={`${translate('screens/realunit', 'Trading volume')} (${translate(
+                      'screens/realunit',
+                      'Last 30 days',
+                    )})`}
+                    value={`${formatChf(tradingVolumeChf30Days())} CHF`}
+                  />
+                </div>
+                <KpiFunnelChart stats={stats} />
+              </div>
+            ) : (
+              <div className="shadow-card rounded-xl p-6 flex justify-center">
+                <StyledLoadingSpinner size={SpinnerSize.MD} />
+              </div>
+            )}
+          </div>
+
           <div className="mb-4">
             <h2 className="text-dfxGray-700 justify-center  mb-2">{translate('screens/realunit', 'Price History')}</h2>
             <PriceHistoryChart
@@ -289,9 +339,7 @@ export default function RealunitScreen(): JSX.Element {
                     onClick={() => navigate(`/realunit/transactions/${tx.id}`)}
                   >
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{displayType(tx.type)}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {tx.amountInChf?.toLocaleString()}
-                    </td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{tx.amountInChf?.toLocaleString()}</td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                       {tx.userAddress ? blankedAddress(tx.userAddress, { displayLength: 12 }) : '-'}
                     </td>

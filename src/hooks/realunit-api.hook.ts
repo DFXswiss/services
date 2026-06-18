@@ -8,6 +8,7 @@ import {
   PriceHistoryEntry,
   RealUnitQuote,
   RealUnitTransaction,
+  RealunitStats,
   TokenInfo,
   TokenPrice,
 } from 'src/dto/realunit.dto';
@@ -101,6 +102,13 @@ export function useRealunitApi() {
     });
   }
 
+  async function getStats(): Promise<RealunitStats> {
+    return call<RealunitStats>({
+      url: 'realunit/admin/stats',
+      method: 'GET',
+    });
+  }
+
   return useMemo(
     () => ({
       getAccountSummary,
@@ -112,6 +120,7 @@ export function useRealunitApi() {
       getAdminQuotes,
       getAdminTransactions,
       confirmPayment,
+      getStats,
     }),
     [call],
   );
