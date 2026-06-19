@@ -30,8 +30,8 @@ import { SupportIssuesPanel } from 'src/components/compliance/support-issues-pan
 import { SupportUserOverviewPanel } from 'src/components/compliance/support-user-overview-panel';
 import { TransactionsTable } from 'src/components/compliance/transactions-tab';
 import { UserDataPanel } from 'src/components/compliance/user-data-panel';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { ErrorHint } from 'src/components/error-hint';
-import { Modal } from 'src/components/modal';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { ComplianceUserData, KycFile, useCompliance } from 'src/hooks/compliance.hook';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
@@ -152,6 +152,7 @@ export default function ComplianceUserScreen(): JSX.Element {
       loadData();
     } catch (e: unknown) {
       setPaymentAgreementError(e instanceof Error ? e.message : 'Unknown error');
+      setShowPaymentAgreementConfirm(false);
     } finally {
       setPaymentAgreementLoading(false);
     }
@@ -347,44 +348,17 @@ export default function ComplianceUserScreen(): JSX.Element {
         </div>
       </div>
 
-      <Modal
+      <ConfirmDialog
         isOpen={showPaymentAgreementConfirm}
-        onClose={() => !paymentAgreementLoading && setShowPaymentAgreementConfirm(false)}
-        variant="dialog"
-      >
-        <div className="bg-white rounded-lg shadow-sm p-6 max-w-lg mx-auto w-full">
-          <h2 className="text-lg font-semibold text-dfxBlue-800 mb-4 text-left">
-            {translate('screens/compliance', 'Open PaymentAgreement')}
-          </h2>
-
-          <StyledVerticalStack gap={4} full>
-            <p className="text-sm text-dfxGray-700 text-left">
-              {translate(
-                'screens/compliance',
-                'This opens the PaymentAgreement KYC step for the customer and sends them an email with the KYC link. The customer must then complete and accept the agreement themselves. Do you want to continue?',
-              )}
-            </p>
-
-            {paymentAgreementError && <ErrorHint message={paymentAgreementError} />}
-
-            <div className="flex gap-2 w-full">
-              <StyledButton
-                label={translate('general/actions', 'Cancel')}
-                onClick={() => setShowPaymentAgreementConfirm(false)}
-                width={StyledButtonWidth.FULL}
-                color={StyledButtonColor.STURDY_WHITE}
-                disabled={paymentAgreementLoading}
-              />
-              <StyledButton
-                label={translate('general/actions', 'Confirm')}
-                onClick={handleOpenPaymentAgreement}
-                width={StyledButtonWidth.FULL}
-                isLoading={paymentAgreementLoading}
-              />
-            </div>
-          </StyledVerticalStack>
-        </div>
-      </Modal>
+        title={translate('screens/compliance', 'Open PaymentAgreement')}
+        message={translate(
+          'screens/compliance',
+          'This opens the PaymentAgreement KYC step for the customer and sends them an email with the KYC link. The customer must then complete and accept the agreement themselves. Do you want to continue?',
+        )}
+        isLoading={paymentAgreementLoading}
+        onConfirm={handleOpenPaymentAgreement}
+        onCancel={() => setShowPaymentAgreementConfirm(false)}
+      />
     </div>
   );
 }
