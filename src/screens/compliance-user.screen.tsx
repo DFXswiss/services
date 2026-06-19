@@ -312,6 +312,7 @@ export default function ComplianceUserScreen(): JSX.Element {
               <div className="flex flex-col items-start gap-2">
                 <StyledButton
                   label={translate('screens/compliance', 'Open PaymentAgreement')}
+                  color={StyledButtonColor.STURDY_WHITE}
                   onClick={() => {
                     setPaymentAgreementError(undefined);
                     setPaymentAgreementSuccess(false);
