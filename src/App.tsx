@@ -73,6 +73,7 @@ const ComplianceReviewScreen = lazy(() => import('./screens/compliance-review.sc
 const ComplianceCallQueuesScreen = lazy(() => import('./screens/compliance-call-queues.screen'));
 const ComplianceCallQueueScreen = lazy(() => import('./screens/compliance-call-queue.screen'));
 const ComplianceCallQueueDetailScreen = lazy(() => import('./screens/compliance-call-queue-detail.screen'));
+const SupportDashboardOverviewScreen = lazy(() => import('./screens/support-dashboard-overview.screen'));
 const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
 const SupportDashboardIssueScreen = lazy(() => import('./screens/support-dashboard-issue.screen'));
 const SupportDashboardCreateScreen = lazy(() => import('./screens/support-dashboard-create.screen'));
@@ -449,6 +450,10 @@ export const Routes = [
       },
       {
         path: 'support/dashboard',
+        element: withSuspense(<SupportDashboardOverviewScreen />),
+      },
+      {
+        path: 'support/dashboard/all',
         element: withSuspense(<SupportDashboardScreen />),
       },
       {

@@ -1,0 +1,167 @@
+// Pure ticket aging, escalation and statistics logic — no React or API dependencies,
+// so it is cheap to unit-test in isolation.
+import type { SupportIssueListItem } from 'src/hooks/support-dashboard.hook';
+
+// Author marker the backend stamps on customer messages (mirrors `CustomerAuthor` in DFXswiss/api).
+export const CustomerAuthor = 'Customer';
+
+// --- Customer waiting & escalation ---
+
+// A ticket escalates once a customer has waited this long without a reply (= the top tier).
+export const ESCALATION_HOURS = 24;
+
+// Customer-waiting thresholds (hours waiting for a reply) with rising severity.
+// The ≥24h tier equals the escalation threshold.
+export const WAIT_TIER_HOURS = [1, 12, 24] as const;
+
+// 0 = fresh (<1h), 1 = ≥1h, 2 = ≥12h, 3 = ≥24h (escalated)
+export function waitTier(hoursWaiting: number): 0 | 1 | 2 | 3 {
+  if (hoursWaiting >= 24) return 3;
+  if (hoursWaiting >= 12) return 2;
+  if (hoursWaiting >= 1) return 1;
+  return 0;
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+export function hoursSince(date: string | Date, now: Date = new Date()): number {
+  return (now.getTime() - new Date(date).getTime()) / HOUR_MS;
+}
+
+export function daysSince(date: string | Date, now: Date = new Date()): number {
+  return (now.getTime() - new Date(date).getTime()) / DAY_MS;
+}
+
+// Hours the customer has been waiting for a reply, or null if the ball is on our side
+// (we answered last, or there are no messages yet). The clock restarts on every
+// customer message because `lastMessageDate` always points at the latest message.
+export function customerWaitingHours(issue: SupportIssueListItem, now: Date = new Date()): number | null {
+  if (issue.lastMessageAuthor !== CustomerAuthor || !issue.lastMessageDate) return null;
+  return hoursSince(issue.lastMessageDate, now);
+}
+
+// Human-friendly "2d 4h" / "5h" / "20m" elapsed string.
+export function formatElapsed(hours: number): string {
+  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m`;
+  if (hours < 24) return `${Math.floor(hours)}h`;
+  const days = Math.floor(hours / 24);
+  const rest = Math.floor(hours % 24);
+  return rest > 0 ? `${days}d ${rest}h` : `${days}d`;
+}
+
+// --- Statistics ---
+
+export type StatGranularity = 'day' | 'month';
+
+// Selectable analysis periods for the statistics tab.
+export const STAT_PERIODS: { days: number; label: string }[] = [
+  { days: 7, label: '7 Tage' },
+  { days: 30, label: '30 Tage' },
+  { days: 183, label: '6 Monate' },
+  { days: 365, label: '12 Monate' },
+];
+export const DEFAULT_STAT_PERIOD_DAYS = 365;
+
+export interface TicketBucket {
+  key: string; // display label
+  count: number;
+}
+
+export interface ResolutionBucket {
+  key: string; // issue type
+  avgHours: number;
+  count: number;
+}
+
+// Ticket state marking a resolved ticket (mirrors SupportIssueInternalState.COMPLETED in DFXswiss/api).
+export const COMPLETED_STATE = 'Completed';
+
+export interface TicketStatistics {
+  periodDays: number;
+  total: number; // tickets created within the period
+  avgMessages: number; // mean messages per ticket within the period
+  perDay: number; // tickets per day within the period
+  granularity: StatGranularity;
+  trend: TicketBucket[]; // buckets across the period, oldest first
+  avgResolutionHours: number; // mean creation→completion time of tickets completed in the period
+  resolutionByType: ResolutionBucket[]; // average resolution time per type, descending by count
+}
+
+const pad = (n: number): string => String(n).padStart(2, '0');
+const dayKey = (d: Date): string => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const monthKey = (d: Date): string => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+
+export function granularityFor(periodDays: number): StatGranularity {
+  return periodDays <= 31 ? 'day' : 'month';
+}
+
+// Turns a stable bucket key ("YYYY-MM-DD" / "YYYY-MM") into a localized display label.
+export function trendLabel(stableKey: string, granularity: StatGranularity): string {
+  const [y, m, d] = stableKey.split('-').map(Number);
+  return granularity === 'day'
+    ? new Date(y, m - 1, d).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })
+    : new Date(y, m - 1, 1).toLocaleString(undefined, { month: 'short' });
+}
+
+export function computeStatistics(
+  issues: SupportIssueListItem[],
+  periodDays: number,
+  now: Date = new Date(),
+): TicketStatistics {
+  const granularity = granularityFor(periodDays);
+  const inPeriod = issues.filter((i) => daysSince(i.created, now) <= periodDays);
+  const total = inPeriod.length;
+  const messages = inPeriod.reduce((sum, i) => sum + (i.messageCount ?? 0), 0);
+
+  // pre-fill empty buckets oldest → newest
+  const buckets = new Map<string, number>();
+  if (granularity === 'day') {
+    for (let d = Math.round(periodDays) - 1; d >= 0; d--) {
+      const date = new Date(now);
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - d);
+      buckets.set(dayKey(date), 0);
+    }
+  } else {
+    const months = Math.max(1, Math.round(periodDays / 30));
+    for (let m = months - 1; m >= 0; m--) {
+      buckets.set(monthKey(new Date(now.getFullYear(), now.getMonth() - m, 1)), 0);
+    }
+  }
+  for (const issue of inPeriod) {
+    const d = new Date(issue.created);
+    const key = granularity === 'day' ? dayKey(d) : monthKey(d);
+    if (buckets.has(key)) buckets.set(key, (buckets.get(key) as number) + 1);
+  }
+
+  // resolution time per type for tickets completed within the period
+  const resolved = issues.filter(
+    (i) => i.state === COMPLETED_STATE && i.updated && daysSince(i.updated, now) <= periodDays,
+  );
+  const resolutionHours = (i: SupportIssueListItem): number =>
+    (new Date(i.updated as string).getTime() - new Date(i.created).getTime()) / (60 * 60 * 1000);
+  const byType = new Map<string, { sum: number; count: number }>();
+  for (const i of resolved) {
+    const e = byType.get(i.type) ?? { sum: 0, count: 0 };
+    e.sum += resolutionHours(i);
+    e.count += 1;
+    byType.set(i.type, e);
+  }
+  const resolutionByType = Array.from(byType.entries())
+    .map(([key, v]) => ({ key, avgHours: v.count > 0 ? v.sum / v.count : 0, count: v.count }))
+    .sort((a, b) => b.count - a.count);
+  const avgResolutionHours =
+    resolved.length > 0 ? resolved.reduce((sum, i) => sum + resolutionHours(i), 0) / resolved.length : 0;
+
+  return {
+    periodDays,
+    total,
+    avgMessages: total > 0 ? messages / total : 0,
+    perDay: periodDays > 0 ? total / periodDays : 0,
+    granularity,
+    trend: Array.from(buckets.entries()).map(([key, count]) => ({ key: trendLabel(key, granularity), count })),
+    avgResolutionHours,
+    resolutionByType,
+  };
+}
