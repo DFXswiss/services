@@ -24,16 +24,9 @@ import {
 } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { layoutGraph, mergeFragment } from 'src/util/recommendation-graph.util';
+import { layoutGraph, mergeFragment, UserNodeData } from 'src/util/recommendation-graph.util';
 
 const NEIGHBOR_PAGE_SIZE = 25;
-
-type UserNodeData = RecommendationGraphNode & {
-  isCenter: boolean;
-  isExpandable: boolean;
-  isExpanded: boolean;
-  isLoading: boolean;
-};
 
 function UserNode({ data }: { data: UserNodeData }): JSX.Element {
   const name = [data.firstname, data.surname].filter(Boolean).join(' ') || '-';
@@ -75,6 +68,26 @@ function UserNode({ data }: { data: UserNodeData }): JSX.Element {
 
 const nodeTypes = { user: UserNode };
 
+// accumulating client graph store (deduped by node id and by directed edge pair). Held in React
+// state and replaced immutably on merge so every render-visible value stays reactive.
+interface GraphStore {
+  nodes: Map<number, RecommendationGraphNode>;
+  edges: Map<string, RecommendationGraphEdge>;
+  expandedIds: Set<number>; // nodes whose neighbors are fully loaded
+  loadedCount: Map<number, number>; // neighbors already loaded per node (pagination cursor)
+  hasMoreIds: Set<number>; // nodes with further neighbors to load
+}
+
+function emptyStore(): GraphStore {
+  return {
+    nodes: new Map(),
+    edges: new Map(),
+    expandedIds: new Set(),
+    loadedCount: new Map(),
+    hasMoreIds: new Set(),
+  };
+}
+
 export default function ComplianceRecommendationGraphScreen(): JSX.Element {
   useComplianceGuard();
 
@@ -85,15 +98,8 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
 
   const centerId = id ? +id : undefined;
 
-  // accumulating client graph store (deduped by node id and by directed edge pair)
-  const nodeStore = useRef(new Map<number, RecommendationGraphNode>());
-  const edgeStore = useRef(new Map<string, RecommendationGraphEdge>());
-  const expandedIds = useRef(new Set<number>()); // nodes whose neighbors are fully loaded
-  const loadedCount = useRef(new Map<number, number>()); // neighbors already loaded per node (pagination cursor)
-  const hasMoreIds = useRef(new Set<number>()); // nodes with further neighbors to load
-
-  const [version, setVersion] = useState(0); // bumped after store mutations to trigger a re-layout
-  const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
+  const [store, setStore] = useState<GraphStore>(emptyStore);
+  const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set()); // drives the per-node spinner only
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
 
@@ -101,8 +107,13 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
   const [detail, setDetail] = useState<ComplianceUserData>();
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<UserNodeData>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  // in-flight re-entrancy guard only: keeps loadNeighbors out of loadingIds state dependencies
+  const inFlight = useRef(new Set<number>());
+  // dossier cache so re-clicking a node does not re-fetch the full userData
+  const detailCache = useRef(new Map<number, ComplianceUserData>());
 
   useLayoutOptions({
     title: translate('screens/compliance', 'Recommendation Network'),
@@ -110,28 +121,61 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     noMaxWidth: true,
   });
 
-  const merge = useCallback((fragment: RecommendationGraph): void => {
-    mergeFragment(nodeStore.current, edgeStore.current, fragment);
+  // merge a fragment into a fresh copy of the store (immutable replacement keeps state reactive)
+  const applyFragment = useCallback((prev: GraphStore, nodeId: number, fragment: RecommendationGraph): GraphStore => {
+    const nodes = new Map(prev.nodes);
+    const edges = new Map(prev.edges);
+    mergeFragment(nodes, edges, fragment);
+    const expandedIds = new Set(prev.expandedIds);
+    const hasMoreIds = new Set(prev.hasMoreIds);
+    const loadedCount = new Map(prev.loadedCount);
+    // advance the cursor by the requested page size (not the returned count) so a dropped userData
+    // id can't stall 'Load more'
+    loadedCount.set(nodeId, (prev.loadedCount.get(nodeId) ?? 0) + NEIGHBOR_PAGE_SIZE);
+    if (fragment.hasMore) {
+      hasMoreIds.add(nodeId);
+    } else {
+      hasMoreIds.delete(nodeId);
+      expandedIds.add(nodeId);
+    }
+    return { nodes, edges, expandedIds, hasMoreIds, loadedCount };
   }, []);
+
+  const openDetail = useCallback(
+    (nodeId: number): void => {
+      setSelectedId(nodeId);
+      const cached = detailCache.current.get(nodeId);
+      if (cached) {
+        setDetail(cached);
+        setDetailLoading(false);
+        return;
+      }
+      setDetail(undefined);
+      setDetailLoading(true);
+      getUserData(nodeId)
+        .then((data) => {
+          detailCache.current.set(nodeId, data);
+          setDetail(data);
+        })
+        .catch(() => undefined)
+        .finally(() => setDetailLoading(false));
+    },
+    [getUserData],
+  );
 
   const loadNeighbors = useCallback(
     async (nodeId: number): Promise<void> => {
-      if (loadingIds.has(nodeId) || expandedIds.current.has(nodeId)) return;
-      const skip = loadedCount.current.get(nodeId) ?? 0;
+      if (inFlight.current.has(nodeId)) return;
+      inFlight.current.add(nodeId);
       setLoadingIds((prev) => new Set(prev).add(nodeId));
       try {
+        const skip = store.loadedCount.get(nodeId) ?? 0;
         const fragment = await getRecommendationGraphNeighbors(nodeId, skip, NEIGHBOR_PAGE_SIZE);
-        merge(fragment);
-        loadedCount.current.set(nodeId, skip + fragment.nodes.filter((n) => n.id !== nodeId).length);
-        if (fragment.hasMore) hasMoreIds.current.add(nodeId);
-        else {
-          hasMoreIds.current.delete(nodeId);
-          expandedIds.current.add(nodeId);
-        }
-        setVersion((v) => v + 1);
+        setStore((prev) => applyFragment(prev, nodeId, fragment));
       } catch (e) {
-        setError((e as ApiError).message ?? 'Unknown error');
+        setError((e as ApiError).message ?? translate('screens/compliance', 'Unknown error'));
       } finally {
+        inFlight.current.delete(nodeId);
         setLoadingIds((prev) => {
           const next = new Set(prev);
           next.delete(nodeId);
@@ -139,20 +183,7 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
         });
       }
     },
-    [getRecommendationGraphNeighbors, loadingIds, merge],
-  );
-
-  const openDetail = useCallback(
-    (nodeId: number): void => {
-      setSelectedId(nodeId);
-      setDetail(undefined);
-      setDetailLoading(true);
-      getUserData(nodeId)
-        .then(setDetail)
-        .catch(() => undefined)
-        .finally(() => setDetailLoading(false));
-    },
-    [getUserData],
+    [getRecommendationGraphNeighbors, applyFragment, store.loadedCount, translate],
   );
 
   // one click does both: show the node's details AND lazily load its connected accounts
@@ -160,22 +191,20 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     (_, node) => {
       const nodeId = +node.id;
       openDetail(nodeId);
-      const stored = nodeStore.current.get(nodeId);
-      if ((stored?.expandable || hasMoreIds.current.has(nodeId)) && !expandedIds.current.has(nodeId)) {
+      const stored = store.nodes.get(nodeId);
+      if ((stored?.expandable || store.hasMoreIds.has(nodeId)) && !store.expandedIds.has(nodeId)) {
         void loadNeighbors(nodeId);
       }
     },
-    [openDetail, loadNeighbors],
+    [openDetail, loadNeighbors, store.nodes, store.hasMoreIds, store.expandedIds],
   );
 
   // initial load: reset the store and load the center's direct (1-hop) neighbors
   useEffect(() => {
     if (centerId == null) return;
-    nodeStore.current = new Map();
-    edgeStore.current = new Map();
-    expandedIds.current = new Set();
-    loadedCount.current = new Map();
-    hasMoreIds.current = new Set();
+    setStore(emptyStore());
+    inFlight.current = new Set();
+    detailCache.current = new Map();
     setSelectedId(undefined);
     setDetail(undefined);
     setError(undefined);
@@ -185,14 +214,10 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     getRecommendationGraphNeighbors(centerId, 0, NEIGHBOR_PAGE_SIZE)
       .then((fragment) => {
         if (cancelled) return;
-        merge(fragment);
-        loadedCount.current.set(centerId, fragment.nodes.filter((n) => n.id !== centerId).length);
-        if (fragment.hasMore) hasMoreIds.current.add(centerId);
-        else expandedIds.current.add(centerId);
-        setVersion((v) => v + 1);
+        setStore((prev) => applyFragment(prev, centerId, fragment));
         openDetail(centerId);
       })
-      .catch((e: ApiError) => !cancelled && setError(e.message ?? 'Unknown error'))
+      .catch((e: ApiError) => !cancelled && setError(e.message ?? translate('screens/compliance', 'Unknown error')))
       .finally(() => !cancelled && setIsLoading(false));
     return () => {
       cancelled = true;
@@ -204,25 +229,25 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
   useEffect(() => {
     if (centerId == null) return;
     const graph: RecommendationGraph = {
-      nodes: [...nodeStore.current.values()],
-      edges: [...edgeStore.current.values()],
+      nodes: [...store.nodes.values()],
+      edges: [...store.edges.values()],
       rootId: centerId,
     };
-    const layout = layoutGraph(graph, centerId, expandedIds.current, loadingIds);
+    const layout = layoutGraph(graph, centerId, store.expandedIds, loadingIds);
     setNodes(layout.nodes);
     setEdges(layout.edges);
-  }, [version, loadingIds, centerId]);
+  }, [store, loadingIds, centerId, setNodes, setEdges]);
 
   const memoNodeTypes = useMemo(() => nodeTypes, []);
 
   if (error) return <ErrorHint message={error} />;
   if (isLoading) return <StyledLoadingSpinner size={SpinnerSize.LG} />;
 
-  const selectedNode = selectedId != null ? nodeStore.current.get(selectedId) : undefined;
+  const selectedNode = selectedId != null ? store.nodes.get(selectedId) : undefined;
   const canLoadMore =
     selectedId != null &&
-    !expandedIds.current.has(selectedId) &&
-    (selectedNode?.expandable || hasMoreIds.current.has(selectedId));
+    !store.expandedIds.has(selectedId) &&
+    (selectedNode?.expandable || store.hasMoreIds.has(selectedId));
   const selectedReferrer = detail?.users.find((u) => u.refUserDataId);
 
   return (
@@ -230,20 +255,30 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Stats + legend bar */}
         <div className="flex flex-wrap gap-4 px-4 py-2 bg-white border-b border-dfxGray-300 text-sm text-dfxBlue-800">
-          <span>Nodes: {nodeStore.current.size}</span>
-          <span>Edges: {edgeStore.current.size}</span>
-          <span className="text-dfxGray-700">click a node to show details &amp; load its connections</span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded border-2 border-dfxBlue-800 bg-blue-50 inline-block" /> Current user
+          <span>
+            {translate('screens/compliance', 'Nodes')}: {store.nodes.size}
+          </span>
+          <span>
+            {translate('screens/compliance', 'Edges')}: {store.edges.size}
+          </span>
+          <span className="text-dfxGray-700">
+            {translate('screens/compliance', 'click a node to show details & load its connections')}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded border-2 border-green-500 bg-green-50 inline-block" /> Trade approved
+            <span className="w-3 h-3 rounded border-2 border-dfxBlue-800 bg-blue-50 inline-block" />{' '}
+            {translate('screens/compliance', 'Current user')}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded border-2 border-dfxGray-300 bg-white inline-block" /> No approval
+            <span className="w-3 h-3 rounded border-2 border-green-500 bg-green-50 inline-block" />{' '}
+            {translate('screens/compliance', 'Trade approved')}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-6 border-t-2 border-dashed border-blue-500 inline-block" /> Ref-Code
+            <span className="w-3 h-3 rounded border-2 border-dfxGray-300 bg-white inline-block" />{' '}
+            {translate('screens/compliance', 'No approval')}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-6 border-t-2 border-dashed border-blue-500 inline-block" />{' '}
+            {translate('screens/compliance', 'Ref-Code')}
           </span>
         </div>
 
@@ -276,20 +311,28 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
         <div className="w-80 shrink-0 border-l border-dfxGray-300 bg-white overflow-auto p-4 text-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="font-semibold text-dfxBlue-800">UserData #{selectedId}</div>
-            <button className="text-dfxGray-700 hover:text-dfxBlue-800" onClick={() => setSelectedId(undefined)}>
+            <button
+              className="text-dfxGray-700 hover:text-dfxBlue-800"
+              aria-label={translate('screens/compliance', 'Close')}
+              title={translate('screens/compliance', 'Close')}
+              onClick={() => setSelectedId(undefined)}
+            >
               ✕
             </button>
           </div>
 
           {selectedNode && (
             <div className="space-y-1 text-dfxBlue-800">
-              <div>Name: {[selectedNode.firstname, selectedNode.surname].filter(Boolean).join(' ') || '-'}</div>
               <div>
-                KYC: {selectedNode.kycStatus ?? '-'}
+                {translate('screens/compliance', 'Name')}:{' '}
+                {[selectedNode.firstname, selectedNode.surname].filter(Boolean).join(' ') || '-'}
+              </div>
+              <div>
+                {translate('screens/compliance', 'KYC')}: {selectedNode.kycStatus ?? '-'}
                 {selectedNode.kycLevel != null ? ` (L${selectedNode.kycLevel})` : ''}
               </div>
               <div>
-                Trade approved:{' '}
+                {translate('screens/compliance', 'Trade approved')}:{' '}
                 {selectedNode.tradeApprovalDate ? new Date(selectedNode.tradeApprovalDate).toLocaleDateString() : '-'}
               </div>
             </div>
@@ -303,9 +346,11 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
 
           {detail && (
             <div className="mt-3 space-y-1 text-dfxGray-700">
-              <div>Wallets: {detail.users.length}</div>
               <div>
-                Ref-Codes:{' '}
+                {translate('screens/compliance', 'Wallets')}: {detail.users.length}
+              </div>
+              <div>
+                {translate('screens/compliance', 'Ref-Codes')}:{' '}
                 {detail.users
                   .map((u) => u.ref)
                   .filter(Boolean)
@@ -313,13 +358,19 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
               </div>
               {selectedReferrer && (
                 <div>
-                  Referrer: {selectedReferrer.refUserName ?? '-'} #{selectedReferrer.refUserDataId} (
-                  {selectedReferrer.usedRef})
+                  {translate('screens/compliance', 'Referrer')}: {selectedReferrer.refUserName ?? '-'} #
+                  {selectedReferrer.refUserDataId} ({selectedReferrer.usedRef})
                 </div>
               )}
-              <div>Transactions: {detail.transactions.length}</div>
-              <div>KYC steps: {detail.kycSteps.length}</div>
-              <div>Support issues: {detail.supportIssues?.length ?? 0}</div>
+              <div>
+                {translate('screens/compliance', 'Transactions')}: {detail.transactions.length}
+              </div>
+              <div>
+                {translate('screens/compliance', 'KYC steps')}: {detail.kycSteps.length}
+              </div>
+              <div>
+                {translate('screens/compliance', 'Support issues')}: {detail.supportIssues?.length ?? 0}
+              </div>
             </div>
           )}
 
@@ -330,14 +381,16 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
                 disabled={loadingIds.has(selectedId)}
                 onClick={() => void loadNeighbors(selectedId)}
               >
-                {hasMoreIds.current.has(selectedId) ? 'Load more connections' : 'Load connections'}
+                {store.hasMoreIds.has(selectedId)
+                  ? translate('screens/compliance', 'Load more connections')
+                  : translate('screens/compliance', 'Load connections')}
               </button>
             )}
             <button
               className="w-full px-3 py-1.5 rounded border border-dfxBlue-800 text-dfxBlue-800 text-sm"
               onClick={() => navigate(`/compliance/user/${selectedId}`)}
             >
-              Open full detail page
+              {translate('screens/compliance', 'Open full detail page')}
             </button>
           </div>
         </div>

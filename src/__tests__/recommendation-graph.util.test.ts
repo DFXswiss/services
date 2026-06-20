@@ -25,7 +25,7 @@ import {
   RecommendationGraphEdgeKind,
   RecommendationGraphNode,
 } from 'src/hooks/compliance.hook';
-import { edgeKey, edgePairKey, layoutGraph, mergeFragment } from '../util/recommendation-graph.util';
+import { edgePairKey, layoutGraph, mergeFragment, reactFlowEdgeId } from '../util/recommendation-graph.util';
 
 function node(id: number, extra: Partial<RecommendationGraphNode> = {}): RecommendationGraphNode {
   return { id, ...extra };
@@ -60,15 +60,15 @@ function refEdge(
 }
 
 describe('recommendation-graph.util', () => {
-  describe('edgeKey', () => {
+  describe('reactFlowEdgeId', () => {
     it('keys an edge by directed pair + kind', () => {
-      expect(edgeKey(recEdge(1, 2))).toBe('e-1-2-Recommendation');
-      expect(edgeKey(refEdge(1, 2))).toBe('e-1-2-UsedRef');
+      expect(reactFlowEdgeId(recEdge(1, 2))).toBe('e-1-2-Recommendation');
+      expect(reactFlowEdgeId(refEdge(1, 2))).toBe('e-1-2-UsedRef');
     });
 
     it('distinguishes direction and kind', () => {
-      expect(edgeKey(recEdge(2, 1))).not.toBe(edgeKey(recEdge(1, 2)));
-      expect(edgeKey(recEdge(1, 2))).not.toBe(edgeKey(refEdge(1, 2)));
+      expect(reactFlowEdgeId(recEdge(2, 1))).not.toBe(reactFlowEdgeId(recEdge(1, 2)));
+      expect(reactFlowEdgeId(recEdge(1, 2))).not.toBe(reactFlowEdgeId(refEdge(1, 2)));
     });
   });
 

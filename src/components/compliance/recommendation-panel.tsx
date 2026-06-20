@@ -1,6 +1,6 @@
 import { NavigateFunction } from 'react-router-dom';
 import { KycStepInfo, UserInfo } from 'src/hooks/compliance.hook';
-import { formatDate, statusBadge } from 'src/util/compliance-helpers';
+import { DEFAULT_REF, formatDate, statusBadge } from 'src/util/compliance-helpers';
 
 interface RecommendationPanelProps {
   kycSteps: KycStepInfo[];
@@ -14,9 +14,7 @@ export function RecommendationPanel({ kycSteps, users, userDataId, navigate }: R
 
   // classic ref-code referrers (user.usedRef), deduplicated by code
   const referrers = Array.from(
-    new Map(
-      (users ?? []).filter((u) => u.usedRef && u.usedRef !== '000-000').map((u) => [u.usedRef, u]),
-    ).values(),
+    new Map((users ?? []).filter((u) => u.usedRef && u.usedRef !== DEFAULT_REF).map((u) => [u.usedRef, u])).values(),
   );
 
   return (

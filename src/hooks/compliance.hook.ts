@@ -997,13 +997,6 @@ export function useCompliance() {
     return { success: true, completedSteps };
   }
 
-  async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
-    return call<RecommendationGraph>({
-      url: `support/recommendation-graph/${userDataId}`,
-      method: 'GET',
-    });
-  }
-
   async function getRecommendationGraphNeighbors(
     userDataId: number,
     skip?: number,
@@ -1233,7 +1226,6 @@ export function useCompliance() {
       getKycFileList,
       getKycFileStats,
       getTransactionList,
-      getRecommendationGraph,
       getRecommendationGraphNeighbors,
       downloadIpLogPdf,
       downloadTransactionPdf,

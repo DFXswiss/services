@@ -6,9 +6,20 @@ import {
   RecommendationGraphNode,
 } from 'src/hooks/compliance.hook';
 
+// react-flow node data: the stored node plus the render-time flags layoutGraph derives.
+// Exported so the producer (layoutGraph) and consumer (UserNode) share the shape.
+export type UserNodeData = RecommendationGraphNode & {
+  isCenter: boolean;
+  isExpandable: boolean;
+  isExpanded: boolean;
+  isLoading: boolean;
+};
+
 // react-flow edge id keyed by directed pair + kind.
 // Synthetic ref-edge ids are negative & per-response, so the raw edge.id would collide on merge.
-export function edgeKey(edge: Pick<RecommendationGraphEdge, 'recommenderId' | 'recommendedId' | 'kind'>): string {
+export function reactFlowEdgeId(
+  edge: Pick<RecommendationGraphEdge, 'recommenderId' | 'recommendedId' | 'kind'>,
+): string {
   return `e-${edge.recommenderId}-${edge.recommendedId}-${edge.kind}`;
 }
 
@@ -23,7 +34,7 @@ export function layoutGraph(
   centerId: number,
   expandedIds: Set<number>,
   loadingIds: Set<number>,
-): { nodes: Node[]; edges: Edge[] } {
+): { nodes: Node<UserNodeData>[]; edges: Edge[] } {
   // Build adjacency: recommender -> recommended[]
   const children = new Map<number, number[]>();
   const parents = new Map<number, number[]>();
@@ -54,18 +65,13 @@ export function layoutGraph(
   const queue: number[] = [topRoot];
   levels.set(topRoot, 0);
   const ordered: number[] = [];
-  const visited = new Set<number>();
 
   while (queue.length > 0) {
     const current = queue.shift() as number;
-    // defensive: the `!levels.has(child)` enqueue guard already prevents a node from being queued
-    // twice, so a node is never dequeued in the visited state — exclude from branch coverage
-    /* istanbul ignore next */
-    if (visited.has(current)) continue;
-    visited.add(current);
     ordered.push(current);
     const childList = children.get(current) || [];
     for (const child of childList) {
+      // the `!levels.has(child)` guard prevents a node from being enqueued (and so dequeued) twice
       if (!levels.has(child)) {
         levels.set(child, (levels.get(current) || 0) + 1);
         queue.push(child);
@@ -96,7 +102,7 @@ export function layoutGraph(
   const LEVEL_HEIGHT = NODE_HEIGHT * 2;
   const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
 
-  const nodes: Node[] = [];
+  const nodes: Node<UserNodeData>[] = [];
   for (const [level, ids] of byLevel.entries()) {
     const totalWidth = ids.length * NODE_WIDTH;
     const startX = -totalWidth / 2;
@@ -123,7 +129,7 @@ export function layoutGraph(
     const isRef = e.kind === RecommendationGraphEdgeKind.USED_REF;
     return {
       // key by directed pair + kind: synthetic ref-edge ids are negative & per-response, so e.id would collide on merge
-      id: edgeKey(e),
+      id: reactFlowEdgeId(e),
       source: String(e.recommenderId),
       target: String(e.recommendedId),
       markerEnd: { type: MarkerType.ArrowClosed },
