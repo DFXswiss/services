@@ -124,6 +124,8 @@ function layoutGraph(graph: RecommendationGraph): { nodes: Node[]; edges: Edge[]
 
   const NODE_WIDTH = 220;
   const NODE_HEIGHT = 120;
+  // vertical pitch between BFS levels: a full empty level between rows so the hierarchy is readable
+  const LEVEL_HEIGHT = NODE_HEIGHT * 2;
   const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
 
   const nodes: Node[] = [];
@@ -137,7 +139,7 @@ function layoutGraph(graph: RecommendationGraph): { nodes: Node[]; edges: Edge[]
       nodes.push({
         id: String(id),
         type: 'user',
-        position: { x: startX + index * NODE_WIDTH, y: level * NODE_HEIGHT },
+        position: { x: startX + index * NODE_WIDTH, y: level * LEVEL_HEIGHT },
         data: {
           ...nodeData,
           isRoot: id === graph.rootId,
