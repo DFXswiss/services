@@ -114,6 +114,9 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
   useEffect(() => {
     storeRef.current = store;
   }, [store]);
+  // bumped on every center (re)load; loadNeighbors captures it and drops a fragment that resolves after
+  // the center changed, so a stale expand can never merge into a freshly-reset graph
+  const loadEpoch = useRef(0);
 
   useLayoutOptions({
     title: translate('screens/compliance', 'Recommendation Network'),
@@ -160,13 +163,16 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
       const current = storeRef.current;
       if (!shouldExpand(current, nodeId)) return;
       const skip = nextSkip(current, nodeId);
+      const epoch = loadEpoch.current;
       inFlight.current.add(nodeId);
       setStore((prev) => beginExpand(prev, nodeId));
       setLoadMoreError(undefined);
       try {
         const fragment = await getRecommendationGraphNeighbors(nodeId, skip, NEIGHBOR_PAGE_SIZE);
+        if (loadEpoch.current !== epoch) return; // a new center loaded while this expand was in flight
         setStore((prev) => applyFragment(prev, nodeId, fragment, NEIGHBOR_PAGE_SIZE));
       } catch (e) {
+        if (loadEpoch.current !== epoch) return; // center changed; ignore this stale failure
         setStore((prev) => endExpandError(prev, nodeId));
         setLoadMoreError((e as ApiError).message ?? translate('screens/compliance', 'Unknown error'));
       } finally {
@@ -195,6 +201,7 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     if (centerId == null) return;
     setStore(emptyGraphStore());
     inFlight.current = new Set();
+    loadEpoch.current += 1;
     detailCache.current = new Map();
     setSelectedId(undefined);
     setDetail(undefined);
@@ -348,7 +355,9 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
             </div>
           )}
 
-          {detailError && <div className="mt-3 text-sm text-red-600">{detailError}</div>}
+          {detailError && (
+            <div className="mt-3 rounded bg-dfxRed-100/20 px-2 py-1 text-sm text-dfxRed-100">{detailError}</div>
+          )}
 
           {detail && (
             <div className="mt-3 space-y-1 text-dfxGray-700">
@@ -393,7 +402,9 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
               </button>
             )}
             {/* non-destructive, panel-scoped: a failed lazy-expand keeps the graph + panel intact */}
-            {loadMoreError && <div className="text-sm text-red-600">{loadMoreError}</div>}
+            {loadMoreError && (
+              <div className="rounded bg-dfxRed-100/20 px-2 py-1 text-sm text-dfxRed-100">{loadMoreError}</div>
+            )}
             <button
               className="w-full px-3 py-1.5 rounded border border-dfxBlue-800 text-dfxBlue-800 text-sm"
               onClick={() => navigate(`/compliance/user/${selectedId}`)}

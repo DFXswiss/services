@@ -252,12 +252,13 @@ export function applyFragment(
   const loadingIds = new Set(prev.loadingIds);
   const loadedCount = new Map(prev.loadedCount);
 
-  // advance the cursor by the number of items actually returned (derived from `prev`), matching the
-  // server's slice window. Capped at pageSize because a fragment may re-include already-known context
-  // nodes (e.g. an upward parent that mergeFragment dedups) beyond this page's neighbors - so a
-  // dropped/merged userData id in the response can't stall 'Load more' nor over-advance the cursor.
-  const returned = Math.min(fragment.nodes.length, pageSize);
-  loadedCount.set(nodeId, (prev.loadedCount.get(nodeId) ?? 0) + returned);
+  // advance the cursor (derived from `prev`) to track the server's skip+take window. When the server
+  // reports more pages, advance by exactly the requested pageSize: hasMore implies the server returned
+  // a full take-sized neighbor page, so the cursor must move by take regardless of how many nodes the
+  // fragment rendered after dedup/dangling-row drops - otherwise a short page could stall 'Load more'.
+  // When there are no more pages the node is marked fully expanded below and the cursor value is moot.
+  const advance = fragment.hasMore ? pageSize : Math.min(fragment.nodes.length, pageSize);
+  loadedCount.set(nodeId, (prev.loadedCount.get(nodeId) ?? 0) + advance);
 
   loadingIds.delete(nodeId);
   if (fragment.hasMore) {

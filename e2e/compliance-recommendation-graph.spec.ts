@@ -107,7 +107,7 @@ function node(id: number, name: string, opts: Partial<GraphNode> = {}): GraphNod
   return { id, firstname, surname, kycStatus: 'Completed', kycLevel: 50, ...opts };
 }
 
-function recEdge(recommenderId: number, recommendedId: number, method = 'Lock'): GraphEdge {
+function recEdge(recommenderId: number, recommendedId: number, method = 'RecommendationCode'): GraphEdge {
   return {
     id: recommenderId * 1000 + recommendedId,
     kind: 'Recommendation',

@@ -226,7 +226,7 @@ describe('recommendation-graph.util', () => {
       it('styles a confirmed recommendation green with the method label', () => {
         const graph: RecommendationGraph = {
           nodes: [node(1), node(2)],
-          edges: [recEdge(1, 2, { isConfirmed: true, method: 'Manual' })],
+          edges: [recEdge(1, 2, { isConfirmed: true, method: 'RecommendationCode' })],
           rootId: 1,
         };
 
@@ -238,7 +238,7 @@ describe('recommendation-graph.util', () => {
         expect(e.target).toBe('2');
         expect(e.animated).toBe(false);
         expect(e.style).toEqual({ stroke: '#22c55e' });
-        expect(e.label).toBe('Manual');
+        expect(e.label).toBe('RecommendationCode');
         expect(e.labelStyle).toEqual({ fontSize: 10, fill: '#6b7280' });
         expect(e.markerEnd).toEqual({ type: MarkerType.ArrowClosed });
       });
@@ -392,10 +392,10 @@ describe('recommendation-graph.util', () => {
     it('advances the cursor from prev across two pages (single source of truth)', () => {
       let store = beginExpand(emptyGraphStore(), 1);
       store = applyFragment(store, 1, fragment([node(1), node(2), node(3)], [], true), 25);
-      expect(store.loadedCount.get(1)).toBe(3);
+      expect(store.loadedCount.get(1)).toBe(25); // hasMore -> advance by the requested page size (server skip+take)
       store = beginExpand(store, 1);
       store = applyFragment(store, 1, fragment([node(4), node(5)], [], false), 25);
-      expect(store.loadedCount.get(1)).toBe(5); // 3 (prev) + 2
+      expect(store.loadedCount.get(1)).toBe(27); // 25 (prev) + 2 (final short page)
     });
 
     it('dedups across two fragments without duplicating existing nodes/edges', () => {
