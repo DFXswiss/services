@@ -287,7 +287,7 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
             {translate('screens/compliance', 'No approval')}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-6 border-t-2 border-dashed border-blue-500 inline-block" />{' '}
+            <span className="w-6 border-t-2 border-dashed inline-block" style={{ borderColor: '#3b82f6' }} />{' '}
             {translate('screens/compliance', 'Ref-Code')}
           </span>
         </div>

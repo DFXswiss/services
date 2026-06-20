@@ -472,10 +472,11 @@ test.describe('Compliance Recommendation Network (graph) - Visual Regression Tes
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    // a second neighbors request with advanced skip (cursor advanced past page 1's 3 returned nodes)
+    // the second neighbors request advanced skip by exactly the requested page size (take=25), i.e. by the
+    // requested take and NOT by the number of nodes page 1 rendered - directly guards the cursor fix
     const hubCalls = router.calls.filter((c) => c.id === 9002);
     expect(hubCalls.length).toBe(2);
-    expect(hubCalls[1].skip).toBeGreaterThan(0);
+    expect(hubCalls[1].skip).toBe(25);
 
     // page-2 nodes appeared
     await expect(graphNode(page, 9022)).toBeVisible();
