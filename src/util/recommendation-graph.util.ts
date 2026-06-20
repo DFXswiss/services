@@ -13,6 +13,9 @@ export type UserNodeData = RecommendationGraphNode & {
   isExpandable: boolean;
   isExpanded: boolean;
   isLoading: boolean;
+  // already-translated in-canvas hint shown on expandable nodes (UserNode is module-scope and has no
+  // translate hook, so the screen passes the translated label down via this field)
+  expandLabel: string;
 };
 
 // react-flow edge id keyed by directed pair + kind.
@@ -34,6 +37,8 @@ export function layoutGraph(
   centerId: number,
   expandedIds: Set<number>,
   loadingIds: Set<number>,
+  // already-translated in-canvas expand hint, passed down from the screen (which owns translate)
+  expandLabel: string,
 ): { nodes: Node<UserNodeData>[]; edges: Edge[] } {
   // Build adjacency: recommender -> recommended[]
   const children = new Map<number, number[]>();
@@ -120,6 +125,7 @@ export function layoutGraph(
           isExpandable: !!nodeData.expandable,
           isExpanded: expandedIds.has(id),
           isLoading: loadingIds.has(id),
+          expandLabel,
         },
       });
     });
@@ -154,6 +160,8 @@ export function mergeFragment(
   edgeStore: Map<string, RecommendationGraphEdge>,
   fragment: RecommendationGraph,
 ): void {
+  // intentional asymmetry: node metadata takes the latest fragment, but edges keep the first stored
+  // recommendation - only a USED_REF edge is upgraded to a RECOMMENDATION on the same pair
   for (const node of fragment.nodes) {
     const existing = nodeStore.get(node.id);
     // keep an already-set expandable flag; take latest metadata otherwise

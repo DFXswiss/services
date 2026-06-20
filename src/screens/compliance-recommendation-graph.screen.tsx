@@ -33,7 +33,18 @@ function UserNode({ data }: { data: UserNodeData }): JSX.Element {
   const hasApproval = !!data.tradeApprovalDate;
 
   return (
+    // role/tabIndex/onKeyDown make the node keyboard-operable: react-flow only wires onNodeClick for
+    // the mouse, so Enter/Space synthesizes a bubbling click that reaches its node wrapper and runs
+    // the same expand-and-open-detail handler.
     <div
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.currentTarget.click();
+        }
+      }}
       className={`px-4 py-3 rounded-lg shadow-md border-2 cursor-pointer min-w-[180px] ${
         data.isCenter
           ? 'border-dfxBlue-800 bg-blue-50'
@@ -59,7 +70,7 @@ function UserNode({ data }: { data: UserNodeData }): JSX.Element {
         </div>
       ) : (
         data.isExpandable &&
-        !data.isExpanded && <div className="mt-1 text-xs font-semibold text-dfxBlue-800">+ load connections</div>
+        !data.isExpanded && <div className="mt-1 text-xs font-semibold text-dfxBlue-800">{data.expandLabel}</div>
       )}
       <Handle type="source" position={Position.Bottom} className="!bg-dfxGray-700" />
     </div>
@@ -106,6 +117,7 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
   const [selectedId, setSelectedId] = useState<number>();
   const [detail, setDetail] = useState<ComplianceUserData>();
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string>(); // panel-scoped: failed getUserData vs empty dossier
 
   const [nodes, setNodes, onNodesChange] = useNodesState<UserNodeData>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -129,8 +141,8 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     const expandedIds = new Set(prev.expandedIds);
     const hasMoreIds = new Set(prev.hasMoreIds);
     const loadedCount = new Map(prev.loadedCount);
-    // advance the cursor by the requested page size (not the returned count) so a dropped userData
-    // id can't stall 'Load more'
+    // advance the cursor by NEIGHBOR_PAGE_SIZE (the requested page size), which matches the server's
+    // slice window - so a dropped/merged userData id in the response can't stall 'Load more'
     loadedCount.set(nodeId, (prev.loadedCount.get(nodeId) ?? 0) + NEIGHBOR_PAGE_SIZE);
     if (fragment.hasMore) {
       hasMoreIds.add(nodeId);
@@ -144,6 +156,7 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
   const openDetail = useCallback(
     (nodeId: number): void => {
       setSelectedId(nodeId);
+      setDetailError(undefined);
       const cached = detailCache.current.get(nodeId);
       if (cached) {
         setDetail(cached);
@@ -157,10 +170,15 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
           detailCache.current.set(nodeId, data);
           setDetail(data);
         })
-        .catch(() => undefined)
+        // surface the failure (panel-scoped) so a failed fetch is distinguishable from an empty dossier
+        .catch((e: ApiError) => {
+          // eslint-disable-next-line no-console
+          console.error('getUserData failed', nodeId, e);
+          setDetailError(e.message ?? translate('screens/compliance', 'Unknown error'));
+        })
         .finally(() => setDetailLoading(false));
     },
-    [getUserData],
+    [getUserData, translate],
   );
 
   const loadNeighbors = useCallback(
@@ -207,6 +225,7 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     detailCache.current = new Map();
     setSelectedId(undefined);
     setDetail(undefined);
+    setDetailError(undefined);
     setError(undefined);
     setIsLoading(true);
 
@@ -233,10 +252,12 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
       edges: [...store.edges.values()],
       rootId: centerId,
     };
-    const layout = layoutGraph(graph, centerId, store.expandedIds, loadingIds);
+    // reuse the side-panel 'Load connections' string for the in-canvas hint so both stay in sync
+    const expandLabel = translate('screens/compliance', 'Load connections');
+    const layout = layoutGraph(graph, centerId, store.expandedIds, loadingIds, expandLabel);
     setNodes(layout.nodes);
     setEdges(layout.edges);
-  }, [store, loadingIds, centerId, setNodes, setEdges]);
+  }, [store, loadingIds, centerId, setNodes, setEdges, translate]);
 
   const memoNodeTypes = useMemo(() => nodeTypes, []);
 
@@ -343,6 +364,8 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
               <StyledLoadingSpinner size={SpinnerSize.SM} />
             </div>
           )}
+
+          {detailError && <div className="mt-3 text-sm text-red-600">{detailError}</div>}
 
           {detail && (
             <div className="mt-3 space-y-1 text-dfxGray-700">

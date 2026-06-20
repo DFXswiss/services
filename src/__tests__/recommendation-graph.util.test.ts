@@ -87,7 +87,7 @@ describe('recommendation-graph.util', () => {
         rootId: 2,
       };
 
-      const { nodes } = layoutGraph(graph, 2, new Set(), new Set());
+      const { nodes } = layoutGraph(graph, 2, new Set(), new Set(), 'load connections');
 
       const byId = new Map(nodes.map((n) => [n.id, n]));
       // root 1 at level 0, 2 at level 1, 3 at level 2
@@ -103,7 +103,7 @@ describe('recommendation-graph.util', () => {
         rootId: 1,
       };
 
-      const { nodes } = layoutGraph(graph, 1, new Set(), new Set());
+      const { nodes } = layoutGraph(graph, 1, new Set(), new Set(), 'load connections');
       // two nodes at the same level: totalWidth = 440, startX = -220
       const xs = nodes.map((n) => n.position.x).sort((a, b) => a - b);
       expect(xs).toEqual([-220, 0]);
@@ -116,7 +116,7 @@ describe('recommendation-graph.util', () => {
         rootId: 5,
       };
 
-      const { nodes } = layoutGraph(graph, 5, new Set(), new Set());
+      const { nodes } = layoutGraph(graph, 5, new Set(), new Set(), 'load connections');
       const byId = new Map(nodes.map((n) => [n.id, n]));
       expect(byId.get('5')?.position.y).toBe(0);
       expect(byId.get('6')?.position.y).toBe(240);
@@ -129,7 +129,7 @@ describe('recommendation-graph.util', () => {
         rootId: 1,
       };
 
-      const { nodes } = layoutGraph(graph, 1, new Set(), new Set());
+      const { nodes } = layoutGraph(graph, 1, new Set(), new Set(), 'load connections');
       const byId = new Map(nodes.map((n) => [n.id, n]));
       expect(byId.get('99')?.position.y).toBe(0);
     });
@@ -141,8 +141,8 @@ describe('recommendation-graph.util', () => {
         rootId: 1,
       };
 
-      expect(() => layoutGraph(graph, 1, new Set(), new Set())).not.toThrow();
-      const { nodes } = layoutGraph(graph, 1, new Set(), new Set());
+      expect(() => layoutGraph(graph, 1, new Set(), new Set(), 'load connections')).not.toThrow();
+      const { nodes } = layoutGraph(graph, 1, new Set(), new Set(), 'load connections');
       expect(nodes).toHaveLength(2);
     });
 
@@ -153,7 +153,7 @@ describe('recommendation-graph.util', () => {
         rootId: 1,
       };
 
-      const { nodes } = layoutGraph(graph, 1, new Set(), new Set());
+      const { nodes } = layoutGraph(graph, 1, new Set(), new Set(), 'load connections');
       expect(nodes.map((n) => n.id)).toEqual(['1']);
     });
 
@@ -164,7 +164,7 @@ describe('recommendation-graph.util', () => {
         rootId: 2,
       };
 
-      const { nodes } = layoutGraph(graph, 2, new Set(), new Set());
+      const { nodes } = layoutGraph(graph, 2, new Set(), new Set(), 'load connections');
       const byId = new Map(nodes.map((n) => [n.id, n]));
       expect(byId.get('2')?.data.isCenter).toBe(true);
       expect(byId.get('1')?.data.isCenter).toBe(false);
@@ -177,8 +177,10 @@ describe('recommendation-graph.util', () => {
         rootId: 1,
       };
 
-      const { nodes } = layoutGraph(graph, 1, new Set([1]), new Set([2]));
+      const { nodes } = layoutGraph(graph, 1, new Set([1]), new Set([2]), 'load connections');
       const byId = new Map(nodes.map((n) => [n.id, n]));
+      expect(byId.get('1')?.data.expandLabel).toBe('load connections');
+      expect(byId.get('2')?.data.expandLabel).toBe('load connections');
       expect(byId.get('1')?.data.isExpandable).toBe(true);
       expect(byId.get('1')?.data.isExpanded).toBe(true);
       expect(byId.get('1')?.data.isLoading).toBe(false);
@@ -189,7 +191,7 @@ describe('recommendation-graph.util', () => {
 
     it('uses the user node type and string ids', () => {
       const graph: RecommendationGraph = { nodes: [node(7)], edges: [], rootId: 7 };
-      const { nodes } = layoutGraph(graph, 7, new Set(), new Set());
+      const { nodes } = layoutGraph(graph, 7, new Set(), new Set(), 'load connections');
       expect(nodes[0].type).toBe('user');
       expect(nodes[0].id).toBe('7');
     });
@@ -202,7 +204,7 @@ describe('recommendation-graph.util', () => {
           rootId: 1,
         };
 
-        const { edges } = layoutGraph(graph, 1, new Set(), new Set());
+        const { edges } = layoutGraph(graph, 1, new Set(), new Set(), 'load connections');
         expect(edges).toHaveLength(1);
         const e = edges[0];
         expect(e.id).toBe('e-1-2-Recommendation');
@@ -222,7 +224,7 @@ describe('recommendation-graph.util', () => {
           rootId: 1,
         };
 
-        const { edges } = layoutGraph(graph, 1, new Set(), new Set());
+        const { edges } = layoutGraph(graph, 1, new Set(), new Set(), 'load connections');
         expect(edges[0].style).toEqual({ stroke: '#ef4444' });
       });
 
@@ -233,7 +235,7 @@ describe('recommendation-graph.util', () => {
           rootId: 1,
         };
 
-        const { edges } = layoutGraph(graph, 1, new Set(), new Set());
+        const { edges } = layoutGraph(graph, 1, new Set(), new Set(), 'load connections');
         expect(edges[0].style).toEqual({ stroke: '#9ca3af' });
       });
 
@@ -244,7 +246,7 @@ describe('recommendation-graph.util', () => {
           rootId: 1,
         };
 
-        const { edges } = layoutGraph(graph, 1, new Set(), new Set());
+        const { edges } = layoutGraph(graph, 1, new Set(), new Set(), 'load connections');
         const e = edges[0];
         expect(e.id).toBe('e-1-2-UsedRef');
         expect(e.animated).toBe(true);
