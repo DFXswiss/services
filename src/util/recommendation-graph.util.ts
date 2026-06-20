@@ -134,7 +134,6 @@ export function layoutGraph(
   const edges: Edge[] = graph.edges.map((e) => {
     const isRef = e.kind === RecommendationGraphEdgeKind.USED_REF;
     return {
-      // key by directed pair + kind: synthetic ref-edge ids are negative & per-response, so e.id would collide on merge
       id: reactFlowEdgeId(e),
       source: String(e.recommenderId),
       target: String(e.recommendedId),

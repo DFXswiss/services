@@ -24,6 +24,7 @@ import {
 } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { DEFAULT_REF } from 'src/util/compliance-helpers';
 import { layoutGraph, mergeFragment, UserNodeData } from 'src/util/recommendation-graph.util';
 
 const NEIGHBOR_PAGE_SIZE = 25;
@@ -45,7 +46,7 @@ function UserNode({ data }: { data: UserNodeData }): JSX.Element {
           e.currentTarget.click();
         }
       }}
-      className={`px-4 py-3 rounded-lg shadow-md border-2 cursor-pointer min-w-[180px] ${
+      className={`px-4 py-3 rounded-lg shadow-md border-2 cursor-pointer min-w-[180px] focus:outline-none focus-visible:ring-2 focus-visible:ring-dfxBlue-800 ${
         data.isCenter
           ? 'border-dfxBlue-800 bg-blue-50'
           : hasApproval
@@ -171,11 +172,7 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
           setDetail(data);
         })
         // surface the failure (panel-scoped) so a failed fetch is distinguishable from an empty dossier
-        .catch((e: ApiError) => {
-          // eslint-disable-next-line no-console
-          console.error('getUserData failed', nodeId, e);
-          setDetailError(e.message ?? translate('screens/compliance', 'Unknown error'));
-        })
+        .catch((e: ApiError) => setDetailError(e.message ?? translate('screens/compliance', 'Unknown error')))
         .finally(() => setDetailLoading(false));
     },
     [getUserData, translate],
@@ -204,17 +201,20 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     [getRecommendationGraphNeighbors, applyFragment, store.loadedCount, translate],
   );
 
-  // one click does both: show the node's details AND lazily load its connected accounts
+  // clicking a node always inspects it (opens the detail panel); it auto-loads neighbors ONLY on the
+  // node's first expansion (when it has never been loaded yet). Further pagination is explicit, via
+  // the 'Load more connections' button, so re-clicking a node to inspect it never grows the graph.
   const onNodeClick = useCallback<NodeMouseHandler>(
     (_, node) => {
       const nodeId = +node.id;
       openDetail(nodeId);
       const stored = store.nodes.get(nodeId);
-      if ((stored?.expandable || store.hasMoreIds.has(nodeId)) && !store.expandedIds.has(nodeId)) {
+      const neverLoaded = !store.loadedCount.has(nodeId);
+      if (stored?.expandable && neverLoaded) {
         void loadNeighbors(nodeId);
       }
     },
-    [openDetail, loadNeighbors, store.nodes, store.hasMoreIds, store.expandedIds],
+    [openDetail, loadNeighbors, store.nodes, store.loadedCount],
   );
 
   // initial load: reset the store and load the center's direct (1-hop) neighbors
@@ -241,8 +241,12 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     return () => {
       cancelled = true;
     };
-    // re-init only when the inspected userData changes
-  }, [centerId]);
+    // Effectively re-inits only when centerId changes: the other deps are stable references
+    // (getRecommendationGraphNeighbors/getUserData are memoized on the api `call`, applyFragment is a
+    // useCallback([]), openDetail is a useCallback over those stable values, and translate is captured
+    // in the settings-context memo). Listing them honestly satisfies react-hooks/exhaustive-deps
+    // without a suppression and does not introduce a reset/refetch loop.
+  }, [centerId, getRecommendationGraphNeighbors, applyFragment, openDetail, translate]);
 
   // rebuild the react-flow graph whenever the store or per-node loading state changes
   useEffect(() => {
@@ -269,7 +273,13 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     selectedId != null &&
     !store.expandedIds.has(selectedId) &&
     (selectedNode?.expandable || store.hasMoreIds.has(selectedId));
-  const selectedReferrer = detail?.users.find((u) => u.refUserDataId);
+  // all distinct ref-code referrers, deduped by usedRef and ignoring the DEFAULT_REF sentinel
+  // (same dedup as recommendation-panel.tsx)
+  const selectedReferrers = Array.from(
+    new Map(
+      (detail?.users ?? []).filter((u) => u.usedRef && u.usedRef !== DEFAULT_REF).map((u) => [u.usedRef, u]),
+    ).values(),
+  );
 
   return (
     <div className="w-full flex" style={{ height: 'calc(100vh - 80px)' }}>
@@ -283,7 +293,7 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
             {translate('screens/compliance', 'Edges')}: {store.edges.size}
           </span>
           <span className="text-dfxGray-700">
-            {translate('screens/compliance', 'click a node to show details & load its connections')}
+            {translate('screens/compliance', 'Click a node to show details and load its connections')}
           </span>
           <span className="flex items-center gap-1">
             <span className="w-3 h-3 rounded border-2 border-dfxBlue-800 bg-blue-50 inline-block" />{' '}
@@ -379,12 +389,12 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
                   .filter(Boolean)
                   .join(', ') || '-'}
               </div>
-              {selectedReferrer && (
-                <div>
-                  {translate('screens/compliance', 'Referrer')}: {selectedReferrer.refUserName ?? '-'} #
-                  {selectedReferrer.refUserDataId} ({selectedReferrer.usedRef})
+              {selectedReferrers.map((u) => (
+                <div key={u.usedRef}>
+                  {translate('screens/compliance', 'Referrer')}: {u.refUserName ?? '-'}{' '}
+                  {u.refUserDataId ? `#${u.refUserDataId}` : ''} ({u.usedRef})
                 </div>
-              )}
+              ))}
               <div>
                 {translate('screens/compliance', 'Transactions')}: {detail.transactions.length}
               </div>
