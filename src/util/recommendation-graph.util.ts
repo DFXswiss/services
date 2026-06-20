@@ -4,7 +4,9 @@ import {
   RecommendationGraphEdge,
   RecommendationGraphEdgeKind,
   RecommendationGraphNode,
+  UserInfo,
 } from 'src/hooks/compliance.hook';
+import { DEFAULT_REF } from 'src/util/compliance-helpers';
 
 // react-flow node data: the stored node plus the render-time flags layoutGraph derives.
 // Exported so the producer (layoutGraph) and consumer (UserNode) share the shape.
@@ -16,6 +18,9 @@ export type UserNodeData = RecommendationGraphNode & {
   // already-translated in-canvas hint shown on expandable nodes (UserNode is module-scope and has no
   // translate hook, so the screen passes the translated label down via this field)
   expandLabel: string;
+  // explicit activation callback: UserNode calls this directly from both the click and the
+  // Enter/Space keydown handlers, so keyboard activation never relies on synthesizing a bubbling click.
+  onActivate?: (id: number) => void;
 };
 
 // react-flow edge id keyed by directed pair + kind.
@@ -131,6 +136,8 @@ export function layoutGraph(
     });
   }
 
+  // edges intentionally carry no typed `data` (deliberate asymmetry with Node<UserNodeData>[] above):
+  // the react-flow edge styling/labels are derived inline here and nothing downstream reads edge.data.
   const edges: Edge[] = graph.edges.map((e) => {
     const isRef = e.kind === RecommendationGraphEdgeKind.USED_REF;
     return {
@@ -175,4 +182,107 @@ export function mergeFragment(
       edge.kind === RecommendationGraphEdgeKind.RECOMMENDATION;
     if (!existing || upgrade) edgeStore.set(key, edge);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Lazy-expand state machine (pure, immutable). The screen holds a GraphStore in React state and
+// drives expansion via these functions; keeping the transitions here makes them coverage-measured
+// (.tsx screens are excluded from collectCoverageFrom) and directly unit-testable.
+// ---------------------------------------------------------------------------
+
+// accumulating client graph store (deduped by node id and by directed edge pair). Held in React
+// state and replaced immutably on every transition so all render-visible values stay reactive.
+export interface GraphStore {
+  nodes: Map<number, RecommendationGraphNode>;
+  edges: Map<string, RecommendationGraphEdge>;
+  expandedIds: Set<number>; // nodes whose neighbors are fully loaded
+  loadingIds: Set<number>; // nodes with an in-flight neighbors fetch (drives the per-node spinner)
+  loadedCount: Map<number, number>; // neighbors already loaded per node (pagination cursor)
+  hasMoreIds: Set<number>; // nodes with further neighbors to load
+}
+
+export function emptyGraphStore(): GraphStore {
+  return {
+    nodes: new Map(),
+    edges: new Map(),
+    expandedIds: new Set(),
+    loadingIds: new Set(),
+    loadedCount: new Map(),
+    hasMoreIds: new Set(),
+  };
+}
+
+// true iff the node is not already fully expanded AND not currently loading: a click on an
+// already-expanded (or in-flight) node must not trigger another fetch.
+export function shouldExpand(store: GraphStore, nodeId: number): boolean {
+  return !store.expandedIds.has(nodeId) && !store.loadingIds.has(nodeId);
+}
+
+// pagination cursor for the node's next neighbors page (0 when never loaded).
+export function nextSkip(store: GraphStore, nodeId: number): number {
+  return store.loadedCount.get(nodeId) ?? 0;
+}
+
+// mark a node as having an in-flight fetch (idempotent). Returns a new store.
+export function beginExpand(store: GraphStore, nodeId: number): GraphStore {
+  const loadingIds = new Set(store.loadingIds);
+  loadingIds.add(nodeId);
+  return { ...store, loadingIds };
+}
+
+// merge a freshly fetched fragment for nodeId into a new store:
+// - merge nodes/edges via mergeFragment (dedup by id / directed pair)
+// - advance the per-node cursor (single source of truth: derived FROM `prev`, never a closure skip)
+//   by the number of neighbor items actually returned, capped at the requested page size
+// - add/remove nodeId in hasMoreIds based on fragment.hasMore
+// - mark nodeId fully expanded (expandedIds) ONLY once no further pages remain, so a node with more
+//   pages stays expandable via 'Load more'; always clear nodeId from loadingIds
+export function applyFragment(
+  prev: GraphStore,
+  nodeId: number,
+  fragment: RecommendationGraph,
+  pageSize: number,
+): GraphStore {
+  const nodes = new Map(prev.nodes);
+  const edges = new Map(prev.edges);
+  mergeFragment(nodes, edges, fragment);
+
+  const expandedIds = new Set(prev.expandedIds);
+  const hasMoreIds = new Set(prev.hasMoreIds);
+  const loadingIds = new Set(prev.loadingIds);
+  const loadedCount = new Map(prev.loadedCount);
+
+  // advance the cursor by the number of items actually returned (derived from `prev`), matching the
+  // server's slice window. Capped at pageSize because a fragment may re-include already-known context
+  // nodes (e.g. an upward parent that mergeFragment dedups) beyond this page's neighbors - so a
+  // dropped/merged userData id in the response can't stall 'Load more' nor over-advance the cursor.
+  const returned = Math.min(fragment.nodes.length, pageSize);
+  loadedCount.set(nodeId, (prev.loadedCount.get(nodeId) ?? 0) + returned);
+
+  loadingIds.delete(nodeId);
+  if (fragment.hasMore) {
+    hasMoreIds.add(nodeId);
+    expandedIds.delete(nodeId);
+  } else {
+    hasMoreIds.delete(nodeId);
+    expandedIds.add(nodeId);
+  }
+
+  return { nodes, edges, expandedIds, loadingIds, loadedCount, hasMoreIds };
+}
+
+// clear a node's in-flight flag after a failed fetch (graph untouched) so a retry is possible.
+export function endExpandError(prev: GraphStore, nodeId: number): GraphStore {
+  const loadingIds = new Set(prev.loadingIds);
+  loadingIds.delete(nodeId);
+  return { ...prev, loadingIds };
+}
+
+// all distinct ref-code referrers for a set of wallet users, deduped by usedRef and ignoring the
+// DEFAULT_REF sentinel. Lives in this .ts util (not the .tsx screen/panel) so it is coverage-measured
+// and is reused by both the recommendation graph screen and the recommendation panel.
+export function distinctReferrers(users: UserInfo[] | undefined): UserInfo[] {
+  return Array.from(
+    new Map((users ?? []).filter((u) => u.usedRef && u.usedRef !== DEFAULT_REF).map((u) => [u.usedRef, u])).values(),
+  );
 }

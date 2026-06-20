@@ -403,6 +403,8 @@ export interface RecommendationGraphEdge {
   kind: RecommendationGraphEdgeKind;
   recommenderId: number;
   recommendedId: number;
+  // method/type are intentionally widened to `string` on the client (the api types them as enums):
+  // a deliberate frontend widening so this read-only graph view doesn't couple to the api enum values.
   method?: string;
   type?: string;
   isConfirmed?: boolean;

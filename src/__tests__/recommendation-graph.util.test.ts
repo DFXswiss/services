@@ -25,7 +25,21 @@ import {
   RecommendationGraphEdgeKind,
   RecommendationGraphNode,
 } from 'src/hooks/compliance.hook';
-import { edgePairKey, layoutGraph, mergeFragment, reactFlowEdgeId } from '../util/recommendation-graph.util';
+import {
+  applyFragment,
+  beginExpand,
+  distinctReferrers,
+  edgePairKey,
+  emptyGraphStore,
+  endExpandError,
+  GraphStore,
+  layoutGraph,
+  mergeFragment,
+  nextSkip,
+  reactFlowEdgeId,
+  shouldExpand,
+} from '../util/recommendation-graph.util';
+import { UserInfo } from '../hooks/compliance.hook';
 
 function node(id: number, extra: Partial<RecommendationGraphNode> = {}): RecommendationGraphNode {
   return { id, ...extra };
@@ -57,6 +71,18 @@ function refEdge(
     recommendedId,
     ...extra,
   };
+}
+
+function fragment(
+  nodes: RecommendationGraphNode[],
+  edges: RecommendationGraphEdge[],
+  hasMore?: boolean,
+): RecommendationGraph {
+  return { nodes, edges, rootId: nodes[0]?.id ?? 0, hasMore };
+}
+
+function user(id: number, usedRef?: string, extra: Partial<UserInfo> = {}): UserInfo {
+  return { id, address: `addr-${id}`, role: 'User', status: 'Active', created: '2024-01-01', usedRef, ...extra };
 }
 
 describe('recommendation-graph.util', () => {
@@ -254,6 +280,174 @@ describe('recommendation-graph.util', () => {
         expect(e.label).toBe('ABC123');
         expect(e.labelStyle).toEqual({ fontSize: 10, fill: '#3b82f6' });
       });
+    });
+  });
+
+  describe('emptyGraphStore', () => {
+    it('returns an empty, independent store on each call', () => {
+      const a = emptyGraphStore();
+      const b = emptyGraphStore();
+      expect(a.nodes.size).toBe(0);
+      expect(a.edges.size).toBe(0);
+      expect(a.expandedIds.size).toBe(0);
+      expect(a.loadingIds.size).toBe(0);
+      expect(a.loadedCount.size).toBe(0);
+      expect(a.hasMoreIds.size).toBe(0);
+      // fresh instances, not shared references
+      a.loadingIds.add(1);
+      expect(b.loadingIds.has(1)).toBe(false);
+    });
+  });
+
+  describe('shouldExpand', () => {
+    it('is true for a never-touched node', () => {
+      expect(shouldExpand(emptyGraphStore(), 1)).toBe(true);
+    });
+
+    it('is false when the node is already fully expanded', () => {
+      const store: GraphStore = { ...emptyGraphStore(), expandedIds: new Set([1]) };
+      expect(shouldExpand(store, 1)).toBe(false);
+    });
+
+    it('is false when the node is currently loading', () => {
+      const store: GraphStore = { ...emptyGraphStore(), loadingIds: new Set([1]) };
+      expect(shouldExpand(store, 1)).toBe(false);
+    });
+
+    it('is true for a node with more pages (in hasMoreIds, not expanded/loading)', () => {
+      const store: GraphStore = { ...emptyGraphStore(), hasMoreIds: new Set([1]) };
+      expect(shouldExpand(store, 1)).toBe(true);
+    });
+  });
+
+  describe('nextSkip', () => {
+    it('is 0 when the node has never been loaded', () => {
+      expect(nextSkip(emptyGraphStore(), 1)).toBe(0);
+    });
+
+    it('returns the per-node loaded count cursor', () => {
+      const store: GraphStore = { ...emptyGraphStore(), loadedCount: new Map([[1, 25]]) };
+      expect(nextSkip(store, 1)).toBe(25);
+    });
+  });
+
+  describe('beginExpand', () => {
+    it('adds the node to loadingIds and returns a new store (input untouched)', () => {
+      const prev = emptyGraphStore();
+      const next = beginExpand(prev, 1);
+      expect(next).not.toBe(prev);
+      expect(next.loadingIds.has(1)).toBe(true);
+      expect(prev.loadingIds.has(1)).toBe(false); // immutable
+    });
+
+    it('is idempotent', () => {
+      const next = beginExpand(beginExpand(emptyGraphStore(), 1), 1);
+      expect(next.loadingIds.size).toBe(1);
+      expect(next.loadingIds.has(1)).toBe(true);
+    });
+  });
+
+  describe('endExpandError', () => {
+    it('removes the node from loadingIds only, leaving the graph untouched', () => {
+      const prev: GraphStore = {
+        ...emptyGraphStore(),
+        nodes: new Map([[1, node(1)]]),
+        loadingIds: new Set([1, 2]),
+      };
+      const next = endExpandError(prev, 1);
+      expect(next).not.toBe(prev);
+      expect(next.loadingIds.has(1)).toBe(false);
+      expect(next.loadingIds.has(2)).toBe(true); // other in-flight nodes kept
+      expect(next.nodes.size).toBe(1); // graph untouched
+      expect(prev.loadingIds.has(1)).toBe(true); // immutable
+    });
+  });
+
+  describe('applyFragment', () => {
+    it('merges nodes/edges, clears loading, advances the cursor and marks expanded (no more pages)', () => {
+      const prev = beginExpand(emptyGraphStore(), 1);
+      const next = applyFragment(prev, 1, fragment([node(1), node(2)], [recEdge(1, 2)], false), 25);
+
+      expect(next).not.toBe(prev);
+      expect(next.nodes.size).toBe(2);
+      expect(next.edges.size).toBe(1);
+      expect(next.loadingIds.has(1)).toBe(false); // cleared
+      expect(next.loadedCount.get(1)).toBe(2); // advanced by items actually returned
+      expect(next.expandedIds.has(1)).toBe(true); // fully expanded - no more pages
+      expect(next.hasMoreIds.has(1)).toBe(false);
+      expect(prev.nodes.size).toBe(0); // immutable
+    });
+
+    it('keeps the node expandable (hasMoreIds, not expandedIds) and caps the cursor at page size', () => {
+      // a full page can also include an upward-parent context node, so nodes.length may exceed pageSize
+      const prev = beginExpand(emptyGraphStore(), 1);
+      const pageNodes = Array.from({ length: 27 }, (_, i) => node(i + 1));
+      const next = applyFragment(prev, 1, fragment(pageNodes, [], true), 25);
+
+      expect(next.hasMoreIds.has(1)).toBe(true);
+      expect(next.expandedIds.has(1)).toBe(false); // still has further pages
+      expect(next.loadedCount.get(1)).toBe(25); // capped at page size, not 27
+    });
+
+    it('advances the cursor from prev across two pages (single source of truth)', () => {
+      let store = beginExpand(emptyGraphStore(), 1);
+      store = applyFragment(store, 1, fragment([node(1), node(2), node(3)], [], true), 25);
+      expect(store.loadedCount.get(1)).toBe(3);
+      store = beginExpand(store, 1);
+      store = applyFragment(store, 1, fragment([node(4), node(5)], [], false), 25);
+      expect(store.loadedCount.get(1)).toBe(5); // 3 (prev) + 2
+    });
+
+    it('dedups across two fragments without duplicating existing nodes/edges', () => {
+      let store = beginExpand(emptyGraphStore(), 1);
+      store = applyFragment(store, 1, fragment([node(1), node(2)], [recEdge(1, 2)], true), 25);
+      store = beginExpand(store, 1);
+      // second page re-includes node 2 + the same edge plus a new node 3
+      store = applyFragment(store, 1, fragment([node(2), node(3)], [recEdge(1, 2), recEdge(2, 3)], false), 25);
+
+      expect(store.nodes.size).toBe(3); // 1,2,3 - no duplicate of 2
+      expect(store.edges.size).toBe(2); // 1-2 (kept once) and 2-3
+    });
+
+    it('removes a node from hasMoreIds once a later page reports no more', () => {
+      let store: GraphStore = { ...emptyGraphStore(), hasMoreIds: new Set([1]), loadingIds: new Set([1]) };
+      store = applyFragment(store, 1, fragment([node(1)], [], false), 25);
+      expect(store.hasMoreIds.has(1)).toBe(false);
+      expect(store.expandedIds.has(1)).toBe(true);
+    });
+
+    it('removes a stale expanded flag when a fragment reports more pages', () => {
+      let store: GraphStore = { ...emptyGraphStore(), expandedIds: new Set([1]), loadingIds: new Set([1]) };
+      store = applyFragment(store, 1, fragment([node(1)], [], true), 25);
+      expect(store.expandedIds.has(1)).toBe(false);
+      expect(store.hasMoreIds.has(1)).toBe(true);
+    });
+
+    it('treats a missing hasMore (undefined) as no more pages', () => {
+      const store = applyFragment(beginExpand(emptyGraphStore(), 1), 1, fragment([node(1)], []), 25);
+      expect(store.expandedIds.has(1)).toBe(true);
+      expect(store.hasMoreIds.has(1)).toBe(false);
+    });
+  });
+
+  describe('distinctReferrers', () => {
+    it('returns an empty array for undefined input', () => {
+      expect(distinctReferrers(undefined)).toEqual([]);
+    });
+
+    it('returns an empty array for an empty list', () => {
+      expect(distinctReferrers([])).toEqual([]);
+    });
+
+    it('drops users without a usedRef and the DEFAULT_REF sentinel', () => {
+      const result = distinctReferrers([user(1, undefined), user(2, '000-000'), user(3, 'ABC-123')]);
+      expect(result.map((u) => u.id)).toEqual([3]);
+    });
+
+    it('dedupes by usedRef, keeping the last occurrence (Map insertion semantics)', () => {
+      const result = distinctReferrers([user(1, 'REF-1'), user(2, 'REF-1'), user(3, 'REF-2')]);
+      expect(result.map((u) => u.id)).toEqual([2, 3]); // REF-1 -> user 2 (last wins), REF-2 -> user 3
+      expect(result).toHaveLength(2);
     });
   });
 
