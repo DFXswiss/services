@@ -389,6 +389,8 @@ export interface RecommendationGraphNode {
   kycStatus?: string;
   kycLevel?: number;
   tradeApprovalDate?: string;
+  // set by the neighbors endpoint: the node has further neighbors not contained in the current fragment
+  expandable?: boolean;
 }
 
 export enum RecommendationGraphEdgeKind {
@@ -413,6 +415,8 @@ export interface RecommendationGraph {
   nodes: RecommendationGraphNode[];
   edges: RecommendationGraphEdge[];
   rootId: number;
+  // set by the paginated neighbors endpoint: more direct neighbors of the root exist beyond this page
+  hasMore?: boolean;
 }
 
 export interface RecommendationUserInfo {
@@ -1000,6 +1004,21 @@ export function useCompliance() {
     });
   }
 
+  async function getRecommendationGraphNeighbors(
+    userDataId: number,
+    skip?: number,
+    take?: number,
+  ): Promise<RecommendationGraph> {
+    const query = new URLSearchParams();
+    if (skip != null) query.set('skip', `${skip}`);
+    if (take != null) query.set('take', `${take}`);
+    const queryString = query.toString();
+    return call<RecommendationGraph>({
+      url: `support/recommendation-graph/${userDataId}/neighbors${queryString ? `?${queryString}` : ''}`,
+      method: 'GET',
+    });
+  }
+
   async function updateKycStep(
     stepId: number,
     data: { status: string; result?: string; comment?: string },
@@ -1215,6 +1234,7 @@ export function useCompliance() {
       getKycFileStats,
       getTransactionList,
       getRecommendationGraph,
+      getRecommendationGraphNeighbors,
       downloadIpLogPdf,
       downloadTransactionPdf,
       generateOnboardingPdf,
