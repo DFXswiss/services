@@ -108,6 +108,12 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
   const inFlight = useRef(new Set<number>());
   // dossier cache so re-clicking a node does not re-fetch the full userData
   const detailCache = useRef(new Map<number, ComplianceUserData>());
+  // synchronously-readable mirror of the committed store: loadNeighbors must read shouldExpand/nextSkip
+  // outside the setStore updater (which does NOT run synchronously under React 18) to drive its fetch
+  const storeRef = useRef(store);
+  useEffect(() => {
+    storeRef.current = store;
+  }, [store]);
 
   useLayoutOptions({
     title: translate('screens/compliance', 'Recommendation Network'),
@@ -147,19 +153,15 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
       // synchronous re-entrancy guard so rapid double-clicks before setStore commits can't double-fetch;
       // store.loadingIds (via shouldExpand) is the reactive guard, inFlight is the in-render-frame guard.
       if (inFlight.current.has(nodeId)) return;
-      let skip = 0;
-      let expand = false;
-      setStore((prev) => {
-        if (!shouldExpand(prev, nodeId)) return prev;
-        expand = true;
-        // nextSkip is the per-node cursor; note an expand may re-include an already-known upward parent
-        // (mergeFragment dedups it) so the cursor can advance over already-visible nodes - accepted
-        // as-is for this compliance tool (applyFragment caps the advance at the page size).
-        skip = nextSkip(prev, nodeId);
-        return beginExpand(prev, nodeId);
-      });
-      if (!expand) return;
+      // read the guard + cursor from the synchronously-current store mirror (the setStore updater does
+      // NOT run synchronously under React 18, so it cannot drive control flow). nextSkip is the per-node
+      // cursor; an expand may re-include an already-known upward parent (mergeFragment dedups it) so the
+      // cursor can advance over already-visible nodes - accepted for this compliance tool.
+      const current = storeRef.current;
+      if (!shouldExpand(current, nodeId)) return;
+      const skip = nextSkip(current, nodeId);
       inFlight.current.add(nodeId);
+      setStore((prev) => beginExpand(prev, nodeId));
       setLoadMoreError(undefined);
       try {
         const fragment = await getRecommendationGraphNeighbors(nodeId, skip, NEIGHBOR_PAGE_SIZE);
