@@ -149,7 +149,9 @@ export function layoutGraph(
       style: isRef
         ? { stroke: '#3b82f6', strokeDasharray: '6 4' }
         : { stroke: e.isConfirmed ? '#22c55e' : e.isConfirmed === false ? '#ef4444' : '#9ca3af' },
-      label: isRef ? e.refCode : e.method,
+      // prefer the actual ref code as the label (USED_REF always has one; a ref-code recommendation
+      // now carries the code it superseded) and fall back to the recommendation method otherwise
+      label: e.refCode ?? e.method,
       labelStyle: { fontSize: 10, fill: isRef ? '#3b82f6' : '#6b7280' },
     };
   });

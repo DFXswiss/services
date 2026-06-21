@@ -243,6 +243,19 @@ describe('recommendation-graph.util', () => {
         expect(e.markerEnd).toEqual({ type: MarkerType.ArrowClosed });
       });
 
+      it('labels a ref-code recommendation with the actual ref code, not the method', () => {
+        const graph: RecommendationGraph = {
+          nodes: [node(1), node(2)],
+          edges: [recEdge(1, 2, { isConfirmed: true, method: 'RefCode', refCode: '171-707' })],
+          rootId: 1,
+        };
+
+        const { edges } = layoutGraph(graph, 1, new Set(), new Set(), 'load connections');
+        // stays a green recommendation edge, but is labelled with the code that was used
+        expect(edges[0].style).toEqual({ stroke: '#22c55e' });
+        expect(edges[0].label).toBe('171-707');
+      });
+
       it('styles a rejected recommendation red', () => {
         const graph: RecommendationGraph = {
           nodes: [node(1), node(2)],

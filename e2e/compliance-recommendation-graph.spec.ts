@@ -107,13 +107,19 @@ function node(id: number, name: string, opts: Partial<GraphNode> = {}): GraphNod
   return { id, firstname, surname, kycStatus: 'Completed', kycLevel: 50, ...opts };
 }
 
-function recEdge(recommenderId: number, recommendedId: number, method = 'RecommendationCode'): GraphEdge {
+function recEdge(
+  recommenderId: number,
+  recommendedId: number,
+  method = 'RecommendationCode',
+  refCode?: string,
+): GraphEdge {
   return {
     id: recommenderId * 1000 + recommendedId,
     kind: 'Recommendation',
     recommenderId,
     recommendedId,
     method,
+    refCode,
     isConfirmed: true,
     created: '2024-01-01T00:00:00.000Z',
   };
@@ -142,7 +148,12 @@ const CENTER_FRAGMENT: GraphFragment = {
     node(9002, 'Clara Hub', { expandable: true, kycStatus: 'InProgress', kycLevel: 20 }),
     node(9003, 'Dora Fehler', { expandable: true, kycStatus: 'NA', kycLevel: 0 }),
   ],
-  edges: [refEdge(8000, 9000, '100-001'), recEdge(9000, 9001), recEdge(9000, 9002), refEdge(9000, 9003, '100-002')],
+  edges: [
+    refEdge(8000, 9000, '100-001'),
+    recEdge(9000, 9001, 'RefCode', '100-005'),
+    recEdge(9000, 9002),
+    refEdge(9000, 9003, '100-002'),
+  ],
 };
 
 // Expand 9001: re-includes parent 9000 (deduped on merge) + new nodes 9010, 9011.
@@ -155,7 +166,7 @@ const EXPAND_9001_FRAGMENT: GraphFragment = {
     node(9010, 'Emil Enkel'),
     node(9011, 'Fritz Enkel'),
   ],
-  edges: [recEdge(9000, 9001), recEdge(9001, 9010), recEdge(9001, 9011)],
+  edges: [recEdge(9000, 9001, 'RefCode', '100-005'), recEdge(9001, 9010), recEdge(9001, 9011)],
 };
 
 // Hub 9002 first page: hasMore true (children 9020, 9021).
@@ -393,6 +404,9 @@ test.describe('Compliance Recommendation Network (graph) - Visual Regression Tes
     await expect(graphNode(page, 9001)).toBeVisible();
     await expect(graphNode(page, 9002)).toBeVisible();
     await expect(graphNode(page, 9003)).toBeVisible();
+
+    // a ref-code recommendation edge is labelled with the actual code used, not the method name
+    await expect(page.locator('.react-flow__edge-textwrapper').getByText('100-005')).toBeVisible();
 
     await waitGraphSettled(page);
     await expect(page).toHaveScreenshot('recgraph-01-initial.png', {
