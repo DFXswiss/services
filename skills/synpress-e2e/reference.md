@@ -22,7 +22,7 @@
   `sepolia-sell-e2e.spec.ts`.
 
 ## Wallet constants (e2e/synpress/custom-fixtures.ts)
-- Password: `Tester@1234`. Seed: `TEST_SEED` from `.env` (sample mnemonic in `.env.sample`).
+- Password: `Tester@1234`. Seed: `TEST_SEED` from `.env` (placeholder mnemonic shown in `.env.sample`).
 - Extension loaded with `--disable-extensions-except` / `--load-extension` from
   `.cache-synpress/metamask-chrome-11.9.1`; locale forced to `en-US`; fresh ephemeral profile per run.
 - Sepolia: USDT `0xaa8e23fb1079ea71e0a56f48a2aa51851d8433d0`, chainId `11155111`.
