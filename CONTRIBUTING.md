@@ -51,3 +51,19 @@ platform-, font- and data-dependent — needlessly blocking PRs.
   is expected — these tests are not a regression gate and do not fail the build.
 - For a clean, reviewable diff, regenerate on a realistic data set so the
   screenshot isolates your actual UI change rather than seed-data noise.
+
+## Agent skills
+
+Shared agent skills live under `skills/<name>/` and are version-controlled so the whole team gets them
+on pull. They follow the open [Agent Skills](https://agentskills.io) `SKILL.md` standard, so they are
+not tied to a single tool. Point your agent at the `skills/` directory — symlink or copy
+`skills/<name>/` into your agent's skills folder, or set the path in your agent's config; per-developer
+agent config stays local. Keep `SKILL.md` frontmatter to the portable core (`name`, `description`) and
+reference scripts by repository-relative path.
+
+Current skills:
+
+- `skills/synpress-e2e/` — run the MetaMask wallet e2e suite (pinned Chrome 126 / MetaMask 11.9.1,
+  headed, serial).
+- `skills/visual-baselines/` — regenerate Playwright visual baselines after a UI change (see "Visual
+  regression tests" above).
