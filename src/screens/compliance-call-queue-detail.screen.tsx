@@ -1,4 +1,4 @@
-import { useSessionContext } from '@dfx.swiss/react';
+import { CallQueue, CallQueueSourceType, useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
@@ -16,7 +16,6 @@ import { CallQueueUserInfo } from 'src/components/compliance/call-queue/call-que
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useCallQueueClerks } from 'src/hooks/call-queue-clerks.hook';
-import { CallQueue, CallQueueSourceType } from '@dfx.swiss/react';
 import { CallOutcome, ComplianceUserData, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
@@ -39,7 +38,7 @@ const TX_OUTCOMES: CallOutcome[] = [
   CallOutcome.COMPLETED,
   CallOutcome.UNAVAILABLE,
   CallOutcome.SUSPICIOUS,
-  CallOutcome.USER_REJECTED,
+  CallOutcome.FAILED,
   CallOutcome.REPEAT,
 ];
 
@@ -47,7 +46,7 @@ const USER_OUTCOMES: CallOutcome[] = [
   CallOutcome.COMPLETED,
   CallOutcome.UNAVAILABLE,
   CallOutcome.SUSPICIOUS,
-  CallOutcome.USER_REJECTED,
+  CallOutcome.FAILED,
   CallOutcome.REPEAT,
 ];
 
