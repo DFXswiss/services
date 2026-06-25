@@ -1,5 +1,12 @@
 import { useAuthContext, UserRole, useKyc } from '@dfx.swiss/react';
-import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import {
+  IconColor,
+  IconSize,
+  IconVariant,
+  SpinnerSize,
+  StyledIconButton,
+  StyledLoadingSpinner,
+} from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -57,12 +64,13 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   const { translate } = useSettingsContext();
   const { id: userDataId } = useParams();
-  const { getUserData } = useCompliance();
+  const { getUserData, downloadUserFiles } = useCompliance();
   const { getFile } = useKyc();
   const navigate = useNavigate();
 
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ComplianceUserData>();
+  const [isDownloading, setIsDownloading] = useState(false);
   const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
   const [activeTab, setActiveTab] = useState<TabType>('transactions');
   const [expandedBankTxId, setExpandedBankTxId] = useState<number>();
@@ -126,6 +134,15 @@ export default function ComplianceUserScreen(): JSX.Element {
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unknown error'));
   }, [userDataId, getUserData]);
 
+  function handleDownload(): void {
+    if (!userDataId) return;
+    setIsDownloading(true);
+    setError(undefined);
+    downloadUserFiles([+userDataId])
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unknown error'))
+      .finally(() => setIsDownloading(false));
+  }
+
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -150,7 +167,8 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   const numericUserDataId = +userDataId;
   const isSupport = role === UserRole.SUPPORT;
-  const canCopyKycLinks = role === UserRole.ADMIN || role === UserRole.COMPLIANCE;
+  const isComplianceRole = role === UserRole.ADMIN || role === UserRole.COMPLIANCE;
+  const canCopyKycLinks = isComplianceRole;
   const showRightPanel = data.permissions.viewKycFiles || isSupport;
 
   const tabs: TabConfig[] = [
@@ -172,6 +190,26 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   return (
     <div className="w-full flex flex-col gap-4">
+      {isComplianceRole && (
+        <div className="flex justify-end items-center gap-2">
+          <button
+            className="px-3 py-1.5 text-sm font-medium text-white rounded transition-colors bg-dfxBlue-800 hover:bg-dfxBlue-800/80"
+            onClick={() => navigate(`/compliance/user/${numericUserDataId}/kyc`)}
+          >
+            {translate('screens/compliance', 'KYC')}
+          </button>
+          <StyledIconButton
+            icon={IconVariant.FILE}
+            color={IconColor.BLUE}
+            size={IconSize.MD}
+            onClick={handleDownload}
+            isLoading={isDownloading}
+          />
+        </div>
+      )}
+
+      {error && <ErrorHint message={error} />}
+
       {/* Top Section: (User Data | Middle Panels) | Splitter | (File Preview | Support Overview) */}
       <div ref={containerRef} className="flex min-h-[400px]">
         <div style={{ width: `${showRightPanel ? splitPercent : 100}%` }} className="flex gap-4 min-w-0 pr-2">
