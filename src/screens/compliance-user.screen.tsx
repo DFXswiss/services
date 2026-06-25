@@ -108,6 +108,7 @@ export default function ComplianceUserScreen(): JSX.Element {
   }
 
   async function openFile(file: KycFile): Promise<void> {
+    setError(undefined);
     try {
       const { content, contentType } = await getFile(file.uid);
       if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
@@ -129,6 +130,7 @@ export default function ComplianceUserScreen(): JSX.Element {
       setError('No ID provided');
       return;
     }
+    setError(undefined);
     getUserData(+userDataId)
       .then(setData)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unknown error'));
