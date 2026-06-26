@@ -93,6 +93,7 @@ export interface ComplianceSearchResult {
 export interface UserSearchResult {
   id: number;
   kycStatus: KycStatus;
+  kycLevel?: number;
   accountType?: AccountType;
   mail?: string;
   name?: string;
