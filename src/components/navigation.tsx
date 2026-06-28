@@ -216,6 +216,15 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                   onClose={() => setIsNavigationOpen(false)}
                 />
               )}
+              {session?.role === UserRole.ADMIN && (
+                <NavigationLink
+                  icon={IconVariant.TRANSACTIONS}
+                  label={translate('screens/ledger', 'Ledger')}
+                  url="/ledger"
+                  target="_self"
+                  onClose={() => setIsNavigationOpen(false)}
+                />
+              )}
               {session?.role && [UserRole.ADMIN, UserRole.REALUNIT].includes(session.role) && (
                 <NavigationLink
                   icon={IconVariant.WALLET}

@@ -134,6 +134,16 @@ const sections: PageSection[] = [
     ],
   },
   {
+    title: 'Ledger',
+    pages: [
+      { path: '/ledger', label: 'Ledger' },
+      { path: '/ledger/accounts', label: 'Accounts' },
+      { path: '/ledger/reconciliation', label: 'Reconciliation' },
+      { path: '/ledger/suspense', label: 'Suspense Account' },
+      { path: '/ledger/margin', label: 'Realized Margin' },
+    ],
+  },
+  {
     title: 'Other',
     pages: [
       { path: '/sepa', label: 'SEPA' },
