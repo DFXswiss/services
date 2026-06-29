@@ -163,7 +163,7 @@ export function ChargebackModal({
     iban: Validations.Required,
     creditorName: Validations.Required,
     creditorAddress: Validations.Required,
-    creditorZip: Validations.Required,
+    creditorZip: [Validations.Required, Validations.Custom((v) => !v || v.length <= 8 || 'pattern')],
     creditorCity: Validations.Required,
     creditorCountry: Validations.Required,
   });
