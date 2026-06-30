@@ -1,4 +1,4 @@
-import { ApiError, TfaLevel, TfaSetup, TfaType, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
+import { ApiError, TfaLevel, TfaSetup, TfaType, Utils, Validations, useAuth, useKyc } from '@dfx.swiss/react';
 import {
   CopyButton,
   Form,
@@ -28,8 +28,8 @@ const ANDROID_AUTHENTICATOR_URL =
 
 export default function TfaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { user } = useUserContext();
-  const { setup2fa, verify2fa } = useKyc();
+  const { setup2fa: kycSetup2fa, verify2fa: kycVerify2fa } = useKyc();
+  const { setup2fa: authSetup2fa, verify2fa: authVerify2fa } = useAuth();
   const { search, state } = useLocation();
   const { copy } = useClipboard();
   const { goBack } = useNavigation();
@@ -42,14 +42,17 @@ export default function TfaScreen(): JSX.Element {
   const [setupInfo, setSetupInfo] = useState<TfaSetup>();
 
   const params = new URLSearchParams(search);
-  const kycCode = params.get('code') ?? user?.kyc.hash;
+  const urlCode = params.get('code');
+  // Staff/session 2FA (reached via mail-login/dashboard, no kyc url code) uses the bearer-based auth/2fa
+  // endpoints; kyc 2FA (with a url code) keeps using the kyc-code-based endpoints.
+  const isSessionMode = !urlCode;
   const tfaLevel: TfaLevel | undefined = state?.level;
 
-  useUserGuard('/login', !kycCode);
+  useUserGuard('/login', isSessionMode);
 
   useEffect(() => {
     load();
-  }, [kycCode]);
+  }, [isSessionMode, urlCode]);
 
   const {
     control,
@@ -62,9 +65,7 @@ export default function TfaScreen(): JSX.Element {
   });
 
   async function load(): Promise<void> {
-    if (!kycCode) return;
-
-    return setup2fa(kycCode, tfaLevel)
+    return (isSessionMode ? authSetup2fa(tfaLevel) : kycSetup2fa(urlCode as string, tfaLevel))
       .then(setSetupInfo)
       .catch((error: ApiError) => {
         if (error.message !== '2FA already set up') {
@@ -75,13 +76,11 @@ export default function TfaScreen(): JSX.Element {
   }
 
   async function onSubmit(data: { token: string }) {
-    if (!kycCode) return;
-
     setError(undefined);
     setTokenInvalid(false);
     setIsSubmitting(true);
 
-    verify2fa(kycCode, data.token)
+    (isSessionMode ? authVerify2fa(data.token) : kycVerify2fa(urlCode as string, data.token))
       .then(() => goBack())
       .catch((e: ApiError) => (e.statusCode === 403 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error')))
       .finally(() => setIsSubmitting(false));
