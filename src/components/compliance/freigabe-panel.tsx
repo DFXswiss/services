@@ -4,6 +4,7 @@ import { KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook'
 import {
   buildAddress,
   display,
+  findLatestStep,
   formatBirthday,
   formatDate,
   formatDateTime,
@@ -50,10 +51,6 @@ interface SavedComment {
   amlAccountType?: string;
   processedBy?: string;
   finalDecision?: string;
-}
-
-function findStep(steps: KycStepInfo[], name: string): KycStepInfo | undefined {
-  return steps.filter((s) => s.name === name).sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
 }
 
 function parseResult(step: KycStepInfo | undefined): Record<string, unknown> | undefined {
@@ -280,9 +277,9 @@ export function ComplianceReviewFreigabePanel({
   isSaving,
 }: OnboardingComplianceReviewFreigabePanelProps): JSX.Element {
   // Derived from predecessor step status (read-only, like in GS)
-  const ownerDirectoryStep = findStep(kycSteps, 'OwnerDirectory');
-  const legalEntityStepForDecision = findStep(kycSteps, 'LegalEntity');
-  const authorityStepForDecision = findStep(kycSteps, 'Authority');
+  const ownerDirectoryStep = findLatestStep(kycSteps, 'OwnerDirectory');
+  const legalEntityStepForDecision = findLatestStep(kycSteps, 'LegalEntity');
+  const authorityStepForDecision = findLatestStep(kycSteps, 'Authority');
 
   function stepToDecision(s: KycStepInfo | undefined): DecisionValue {
     if (!s) return '';
@@ -343,16 +340,16 @@ export function ComplianceReviewFreigabePanel({
 
   const accountType = display(userData.accountType);
   const isOrganization = accountType === 'Organization';
-  const legalEntityStep = findStep(kycSteps, 'LegalEntity');
+  const legalEntityStep = findLatestStep(kycSteps, 'LegalEntity');
   const legalEntityResult = parseResult(legalEntityStep);
   const legalEntity = legalEntityResult?.legalEntity ? String(legalEntityResult.legalEntity) : '';
   const isGmbH = legalEntity === 'GmbH';
 
   const kycHash = display(userData.kycHash);
-  const financialDataStep = findStep(kycSteps, 'FinancialData');
-  const beneficialOwnerStep = findStep(kycSteps, 'BeneficialOwner');
-  const signatoryPowerStep = findStep(kycSteps, 'SignatoryPower');
-  const operationalActivityStep = findStep(kycSteps, 'OperationalActivity');
+  const financialDataStep = findLatestStep(kycSteps, 'FinancialData');
+  const beneficialOwnerStep = findLatestStep(kycSteps, 'BeneficialOwner');
+  const signatoryPowerStep = findLatestStep(kycSteps, 'SignatoryPower');
+  const operationalActivityStep = findLatestStep(kycSteps, 'OperationalActivity');
   const operationalActivityResult = parseResult(operationalActivityStep);
 
   async function handleSave(): Promise<void> {

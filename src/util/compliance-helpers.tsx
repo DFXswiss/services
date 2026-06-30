@@ -208,14 +208,21 @@ export function refName(ref?: { name?: string; symbol?: string }): string {
   return ref?.name ?? ref?.symbol ?? '-';
 }
 
+// Returns the most recent KYC step of the given name. "Most recent" is the highest id
+// (auto-increment, so chronologically latest) — NOT the highest sequenceNumber. A newer step
+// can have a lower sequenceNumber than an older one (e.g. a fresh SumsubVideo ident in
+// ManualReview vs. a previously completed SumsubAuto ident), and sorting by sequenceNumber
+// would surface the stale completed step and hide the one that still needs review.
+export function findLatestStep(kycSteps: KycStepInfo[], stepName: string): KycStepInfo | undefined {
+  return kycSteps.filter((s) => s.name === stepName).sort((a, b) => b.id - a.id)[0];
+}
+
 // Resolve the legal entity for a user from the latest LegalEntity KYC step result.
 // Sole proprietorships are treated as Einzelunternehmen without a step lookup.
 export function extractLegalEntity(kycSteps: KycStepInfo[], accountType?: string): string {
   if (accountType === 'SoleProprietorship') return 'Einzelunternehmen';
 
-  const legalEntityStep = kycSteps
-    .filter((s) => s.name === 'LegalEntity')
-    .sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
+  const legalEntityStep = findLatestStep(kycSteps, 'LegalEntity');
 
   if (legalEntityStep?.result) {
     try {

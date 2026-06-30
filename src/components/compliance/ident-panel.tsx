@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { ComplianceUserData, KycFile, KycStepInfo, IpLogInfo } from 'src/hooks/compliance.hook';
-import { display, formatBirthday, refName, statusBadge, todayAsString } from 'src/util/compliance-helpers';
+import {
+  display,
+  findLatestStep,
+  formatBirthday,
+  refName,
+  statusBadge,
+  todayAsString,
+} from 'src/util/compliance-helpers';
 import { renderResultTable } from './compliance-review-panel';
 
 interface IdentPanelProps {
@@ -31,10 +38,6 @@ interface IdentResult {
   ipCountry?: string;
   country?: string;
   type?: string;
-}
-
-function findLatestStep(kycSteps: KycStepInfo[], stepName: string): KycStepInfo | undefined {
-  return kycSteps.filter((s) => s.name === stepName).sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
 }
 
 function parseIdentResult(step: KycStepInfo): IdentResult | undefined {

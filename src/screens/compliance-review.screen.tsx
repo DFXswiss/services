@@ -20,11 +20,7 @@ import { ComplianceUserData, KycFile, KycStepInfo, TransactionInfo, useComplianc
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSplitPane } from 'src/hooks/split-pane.hook';
-import { buildKycLogMessage, KycLogResult } from 'src/util/compliance-helpers';
-
-function findLatestStep(kycSteps: KycStepInfo[], stepName: string): KycStepInfo | undefined {
-  return kycSteps.filter((s) => s.name === stepName).sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
-}
+import { buildKycLogMessage, findLatestStep, KycLogResult } from 'src/util/compliance-helpers';
 
 function findFiles(kycFiles: KycFile[], fileTypes: string[]): KycFile[] {
   return kycFiles.filter((f) => fileTypes.includes(f.type));
