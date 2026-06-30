@@ -54,12 +54,13 @@ export function formatElapsed(hours: number): string {
 
 export type StatGranularity = 'day' | 'month';
 
-// Selectable analysis periods for the statistics tab.
-export const STAT_PERIODS: { days: number; label: string }[] = [
-  { days: 7, label: '7 Tage' },
-  { days: 30, label: '30 Tage' },
-  { days: 183, label: '6 Monate' },
-  { days: 365, label: '12 Monate' },
+// Selectable analysis periods for the statistics tab. Labels are i18n keys (with
+// interpolation params) resolved at render time, not hardcoded strings.
+export const STAT_PERIODS: { days: number; labelKey: string; labelParams: Record<string, number> }[] = [
+  { days: 7, labelKey: '{{days}} days', labelParams: { days: 7 } },
+  { days: 30, labelKey: '{{days}} days', labelParams: { days: 30 } },
+  { days: 183, labelKey: '{{months}} months', labelParams: { months: 6 } },
+  { days: 365, labelKey: '{{months}} months', labelParams: { months: 12 } },
 ];
 export const DEFAULT_STAT_PERIOD_DAYS = 365;
 
@@ -110,13 +111,17 @@ export function computeStatistics(
   now: Date = new Date(),
 ): TicketStatistics {
   const granularity = granularityFor(periodDays);
-  const inPeriod = issues.filter((i) => daysSince(i.created, now) <= periodDays);
-  const total = inPeriod.length;
-  const messages = inPeriod.reduce((sum, i) => sum + (i.messageCount ?? 0), 0);
 
-  // pre-fill empty buckets oldest → newest
+  // Build the (empty) buckets first and let their span define the period window, so the
+  // headline `total` always equals the sum of the trend buckets. Filtering `inPeriod` by a
+  // rolling `daysSince <= periodDays` window instead would let a boundary-aged ticket count
+  // toward `total` while its bucket key falls before the oldest bucket and is dropped.
   const buckets = new Map<string, number>();
+  let periodStart: Date;
   if (granularity === 'day') {
+    periodStart = new Date(now);
+    periodStart.setHours(0, 0, 0, 0);
+    periodStart.setDate(periodStart.getDate() - (Math.round(periodDays) - 1));
     for (let d = Math.round(periodDays) - 1; d >= 0; d--) {
       const date = new Date(now);
       date.setHours(0, 0, 0, 0);
@@ -125,20 +130,24 @@ export function computeStatistics(
     }
   } else {
     const months = Math.max(1, Math.round(periodDays / 30));
+    periodStart = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
     for (let m = months - 1; m >= 0; m--) {
       buckets.set(monthKey(new Date(now.getFullYear(), now.getMonth() - m, 1)), 0);
     }
   }
+
+  const inPeriod = issues.filter((i) => new Date(i.created) >= periodStart);
+  const total = inPeriod.length;
+  const messages = inPeriod.reduce((sum, i) => sum + (i.messageCount ?? 0), 0);
+
   for (const issue of inPeriod) {
     const d = new Date(issue.created);
     const key = granularity === 'day' ? dayKey(d) : monthKey(d);
     if (buckets.has(key)) buckets.set(key, (buckets.get(key) as number) + 1);
   }
 
-  // resolution time per type for tickets completed within the period
-  const resolved = issues.filter(
-    (i) => i.state === COMPLETED_STATE && i.updated && daysSince(i.updated, now) <= periodDays,
-  );
+  // resolution time per type for tickets completed within the period (same window as above)
+  const resolved = issues.filter((i) => i.state === COMPLETED_STATE && i.updated && new Date(i.updated) >= periodStart);
   const resolutionHours = (i: SupportIssueListItem): number =>
     (new Date(i.updated as string).getTime() - new Date(i.created).getTime()) / (60 * 60 * 1000);
   const byType = new Map<string, { sum: number; count: number }>();

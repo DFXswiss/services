@@ -1,6 +1,7 @@
 import { SupportIssueInternalState, SupportIssueType } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
@@ -26,11 +27,62 @@ import {
 
 type DashboardTab = 'overview' | 'statistics';
 
-const OPEN_STATES = [SupportIssueInternalState.CREATED, SupportIssueInternalState.PENDING];
+// Terminal/resting states a ticket can settle in — everything else is "open" and still needs
+// attention. Defined as the complement of these so any new non-terminal state the backend adds
+// (e.g. InProgress / InClarification, api#3950) is automatically included in the overview filters
+// instead of silently dropping such tickets from My tickets / Waiting / Escalations.
+const TERMINAL_STATES: SupportIssueInternalState[] = [
+  SupportIssueInternalState.COMPLETED,
+  SupportIssueInternalState.CANCELED,
+  SupportIssueInternalState.ON_HOLD,
+];
+const OPEN_STATES = Object.values(SupportIssueInternalState).filter((s) => !TERMINAL_STATES.includes(s));
 const REFRESH_MS = 60_000;
 
+// LOCAL PREVIEW ONLY (not committed) — sample data via /support/dashboard?preview=1.
+function previewIssues(): SupportIssueListItem[] {
+  const ago = (h: number): string => new Date(Date.now() - h * 3600 * 1000).toISOString();
+  const base = (id: number, name: string, type: string, reason: string, state: string): SupportIssueListItem => ({
+    id,
+    uid: `uid-${id}`,
+    type,
+    reason,
+    state,
+    name,
+    created: ago(0),
+    messageCount: 1,
+  });
+  return [
+    { ...base(101, 'Alice Müller', 'TransactionIssue', 'FundsNotReceived', 'Pending'), clerk: 'Josh', created: ago(62), messageCount: 4, lastMessageDate: ago(31), lastMessageAuthor: 'Customer' },
+    { ...base(102, 'Bob Meier', 'TransactionIssue', 'TransactionMissing', 'Created'), created: ago(40), messageCount: 2, lastMessageDate: ago(26), lastMessageAuthor: 'Customer' },
+    { ...base(103, 'Carla Rossi', 'KycIssue', 'Other', 'Pending'), clerk: 'Josh', created: ago(10), messageCount: 3, lastMessageDate: ago(5), lastMessageAuthor: 'Customer' },
+    { ...base(104, 'David Schmid', 'LimitRequest', 'Other', 'Pending'), clerk: 'Josh', created: ago(70), messageCount: 5, lastMessageDate: ago(2), lastMessageAuthor: 'Josh' },
+    { ...base(105, 'Eva Keller', 'TransactionIssue', 'Other', 'Created'), created: ago(3), messageCount: 0 },
+    { ...base(106, 'Acme GmbH', 'LimitRequest', 'Other', 'Pending'), clerk: 'Anna', created: ago(20), messageCount: 2, lastMessageDate: ago(8), lastMessageAuthor: 'Anna' },
+  ];
+}
+function previewStatsIssues(): SupportIssueListItem[] {
+  const now = new Date();
+  const types = ['TransactionIssue', 'LimitRequest', 'KycIssue', 'GenericIssue'];
+  const clerks: (string | undefined)[] = ['Josh', 'Anna', 'Marc', undefined];
+  const perMonth = [3, 4, 5, 4, 6, 7, 5, 8, 9, 7, 11, 14];
+  const out: SupportIssueListItem[] = [];
+  let id = 1000;
+  for (let m = 0; m < 12; m++) {
+    for (let k = 0; k < perMonth[m]; k++) {
+      const created = new Date(now.getFullYear(), now.getMonth() - (11 - m), 1 + ((k * 7 + m * 3) % 27), 9).toISOString();
+      const updated = new Date(new Date(created).getTime() + (6 + ((id + k) % 10) * 8) * 3600 * 1000).toISOString();
+      out.push({ id, uid: `u${id}`, type: types[(id + k) % types.length], reason: 'Other', state: 'Completed', name: `Ticket ${id}`, clerk: clerks[(id + m) % clerks.length], created, updated, messageCount: 1 + ((id + k) % 6) });
+      id++;
+    }
+  }
+  return out;
+}
+
 export default function SupportDashboardOverviewScreen(): JSX.Element {
-  useSupportDashboardGuard();
+  const [params] = useSearchParams();
+  const isPreview = params.get('preview') === '1';
+  useSupportDashboardGuard('/', !isPreview);
 
   const { translate } = useSettingsContext();
   const { getIssueList, getMyClerk, getIssueStatistics } = useSupportDashboard();
@@ -55,6 +107,13 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
 
   const loadIssues = useCallback(
     (showSpinner: boolean): void => {
+      if (isPreview) {
+        setIssues(previewIssues());
+        setError(undefined);
+        setNow(new Date());
+        setIsLoading(false);
+        return;
+      }
       if (showSpinner) setIsLoading(true);
       getIssueList({ states: OPEN_STATES.join(',') })
         .then((res) => {
@@ -65,7 +124,7 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
         .catch((e: Error) => setError(e.message ?? 'Unknown error'))
         .finally(() => setIsLoading(false));
     },
-    [getIssueList],
+    [getIssueList, isPreview],
   );
 
   useEffect(() => {
@@ -81,10 +140,14 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
   }, [loadIssues]);
 
   useEffect(() => {
+    if (isPreview) {
+      setClerk('Josh');
+      return;
+    }
     getMyClerk()
       .then(setClerk)
       .catch(() => undefined);
-  }, [getMyClerk]);
+  }, [getMyClerk, isPreview]);
 
   const scrollToSection = useCallback((id: string): void => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -94,6 +157,13 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
   // if that endpoint is unavailable we fall back to computing from the most recent tickets.
   const loadStats = useCallback(
     (periodDays: number): void => {
+      // clear any prior error up front so a stale error can't mask freshly loaded stats
+      // (the fallback success path below sets `statistics` without touching `statsError`)
+      setStatsError(undefined);
+      if (isPreview) {
+        setStatistics(computeStatistics(previewStatsIssues(), periodDays));
+        return;
+      }
       setStatsLoading(true);
       getIssueStatistics(periodDays)
         .then((dto) => {
@@ -101,13 +171,12 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
             ...dto,
             trend: dto.trend.map((b) => ({ key: trendLabel(b.key, dto.granularity), count: b.count })),
           });
-          setStatsError(undefined);
         })
         .catch(() => getIssueList({ take: 1000 }).then((res) => setStatistics(computeStatistics(res.data, periodDays))))
         .catch((e: Error) => setStatsError(e.message ?? 'Unknown error'))
         .finally(() => setStatsLoading(false));
     },
-    [getIssueStatistics, getIssueList],
+    [getIssueStatistics, getIssueList, isPreview],
   );
 
   useEffect(() => {
@@ -441,7 +510,7 @@ function StatisticsView({
               }`}
               onClick={() => onPeriodChange(p.days)}
             >
-              {p.label}
+              {translate('screens/support', p.labelKey, p.labelParams)}
             </button>
           ))}
         </div>
