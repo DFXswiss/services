@@ -1,7 +1,8 @@
 import { Department, useApi } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 
-export const CustomerAuthor = 'Customer';
+// re-exported for existing call sites; canonical definition lives in the pure stats module
+export { CustomerAuthor } from 'src/util/support-stats';
 
 export const ASSIGNABLE_DEPARTMENTS: Department[] = [Department.SUPPORT, Department.COMPLIANCE];
 
@@ -15,6 +16,7 @@ export interface SupportIssueListItem {
   clerk?: string;
   department?: string;
   created: string;
+  updated?: string;
   messageCount: number;
   lastMessageDate?: string;
   lastMessageAuthor?: string;
@@ -98,6 +100,28 @@ export interface UserSearchResult {
   name?: string;
 }
 
+export interface SupportStatBucket {
+  key: string; // "YYYY-MM-DD" (daily) or "YYYY-MM" (monthly)
+  count: number;
+}
+
+export interface SupportResolutionBucket {
+  key: string; // issue type
+  avgHours: number;
+  count: number;
+}
+
+export interface SupportStatisticsDto {
+  periodDays: number;
+  total: number;
+  avgMessages: number;
+  perDay: number;
+  granularity: 'day' | 'month';
+  trend: SupportStatBucket[]; // oldest first
+  avgResolutionHours: number;
+  resolutionByType: SupportResolutionBucket[];
+}
+
 export function useSupportDashboard() {
   const { call } = useApi();
 
@@ -135,11 +159,27 @@ export function useSupportDashboard() {
     });
   }
 
+  async function getIssueStatistics(periodDays: number): Promise<SupportStatisticsDto> {
+    return call<SupportStatisticsDto>({
+      url: `support/issue/statistics?days=${periodDays}`,
+      method: 'GET',
+    });
+  }
+
   async function getClerks(): Promise<string[]> {
     return call<string[]>({
       url: 'support/issue/clerks',
       method: 'GET',
     });
+  }
+
+  // the clerk name mapped to the logged-in support account (null if unmapped)
+  async function getMyClerk(): Promise<string | undefined> {
+    const result = await call<{ clerk: string | null }>({
+      url: 'support/issue/clerk',
+      method: 'GET',
+    });
+    return result.clerk ?? undefined;
   }
 
   async function getIssueData(issueId: number): Promise<SupportIssueInternalData> {
@@ -223,7 +263,9 @@ export function useSupportDashboard() {
       getIssueList,
       getIssueCounts,
       getIssueActivity,
+      getIssueStatistics,
       getClerks,
+      getMyClerk,
       getIssueData,
       updateIssue,
       sendMessage,
