@@ -1,6 +1,10 @@
 import { Department, SupportIssueType, UserRole } from '@dfx.swiss/react';
 import { IssueReasonLabels, IssueTypeLabels } from 'src/config/labels';
 
+// Pure aging/escalation/statistics logic lives in a dependency-free module; re-exported
+// here so existing imports from 'support-helpers' keep working.
+export * from './support-stats';
+
 export function typeLabel(type: string): string {
   return IssueTypeLabels[type as SupportIssueType] ?? type;
 }

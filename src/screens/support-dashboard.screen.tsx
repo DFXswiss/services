@@ -170,7 +170,7 @@ export default function SupportDashboardScreen(): JSX.Element {
   }, [activeTab, searchQuery, loadOpenIssues, loadPaged]);
 
   useLayoutOptions({
-    title: translate('screens/support', 'Support Dashboard'),
+    title: translate('screens/support', 'All Tickets'),
     backButton: true,
     noMaxWidth: true,
     noPadding: true,
@@ -247,7 +247,7 @@ export default function SupportDashboardScreen(): JSX.Element {
   }
 
   return (
-    <div className="w-full flex flex-col gap-3 flex-1 min-h-0 p-3 text-left">
+    <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-3 flex-1 min-h-0 p-4 md:p-6 text-left">
       {/* Stats & Actions */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="bg-white rounded-lg shadow-sm p-3 flex-1 min-w-[150px]">
