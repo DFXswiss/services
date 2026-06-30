@@ -1,5 +1,12 @@
 import { KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
-import { buildAddress, display, extractLegalEntity, formatBirthday, refName } from 'src/util/compliance-helpers';
+import {
+  buildAddress,
+  display,
+  extractLegalEntity,
+  findLatestStep,
+  formatBirthday,
+  refName,
+} from 'src/util/compliance-helpers';
 
 interface ComplianceReviewHeaderProps {
   userData: UserDataDetail;
@@ -14,7 +21,7 @@ interface HeaderField {
 }
 
 function extractStepCreatedDate(kycSteps: KycStepInfo[]): string {
-  const step = kycSteps.filter((s) => s.name === 'LegalEntity').sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
+  const step = findLatestStep(kycSteps, 'LegalEntity');
 
   if (!step) return '-';
   return new Date(step.created).toLocaleDateString('de-CH');
