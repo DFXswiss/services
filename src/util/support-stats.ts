@@ -136,7 +136,7 @@ export function computeStatistics(
     }
   }
 
-  const inPeriod = issues.filter((i) => new Date(i.created) >= periodStart);
+  const inPeriod = issues.filter((i) => new Date(i.created) >= periodStart && new Date(i.created) <= now);
   const total = inPeriod.length;
   const messages = inPeriod.reduce((sum, i) => sum + (i.messageCount ?? 0), 0);
 
@@ -147,7 +147,9 @@ export function computeStatistics(
   }
 
   // resolution time per type for tickets completed within the period (same window as above)
-  const resolved = issues.filter((i) => i.state === COMPLETED_STATE && i.updated && new Date(i.updated) >= periodStart);
+  const resolved = issues.filter(
+    (i) => i.state === COMPLETED_STATE && i.updated && new Date(i.updated) >= periodStart && new Date(i.updated) <= now,
+  );
   const resolutionHours = (i: SupportIssueListItem): number =>
     (new Date(i.updated as string).getTime() - new Date(i.created).getTime()) / (60 * 60 * 1000);
   const byType = new Map<string, { sum: number; count: number }>();

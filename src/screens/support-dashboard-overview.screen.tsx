@@ -1,7 +1,6 @@
 import { SupportIssueInternalState, SupportIssueType } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
@@ -39,50 +38,8 @@ const TERMINAL_STATES: SupportIssueInternalState[] = [
 const OPEN_STATES = Object.values(SupportIssueInternalState).filter((s) => !TERMINAL_STATES.includes(s));
 const REFRESH_MS = 60_000;
 
-// LOCAL PREVIEW ONLY (not committed) — sample data via /support/dashboard?preview=1.
-function previewIssues(): SupportIssueListItem[] {
-  const ago = (h: number): string => new Date(Date.now() - h * 3600 * 1000).toISOString();
-  const base = (id: number, name: string, type: string, reason: string, state: string): SupportIssueListItem => ({
-    id,
-    uid: `uid-${id}`,
-    type,
-    reason,
-    state,
-    name,
-    created: ago(0),
-    messageCount: 1,
-  });
-  return [
-    { ...base(101, 'Alice Müller', 'TransactionIssue', 'FundsNotReceived', 'Pending'), clerk: 'Josh', created: ago(62), messageCount: 4, lastMessageDate: ago(31), lastMessageAuthor: 'Customer' },
-    { ...base(102, 'Bob Meier', 'TransactionIssue', 'TransactionMissing', 'Created'), created: ago(40), messageCount: 2, lastMessageDate: ago(26), lastMessageAuthor: 'Customer' },
-    { ...base(103, 'Carla Rossi', 'KycIssue', 'Other', 'Pending'), clerk: 'Josh', created: ago(10), messageCount: 3, lastMessageDate: ago(5), lastMessageAuthor: 'Customer' },
-    { ...base(104, 'David Schmid', 'LimitRequest', 'Other', 'Pending'), clerk: 'Josh', created: ago(70), messageCount: 5, lastMessageDate: ago(2), lastMessageAuthor: 'Josh' },
-    { ...base(105, 'Eva Keller', 'TransactionIssue', 'Other', 'Created'), created: ago(3), messageCount: 0 },
-    { ...base(106, 'Acme GmbH', 'LimitRequest', 'Other', 'Pending'), clerk: 'Anna', created: ago(20), messageCount: 2, lastMessageDate: ago(8), lastMessageAuthor: 'Anna' },
-  ];
-}
-function previewStatsIssues(): SupportIssueListItem[] {
-  const now = new Date();
-  const types = ['TransactionIssue', 'LimitRequest', 'KycIssue', 'GenericIssue'];
-  const clerks: (string | undefined)[] = ['Josh', 'Anna', 'Marc', undefined];
-  const perMonth = [3, 4, 5, 4, 6, 7, 5, 8, 9, 7, 11, 14];
-  const out: SupportIssueListItem[] = [];
-  let id = 1000;
-  for (let m = 0; m < 12; m++) {
-    for (let k = 0; k < perMonth[m]; k++) {
-      const created = new Date(now.getFullYear(), now.getMonth() - (11 - m), 1 + ((k * 7 + m * 3) % 27), 9).toISOString();
-      const updated = new Date(new Date(created).getTime() + (6 + ((id + k) % 10) * 8) * 3600 * 1000).toISOString();
-      out.push({ id, uid: `u${id}`, type: types[(id + k) % types.length], reason: 'Other', state: 'Completed', name: `Ticket ${id}`, clerk: clerks[(id + m) % clerks.length], created, updated, messageCount: 1 + ((id + k) % 6) });
-      id++;
-    }
-  }
-  return out;
-}
-
 export default function SupportDashboardOverviewScreen(): JSX.Element {
-  const [params] = useSearchParams();
-  const isPreview = params.get('preview') === '1';
-  useSupportDashboardGuard('/', !isPreview);
+  useSupportDashboardGuard();
 
   const { translate } = useSettingsContext();
   const { getIssueList, getMyClerk, getIssueStatistics } = useSupportDashboard();
@@ -107,13 +64,6 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
 
   const loadIssues = useCallback(
     (showSpinner: boolean): void => {
-      if (isPreview) {
-        setIssues(previewIssues());
-        setError(undefined);
-        setNow(new Date());
-        setIsLoading(false);
-        return;
-      }
       if (showSpinner) setIsLoading(true);
       getIssueList({ states: OPEN_STATES.join(',') })
         .then((res) => {
@@ -124,7 +74,7 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
         .catch((e: Error) => setError(e.message ?? 'Unknown error'))
         .finally(() => setIsLoading(false));
     },
-    [getIssueList, isPreview],
+    [getIssueList],
   );
 
   useEffect(() => {
@@ -140,14 +90,10 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
   }, [loadIssues]);
 
   useEffect(() => {
-    if (isPreview) {
-      setClerk('Josh');
-      return;
-    }
     getMyClerk()
       .then(setClerk)
       .catch(() => undefined);
-  }, [getMyClerk, isPreview]);
+  }, [getMyClerk]);
 
   const scrollToSection = useCallback((id: string): void => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -160,10 +106,6 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
       // clear any prior error up front so a stale error can't mask freshly loaded stats
       // (the fallback success path below sets `statistics` without touching `statsError`)
       setStatsError(undefined);
-      if (isPreview) {
-        setStatistics(computeStatistics(previewStatsIssues(), periodDays));
-        return;
-      }
       setStatsLoading(true);
       getIssueStatistics(periodDays)
         .then((dto) => {
@@ -176,7 +118,7 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
         .catch((e: Error) => setStatsError(e.message ?? 'Unknown error'))
         .finally(() => setStatsLoading(false));
     },
-    [getIssueStatistics, getIssueList, isPreview],
+    [getIssueStatistics, getIssueList],
   );
 
   useEffect(() => {
