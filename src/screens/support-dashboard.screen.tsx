@@ -1,4 +1,4 @@
-import { Department, SupportIssueInternalState, SupportIssueType, useAuthContext, UserRole } from '@dfx.swiss/react';
+import { SupportIssueInternalState, SupportIssueType, useAuthContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TemplatePickerModal } from 'src/components/support-templates/template-picker-modal';
@@ -11,7 +11,7 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { CustomerAuthor, SupportIssueListItem, useSupportDashboard } from 'src/hooks/support-dashboard.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
-import { reasonLabel, typeLabel } from 'src/util/support-helpers';
+import { reasonLabel, typeLabel, visibleDepartmentsForRole } from 'src/util/support-helpers';
 
 type PagedTab = 'OnHold' | 'Canceled' | 'Completed';
 type Tab = 'open' | PagedTab;
@@ -72,7 +72,10 @@ export default function SupportDashboardScreen(): JSX.Element {
   const [newMessageCount, setNewMessageCount] = useState(0);
   const baselineRef = useRef<Date>(new Date());
 
-  const isAdmin = session?.role === UserRole.ADMIN;
+  // A role that may see more than one department gets the department filter and column, so it can
+  // tell apart and narrow the mixed list (e.g. compliance now sees support + compliance tickets).
+  const visibleDepartments = useMemo(() => visibleDepartmentsForRole(session?.role), [session?.role]);
+  const canFilterDepartment = visibleDepartments.length > 1;
 
   const loadOpenIssues = useCallback(
     (query: string): void => {
@@ -397,12 +400,12 @@ export default function SupportDashboardScreen(): JSX.Element {
             onChange={setStateFilter}
             options={OPEN_STATES.map((s) => ({ value: s, label: s }))}
           />
-          {isAdmin && (
+          {canFilterDepartment && (
             <FilterSelect
               label="Department"
               value={departmentFilter}
               onChange={setDepartmentFilter}
-              options={Object.values(Department).map((d) => ({ value: d, label: d }))}
+              options={visibleDepartments.map((d) => ({ value: d, label: d }))}
             />
           )}
           <button
@@ -443,14 +446,14 @@ export default function SupportDashboardScreen(): JSX.Element {
       ) : activeTab === 'open' ? (
         <GroupedIssueTable
           groups={openIssueGroups}
-          showDepartment={isAdmin}
+          showDepartment={canFilterDepartment}
           onRowClick={(issue) => navigate(`/support/dashboard/issue/${issue.id}`)}
         />
       ) : (
         <>
           <IssueTable
             issues={displayedIssues}
-            showDepartment={isAdmin}
+            showDepartment={canFilterDepartment}
             onRowClick={(issue) => navigate(`/support/dashboard/issue/${issue.id}`)}
           />
           {hasMore && (
