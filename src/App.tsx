@@ -53,7 +53,6 @@ const StickersScreen = lazy(() => import('./screens/stickers.screen'));
 const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.screen'));
 const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
 const SafeScreen = lazy(() => import('./screens/safe.screen'));
-const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.screen'));
 const ComplianceScreen = lazy(() => import('./screens/compliance.screen'));
 const ComplianceBankTxScreen = lazy(() => import('./screens/compliance-bank-tx.screen'));
 const ComplianceBankTxRecallScreen = lazy(() => import('./screens/compliance-bank-tx-recall.screen'));
@@ -310,10 +309,6 @@ export const Routes = [
           {
             path: 'tickets',
             element: withSuspense(<SupportTicketsScreen />),
-          },
-          {
-            path: 'telegram',
-            element: withSuspense(<TelegramSupportScreen />),
           },
           {
             path: 'issue',
