@@ -91,6 +91,7 @@ import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { delay, toBase64, url } from '../util/utils';
+import { ZipValidation } from '../util/validation-rules';
 import { IframeMessageType } from './kyc-redirect.screen';
 
 enum Mode {
@@ -728,14 +729,14 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
     phone: [Validations.Required, Validations.Phone],
 
     ['address.street']: Validations.Required,
-    ['address.zip']: Validations.Required,
+    ['address.zip']: ZipValidation,
     ['address.city']: Validations.Required,
     ['address.country']: Validations.Required,
 
     organizationName: Validations.Required,
     ['organizationAddress.street']: Validations.Required,
     ['organizationAddress.city']: Validations.Required,
-    ['organizationAddress.zip']: Validations.Required,
+    ['organizationAddress.zip']: ZipValidation,
     ['organizationAddress.country']: Validations.Required,
   });
 
@@ -2390,7 +2391,7 @@ function AddressChangeData({ rootRef, code, isLoading, step, onDone, onCancel, i
 
   const rules = Utils.createRules({
     ['address.street']: Validations.Required,
-    ['address.zip']: Validations.Required,
+    ['address.zip']: ZipValidation,
     ['address.city']: Validations.Required,
     ['address.country']: Validations.Required,
     file: [
