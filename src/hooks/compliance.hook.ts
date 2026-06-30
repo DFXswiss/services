@@ -20,11 +20,11 @@ import {
   ResponseType,
   useApi,
 } from '@dfx.swiss/react';
+import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
+import { useMemo } from 'react';
 import { CreateMrosDto, MrosListEntry, UpdateMrosDto } from 'src/dto/mros.dto';
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { CreateRecallDto, RecallListEntry } from 'src/dto/recall.dto';
-import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
-import { useMemo } from 'react';
 import { buildKycLogMessage, KycLogResult } from 'src/util/compliance-helpers';
 import { downloadFile, downloadPdfFromString, filenameDateFormat } from 'src/util/utils';
 
@@ -121,7 +121,7 @@ export enum CallOutcome {
   COMPLETED = 'Completed',
   UNAVAILABLE = 'Unavailable',
   SUSPICIOUS = 'Suspicious',
-  USER_REJECTED = 'UserRejected',
+  FAILED = 'Failed',
   REPEAT = 'Repeat',
 }
 
@@ -653,7 +653,7 @@ const callOutcomeToPhoneStatus: Record<CallOutcome, PhoneCallStatus | undefined>
   [CallOutcome.COMPLETED]: PhoneCallStatus.COMPLETED,
   [CallOutcome.UNAVAILABLE]: PhoneCallStatus.UNAVAILABLE,
   [CallOutcome.SUSPICIOUS]: PhoneCallStatus.SUSPICIOUS,
-  [CallOutcome.USER_REJECTED]: PhoneCallStatus.USER_REJECTED,
+  [CallOutcome.FAILED]: PhoneCallStatus.FAILED,
   [CallOutcome.REPEAT]: PhoneCallStatus.REPEAT,
 };
 

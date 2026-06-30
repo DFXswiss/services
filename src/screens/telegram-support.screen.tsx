@@ -60,7 +60,7 @@ export default function TelegramSupportScreen(): JSX.Element {
     answer2: Validations.Required,
   });
 
-  useLayoutOptions({ title: translate('screens/support', 'Telegram Support') });
+  useLayoutOptions({ title: translate('screens/support', 'Telegram Group') });
 
   return (
     <Form control={control} rules={rules} errors={errors}>
