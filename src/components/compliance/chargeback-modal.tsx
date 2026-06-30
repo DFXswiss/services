@@ -5,6 +5,7 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
+  StyledHorizontalStack,
   StyledInput,
   StyledLoadingSpinner,
   StyledSearchDropdown,
@@ -33,7 +34,8 @@ interface ChargebackFormData {
   refundAddress: string;
   creditorName: string;
   creditorAddress: string;
-  creditorZipCity: string;
+  creditorZip: string;
+  creditorCity: string;
   creditorCountry: Country;
 }
 
@@ -100,8 +102,8 @@ export function ChargebackModal({
           if (data.bankDetails.name) setValue('creditorName', data.bankDetails.name);
           const address = [data.bankDetails.address, data.bankDetails.houseNumber].filter(Boolean).join(' ');
           if (address) setValue('creditorAddress', address);
-          const zipCity = [data.bankDetails.zip, data.bankDetails.city].filter(Boolean).join(' ');
-          if (zipCity) setValue('creditorZipCity', zipCity);
+          if (data.bankDetails.zip) setValue('creditorZip', data.bankDetails.zip);
+          if (data.bankDetails.city) setValue('creditorCity', data.bankDetails.city);
           if (data.bankDetails.country) {
             const country = allowedCountries.find((c) => c.symbol === data.bankDetails?.country);
             if (country) setValue('creditorCountry', country);
@@ -135,8 +137,8 @@ export function ChargebackModal({
             ? {
                 name: formData.creditorName,
                 address: formData.creditorAddress,
-                zip: formData.creditorZipCity,
-                city: formData.creditorZipCity,
+                zip: formData.creditorZip,
+                city: formData.creditorCity,
                 country: formData.creditorCountry.symbol,
               }
             : undefined,
@@ -161,7 +163,8 @@ export function ChargebackModal({
     iban: Validations.Required,
     creditorName: Validations.Required,
     creditorAddress: Validations.Required,
-    creditorZipCity: Validations.Required,
+    creditorZip: [Validations.Required, Validations.Custom((v) => !v || v.length <= 8 || 'pattern')],
+    creditorCity: Validations.Required,
     creditorCountry: Validations.Required,
   });
 
@@ -235,15 +238,26 @@ export function ChargebackModal({
                       full
                       smallLabel
                     />
-                    <StyledInput
-                      control={control}
-                      rules={bankRules?.creditorZipCity}
-                      name="creditorZipCity"
-                      label={translate('screens/kyc', 'ZIP code') + ' / ' + translate('screens/kyc', 'City')}
-                      placeholder="10115 Berlin"
-                      full
-                      smallLabel
-                    />
+                    <StyledHorizontalStack gap={2}>
+                      <StyledInput
+                        control={control}
+                        rules={bankRules?.creditorZip}
+                        name="creditorZip"
+                        label={translate('screens/kyc', 'ZIP code')}
+                        placeholder="10115"
+                        small
+                        smallLabel
+                      />
+                      <StyledInput
+                        control={control}
+                        rules={bankRules?.creditorCity}
+                        name="creditorCity"
+                        label={translate('screens/kyc', 'City')}
+                        placeholder={translate('screens/kyc', 'City')}
+                        full
+                        smallLabel
+                      />
+                    </StyledHorizontalStack>
                     <StyledSearchDropdown<Country>
                       control={control}
                       rules={bankRules?.creditorCountry}
