@@ -19,6 +19,7 @@ import { RefundDataTable } from 'src/components/refund/refund-data-table';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { TransactionRefundData, useCompliance } from 'src/hooks/compliance.hook';
+import { ZipValidation } from 'src/util/validation-rules';
 
 interface ChargebackModalProps {
   readonly isOpen: boolean;
@@ -163,7 +164,7 @@ export function ChargebackModal({
     iban: Validations.Required,
     creditorName: Validations.Required,
     creditorAddress: Validations.Required,
-    creditorZip: [Validations.Required, Validations.Custom((v) => !v || v.length <= 8 || 'pattern')],
+    creditorZip: ZipValidation,
     creditorCity: Validations.Required,
     creditorCountry: Validations.Required,
   });
