@@ -1,4 +1,4 @@
-import { ApiError, TfaLevel, TfaSetup, TfaType, Utils, Validations, useAuth, useKyc } from '@dfx.swiss/react';
+import { ApiError, TfaLevel, TfaSetup, TfaType, Utils, Validations, useAuth, useKyc, useUserContext } from '@dfx.swiss/react';
 import {
   CopyButton,
   Form,
@@ -30,6 +30,7 @@ export default function TfaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setup2fa: kycSetup2fa, verify2fa: kycVerify2fa } = useKyc();
   const { setup2fa: authSetup2fa, verify2fa: authVerify2fa } = useAuth();
+  const { user } = useUserContext();
   const { search, state } = useLocation();
   const { copy } = useClipboard();
   const { goBack } = useNavigation();
@@ -43,16 +44,18 @@ export default function TfaScreen(): JSX.Element {
 
   const params = new URLSearchParams(search);
   const urlCode = params.get('code');
-  // Staff/session 2FA (reached via mail-login/dashboard, no kyc url code) uses the bearer-based auth/2fa
-  // endpoints; kyc 2FA (with a url code) keeps using the kyc-code-based endpoints.
-  const isSessionMode = !urlCode;
+  // kyc 2FA resolves its code from the url or the logged-in user's kyc hash (unchanged for edit-mail/kyc flows).
+  const kycCode = urlCode ?? user?.kyc.hash;
+  // Session mode (staff, reached from the support dashboard) is opt-in via an explicit navigation flag and uses
+  // the bearer-based auth/2fa endpoints. Everything else stays on the kyc-code-based endpoints as before.
+  const isSessionMode = state?.sessionMode === true;
   const tfaLevel: TfaLevel | undefined = state?.level;
 
-  useUserGuard('/login', isSessionMode);
+  useUserGuard('/login', isSessionMode || !kycCode);
 
   useEffect(() => {
     load();
-  }, [isSessionMode, urlCode]);
+  }, [isSessionMode, kycCode]);
 
   const {
     control,
@@ -65,7 +68,8 @@ export default function TfaScreen(): JSX.Element {
   });
 
   async function load(): Promise<void> {
-    return (isSessionMode ? authSetup2fa(tfaLevel) : kycSetup2fa(urlCode as string, tfaLevel))
+    if (!isSessionMode && !kycCode) return;
+    return (isSessionMode ? authSetup2fa(tfaLevel) : kycSetup2fa(kycCode as string, tfaLevel))
       .then(setSetupInfo)
       .catch((error: ApiError) => {
         if (error.message !== '2FA already set up') {
@@ -80,7 +84,7 @@ export default function TfaScreen(): JSX.Element {
     setTokenInvalid(false);
     setIsSubmitting(true);
 
-    (isSessionMode ? authVerify2fa(data.token) : kycVerify2fa(urlCode as string, data.token))
+    (isSessionMode ? authVerify2fa(data.token) : kycVerify2fa(kycCode as string, data.token))
       .then(() => goBack())
       .catch((e: ApiError) => (e.statusCode === 403 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error')))
       .finally(() => setIsSubmitting(false));

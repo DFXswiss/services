@@ -133,8 +133,8 @@ export function useSupportDashboard() {
     <T>(config: CallConfig): Promise<T> =>
       call<T>(config).catch((error: ApiError) => {
         if (error.code === 'TFA_REQUIRED') {
-          const level = (error as ApiError & { level?: TfaLevel }).level;
-          navigate('/2fa', { state: { level }, setRedirect: true });
+          // staff 2FA is always STRICT/TOTP; route into the bearer-based (session-mode) 2FA flow
+          navigate('/2fa', { state: { level: TfaLevel.STRICT, sessionMode: true }, setRedirect: true });
         }
         throw error;
       }),

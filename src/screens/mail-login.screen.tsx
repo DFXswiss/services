@@ -1,4 +1,4 @@
-import { ApiError, TfaLevel, useApi } from '@dfx.swiss/react';
+import { ApiError, useApi } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -31,12 +31,7 @@ export default function MailLoginScreen() {
           window.location.href = redirectUrl;
         })
         .catch((error: ApiError) => {
-          if (error.code === 'TFA_REQUIRED') {
-            const level = (error as ApiError & { level?: TfaLevel }).level;
-            navigate('/2fa', { state: { level }, setRedirect: true });
-          } else {
-            navigate({ pathname: `/error`, search: `?msg=${error.message}` });
-          }
+          navigate({ pathname: `/error`, search: `?msg=${error.message}` });
         })
         .finally(() => {
           urlParams.delete('otp');
