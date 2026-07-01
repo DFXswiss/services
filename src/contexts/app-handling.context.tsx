@@ -5,7 +5,7 @@ import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
-import { relativeUrl, url } from '../util/utils';
+import { isSafeRedirectUri, relativeUrl, url } from '../util/utils';
 import { useBalanceContext } from './balance.context';
 
 // --- INTERFACES --- //
@@ -271,7 +271,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   async function init() {
     const params = loadQueryParams();
 
-    if (params.redirectUri) {
+    if (params.redirectUri && isSafeRedirectUri(params.redirectUri)) {
       setRedirectUri(params.redirectUri);
       storeRedirectUri.set(params.redirectUri);
     }
@@ -376,10 +376,14 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       }
 
       if (redirectUri) {
-        const uri = getRedirectUri(redirectUri, params);
         storeRedirectUri.remove();
         setRedirectUri(undefined);
-        setTimeout(() => ((window as Window).location = uri), 2000);
+
+        // discard unsafe URIs (e.g. javascript:) to prevent script execution and phishing redirects
+        if (isSafeRedirectUri(redirectUri)) {
+          const uri = getRedirectUri(redirectUri, params);
+          setTimeout(() => ((window as Window).location = uri), 2000);
+        }
       }
     }
 
