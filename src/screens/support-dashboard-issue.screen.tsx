@@ -284,6 +284,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         {/* Info Panels - Row 1: Issue + Account */}
         <div className="flex gap-4 flex-wrap">
           <InfoPanel title="Issue Details">
+            <InfoRow label="ID" value={String(issueData.id)} mono />
             <InfoRow label="UID" value={issueData.uid} mono />
             <InfoRow label="Name" value={issueData.name} />
             <InfoRow label="Type" value={translate('screens/support', typeLabel(issueData.type))} />
@@ -501,7 +502,9 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                         <span className="text-xs font-medium">{msg.author}</span>
                         <span className="text-xs opacity-70">{formatDateTime(msg.created)}</span>
                       </div>
-                      <div className="text-sm whitespace-pre-wrap">{msg.message || '-'}</div>
+                      <div className="text-sm whitespace-pre-wrap break-words">
+                        {msg.message ? <LinkedText text={msg.message} /> : '-'}
+                      </div>
                       {msg.fileName && (
                         <button
                           className="text-xs mt-1 text-dfxBlue-400 underline hover:text-dfxBlue-800"
@@ -691,5 +694,30 @@ function InfoRow({ label, value, mono }: { label: string; value: string | JSX.El
       <td className="pr-4 py-1 font-medium whitespace-nowrap text-sm">{label}:</td>
       <td className={`py-1 text-sm break-all ${mono ? 'font-mono' : ''}`}>{value}</td>
     </tr>
+  );
+}
+
+const URL_PATTERN = /https?:\/\/[^\s]+/;
+
+function LinkedText({ text }: { text: string }): JSX.Element {
+  const parts = text.split(new RegExp(`(${URL_PATTERN.source})`, 'g'));
+  return (
+    <>
+      {parts.map((part, i) =>
+        URL_PATTERN.test(part) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-dfxBlue-400 underline hover:text-dfxBlue-800 break-all"
+          >
+            {part}
+          </a>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
   );
 }
