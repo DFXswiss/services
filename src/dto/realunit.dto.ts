@@ -133,6 +133,7 @@ export interface RealunitContextInterface {
   transactionsLoading: boolean;
   quotesError: boolean;
   transactionsError: boolean;
+  priceHistoryError: boolean;
   fetchAccountSummary: (address: string) => void;
   fetchAccountHistory: (address: string, cursor?: string, direction?: PaginationDirection) => void;
   fetchHolders: (cursor?: string, direction?: PaginationDirection) => void;
