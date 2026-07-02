@@ -12,7 +12,7 @@ import {
   TokenPrice,
 } from 'src/dto/realunit.dto';
 import { Timeframe } from 'src/util/chart';
-import { relativeUrl } from 'src/util/utils';
+import { apiUrl } from 'src/util/utils';
 
 export function useRealunitApi() {
   const { call } = useGuardedApi();
@@ -33,7 +33,7 @@ export function useRealunitApi() {
     cursor && direction && params.set(String(direction) === 'prev' ? 'before' : 'after', cursor);
 
     return call<AccountHistory>({
-      url: relativeUrl({ path: `realunit/account/${address}/history`, params }),
+      url: apiUrl({ path: `realunit/account/${address}/history`, params }),
       method: 'GET',
     });
   }
@@ -43,7 +43,7 @@ export function useRealunitApi() {
     cursor && direction && params.set(String(direction) === 'prev' ? 'before' : 'after', cursor);
 
     return call<HoldersResponse>({
-      url: relativeUrl({ path: 'realunit/holders', params }),
+      url: apiUrl({ path: 'realunit/holders', params }),
       method: 'GET',
     });
   }
@@ -67,7 +67,7 @@ export function useRealunitApi() {
     params.set('timeFrame', timeFrame.toUpperCase());
 
     return call<PriceHistoryEntry[]>({
-      url: relativeUrl({ path: 'realunit/price/history', params }),
+      url: apiUrl({ path: 'realunit/price/history', params }),
       method: 'GET',
     });
   }
@@ -78,7 +78,7 @@ export function useRealunitApi() {
     if (offset != null) params.set('offset', String(offset));
 
     return call<RealUnitQuote[]>({
-      url: relativeUrl({ path: 'realunit/admin/quotes', params }),
+      url: apiUrl({ path: 'realunit/admin/quotes', params }),
       method: 'GET',
     });
   }
@@ -89,7 +89,7 @@ export function useRealunitApi() {
     if (offset != null) params.set('offset', String(offset));
 
     return call<RealUnitTransaction[]>({
-      url: relativeUrl({ path: 'realunit/admin/transactions', params }),
+      url: apiUrl({ path: 'realunit/admin/transactions', params }),
       method: 'GET',
     });
   }

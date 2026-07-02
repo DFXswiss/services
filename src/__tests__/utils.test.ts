@@ -36,6 +36,8 @@ import {
   deepEqual,
   equalsIgnoreCase,
   formatLocationAddress,
+  apiUrl,
+  relativeUrl,
 } from '../util/utils';
 
 describe('utils', () => {
@@ -330,6 +332,35 @@ describe('utils', () => {
 
     it('should return undefined for empty address', () => {
       expect(formatLocationAddress({})).toBeUndefined();
+    });
+  });
+
+  describe('apiUrl', () => {
+    it('should never produce a leading slash (SDK joins baseUrl + "/" + url)', () => {
+      expect(apiUrl({ path: 'realunit/holders' })).toBe('realunit/holders');
+      expect(apiUrl({ path: '/realunit/holders' })).toBe('realunit/holders');
+      expect(apiUrl({ path: '///realunit/holders' })).toBe('realunit/holders');
+    });
+
+    it('should append params only when they have entries', () => {
+      expect(apiUrl({ path: 'realunit/holders', params: new URLSearchParams() })).toBe('realunit/holders');
+      expect(apiUrl({ path: 'realunit/holders', params: new URLSearchParams({ after: 'x' }) })).toBe(
+        'realunit/holders?after=x',
+      );
+    });
+  });
+
+  describe('relativeUrl', () => {
+    it('should keep a single leading slash for router navigation', () => {
+      expect(relativeUrl({ path: 'settings' })).toBe('/settings');
+      expect(relativeUrl({ path: '/settings' })).toBe('/settings');
+    });
+
+    it('should differ from apiUrl only by the leading slash', () => {
+      const path = 'realunit/admin/quotes';
+      const params = new URLSearchParams({ limit: '50' });
+      expect(relativeUrl({ path, params })).toBe('/realunit/admin/quotes?limit=50');
+      expect(apiUrl({ path, params })).toBe('realunit/admin/quotes?limit=50');
     });
   });
 });
