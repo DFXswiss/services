@@ -1,5 +1,6 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
+import { ErrorHint } from 'src/components/error-hint';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
@@ -12,7 +13,7 @@ export default function RealunitTransactionsScreen(): JSX.Element {
 
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
-  const { transactions, transactionsLoading, fetchTransactions } = useRealunitContext();
+  const { transactions, transactionsLoading, transactionsError, fetchTransactions } = useRealunitContext();
 
   useLayoutOptions({ title: translate('screens/realunit', 'Received Transactions'), backButton: true });
 
@@ -75,7 +76,7 @@ export default function RealunitTransactionsScreen(): JSX.Element {
                     </td>
                   </tr>
                 ))}
-                {!transactions.length && !transactionsLoading && (
+                {!transactions.length && !transactionsLoading && !transactionsError && (
                   <tr>
                     <td colSpan={4} className="px-4 py-3 text-center text-sm text-dfxGray-700">
                       {translate('screens/realunit', 'No received transactions found')}
@@ -85,6 +86,12 @@ export default function RealunitTransactionsScreen(): JSX.Element {
               </tbody>
             </table>
           </div>
+
+          {transactionsError && (
+            <div className="mt-4">
+              <ErrorHint message={translate('screens/realunit', 'Failed to load received transactions.')} />
+            </div>
+          )}
 
           {transactions.length > 0 && (
             <div className="flex justify-center mt-4">

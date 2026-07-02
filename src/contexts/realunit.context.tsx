@@ -41,6 +41,8 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
   const [transactions, setTransactions] = useState<RealUnitTransaction[]>([]);
   const [quotesLoading, setQuotesLoading] = useState(false);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [quotesError, setQuotesError] = useState(false);
+  const [transactionsError, setTransactionsError] = useState(false);
 
   const {
     getAccountSummary,
@@ -118,10 +120,12 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
 
   const fetchQuotes = useCallback(() => {
     setQuotesLoading(true);
+    setQuotesError(false);
     getAdminQuotes(50, quotes.length)
       .then((data) => {
         setQuotes((prev) => [...prev, ...data]);
       })
+      .catch(() => setQuotesError(true))
       .finally(() => setQuotesLoading(false));
   }, [quotes.length]);
 
@@ -131,10 +135,12 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
 
   const fetchTransactions = useCallback(() => {
     setTransactionsLoading(true);
+    setTransactionsError(false);
     getAdminTransactions(50, transactions.length)
       .then((data) => {
         setTransactions((prev) => [...prev, ...data]);
       })
+      .catch(() => setTransactionsError(true))
       .finally(() => setTransactionsLoading(false));
   }, [transactions.length]);
 
@@ -154,6 +160,8 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       transactions,
       quotesLoading,
       transactionsLoading,
+      quotesError,
+      transactionsError,
       fetchAccountSummary,
       fetchAccountHistory,
       fetchHolders,
@@ -180,6 +188,8 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       transactions,
       quotesLoading,
       transactionsLoading,
+      quotesError,
+      transactionsError,
       fetchAccountSummary,
       fetchAccountHistory,
       fetchHolders,

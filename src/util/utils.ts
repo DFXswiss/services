@@ -57,10 +57,20 @@ export function url({
   return absoluteUrl.href;
 }
 
+// Router navigation path (react-router): the leading slash is REQUIRED so the target is treated as
+// an absolute in-app route. Use for navigate()/setCallback, never for SDK call configs.
 export function relativeUrl({ path, params }: { path: string; params?: URLSearchParams }): string {
   if (isAbsoluteUrl(path)) return url({ base: path, params });
 
   const normalizedPath = '/' + path.replace(/^\/+/, ''); // start with a single slash
+  return params && params.toString() ? `${normalizedPath}?${params}` : normalizedPath;
+}
+
+// SDK call path (DfxHttpClient config.url): the leading slash is FORBIDDEN because the client joins
+// baseUrl + '/' + url. A leading slash would produce a double slash (e.g. .../v1//realunit/...) and
+// a 404 before any guard runs. Use for call() configs, never for router navigation.
+export function apiUrl({ path, params }: { path: string; params?: URLSearchParams }): string {
+  const normalizedPath = path.replace(/^\/+/, ''); // remove leading slashes
   return params && params.toString() ? `${normalizedPath}?${params}` : normalizedPath;
 }
 

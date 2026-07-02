@@ -1,5 +1,6 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
+import { ErrorHint } from 'src/components/error-hint';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
@@ -12,7 +13,7 @@ export default function RealunitQuotesScreen(): JSX.Element {
 
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
-  const { quotes, quotesLoading, fetchQuotes } = useRealunitContext();
+  const { quotes, quotesLoading, quotesError, fetchQuotes } = useRealunitContext();
 
   useLayoutOptions({ title: translate('screens/realunit', 'Pending Transactions'), backButton: true });
 
@@ -73,7 +74,7 @@ export default function RealunitQuotesScreen(): JSX.Element {
                     </td>
                   </tr>
                 ))}
-                {!quotes.length && !quotesLoading && (
+                {!quotes.length && !quotesLoading && !quotesError && (
                   <tr>
                     <td colSpan={4} className="px-4 py-3 text-center text-sm text-dfxGray-700">
                       {translate('screens/realunit', 'No pending transactions found')}
@@ -83,6 +84,12 @@ export default function RealunitQuotesScreen(): JSX.Element {
               </tbody>
             </table>
           </div>
+
+          {quotesError && (
+            <div className="mt-4">
+              <ErrorHint message={translate('screens/realunit', 'Failed to load pending transactions.')} />
+            </div>
+          )}
 
           {quotes.length > 0 && (
             <div className="flex justify-center mt-4">

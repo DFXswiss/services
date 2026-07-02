@@ -131,6 +131,8 @@ export interface RealunitContextInterface {
   transactions: RealUnitTransaction[];
   quotesLoading: boolean;
   transactionsLoading: boolean;
+  quotesError: boolean;
+  transactionsError: boolean;
   fetchAccountSummary: (address: string) => void;
   fetchAccountHistory: (address: string, cursor?: string, direction?: PaginationDirection) => void;
   fetchHolders: (cursor?: string, direction?: PaginationDirection) => void;
