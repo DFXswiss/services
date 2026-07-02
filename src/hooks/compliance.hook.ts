@@ -389,23 +389,36 @@ export interface RecommendationGraphNode {
   kycStatus?: string;
   kycLevel?: number;
   tradeApprovalDate?: string;
+  // set by the neighbors endpoint: the node has further neighbors not contained in the current fragment
+  expandable?: boolean;
+}
+
+export enum RecommendationGraphEdgeKind {
+  RECOMMENDATION = 'Recommendation',
+  USED_REF = 'UsedRef',
 }
 
 export interface RecommendationGraphEdge {
   id: number;
+  kind: RecommendationGraphEdgeKind;
   recommenderId: number;
   recommendedId: number;
-  method: string;
-  type: string;
+  // method/type are intentionally widened to `string` on the client (the api types them as enums):
+  // a deliberate frontend widening so this read-only graph view doesn't couple to the api enum values.
+  method?: string;
+  type?: string;
   isConfirmed?: boolean;
   confirmationDate?: string;
-  created: string;
+  refCode?: string;
+  created?: string;
 }
 
 export interface RecommendationGraph {
   nodes: RecommendationGraphNode[];
   edges: RecommendationGraphEdge[];
   rootId: number;
+  // set by the paginated neighbors endpoint: more direct neighbors of the root exist beyond this page
+  hasMore?: boolean;
 }
 
 export interface RecommendationUserInfo {
@@ -450,6 +463,7 @@ export interface UserInfo {
   ref?: string;
   usedRef?: string;
   refUserName?: string;
+  refUserDataId?: number;
   role: string;
   status: string;
   walletName?: string;
@@ -985,9 +999,17 @@ export function useCompliance() {
     return { success: true, completedSteps };
   }
 
-  async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
+  async function getRecommendationGraphNeighbors(
+    userDataId: number,
+    skip?: number,
+    take?: number,
+  ): Promise<RecommendationGraph> {
+    const query = new URLSearchParams();
+    if (skip != null) query.set('skip', `${skip}`);
+    if (take != null) query.set('take', `${take}`);
+    const queryString = query.toString();
     return call<RecommendationGraph>({
-      url: `support/recommendation-graph/${userDataId}`,
+      url: `support/recommendation-graph/${userDataId}/neighbors${queryString ? `?${queryString}` : ''}`,
       method: 'GET',
     });
   }
@@ -1206,7 +1228,7 @@ export function useCompliance() {
       getKycFileList,
       getKycFileStats,
       getTransactionList,
-      getRecommendationGraph,
+      getRecommendationGraphNeighbors,
       downloadIpLogPdf,
       downloadTransactionPdf,
       generateOnboardingPdf,
