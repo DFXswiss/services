@@ -1,5 +1,6 @@
-import { Department, useApi } from '@dfx.swiss/react';
+import { Department } from '@dfx.swiss/react';
 import { useMemo } from 'react';
+import { useGuardedApi } from './guarded-api.hook';
 
 // re-exported for existing call sites; canonical definition lives in the pure stats module
 export { CustomerAuthor } from 'src/util/support-stats';
@@ -123,7 +124,9 @@ export interface SupportStatisticsDto {
 }
 
 export function useSupportDashboard() {
-  const { call } = useApi();
+  // staff endpoints answer with HTTP 403 { code: 'TFA_REQUIRED' } when the session still needs 2FA;
+  // useGuardedApi routes that into the bearer-based 2FA flow instead of surfacing a raw error
+  const { call: guardedCall } = useGuardedApi();
 
   async function getIssueList(params?: {
     department?: string;
@@ -138,14 +141,14 @@ export function useSupportDashboard() {
       .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`);
     const queryString = queryParts.length ? `?${queryParts.join('&')}` : '';
 
-    return call<{ data: SupportIssueListItem[]; total: number }>({
+    return guardedCall<{ data: SupportIssueListItem[]; total: number }>({
       url: `support/issue/list${queryString}`,
       method: 'GET',
     });
   }
 
   async function getIssueCounts(): Promise<Record<string, number>> {
-    return call<Record<string, number>>({
+    return guardedCall<Record<string, number>>({
       url: 'support/issue/counts',
       method: 'GET',
     });
@@ -153,21 +156,21 @@ export function useSupportDashboard() {
 
   async function getIssueActivity(since?: Date): Promise<{ count: number; latestAt?: string }> {
     const query = since ? `?since=${encodeURIComponent(since.toISOString())}` : '';
-    return call<{ count: number; latestAt?: string }>({
+    return guardedCall<{ count: number; latestAt?: string }>({
       url: `support/issue/activity${query}`,
       method: 'GET',
     });
   }
 
   async function getIssueStatistics(periodDays: number): Promise<SupportStatisticsDto> {
-    return call<SupportStatisticsDto>({
+    return guardedCall<SupportStatisticsDto>({
       url: `support/issue/statistics?days=${periodDays}`,
       method: 'GET',
     });
   }
 
   async function getClerks(): Promise<string[]> {
-    return call<string[]>({
+    return guardedCall<string[]>({
       url: 'support/issue/clerks',
       method: 'GET',
     });
@@ -175,7 +178,7 @@ export function useSupportDashboard() {
 
   // the clerk name mapped to the logged-in support account (null if unmapped)
   async function getMyClerk(): Promise<string | undefined> {
-    const result = await call<{ clerk: string | null }>({
+    const result = await guardedCall<{ clerk: string | null }>({
       url: 'support/issue/clerk',
       method: 'GET',
     });
@@ -183,7 +186,7 @@ export function useSupportDashboard() {
   }
 
   async function getIssueData(issueId: number): Promise<SupportIssueInternalData> {
-    return call<SupportIssueInternalData>({
+    return guardedCall<SupportIssueInternalData>({
       url: `support/issue/${issueId}/data`,
       method: 'GET',
     });
@@ -193,7 +196,7 @@ export function useSupportDashboard() {
     issueId: number,
     data: { state?: string; clerk?: string; department?: string },
   ): Promise<void> {
-    return call<void>({
+    return guardedCall<void>({
       url: `support/issue/${issueId}`,
       method: 'PUT',
       data,
@@ -204,7 +207,7 @@ export function useSupportDashboard() {
     issueId: number,
     data: { author: string; message?: string; file?: string; fileName?: string },
   ): Promise<SupportMessageInfo> {
-    return call<SupportMessageInfo>({
+    return guardedCall<SupportMessageInfo>({
       url: `support/issue/${issueId}/message`,
       method: 'POST',
       data,
@@ -224,7 +227,7 @@ export function useSupportDashboard() {
       fileName?: string;
     },
   ): Promise<void> {
-    return call<void>({
+    return guardedCall<void>({
       url: `support/issue/support?userDataId=${userDataId}`,
       method: 'POST',
       data,
@@ -232,7 +235,7 @@ export function useSupportDashboard() {
   }
 
   async function searchUsers(key: string): Promise<UserSearchResult[]> {
-    const result = await call<{ userDatas: UserSearchResult[] }>({
+    const result = await guardedCall<{ userDatas: UserSearchResult[] }>({
       url: `support?key=${encodeURIComponent(key)}`,
       method: 'GET',
     });
@@ -241,7 +244,7 @@ export function useSupportDashboard() {
 
   async function getIssueMessages(issueUid: string, fromMessageId?: number): Promise<SupportMessageInfo[]> {
     const query = fromMessageId ? `?fromMessageId=${fromMessageId}` : '';
-    const result = await call<{ messages: SupportMessageInfo[] }>({
+    const result = await guardedCall<{ messages: SupportMessageInfo[] }>({
       url: `support/issue/${issueUid}${query}`,
       method: 'GET',
     });
@@ -252,7 +255,7 @@ export function useSupportDashboard() {
     issueId: string,
     messageId: number,
   ): Promise<{ data: { type: string; data: number[] }; contentType: string }> {
-    return call<{ data: { type: string; data: number[] }; contentType: string }>({
+    return guardedCall<{ data: { type: string; data: number[] }; contentType: string }>({
       url: `support/issue/${issueId}/message/${messageId}/file`,
       method: 'GET',
     });
@@ -274,6 +277,6 @@ export function useSupportDashboard() {
       getMessageFile,
       searchUsers,
     }),
-    [call],
+    [guardedCall],
   );
 }
