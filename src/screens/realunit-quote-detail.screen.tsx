@@ -1,6 +1,7 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { ErrorHint } from 'src/components/error-hint';
 import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -15,7 +16,7 @@ export default function RealunitQuoteDetailScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { id } = useParams<{ id: string }>();
-  const { quotes, quotesLoading, fetchQuotes, resetQuotes, confirmPayment } = useRealunitContext();
+  const { quotes, quotesLoading, quotesError, fetchQuotes, resetQuotes, confirmPayment } = useRealunitContext();
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   useLayoutOptions({ title: translate('screens/realunit', 'Quote Detail'), backButton: true });
@@ -41,6 +42,12 @@ export default function RealunitQuoteDetailScreen(): JSX.Element {
     return <StyledLoadingSpinner size={SpinnerSize.LG} />;
   }
 
+  // fetch failed: show an error instead of masquerading as "not found"
+  if (quotesError && !quote) {
+    return <ErrorHint message={translate('screens/realunit', 'Failed to load quote details.')} />;
+  }
+
+  // fetch succeeded, but the requested id is not present
   if (!quote) {
     return <p className="text-dfxGray-700">{translate('screens/realunit', 'Quote not found')}</p>;
   }

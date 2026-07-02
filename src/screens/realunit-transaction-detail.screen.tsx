@@ -1,6 +1,7 @@
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { ErrorHint } from 'src/components/error-hint';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
@@ -14,7 +15,7 @@ export default function RealunitTransactionDetailScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { id } = useParams<{ id: string }>();
-  const { transactions, transactionsLoading, fetchTransactions } = useRealunitContext();
+  const { transactions, transactionsLoading, transactionsError, fetchTransactions } = useRealunitContext();
 
   useLayoutOptions({ title: translate('screens/realunit', 'Transaction Detail'), backButton: true });
 
@@ -39,6 +40,12 @@ export default function RealunitTransactionDetailScreen(): JSX.Element {
     return <StyledLoadingSpinner size={SpinnerSize.LG} />;
   }
 
+  // fetch failed: show an error instead of masquerading as "not found"
+  if (transactionsError && !transaction) {
+    return <ErrorHint message={translate('screens/realunit', 'Failed to load transaction details.')} />;
+  }
+
+  // fetch succeeded, but the requested id is not present
   if (!transaction) {
     return <p className="text-dfxGray-700">{translate('screens/realunit', 'Transaction not found')}</p>;
   }
