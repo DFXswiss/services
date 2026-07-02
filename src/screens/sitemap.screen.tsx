@@ -127,9 +127,6 @@ const sections: PageSection[] = [
       { path: '/dashboard/financial/history', label: 'Financial History' },
       { path: '/dashboard/financial/history/expenses', label: 'Expenses' },
       { path: '/dashboard/financial/liquidity', label: 'Liquidity' },
-      { path: '/dashboard/log-tracing', label: 'Log Tracing' },
-      { path: '/dashboard/log-tracing/realunit', label: 'RealUnit Tracing' },
-      { path: '/dashboard/log-tracing/all', label: 'All Logs' },
     ],
   },
   {
