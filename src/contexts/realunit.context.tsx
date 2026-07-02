@@ -43,6 +43,7 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [quotesError, setQuotesError] = useState(false);
   const [transactionsError, setTransactionsError] = useState(false);
+  const [priceHistoryError, setPriceHistoryError] = useState(false);
 
   const {
     getAccountSummary,
@@ -98,10 +99,13 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
 
   const fetchPriceHistory = useCallback(
     (timeframe = Timeframe.ALL) => {
-      getPriceHistory(timeframe).then((priceData) => {
-        setPriceHistory(priceData);
-        setTimeframe(timeframe);
-      });
+      setPriceHistoryError(false);
+      getPriceHistory(timeframe)
+        .then((priceData) => {
+          setPriceHistory(priceData);
+          setTimeframe(timeframe);
+        })
+        .catch(() => setPriceHistoryError(true));
     },
     [setPriceHistory, setTimeframe],
   );
@@ -162,6 +166,7 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       transactionsLoading,
       quotesError,
       transactionsError,
+      priceHistoryError,
       fetchAccountSummary,
       fetchAccountHistory,
       fetchHolders,
@@ -190,6 +195,7 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       transactionsLoading,
       quotesError,
       transactionsError,
+      priceHistoryError,
       fetchAccountSummary,
       fetchAccountHistory,
       fetchHolders,
