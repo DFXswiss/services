@@ -68,6 +68,57 @@ export function isAbsoluteUrl(url: string): boolean {
   return /^(?:[a-z]+:)?\/\//.test(url);
 }
 
+// Schemes that the browser executes in the page context (XSS), expose local/internal resources or
+// invoke external handlers. These share `origin === 'null'` with legitimate wallet deep links
+// (e.g. javascript:, data:, intent:// all parse like myapp://...), so they cannot be told apart by
+// origin alone. They are hard-blocked as defense-in-depth beneath the allowlist below.
+const blockedRedirectSchemes = new Set([
+  'javascript:',
+  'data:',
+  'vbscript:',
+  'blob:',
+  'file:',
+  'about:',
+  'view-source:',
+  'filesystem:',
+  'intent:',
+  'ws:',
+  'wss:',
+  'ftp:',
+  'tel:',
+  'sms:',
+  'mailto:',
+  'chrome:',
+]);
+
+// RFC 3986 scheme grammar: ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) followed by the URL colon.
+// Anything web-like, with control characters or other special-character tricks fails this match.
+const validSchemePattern = /^[a-z][a-z0-9+.-]*:$/;
+
+export function isSafeRedirectUri(uri: string): boolean {
+  let parsedUri: URL;
+  try {
+    parsedUri = new URL(uri);
+  } catch {
+    return false;
+  }
+
+  const protocol = parsedUri.protocol.toLowerCase();
+
+  // allowlist: HTTPS is always safe
+  if (protocol === 'https:') return true;
+
+  // allowlist: plain HTTP only for local development
+  if (protocol === 'http:') return parsedUri.hostname === 'localhost' || parsedUri.hostname === '127.0.0.1';
+
+  // defense-in-depth: never allow browser-executable / resource-exposing schemes
+  if (blockedRedirectSchemes.has(protocol)) return false;
+
+  // allowlist: custom deep link schemes of wallet apps (e.g. bitcoin:, lightning:, mywallet://...),
+  // restricted to well-formed RFC 3986 schemes that passed the hard block above, see adaptUri
+  return validSchemePattern.test(protocol);
+}
+
 export function isNode(e: EventTarget | null): e is Node {
   return e != null && 'nodeType' in e;
 }

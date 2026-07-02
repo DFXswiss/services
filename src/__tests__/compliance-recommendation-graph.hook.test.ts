@@ -11,7 +11,7 @@ jest.mock('@dfx.swiss/react', () => ({
     COMPLETED: 'Completed',
     UNAVAILABLE: 'Unavailable',
     SUSPICIOUS: 'Suspicious',
-    USER_REJECTED: 'UserRejected',
+    FAILED: 'Failed',
     REPEAT: 'Repeat',
   },
   CallQueue: {
@@ -21,6 +21,12 @@ jest.mock('@dfx.swiss/react', () => ({
     MANUAL_CHECK_EXTERNAL_ACCOUNT_PHONE: 'ManualCheckExternalAccountPhone',
     UNAVAILABLE_SUSPICIOUS: 'UnavailableSuspicious',
   },
+}));
+
+// useCompliance now sources its call from useGuardedApi, which calls useNavigation (react-router hooks);
+// stub navigation so renderHook works without a <Router> wrapper.
+jest.mock('../hooks/navigation.hook', () => ({
+  useNavigation: () => ({ navigate: jest.fn() }),
 }));
 
 import { useCompliance } from '../hooks/compliance.hook';

@@ -49,7 +49,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
     if (wallet.supportedMethods?.includes(Blockchain.LIGHTNING)) {
       const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
       const suffix = 'lightning:';
-      const prefix = wallet.deepLink !== suffix ? `${wallet.deepLink}` : '';
+      const prefix = wallet.deepLink && wallet.deepLink !== suffix ? wallet.deepLink : '';
       return `${prefix}${suffix}${lightning}`;
     }
 

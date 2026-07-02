@@ -53,7 +53,6 @@ const StickersScreen = lazy(() => import('./screens/stickers.screen'));
 const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.screen'));
 const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
 const SafeScreen = lazy(() => import('./screens/safe.screen'));
-const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.screen'));
 const ComplianceScreen = lazy(() => import('./screens/compliance.screen'));
 const ComplianceBankTxScreen = lazy(() => import('./screens/compliance-bank-tx.screen'));
 const ComplianceBankTxRecallScreen = lazy(() => import('./screens/compliance-bank-tx-recall.screen'));
@@ -74,6 +73,7 @@ const ComplianceReviewScreen = lazy(() => import('./screens/compliance-review.sc
 const ComplianceCallQueuesScreen = lazy(() => import('./screens/compliance-call-queues.screen'));
 const ComplianceCallQueueScreen = lazy(() => import('./screens/compliance-call-queue.screen'));
 const ComplianceCallQueueDetailScreen = lazy(() => import('./screens/compliance-call-queue-detail.screen'));
+const SupportDashboardOverviewScreen = lazy(() => import('./screens/support-dashboard-overview.screen'));
 const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
 const SupportDashboardIssueScreen = lazy(() => import('./screens/support-dashboard-issue.screen'));
 const SupportDashboardCreateScreen = lazy(() => import('./screens/support-dashboard-create.screen'));
@@ -312,10 +312,6 @@ export const Routes = [
             element: withSuspense(<SupportTicketsScreen />),
           },
           {
-            path: 'telegram',
-            element: withSuspense(<TelegramSupportScreen />),
-          },
-          {
             path: 'issue',
             element: withSuspense(<SupportIssueScreen />),
           },
@@ -454,6 +450,10 @@ export const Routes = [
       },
       {
         path: 'support/dashboard',
+        element: withSuspense(<SupportDashboardOverviewScreen />),
+      },
+      {
+        path: 'support/dashboard/all',
         element: withSuspense(<SupportDashboardScreen />),
       },
       {

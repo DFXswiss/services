@@ -61,12 +61,6 @@ test.describe('Support System', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test('should navigate to telegram support', async ({ page }) => {
-    await page.goto(`/support/telegram?session=${token}`);
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('body')).toBeVisible();
-  });
-
   test('should navigate to chat', async ({ page }) => {
     await page.goto(`/support/chat?session=${token}`);
     await page.waitForLoadState('networkidle');

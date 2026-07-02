@@ -80,7 +80,6 @@ const sections: PageSection[] = [
     pages: [
       { path: '/support', label: 'Support' },
       { path: '/support/tickets', label: 'Support Tickets' },
-      { path: '/support/telegram', label: 'Telegram Support' },
       { path: '/support/issue', label: 'Support Issue' },
       { path: '/support/chat', label: 'Support Chat' },
     ],

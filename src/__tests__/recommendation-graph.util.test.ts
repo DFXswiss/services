@@ -6,7 +6,7 @@ jest.mock('@dfx.swiss/react', () => ({
     COMPLETED: 'Completed',
     UNAVAILABLE: 'Unavailable',
     SUSPICIOUS: 'Suspicious',
-    USER_REJECTED: 'UserRejected',
+    FAILED: 'Failed',
     REPEAT: 'Repeat',
   },
   CallQueue: {
