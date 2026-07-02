@@ -1,5 +1,5 @@
-import { useApi } from '@dfx.swiss/react';
 import { useEffect, useMemo, useState } from 'react';
+import { useGuardedApi } from './guarded-api.hook';
 
 export const TEMPLATE_NAME_MAX_LENGTH = 256;
 export const TEMPLATE_CONTENT_MAX_LENGTH = 8000;
@@ -40,7 +40,7 @@ export interface UseTemplates {
 }
 
 export function useTemplates(): UseTemplates {
-  const { call } = useApi();
+  const { call } = useGuardedApi();
 
   async function listTemplates(search?: string): Promise<SupportIssueTemplateInfo[]> {
     const suffix = search ? `?search=${encodeURIComponent(search)}` : '';

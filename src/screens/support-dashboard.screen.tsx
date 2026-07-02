@@ -435,7 +435,7 @@ export default function SupportDashboardScreen(): JSX.Element {
           className="px-3 py-1.5 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by UID, name, clerk, message..."
+          placeholder="Search by ID, UID, name, clerk, message..."
         />
       </div>
 
