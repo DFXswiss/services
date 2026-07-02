@@ -7,6 +7,16 @@ import { FiatCurrency } from 'src/dto/safe.dto';
 import { Timeframe } from 'src/util/chart';
 import { ButtonGroup } from '../safe/button-group';
 
+// The RealUnit price API only supports these timeframes; its data is
+// daily-granularity, so 24h/3D are meaningless here and rejected (400) by the API.
+const SUPPORTED_TIMEFRAMES: Timeframe[] = [
+  Timeframe.WEEK,
+  Timeframe.MONTH,
+  Timeframe.QUARTER,
+  Timeframe.YEAR,
+  Timeframe.ALL,
+];
+
 interface PriceHistoryChartProps {
   timeframe: Timeframe;
   priceHistory: PriceHistoryEntry[];
@@ -94,7 +104,7 @@ export const PriceHistoryChart = ({ timeframe, priceHistory, onTimeframeChange }
         <Chart type="area" height={300} options={chartOptions} series={chartSeries} />
         <div className="mt-4 flex justify-center">
           <ButtonGroup<Timeframe>
-            items={Object.values(Timeframe)}
+            items={SUPPORTED_TIMEFRAMES}
             selected={timeframe}
             onClick={(tf) => onTimeframeChange(tf)}
             buttonLabel={(tf) => tf}

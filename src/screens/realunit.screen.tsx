@@ -8,6 +8,7 @@ import {
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
+import { ErrorHint } from 'src/components/error-hint';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -29,6 +30,7 @@ export default function RealunitScreen(): JSX.Element {
     tokenInfo,
     isLoading,
     priceHistory,
+    priceHistoryError,
     timeframe,
     quotes,
     transactions,
@@ -84,6 +86,11 @@ export default function RealunitScreen(): JSX.Element {
               priceHistory={priceHistory}
               onTimeframeChange={fetchPriceHistory}
             />
+            {priceHistoryError && (
+              <div className="mt-4">
+                <ErrorHint message={translate('screens/realunit', 'Failed to load price history.')} />
+              </div>
+            )}
           </div>
 
           {isLoading ? (
