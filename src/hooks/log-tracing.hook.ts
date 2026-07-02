@@ -1,5 +1,5 @@
-import { useApi } from '@dfx.swiss/react';
 import { useMemo } from 'react';
+import { useGuardedApi } from './guarded-api.hook';
 
 export interface LogQueryColumn {
   name: string;
@@ -80,7 +80,7 @@ export function parseGenericTrace(
 }
 
 export function useLogTracing() {
-  const { call } = useApi();
+  const { call } = useGuardedApi();
 
   async function getRealunitTraces(hours: number): Promise<LogQueryResult> {
     return call<LogQueryResult>({

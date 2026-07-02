@@ -1,5 +1,5 @@
-import { useApi } from '@dfx.swiss/react';
 import { useMemo } from 'react';
+import { useGuardedApi } from './guarded-api.hook';
 import {
   AccountHistory,
   AccountSummary,
@@ -15,7 +15,7 @@ import { Timeframe } from 'src/util/chart';
 import { relativeUrl } from 'src/util/utils';
 
 export function useRealunitApi() {
-  const { call } = useApi();
+  const { call } = useGuardedApi();
 
   async function getAccountSummary(address: string): Promise<AccountSummary> {
     return call<AccountSummary>({

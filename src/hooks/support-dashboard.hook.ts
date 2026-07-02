@@ -1,6 +1,6 @@
-import { ApiError, CallConfig, Department, TfaLevel, useApi } from '@dfx.swiss/react';
-import { useCallback, useMemo } from 'react';
-import { useNavigation } from './navigation.hook';
+import { Department } from '@dfx.swiss/react';
+import { useMemo } from 'react';
+import { useGuardedApi } from './guarded-api.hook';
 
 // re-exported for existing call sites; canonical definition lives in the pure stats module
 export { CustomerAuthor } from 'src/util/support-stats';
@@ -124,22 +124,9 @@ export interface SupportStatisticsDto {
 }
 
 export function useSupportDashboard() {
-  const { call } = useApi();
-  const { navigate } = useNavigation();
-
-  // staff endpoints answer with HTTP 403 { code: 'TFA_REQUIRED' } when the session still
-  // needs 2FA; route into the existing 2FA flow instead of surfacing a raw error
-  const guardedCall = useCallback(
-    <T>(config: CallConfig): Promise<T> =>
-      call<T>(config).catch((error: ApiError) => {
-        if (error.code === 'TFA_REQUIRED') {
-          // staff 2FA is always STRICT/TOTP; route into the bearer-based (session-mode) 2FA flow
-          navigate('/2fa', { state: { level: TfaLevel.STRICT, sessionMode: true }, setRedirect: true });
-        }
-        throw error;
-      }),
-    [call, navigate],
-  );
+  // staff endpoints answer with HTTP 403 { code: 'TFA_REQUIRED' } when the session still needs 2FA;
+  // useGuardedApi routes that into the bearer-based 2FA flow instead of surfacing a raw error
+  const { call: guardedCall } = useGuardedApi();
 
   async function getIssueList(params?: {
     department?: string;
