@@ -15,16 +15,16 @@ import { createTestCredentials } from './test-wallet';
  * `useRealunitGuard` accepts (ADMIN | REALUNIT).
  *
  * Feature data is MOCKED with synthetic fixtures via page.route(...), so the baselines are deterministic AND contain
- * NO real production data. Only the RealUnit-scoped support endpoints (+ the shared message-thread endpoint) are
- * intercepted; everything else (auth/role/user/settings) is passed through via route.continue().
+ * NO real production data. Only the RealUnit-scoped support endpoints (incl. the scoped message-thread endpoint)
+ * are intercepted; everything else (auth/role/user/settings) is passed through via route.continue().
  *
  * Intercepted endpoints (base `/v1/` is prepended by useApi):
  *   - GET realunit/support/list?...     (issue list; the list screen calls it with states=Created,Pending for Open)
  *   - GET realunit/support/counts       (paged-tab totals: OnHold/Canceled/Completed)
  *   - GET realunit/support/activity?... (new-message poller, 30s interval)
  *   - GET realunit/support/clerks       (clerk dropdown, issue screen)
- *   - GET realunit/support/:id/data     (issue detail)
- *   - GET support/issue/:uid            (shared, non-role-scoped message thread the issue screen reads by UID)
+ *   - GET realunit/support/:id/data      (issue detail)
+ *   - GET realunit/support/:id/messages  (scoped, membership-enforced message thread by numeric issue id)
  *
  * Synthetic fixtures: fake ids (7000+), fixed ISO dates, fake names — no production data.
  */
@@ -274,7 +274,7 @@ const COUNTS_RE = /\/v1\/realunit\/support\/counts(?:\?|$)/;
 const ACTIVITY_RE = /\/v1\/realunit\/support\/activity(?:\?|$)/;
 const CLERKS_RE = /\/v1\/realunit\/support\/clerks(?:\?|$)/;
 const DATA_RE = /\/v1\/realunit\/support\/(\d+)\/data(?:\?|$)/;
-const MESSAGES_RE = /\/v1\/support\/issue\/([^/?]+)(?:\?|$)/;
+const MESSAGES_RE = /\/v1\/realunit\/support\/(\d+)\/messages(?:\?|$)/;
 
 async function json(route: Route, body: unknown): Promise<void> {
   await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
@@ -289,7 +289,7 @@ async function installSupportRoutes(page: Page): Promise<void> {
     if (ACTIVITY_RE.test(url)) return json(route, { count: 0 });
     if (CLERKS_RE.test(url)) return json(route, CLERKS);
     if (DATA_RE.test(url)) return json(route, ISSUE_DATA);
-    if (MESSAGES_RE.test(url)) return json(route, { messages: MESSAGES });
+    if (MESSAGES_RE.test(url)) return json(route, MESSAGES);
 
     // everything else (auth, role, user, settings) hits the real api
     await route.continue();

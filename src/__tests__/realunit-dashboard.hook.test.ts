@@ -69,13 +69,13 @@ describe('useRealunitSupport', () => {
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/support/42/message/7/file', method: 'GET' });
   });
 
-  it('reads the message thread from the shared UID endpoint', async () => {
-    mockCall.mockResolvedValue({ messages: [{ id: 1, author: 'Alice', created: 'now' }] });
+  it('reads the message thread from the scoped, membership-enforced endpoint by numeric issue id', async () => {
+    mockCall.mockResolvedValue([{ id: 1, author: 'Alice', created: 'now' }]);
     const { result } = renderHook(() => useRealunitSupport());
 
-    const messages = await result.current.getIssueMessages('issue-uid-123');
+    const messages = await result.current.getIssueMessages(7001);
 
-    expect(mockCall).toHaveBeenCalledWith({ url: 'support/issue/issue-uid-123', method: 'GET' });
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/support/7001/messages', method: 'GET' });
     expect(messages).toEqual([{ id: 1, author: 'Alice', created: 'now' }]);
   });
 });

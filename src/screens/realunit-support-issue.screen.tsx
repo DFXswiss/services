@@ -83,24 +83,24 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
   }, [id, getIssueData, clerks]);
 
   const loadMessages = useCallback((): void => {
-    if (!issueData?.uid) return;
-    getIssueMessages(issueData.uid)
+    if (!issueData?.id) return;
+    getIssueMessages(issueData.id)
       .then((fetched) => {
         setMessages(fetched);
         setPendingCount(0);
       })
       .catch((e: Error) => setActionError(e.message ?? 'Failed to load messages'));
-  }, [issueData?.uid, getIssueMessages]);
+  }, [issueData?.id, getIssueMessages]);
 
   const pollForNewMessages = useCallback((): void => {
-    if (!issueData?.uid) return;
-    getIssueMessages(issueData.uid)
+    if (!issueData?.id) return;
+    getIssueMessages(issueData.id)
       .then((fetched) => {
         const newCount = fetched.filter((m) => !visibleIdsRef.current.has(m.id)).length;
         if (newCount > 0) setPendingCount(newCount);
       })
       .catch((e: Error) => setActionError(e.message ?? 'Failed to load messages'));
-  }, [issueData?.uid, getIssueMessages]);
+  }, [issueData?.id, getIssueMessages]);
 
   useEffect(() => {
     loadIssue();
