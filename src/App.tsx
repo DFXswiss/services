@@ -86,6 +86,10 @@ const RealunitTransactionsScreen = lazy(() => import('./screens/realunit-transac
 const RealunitQuoteDetailScreen = lazy(() => import('./screens/realunit-quote-detail.screen'));
 const RealunitTransactionDetailScreen = lazy(() => import('./screens/realunit-transaction-detail.screen'));
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
+const RealunitSupportScreen = lazy(() => import('./screens/realunit-support.screen'));
+const RealunitSupportIssueScreen = lazy(() => import('./screens/realunit-support-issue.screen'));
+const RealunitComplianceScreen = lazy(() => import('./screens/realunit-compliance.screen'));
+const RealunitComplianceUserScreen = lazy(() => import('./screens/realunit-compliance-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
 const DashboardScreen = lazy(() => import('./screens/dashboard.screen'));
@@ -504,6 +508,22 @@ export const Routes = [
           {
             path: 'user/:address',
             element: withSuspense(<RealunitUserScreen />),
+          },
+          {
+            path: 'support',
+            element: withSuspense(<RealunitSupportScreen />),
+          },
+          {
+            path: 'support/issue/:id',
+            element: withSuspense(<RealunitSupportIssueScreen />),
+          },
+          {
+            path: 'compliance',
+            element: withSuspense(<RealunitComplianceScreen />),
+          },
+          {
+            path: 'compliance/user/:id',
+            element: withSuspense(<RealunitComplianceUserScreen />),
           },
         ],
       },

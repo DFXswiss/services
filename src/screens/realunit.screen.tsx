@@ -79,6 +79,20 @@ export default function RealunitScreen(): JSX.Element {
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <div className="w-full">
+          <div className="flex flex-wrap gap-2 mb-6">
+            <StyledButton
+              label={translate('screens/support', 'RealUnit Support')}
+              onClick={() => navigate('/realunit/support')}
+              width={StyledButtonWidth.MIN}
+              color={StyledButtonColor.STURDY_WHITE}
+            />
+            <StyledButton
+              label={translate('screens/compliance', 'RealUnit Compliance')}
+              onClick={() => navigate('/realunit/compliance')}
+              width={StyledButtonWidth.MIN}
+              color={StyledButtonColor.STURDY_WHITE}
+            />
+          </div>
           <div className="mb-4">
             <h2 className="text-dfxGray-700 justify-center  mb-2">{translate('screens/realunit', 'Price History')}</h2>
             <PriceHistoryChart
