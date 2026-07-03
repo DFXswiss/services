@@ -20,6 +20,11 @@ interface FormData {
   mail: string;
 }
 
+// House-brand wallet name of app.dfx.swiss, matching the backend's default wallet (Config.defaultWalletId).
+// Sent when no explicit `wallet` URL param is present, so an email login started here is positively
+// attributed to DFX in the per-login audit trail (IpLog.walletName) instead of relying on the backend default.
+const DFX_WALLET_NAME = 'DFX';
+
 export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { signInWithMail } = useAuth();
@@ -53,7 +58,7 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   async function submit({ mail }: FormData): Promise<void> {
     setIsLoading(true);
     setError(undefined);
-    signInWithMail(mail, redirectUri, recommendationCode, wallet)
+    signInWithMail(mail, redirectUri, recommendationCode, wallet ?? DFX_WALLET_NAME)
       .then(() => setMailSent(true))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
