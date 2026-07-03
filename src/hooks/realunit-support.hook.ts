@@ -92,11 +92,9 @@ export function useRealunitSupport() {
     });
   }
 
-  // The message thread. The scoped RealUnit support controller exposes no messages-list route, so the thread is
-  // read via the shared, non-role-scoped `support/issue/:uid` endpoint (login-only, keyed by the issue UID) — the
-  // exact endpoint the DFX support dashboard already uses. Staff only ever hold UIDs of their own scoped issues.
+  // The message thread, read via the scoped, membership-enforced `realunit/support/:id/messages` endpoint (keyed by
+  // numeric issue id) — server-side tenant isolation, not the shared uid-keyed `support/issue/:uid` endpoint.
   async function getIssueMessages(issueId: number): Promise<SupportMessageInfo[]> {
-    // scoped, membership-enforced thread endpoint (keyed by numeric issue id) — not the shared uid-keyed one
     return call<SupportMessageInfo[]>({
       url: `realunit/support/${issueId}/messages`,
       method: 'GET',

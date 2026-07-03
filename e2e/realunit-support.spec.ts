@@ -266,7 +266,7 @@ const MESSAGES: SupportMessageInfo[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Routing: intercept ONLY the RealUnit support endpoints (+ shared message thread); pass everything else through.
+// Routing: intercept ONLY the RealUnit support endpoints (incl. the scoped message thread); pass everything else through.
 // ---------------------------------------------------------------------------
 
 const LIST_RE = /\/v1\/realunit\/support\/list(?:\?|$)/;
