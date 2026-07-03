@@ -127,25 +127,6 @@ jobs:
               --content-cache-control "public, max-age=3600" \
               --overwrite
 
-            # Upload DFX App 2.0 preview (public/app2 -> /app2/*)
-            az storage blob upload-batch \
-              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
-              -d '$web' \
-              -s ./build \
-              --pattern "app2/*" \
-              --content-cache-control "public, max-age=3600" \
-              --overwrite
-            # entry HTML must always revalidate so redeploys are never served stale
-            if [ -f "./build/app2/index.html" ]; then
-              az storage blob upload \
-                --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
-                -c '$web' \
-                -f "./build/app2/index.html" \
-                -n "app2/index.html" \
-                --content-cache-control "no-cache, must-revalidate" \
-                --overwrite
-            fi
-
       - name: Purge CDN endpoint (PRD)
         uses: azure/CLI@v2
         with:
