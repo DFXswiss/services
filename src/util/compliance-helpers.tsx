@@ -151,6 +151,10 @@ export function todayAsString(): string {
 // Only these types still allow a manual Return via compliance.
 export const BankTxUnassignedTypes = ['GSheet', 'Unknown', 'Pending'];
 
+// Sentinel ref code the backend assigns when a user has no real referrer.
+// The frontend treats it as "no ref" everywhere it reasons about the used ref.
+export const DEFAULT_REF = '000-000';
+
 export function formatDate(value: string): string {
   return new Date(value).toLocaleDateString();
 }

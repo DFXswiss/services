@@ -188,7 +188,12 @@ export default function ComplianceUserScreen(): JSX.Element {
           {!isSupport && (
             <div className="flex-1 min-w-[300px] flex flex-col gap-4">
               {data.permissions.viewRecommendation && (
-                <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId} navigate={navigate} />
+                <RecommendationPanel
+                  kycSteps={data.kycSteps}
+                  users={data.users}
+                  userDataId={userDataId}
+                  navigate={navigate}
+                />
               )}
               {data.permissions.viewKycFiles && (
                 <KycFilesPanel
