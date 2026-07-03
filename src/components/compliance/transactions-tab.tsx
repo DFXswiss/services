@@ -435,25 +435,25 @@ export function TransactionsTable({
                                             className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
                                             onClick={() => handleTxPdf(tx, ramp, 'de')}
                                           >
-                                            {ramp === 'onramp' ? 'OnRamp' : 'OffRamp'} PDF (DE)
+                                            Transaction PDF (DE)
                                           </button>
                                           <button
                                             className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
                                             onClick={() => handleTxPdf(tx, ramp, 'en')}
                                           >
-                                            {ramp === 'onramp' ? 'OnRamp' : 'OffRamp'} PDF (EN)
+                                            Transaction PDF (EN)
                                           </button>
                                           <button
                                             className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
                                             onClick={() => handleAccountInfoPdf(tx, 'de')}
                                           >
-                                            Account Info PDF (DE)
+                                            Account PDF (DE)
                                           </button>
                                           <button
                                             className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
                                             onClick={() => handleAccountInfoPdf(tx, 'en')}
                                           >
-                                            Account Info PDF (EN)
+                                            Account PDF (EN)
                                           </button>
                                         </>
                                       )}
