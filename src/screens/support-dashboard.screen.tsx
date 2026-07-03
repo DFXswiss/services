@@ -11,8 +11,7 @@ import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { CustomerAuthor, SupportIssueListItem, useSupportDashboard } from 'src/hooks/support-dashboard.hook';
-import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
-import { reasonLabel, typeLabel, visibleDepartmentsForRole } from 'src/util/support-helpers';
+import { typeLabel, visibleDepartmentsForRole } from 'src/util/support-helpers';
 
 type PagedTab = 'OnHold' | 'Canceled' | 'Completed';
 type Tab = 'open' | PagedTab;
