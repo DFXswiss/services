@@ -94,14 +94,11 @@ describe('useRealunitCompliance', () => {
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/compliance/customers?key=a%20b%40c', method: 'GET' });
   });
 
-  it('hits the reduced dossier, files and download endpoints', async () => {
+  it('hits the reduced dossier and download endpoints', async () => {
     const { result } = renderHook(() => useRealunitCompliance());
 
     await result.current.getCustomer(9);
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/compliance/customers/9', method: 'GET' });
-
-    await result.current.getCustomerFiles(9);
-    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/compliance/customers/9/files', method: 'GET' });
 
     await result.current.downloadFile(9, 'file-uid');
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/compliance/customers/9/files/file-uid', method: 'GET' });

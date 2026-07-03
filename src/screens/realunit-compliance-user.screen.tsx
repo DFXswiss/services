@@ -131,7 +131,7 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
 
       {/* Identity / KYC status */}
       <div className="flex gap-4 flex-wrap">
-        <InfoPanel title="Identity">
+        <InfoPanel title={translate('screens/compliance', 'Identity')}>
           <InfoRow label="ID" value={String(customer.id)} mono />
           <InfoRow label="Created" value={formatDate(customer.created)} />
           <InfoRow label="Account Type" value={customer.accountType ?? '-'} />
@@ -151,7 +151,7 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
           <InfoRow label="Phone" value={customer.phone ?? '-'} />
         </InfoPanel>
 
-        <InfoPanel title="KYC / Status">
+        <InfoPanel title={translate('screens/compliance', 'KYC / Status')}>
           <InfoRow label="KYC Status" value={statusBadge(customer.kycStatus)} />
           <InfoRow label="KYC Level" value={customer.kycLevel ?? '-'} />
           <InfoRow label="KYC Type" value={customer.kycType ?? '-'} />
@@ -160,7 +160,7 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
         </InfoPanel>
 
         {org && (
-          <InfoPanel title="Organization">
+          <InfoPanel title={translate('screens/compliance', 'Organization')}>
             <InfoRow label="Name" value={org.name ?? '-'} />
             <InfoRow label="Address" value={[org.street, org.houseNumber].filter(Boolean).join(' ') || '-'} />
             <InfoRow label="ZIP / City" value={[org.zip, org.location].filter(Boolean).join(' ') || '-'} />
@@ -170,19 +170,20 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
             <InfoRow label="Complex Org Structure" value={bool(org.complexOrgStructure)} />
             <InfoRow label="Beneficial Owners" value={org.allBeneficialOwnersName ?? '-'} />
             <InfoRow label="Owners Domicile" value={org.allBeneficialOwnersDomicile ?? '-'} />
+            <InfoRow label="Account Opener Authorization" value={org.accountOpenerAuthorization ?? '-'} />
           </InfoPanel>
         )}
       </div>
 
       {/* KYC Files */}
       <CollectionTable
-        title="KYC Files"
+        title={translate('screens/compliance', 'KYC Files')}
         rows={customer.kycFiles}
-        emptyText="No files"
+        emptyText={translate('screens/compliance', 'No files')}
         columns={[
-          { header: 'Name', render: (f) => f.name },
-          { header: 'Type', render: (f) => f.type },
-          { header: 'Created', render: (f) => formatDate(f.created) },
+          { header: translate('screens/kyc', 'Name'), render: (f) => f.name },
+          { header: translate('screens/compliance', 'Type'), render: (f) => f.type },
+          { header: translate('screens/compliance', 'Created'), render: (f) => formatDate(f.created) },
           {
             header: '',
             render: (f) => (
@@ -199,123 +200,158 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
 
       {/* KYC Steps */}
       <CollectionTable
-        title="KYC Steps"
+        title={translate('screens/compliance', 'KYC Steps')}
         rows={customer.kycSteps}
-        emptyText="No steps"
+        emptyText={translate('screens/compliance', 'No steps')}
         columns={[
-          { header: 'Name', render: (s) => s.name },
-          { header: 'Type', render: (s) => s.type ?? '-' },
-          { header: 'Status', render: (s) => statusBadge(s.status) },
-          { header: 'Seq', render: (s) => s.sequenceNumber },
-          { header: 'Created', render: (s) => formatDate(s.created) },
+          { header: translate('screens/kyc', 'Name'), render: (s) => s.name },
+          { header: translate('screens/compliance', 'Type'), render: (s) => s.type ?? '-' },
+          { header: translate('screens/compliance', 'Status'), render: (s) => statusBadge(s.status) },
+          { header: translate('screens/compliance', 'Seq'), render: (s) => s.sequenceNumber },
+          { header: translate('screens/compliance', 'Created'), render: (s) => formatDate(s.created) },
         ]}
       />
 
       {/* Transactions */}
       <CollectionTable
-        title="Transactions"
+        title={translate('screens/compliance', 'Transactions')}
         rows={customer.transactions}
-        emptyText="No transactions"
+        emptyText={translate('screens/compliance', 'No transactions')}
         columns={[
-          { header: 'ID', render: (t) => t.id },
-          { header: 'Type', render: (t) => t.type ?? '-' },
-          { header: 'Source', render: (t) => t.sourceType },
-          { header: 'Input', render: (t) => (t.inputAmount != null ? `${t.inputAmount} ${t.inputAsset ?? ''}` : '-') },
+          { header: translate('screens/compliance', 'ID'), render: (t) => t.id },
+          { header: translate('screens/compliance', 'Type'), render: (t) => t.type ?? '-' },
+          { header: translate('screens/compliance', 'Source'), render: (t) => t.sourceType },
           {
-            header: 'Output',
+            header: translate('screens/compliance', 'Input'),
+            render: (t) => (t.inputAmount != null ? `${t.inputAmount} ${t.inputAsset ?? ''}` : '-'),
+          },
+          {
+            header: translate('screens/compliance', 'Output'),
             render: (t) => (t.outputAmount != null ? `${t.outputAmount} ${t.outputAsset ?? ''}` : '-'),
           },
-          { header: 'CHF', render: (t) => t.amountInChf?.toLocaleString() ?? '-' },
-          { header: 'Complete', render: (t) => bool(t.isCompleted) },
-          { header: 'Created', render: (t) => formatDate(t.created) },
+          { header: translate('screens/compliance', 'CHF'), render: (t) => t.amountInChf?.toLocaleString() ?? '-' },
+          { header: translate('screens/compliance', 'Complete'), render: (t) => bool(t.isCompleted) },
+          {
+            header: translate('screens/compliance', 'Chargeback'),
+            render: (t) => (t.chargebackDate ? formatDate(t.chargebackDate) : '-'),
+          },
+          { header: translate('screens/compliance', 'Created'), render: (t) => formatDate(t.created) },
         ]}
       />
 
       {/* Bank Data */}
       <CollectionTable
-        title="Bank Data"
+        title={translate('screens/compliance', 'Bank Data')}
         rows={customer.bankDatas}
-        emptyText="No bank data"
+        emptyText={translate('screens/compliance', 'No bank data')}
         columns={[
-          { header: 'IBAN', render: (b) => <span className="font-mono">{b.iban}</span> },
-          { header: 'Name', render: (b) => b.name },
-          { header: 'Type', render: (b) => b.type ?? '-' },
-          { header: 'Status', render: (b) => (b.status ? statusBadge(b.status) : '-') },
-          { header: 'Approved', render: (b) => bool(b.approved) },
-          { header: 'Active', render: (b) => bool(b.active) },
-          { header: 'Created', render: (b) => formatDate(b.created) },
+          {
+            header: translate('screens/compliance', 'IBAN'),
+            render: (b) => <span className="font-mono">{b.iban}</span>,
+          },
+          { header: translate('screens/kyc', 'Name'), render: (b) => b.name },
+          { header: translate('screens/compliance', 'Type'), render: (b) => b.type ?? '-' },
+          {
+            header: translate('screens/compliance', 'Status'),
+            render: (b) => (b.status ? statusBadge(b.status) : '-'),
+          },
+          { header: translate('screens/compliance', 'Approved'), render: (b) => bool(b.approved) },
+          { header: translate('screens/compliance', 'Active'), render: (b) => bool(b.active) },
+          { header: translate('screens/compliance', 'Created'), render: (b) => formatDate(b.created) },
         ]}
       />
 
       {/* Buy Routes */}
       <CollectionTable
-        title="Buy Routes"
+        title={translate('screens/compliance', 'Buy Routes')}
         rows={customer.buyRoutes}
-        emptyText="No buy routes"
+        emptyText={translate('screens/compliance', 'No buy routes')}
         columns={[
-          { header: 'ID', render: (r) => r.id },
-          { header: 'Asset', render: (r) => r.assetName },
-          { header: 'Blockchain', render: (r) => r.blockchain },
-          { header: 'IBAN', render: (r) => <span className="font-mono">{r.iban ?? '-'}</span> },
-          { header: 'Volume', render: (r) => r.volume?.toLocaleString() ?? '-' },
-          { header: 'Active', render: (r) => bool(r.active) },
-          { header: 'Created', render: (r) => formatDate(r.created) },
+          { header: translate('screens/compliance', 'ID'), render: (r) => r.id },
+          { header: translate('screens/compliance', 'Asset'), render: (r) => r.assetName },
+          { header: translate('screens/compliance', 'Blockchain'), render: (r) => r.blockchain },
+          {
+            header: translate('screens/compliance', 'IBAN'),
+            render: (r) => <span className="font-mono">{r.iban ?? '-'}</span>,
+          },
+          { header: translate('screens/compliance', 'Volume'), render: (r) => r.volume?.toLocaleString() ?? '-' },
+          { header: translate('screens/compliance', 'Active'), render: (r) => bool(r.active) },
+          { header: translate('screens/compliance', 'Created'), render: (r) => formatDate(r.created) },
         ]}
       />
 
       {/* Sell Routes */}
       <CollectionTable
-        title="Sell Routes"
+        title={translate('screens/compliance', 'Sell Routes')}
         rows={customer.sellRoutes}
-        emptyText="No sell routes"
+        emptyText={translate('screens/compliance', 'No sell routes')}
         columns={[
-          { header: 'ID', render: (r) => r.id },
-          { header: 'Fiat', render: (r) => r.fiatName ?? '-' },
-          { header: 'IBAN', render: (r) => <span className="font-mono">{r.iban}</span> },
-          { header: 'Deposit Address', render: (r) => <span className="break-all">{r.depositAddress ?? '-'}</span> },
-          { header: 'Volume', render: (r) => r.volume?.toLocaleString() ?? '-' },
-          { header: 'Active', render: (r) => bool(r.active) },
-          { header: 'Created', render: (r) => formatDate(r.created) },
+          { header: translate('screens/compliance', 'ID'), render: (r) => r.id },
+          { header: translate('screens/compliance', 'Fiat'), render: (r) => r.fiatName ?? '-' },
+          {
+            header: translate('screens/compliance', 'IBAN'),
+            render: (r) => <span className="font-mono">{r.iban}</span>,
+          },
+          {
+            header: translate('screens/compliance', 'Deposit Address'),
+            render: (r) => <span className="break-all">{r.depositAddress ?? '-'}</span>,
+          },
+          { header: translate('screens/compliance', 'Volume'), render: (r) => r.volume?.toLocaleString() ?? '-' },
+          { header: translate('screens/compliance', 'Active'), render: (r) => bool(r.active) },
+          { header: translate('screens/compliance', 'Created'), render: (r) => formatDate(r.created) },
         ]}
       />
 
       {/* Swap Routes */}
       <CollectionTable
-        title="Swap Routes"
+        title={translate('screens/compliance', 'Swap Routes')}
         rows={customer.swapRoutes}
-        emptyText="No swap routes"
+        emptyText={translate('screens/compliance', 'No swap routes')}
         columns={[
-          { header: 'ID', render: (r) => r.id },
-          { header: 'Asset', render: (r) => r.assetName ?? '-' },
-          { header: 'Blockchain', render: (r) => r.blockchain ?? '-' },
-          { header: 'Deposit Address', render: (r) => <span className="break-all">{r.depositAddress ?? '-'}</span> },
-          { header: 'Volume', render: (r) => r.volume?.toLocaleString() ?? '-' },
-          { header: 'Active', render: (r) => bool(r.active) },
-          { header: 'Created', render: (r) => formatDate(r.created) },
+          { header: translate('screens/compliance', 'ID'), render: (r) => r.id },
+          { header: translate('screens/compliance', 'Asset'), render: (r) => r.assetName ?? '-' },
+          { header: translate('screens/compliance', 'Blockchain'), render: (r) => r.blockchain ?? '-' },
+          {
+            header: translate('screens/compliance', 'Deposit Address'),
+            render: (r) => <span className="break-all">{r.depositAddress ?? '-'}</span>,
+          },
+          { header: translate('screens/compliance', 'Volume'), render: (r) => r.volume?.toLocaleString() ?? '-' },
+          { header: translate('screens/compliance', 'Active'), render: (r) => bool(r.active) },
+          { header: translate('screens/compliance', 'Created'), render: (r) => formatDate(r.created) },
         ]}
       />
 
       {/* Virtual IBANs */}
       <CollectionTable
-        title="Virtual IBANs"
+        title={translate('screens/compliance', 'Virtual IBANs')}
         rows={customer.virtualIbans}
-        emptyText="No virtual IBANs"
+        emptyText={translate('screens/compliance', 'No virtual IBANs')}
         columns={[
-          { header: 'IBAN', render: (v) => <span className="font-mono">{v.iban}</span> },
-          { header: 'Currency', render: (v) => v.currency ?? '-' },
-          { header: 'Bank', render: (v) => v.bank ?? '-' },
-          { header: 'Status', render: (v) => (v.status ? statusBadge(v.status) : '-') },
-          { header: 'Active', render: (v) => bool(v.active) },
-          { header: 'Label', render: (v) => v.label ?? '-' },
-          { header: 'Created', render: (v) => formatDate(v.created) },
+          {
+            header: translate('screens/compliance', 'IBAN'),
+            render: (v) => <span className="font-mono">{v.iban}</span>,
+          },
+          { header: translate('screens/compliance', 'Currency'), render: (v) => v.currency ?? '-' },
+          { header: translate('screens/compliance', 'Bank'), render: (v) => v.bank ?? '-' },
+          {
+            header: translate('screens/compliance', 'Status'),
+            render: (v) => (v.status ? statusBadge(v.status) : '-'),
+          },
+          { header: translate('screens/compliance', 'Active'), render: (v) => bool(v.active) },
+          { header: translate('screens/compliance', 'Label'), render: (v) => v.label ?? '-' },
+          { header: translate('screens/compliance', 'Created'), render: (v) => formatDate(v.created) },
         ]}
       />
 
       {/* Support Issues (read-only, incl. message thread) */}
       <div>
-        <h2 className="text-dfxGray-700 mb-2">Support Issues ({customer.supportIssues.length})</h2>
+        <h2 className="text-dfxGray-700 mb-2">
+          {translate('screens/compliance', 'Support Issues')} ({customer.supportIssues.length})
+        </h2>
         {customer.supportIssues.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-4 text-dfxGray-700 text-sm">No support issues</div>
+          <div className="bg-white rounded-lg shadow-sm p-4 text-dfxGray-700 text-sm">
+            {translate('screens/compliance', 'No support issues')}
+          </div>
         ) : (
           <div className="flex flex-col gap-3">
             {customer.supportIssues.map((issue) => (

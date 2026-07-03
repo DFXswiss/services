@@ -4,7 +4,6 @@ import {
   SupportIssueInternalData,
   SupportIssueListItem,
   SupportMessageInfo,
-  SupportStatisticsDto,
 } from './support-dashboard.hook';
 
 // RealUnit tenant support dashboard hook. Thin wrapper over the strictly customer-scoped `/v1/realunit/support/*`
@@ -35,13 +34,6 @@ export function useRealunitSupport() {
   async function getIssueCounts(): Promise<Record<string, number>> {
     return call<Record<string, number>>({
       url: 'realunit/support/counts',
-      method: 'GET',
-    });
-  }
-
-  async function getIssueStatistics(periodDays: number): Promise<SupportStatisticsDto> {
-    return call<SupportStatisticsDto>({
-      url: `realunit/support/statistics?days=${periodDays}`,
       method: 'GET',
     });
   }
@@ -115,7 +107,6 @@ export function useRealunitSupport() {
     () => ({
       getIssueList,
       getIssueCounts,
-      getIssueStatistics,
       getIssueActivity,
       getClerks,
       getIssueData,

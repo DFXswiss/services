@@ -3,7 +3,6 @@ import {
   RealUnitCustomerDetailDto,
   RealUnitCustomerListDto,
   RealUnitKycFileDownloadDto,
-  RealUnitKycFileDto,
 } from 'src/dto/realunit-compliance.dto';
 import { useGuardedApi } from './guarded-api.hook';
 
@@ -27,13 +26,6 @@ export function useRealunitCompliance() {
     });
   }
 
-  async function getCustomerFiles(id: number): Promise<RealUnitKycFileDto[]> {
-    return call<RealUnitKycFileDto[]>({
-      url: `realunit/compliance/customers/${id}/files`,
-      method: 'GET',
-    });
-  }
-
   async function downloadFile(id: number, uid: string): Promise<RealUnitKycFileDownloadDto> {
     return call<RealUnitKycFileDownloadDto>({
       url: `realunit/compliance/customers/${id}/files/${uid}`,
@@ -45,7 +37,6 @@ export function useRealunitCompliance() {
     () => ({
       searchCustomers,
       getCustomer,
-      getCustomerFiles,
       downloadFile,
     }),
     [call],
