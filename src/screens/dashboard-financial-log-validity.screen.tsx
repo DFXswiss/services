@@ -42,6 +42,8 @@ interface FinancialValidityRequest {
 }
 
 const DATE_PLACEHOLDER = '2026-07-03T23:11:00Z';
+// Require an explicit timezone (Z or ±hh:mm) so an entry is never silently interpreted as local time.
+const ISO_DATETIME_TZ = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/;
 
 export default function DashboardFinancialLogValidityScreen(): JSX.Element {
   useAdminGuard();
@@ -120,15 +122,27 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
       return;
     }
 
-    if (hasFrom && isNaN(Date.parse(from))) {
-      setRangeError(`Invalid 'from' date. Use ISO-8601 UTC, e.g. ${DATE_PLACEHOLDER}.`);
+    if (hasFrom && !ISO_DATETIME_TZ.test(from)) {
+      setRangeError(`Invalid 'from' date. Use ISO-8601 with timezone, e.g. ${DATE_PLACEHOLDER}.`);
       return;
     }
-    if (hasTo && isNaN(Date.parse(to))) {
-      setRangeError(`Invalid 'to' date. Use ISO-8601 UTC, e.g. ${DATE_PLACEHOLDER}.`);
+    if (hasTo && !ISO_DATETIME_TZ.test(to)) {
+      setRangeError(`Invalid 'to' date. Use ISO-8601 with timezone, e.g. ${DATE_PLACEHOLDER}.`);
       return;
     }
-    if (hasFrom && hasTo && Date.parse(from) > Date.parse(to)) {
+
+    const fromDate = hasFrom ? new Date(from) : undefined;
+    const toDate = hasTo ? new Date(to) : undefined;
+
+    if (fromDate && isNaN(fromDate.getTime())) {
+      setRangeError(`Invalid 'from' date. Use ISO-8601 with timezone, e.g. ${DATE_PLACEHOLDER}.`);
+      return;
+    }
+    if (toDate && isNaN(toDate.getTime())) {
+      setRangeError(`Invalid 'to' date. Use ISO-8601 with timezone, e.g. ${DATE_PLACEHOLDER}.`);
+      return;
+    }
+    if (fromDate && toDate && fromDate.getTime() > toDate.getTime()) {
       setRangeError("'from' must be earlier than or equal to 'to'.");
       return;
     }
@@ -150,8 +164,8 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
     }
 
     const payload: FinancialValidityRequest = { valid };
-    if (hasFrom) payload.from = from;
-    if (hasTo) payload.to = to;
+    if (fromDate) payload.from = fromDate.toISOString();
+    if (toDate) payload.to = toDate.toISOString();
     if (min !== undefined) payload.min = min;
     if (max !== undefined) payload.max = max;
 
