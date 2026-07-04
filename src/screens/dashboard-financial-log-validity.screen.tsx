@@ -7,6 +7,7 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
+  StyledDateAndTimePicker,
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -22,8 +23,8 @@ interface IdFormData {
 }
 
 interface RangeFormData {
-  from: string;
-  to: string;
+  from?: Date;
+  to?: Date;
   min: string;
   max: string;
 }
@@ -40,10 +41,6 @@ interface FinancialValidityRequest {
   max?: number;
   valid: boolean;
 }
-
-const DATE_PLACEHOLDER = '2026-07-03T23:11:00Z';
-// Require an explicit timezone (Z or ±hh:mm) so an entry is never silently interpreted as local time.
-const ISO_DATETIME_TZ = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/;
 
 export default function DashboardFinancialLogValidityScreen(): JSX.Element {
   useAdminGuard();
@@ -96,7 +93,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
     reset: resetRange,
   } = useForm<RangeFormData>({
     mode: 'onTouched',
-    defaultValues: { from: '', to: '', min: '', max: '' },
+    defaultValues: { min: '', max: '' },
   });
 
   const [rangeLoading, setRangeLoading] = useState(false);
@@ -107,42 +104,19 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
     setRangeError(undefined);
     setRangeSuccess(undefined);
 
-    const from = data.from.trim();
-    const to = data.to.trim();
+    const { from, to } = data;
     const minStr = data.min.trim();
     const maxStr = data.max.trim();
 
-    const hasFrom = from !== '';
-    const hasTo = to !== '';
     const hasMin = minStr !== '';
     const hasMax = maxStr !== '';
 
-    if (!hasFrom && !hasTo && !hasMin && !hasMax) {
+    if (!from && !to && !hasMin && !hasMax) {
       setRangeError('At least one filter is required (from, to, min or max).');
       return;
     }
 
-    if (hasFrom && !ISO_DATETIME_TZ.test(from)) {
-      setRangeError(`Invalid 'from' date. Use ISO-8601 with timezone, e.g. ${DATE_PLACEHOLDER}.`);
-      return;
-    }
-    if (hasTo && !ISO_DATETIME_TZ.test(to)) {
-      setRangeError(`Invalid 'to' date. Use ISO-8601 with timezone, e.g. ${DATE_PLACEHOLDER}.`);
-      return;
-    }
-
-    const fromDate = hasFrom ? new Date(from) : undefined;
-    const toDate = hasTo ? new Date(to) : undefined;
-
-    if (fromDate && isNaN(fromDate.getTime())) {
-      setRangeError(`Invalid 'from' date. Use ISO-8601 with timezone, e.g. ${DATE_PLACEHOLDER}.`);
-      return;
-    }
-    if (toDate && isNaN(toDate.getTime())) {
-      setRangeError(`Invalid 'to' date. Use ISO-8601 with timezone, e.g. ${DATE_PLACEHOLDER}.`);
-      return;
-    }
-    if (fromDate && toDate && fromDate.getTime() > toDate.getTime()) {
+    if (from && to && from.getTime() > to.getTime()) {
       setRangeError("'from' must be earlier than or equal to 'to'.");
       return;
     }
@@ -163,9 +137,11 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
       return;
     }
 
+    // The picker yields a Date in the browser's local time; toISOString() sends the
+    // unambiguous UTC instant the backend expects.
     const payload: FinancialValidityRequest = { valid };
-    if (fromDate) payload.from = fromDate.toISOString();
-    if (toDate) payload.to = toDate.toISOString();
+    if (from) payload.from = from.toISOString();
+    if (to) payload.to = to.toISOString();
     if (min !== undefined) payload.min = min;
     if (max !== undefined) payload.max = max;
 
@@ -234,14 +210,14 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
       <div className="bg-white rounded-lg shadow p-6 max-w-xl">
         <h2 className="text-lg font-semibold mb-1">By financial range / threshold</h2>
         <p className="text-sm text-gray-500 mb-4">
-          Bulk-update the validity of financial data logs. At least one filter is required. Dates are ISO-8601 UTC:
-          from is inclusive, to is exclusive. min/max apply exclusively to totalBalanceChf.
+          Bulk-update the validity of financial data logs. At least one filter is required. Dates are picked in your
+          local time and sent as UTC; from is inclusive, to is exclusive. min/max apply exclusively to totalBalanceChf.
         </p>
 
         <Form control={rangeControl} errors={rangeErrors} translate={translateError} hasFormElement={false}>
           <StyledVerticalStack gap={4} full>
-            <StyledInput name="from" type="text" label="From (created >=)" placeholder={DATE_PLACEHOLDER} full smallLabel />
-            <StyledInput name="to" type="text" label="To (created <)" placeholder={DATE_PLACEHOLDER} full smallLabel />
+            <StyledDateAndTimePicker name="from" label="From (created >=)" smallLabel />
+            <StyledDateAndTimePicker name="to" label="To (created <)" smallLabel />
             <StyledInput name="min" type="number" label="Min totalBalanceChf (exclusive)" placeholder="0" full smallLabel />
             <StyledInput name="max" type="number" label="Max totalBalanceChf (exclusive)" placeholder="0" full smallLabel />
 
