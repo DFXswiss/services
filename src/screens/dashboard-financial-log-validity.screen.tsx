@@ -70,7 +70,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
 
     try {
       const response = await call<LogValidityResponse>({
-        url: `log/${+data.id}`,
+        url: `log/${data.id}`,
         method: 'PUT',
         data: { valid },
       });
