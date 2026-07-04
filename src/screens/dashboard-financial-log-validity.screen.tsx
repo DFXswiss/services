@@ -7,7 +7,6 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledDateAndTimePicker,
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -23,8 +22,8 @@ interface IdFormData {
 }
 
 interface RangeFormData {
-  from?: Date;
-  to?: Date;
+  from: string;
+  to: string;
   min: string;
   max: string;
 }
@@ -93,7 +92,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
     reset: resetRange,
   } = useForm<RangeFormData>({
     mode: 'onTouched',
-    defaultValues: { min: '', max: '' },
+    defaultValues: { from: '', to: '', min: '', max: '' },
   });
 
   const [rangeLoading, setRangeLoading] = useState(false);
@@ -104,19 +103,33 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
     setRangeError(undefined);
     setRangeSuccess(undefined);
 
-    const { from, to } = data;
     const minStr = data.min.trim();
     const maxStr = data.max.trim();
 
+    const hasFrom = data.from !== '';
+    const hasTo = data.to !== '';
     const hasMin = minStr !== '';
     const hasMax = maxStr !== '';
 
-    if (!from && !to && !hasMin && !hasMax) {
+    if (!hasFrom && !hasTo && !hasMin && !hasMax) {
       setRangeError('At least one filter is required (from, to, min or max).');
       return;
     }
 
-    if (from && to && from.getTime() > to.getTime()) {
+    // The datetime-local field holds local wall-clock time; new Date() reads it as local,
+    // toISOString() then sends the unambiguous UTC instant the backend expects.
+    const fromDate = hasFrom ? new Date(data.from) : undefined;
+    const toDate = hasTo ? new Date(data.to) : undefined;
+
+    if (fromDate && isNaN(fromDate.getTime())) {
+      setRangeError("Invalid 'from' date.");
+      return;
+    }
+    if (toDate && isNaN(toDate.getTime())) {
+      setRangeError("Invalid 'to' date.");
+      return;
+    }
+    if (fromDate && toDate && fromDate.getTime() > toDate.getTime()) {
       setRangeError("'from' must be earlier than or equal to 'to'.");
       return;
     }
@@ -137,11 +150,9 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
       return;
     }
 
-    // The picker yields a Date in the browser's local time; toISOString() sends the
-    // unambiguous UTC instant the backend expects.
     const payload: FinancialValidityRequest = { valid };
-    if (from) payload.from = from.toISOString();
-    if (to) payload.to = to.toISOString();
+    if (fromDate) payload.from = fromDate.toISOString();
+    if (toDate) payload.to = toDate.toISOString();
     if (min !== undefined) payload.min = min;
     if (max !== undefined) payload.max = max;
 
@@ -216,8 +227,8 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
 
         <Form control={rangeControl} errors={rangeErrors} translate={translateError} hasFormElement={false}>
           <StyledVerticalStack gap={4} full>
-            <StyledDateAndTimePicker name="from" label="From (created >=)" smallLabel />
-            <StyledDateAndTimePicker name="to" label="To (created <)" smallLabel />
+            <StyledInput name="from" type="datetime-local" label="From (created >=)" full smallLabel />
+            <StyledInput name="to" type="datetime-local" label="To (created <)" full smallLabel />
             <StyledInput name="min" type="number" label="Min totalBalanceChf (exclusive)" placeholder="0" full smallLabel />
             <StyledInput name="max" type="number" label="Max totalBalanceChf (exclusive)" placeholder="0" full smallLabel />
 
