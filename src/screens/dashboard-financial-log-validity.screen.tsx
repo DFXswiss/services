@@ -13,6 +13,7 @@ import {
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
+import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
@@ -41,11 +42,18 @@ interface FinancialValidityRequest {
   valid: boolean;
 }
 
+interface PendingConfirmation {
+  content: JSX.Element;
+  run: () => Promise<void>;
+}
+
 export default function DashboardFinancialLogValidityScreen(): JSX.Element {
   useAdminGuard();
 
   const { translateError } = useSettingsContext();
   const { call } = useApi();
+
+  const [confirmation, setConfirmation] = useState<PendingConfirmation>();
 
   // --- Section A: by log ID -------------------------------------------------
   const {
@@ -63,7 +71,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
     id: [Validations.Required, Validations.Custom((value) => (/^\d+$/.test(String(value)) ? true : 'pattern'))],
   });
 
-  async function onSubmitId(data: IdFormData, valid: boolean) {
+  async function executeId(data: IdFormData, valid: boolean) {
     setIdLoading(true);
     setIdError(undefined);
     setIdSuccess(undefined);
@@ -84,6 +92,19 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
     }
   }
 
+  function requestIdConfirmation(data: IdFormData, valid: boolean) {
+    setIdError(undefined);
+    setIdSuccess(undefined);
+    setConfirmation({
+      content: (
+        <p className="text-dfxBlue-800 mb-2 text-center">
+          Set validity of log <strong>#{data.id}</strong> to <strong>{String(valid)}</strong>?
+        </p>
+      ),
+      run: () => executeId(data, valid),
+    });
+  }
+
   // --- Section B: by financial range / threshold ----------------------------
   const {
     control: rangeControl,
@@ -99,10 +120,9 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
   const [rangeError, setRangeError] = useState<string>();
   const [rangeSuccess, setRangeSuccess] = useState<string>();
 
-  async function onSubmitRange(data: RangeFormData, valid: boolean) {
-    setRangeError(undefined);
-    setRangeSuccess(undefined);
-
+  // Validate the range form against the backend rules and build the request payload.
+  // Returns undefined (and sets an error) when the input is invalid.
+  function buildRangePayload(data: RangeFormData, valid: boolean): FinancialValidityRequest | undefined {
     const minStr = data.min.trim();
     const maxStr = data.max.trim();
 
@@ -113,7 +133,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
 
     if (!hasFrom && !hasTo && !hasMin && !hasMax) {
       setRangeError('At least one filter is required (from, to, min or max).');
-      return;
+      return undefined;
     }
 
     // The datetime-local field holds local wall-clock time; new Date() reads it as local,
@@ -123,15 +143,15 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
 
     if (fromDate && isNaN(fromDate.getTime())) {
       setRangeError("Invalid 'from' date.");
-      return;
+      return undefined;
     }
     if (toDate && isNaN(toDate.getTime())) {
       setRangeError("Invalid 'to' date.");
-      return;
+      return undefined;
     }
     if (fromDate && toDate && fromDate.getTime() > toDate.getTime()) {
       setRangeError("'from' must be earlier than or equal to 'to'.");
-      return;
+      return undefined;
     }
 
     const min = hasMin ? Number(minStr) : undefined;
@@ -139,15 +159,15 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
 
     if (min !== undefined && isNaN(min)) {
       setRangeError("'min' must be a number.");
-      return;
+      return undefined;
     }
     if (max !== undefined && isNaN(max)) {
       setRangeError("'max' must be a number.");
-      return;
+      return undefined;
     }
     if (min !== undefined && max !== undefined && min >= max) {
       setRangeError("'min' must be less than 'max'.");
-      return;
+      return undefined;
     }
 
     const payload: FinancialValidityRequest = { valid };
@@ -155,7 +175,10 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
     if (toDate) payload.to = toDate.toISOString();
     if (min !== undefined) payload.min = min;
     if (max !== undefined) payload.max = max;
+    return payload;
+  }
 
+  async function executeRange(payload: FinancialValidityRequest) {
     setRangeLoading(true);
     try {
       const response = await call<{ affected: number }>({
@@ -164,7 +187,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
         data: payload,
       });
       setRangeSuccess(
-        `Updated ${response.affected} ${response.affected === 1 ? 'entry' : 'entries'} to valid = ${valid}.`,
+        `Updated ${response.affected} ${response.affected === 1 ? 'entry' : 'entries'} to valid = ${payload.valid}.`,
       );
       setTimeout(() => setRangeSuccess(undefined), 4000);
       resetRange();
@@ -175,7 +198,50 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
     }
   }
 
+  function requestRangeConfirmation(data: RangeFormData, valid: boolean) {
+    setRangeError(undefined);
+    setRangeSuccess(undefined);
+
+    const payload = buildRangePayload(data, valid);
+    if (!payload) return;
+
+    const filters: string[] = [];
+    if (payload.from) filters.push(`from ${payload.from}`);
+    if (payload.to) filters.push(`to ${payload.to}`);
+    if (payload.min !== undefined) filters.push(`min ${payload.min}`);
+    if (payload.max !== undefined) filters.push(`max ${payload.max}`);
+
+    setConfirmation({
+      content: (
+        <p className="text-dfxBlue-800 mb-2 text-center">
+          Update all financial data logs matching <strong>{filters.join(', ')}</strong> to valid ={' '}
+          <strong>{String(valid)}</strong>?
+        </p>
+      ),
+      run: () => executeRange(payload),
+    });
+  }
+
   useLayoutOptions({ title: 'Log Validity', noMaxWidth: true });
+
+  if (confirmation) {
+    return (
+      <div className="space-y-6 p-4 w-full self-stretch" style={{ color: '#111827' }}>
+        <div className="bg-white rounded-lg shadow p-6 max-w-xl">
+          <ConfirmationOverlay
+            messageContent={confirmation.content}
+            cancelLabel="Cancel"
+            confirmLabel="Confirm"
+            onCancel={() => setConfirmation(undefined)}
+            onConfirm={async () => {
+              await confirmation.run();
+              setConfirmation(undefined);
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-4 w-full self-stretch" style={{ color: '#111827' }}>
@@ -193,7 +259,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
             <StyledButton
               label="Set valid = true"
               color={StyledButtonColor.GREEN}
-              onClick={handleIdSubmit((data) => onSubmitId(data, true))}
+              onClick={handleIdSubmit((data) => requestIdConfirmation(data, true))}
               width={StyledButtonWidth.FULL}
               isLoading={idLoading}
               disabled={idLoading}
@@ -201,7 +267,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
             <StyledButton
               label="Set valid = false"
               color={StyledButtonColor.RED}
-              onClick={handleIdSubmit((data) => onSubmitId(data, false))}
+              onClick={handleIdSubmit((data) => requestIdConfirmation(data, false))}
               width={StyledButtonWidth.FULL}
               isLoading={idLoading}
               disabled={idLoading}
@@ -229,15 +295,29 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
           <StyledVerticalStack gap={4} full>
             <StyledInput name="from" type="datetime-local" label="From (created >=)" full smallLabel />
             <StyledInput name="to" type="datetime-local" label="To (created <)" full smallLabel />
-            <StyledInput name="min" type="number" label="Min totalBalanceChf (exclusive)" placeholder="0" full smallLabel />
-            <StyledInput name="max" type="number" label="Max totalBalanceChf (exclusive)" placeholder="0" full smallLabel />
+            <StyledInput
+              name="min"
+              type="number"
+              label="Min totalBalanceChf (exclusive)"
+              placeholder="0"
+              full
+              smallLabel
+            />
+            <StyledInput
+              name="max"
+              type="number"
+              label="Max totalBalanceChf (exclusive)"
+              placeholder="0"
+              full
+              smallLabel
+            />
 
             {rangeError && <ErrorHint message={rangeError} />}
 
             <StyledButton
               label="Set valid = true"
               color={StyledButtonColor.GREEN}
-              onClick={handleRangeSubmit((data) => onSubmitRange(data, true))}
+              onClick={handleRangeSubmit((data) => requestRangeConfirmation(data, true))}
               width={StyledButtonWidth.FULL}
               isLoading={rangeLoading}
               disabled={rangeLoading}
@@ -245,7 +325,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
             <StyledButton
               label="Set valid = false"
               color={StyledButtonColor.RED}
-              onClick={handleRangeSubmit((data) => onSubmitRange(data, false))}
+              onClick={handleRangeSubmit((data) => requestRangeConfirmation(data, false))}
               width={StyledButtonWidth.FULL}
               isLoading={rangeLoading}
               disabled={rangeLoading}
