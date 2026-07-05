@@ -128,6 +128,9 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
     (nodeId: number): void => {
       setSelectedId(nodeId);
       setDetailError(undefined);
+      // loadMoreError is panel-scoped like detailError: clear the previous node's expand error
+      // when switching selection, otherwise it bleeds onto a node that never failed to expand.
+      setLoadMoreError(undefined);
       const cached = detailCache.current.get(nodeId);
       if (cached) {
         setDetail(cached);
