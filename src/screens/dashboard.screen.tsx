@@ -19,15 +19,6 @@ export default function DashboardScreen(): JSX.Element {
           Balance overview, history, liquidity & expenses
         </div>
       </div>
-      <div
-        className="bg-white rounded-lg shadow p-6 cursor-pointer hover:bg-gray-50"
-        onClick={() => navigate('/dashboard/log-tracing')}
-      >
-        <div className="text-lg font-semibold">Log Tracing</div>
-        <div className="text-sm mt-1" style={{ color: '#6b7280' }}>
-          Live tracing of API calls — RealUnit dashboard and all logs
-        </div>
-      </div>
     </div>
   );
 }

@@ -65,6 +65,7 @@ import { useUserGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress, openPdfFromString } from '../util/utils';
+import { ZipValidation } from '../util/validation-rules';
 
 export enum ExportType {
   COMPACT = 'Compact',
@@ -440,7 +441,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
         ? undefined
         : Validations.Required,
     creditorStreet: isBankRefund ? Validations.Required : undefined,
-    creditorZip: isBankRefund ? Validations.Required : undefined,
+    creditorZip: isBankRefund ? ZipValidation : undefined,
     creditorCity: isBankRefund ? Validations.Required : undefined,
     creditorCountry: isBankRefund ? Validations.Required : undefined,
   });

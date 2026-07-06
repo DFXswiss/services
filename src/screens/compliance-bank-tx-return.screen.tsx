@@ -20,6 +20,7 @@ import { TransactionRefundData, useCompliance } from 'src/hooks/compliance.hook'
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { ZipValidation } from 'src/util/validation-rules';
 
 interface FormData {
   iban: string;
@@ -116,7 +117,7 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
     iban: Validations.Required,
     creditorName: Validations.Required,
     creditorStreet: Validations.Required,
-    creditorZip: Validations.Required,
+    creditorZip: ZipValidation,
     creditorCity: Validations.Required,
     creditorCountry: Validations.Required,
   });

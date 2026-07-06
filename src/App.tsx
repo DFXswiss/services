@@ -86,6 +86,10 @@ const RealunitTransactionsScreen = lazy(() => import('./screens/realunit-transac
 const RealunitQuoteDetailScreen = lazy(() => import('./screens/realunit-quote-detail.screen'));
 const RealunitTransactionDetailScreen = lazy(() => import('./screens/realunit-transaction-detail.screen'));
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
+const RealunitSupportScreen = lazy(() => import('./screens/realunit-support.screen'));
+const RealunitSupportIssueScreen = lazy(() => import('./screens/realunit-support-issue.screen'));
+const RealunitComplianceScreen = lazy(() => import('./screens/realunit-compliance.screen'));
+const RealunitComplianceUserScreen = lazy(() => import('./screens/realunit-compliance-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
 const DashboardScreen = lazy(() => import('./screens/dashboard.screen'));
@@ -95,9 +99,6 @@ const DashboardFinancialHistoryScreen = lazy(() => import('./screens/dashboard-f
 const DashboardFinancialLiveScreen = lazy(() => import('./screens/dashboard-financial-live.screen'));
 const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-financial-expenses.screen'));
 const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard-financial-liquidity.screen'));
-const DashboardLogTracingScreen = lazy(() => import('./screens/dashboard-log-tracing.screen'));
-const DashboardLogTracingRealunitScreen = lazy(() => import('./screens/dashboard-log-tracing-realunit.screen'));
-const DashboardLogTracingAllScreen = lazy(() => import('./screens/dashboard-log-tracing-all.screen'));
 const SitemapScreen = lazy(() => import('./screens/sitemap.screen'));
 
 setupLanguages();
@@ -508,6 +509,22 @@ export const Routes = [
             path: 'user/:address',
             element: withSuspense(<RealunitUserScreen />),
           },
+          {
+            path: 'support',
+            element: withSuspense(<RealunitSupportScreen />),
+          },
+          {
+            path: 'support/issue/:id',
+            element: withSuspense(<RealunitSupportIssueScreen />),
+          },
+          {
+            path: 'compliance',
+            element: withSuspense(<RealunitComplianceScreen />),
+          },
+          {
+            path: 'compliance/user/:id',
+            element: withSuspense(<RealunitComplianceUserScreen />),
+          },
         ],
       },
       {
@@ -548,23 +565,6 @@ export const Routes = [
               {
                 path: 'liquidity',
                 element: withSuspense(<DashboardFinancialLiquidityScreen />),
-              },
-            ],
-          },
-          {
-            path: 'log-tracing',
-            children: [
-              {
-                index: true,
-                element: withSuspense(<DashboardLogTracingScreen />),
-              },
-              {
-                path: 'realunit',
-                element: withSuspense(<DashboardLogTracingRealunitScreen />),
-              },
-              {
-                path: 'all',
-                element: withSuspense(<DashboardLogTracingAllScreen />),
               },
             ],
           },

@@ -1,38 +1,27 @@
-import { Department, SupportIssueInternalState, useAuthContext, UserRole } from '@dfx.swiss/react';
+import { SupportIssueInternalState } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
 import { ErrorHint } from 'src/components/error-hint';
 import { InfoPanel, InfoRow, SupportMessageList } from 'src/components/support/info-panel';
-import { TemplateArrayPickerModal } from 'src/components/support-templates/template-array-picker-modal';
-import { TemplatePickerModal } from 'src/components/support-templates/template-picker-modal';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { TransactionInfo, UserDataDetail, useCompliance } from 'src/hooks/compliance.hook';
-import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
+import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useRealunitSupport } from 'src/hooks/realunit-support.hook';
 import { useSplitPane } from 'src/hooks/split-pane.hook';
-import {
-  ASSIGNABLE_DEPARTMENTS,
-  SupportIssueInternalData,
-  SupportMessageInfo,
-  useSupportDashboard,
-} from 'src/hooks/support-dashboard.hook';
+import { ASSIGNABLE_DEPARTMENTS, SupportIssueInternalData, SupportMessageInfo } from 'src/hooks/support-dashboard.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
-import { detectPlaceholders, requiresArraySelection, resolvePlaceholders } from 'src/util/template-placeholders';
 import { toBase64 } from 'src/util/utils';
 
-export default function SupportDashboardIssueScreen(): JSX.Element {
-  useSupportDashboardGuard();
+export default function RealunitSupportIssueScreen(): JSX.Element {
+  useRealunitGuard();
 
   const { id } = useParams();
   const { translate } = useSettingsContext();
-  const { session } = useAuthContext();
-  const canAccessCompliance = session?.role === UserRole.ADMIN || session?.role === UserRole.COMPLIANCE;
-  const { getIssueData, updateIssue, sendMessage, getIssueMessages, getMessageFile, getClerks } = useSupportDashboard();
-  const { getUserData } = useCompliance();
+  const { getIssueData, updateIssue, createMessage, getIssueMessages, getFile, getClerks } = useRealunitSupport();
   const { navigate } = useNavigation();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -58,21 +47,12 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Template state
-  const [userDataDetail, setUserDataDetail] = useState<UserDataDetail>();
-  const [userTransactions, setUserTransactions] = useState<TransactionInfo[]>([]);
-  const [isUserDataLoading, setIsUserDataLoading] = useState(false);
-  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
-  const [pendingTemplateContent, setPendingTemplateContent] = useState<string>();
-
   // File preview state
   const [filePreview, setFilePreview] = useState<{ url: string; contentType: string; name: string }>();
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
-  const isComplianceDept = issueData?.department === Department.COMPLIANCE;
-
   useLayoutOptions({
-    title: translate('screens/support', 'Support Issue'),
+    title: translate('screens/support', 'RealUnit Support Issue'),
     backButton: true,
     noMaxWidth: true,
     textStart: true,
@@ -103,24 +83,24 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   }, [id, getIssueData, clerks]);
 
   const loadMessages = useCallback((): void => {
-    if (!issueData?.uid) return;
-    getIssueMessages(issueData.uid)
+    if (!issueData?.id) return;
+    getIssueMessages(issueData.id)
       .then((fetched) => {
         setMessages(fetched);
         setPendingCount(0);
       })
       .catch((e: Error) => setActionError(e.message ?? 'Failed to load messages'));
-  }, [issueData?.uid, getIssueMessages]);
+  }, [issueData?.id, getIssueMessages]);
 
   const pollForNewMessages = useCallback((): void => {
-    if (!issueData?.uid) return;
-    getIssueMessages(issueData.uid)
+    if (!issueData?.id) return;
+    getIssueMessages(issueData.id)
       .then((fetched) => {
         const newCount = fetched.filter((m) => !visibleIdsRef.current.has(m.id)).length;
         if (newCount > 0) setPendingCount(newCount);
       })
       .catch((e: Error) => setActionError(e.message ?? 'Failed to load messages'));
-  }, [issueData?.uid, getIssueMessages]);
+  }, [issueData?.id, getIssueMessages]);
 
   useEffect(() => {
     loadIssue();
@@ -130,44 +110,15 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     loadMessages();
   }, [loadMessages]);
 
-  // Reset cached UserData when the issue (and thus the account) changes
-  useEffect(() => {
-    setUserDataDetail(undefined);
-    setUserTransactions([]);
-  }, [issueData?.account.id]);
-
-  async function openTemplatePicker(): Promise<void> {
-    const accountId = issueData?.account.id;
-    if (accountId == null || isUserDataLoading) return;
-    if (userDataDetail) {
-      setTemplatePickerOpen(true);
-      return;
-    }
-    setIsUserDataLoading(true);
-    try {
-      const data = await getUserData(accountId);
-      setUserDataDetail(data.userData);
-      setUserTransactions(data.transactions ?? []);
-      setTemplatePickerOpen(true);
-    } catch (e: unknown) {
-      setActionError(e instanceof Error ? e.message : 'Failed to load user data for templates');
-    } finally {
-      setIsUserDataLoading(false);
-    }
-  }
-
-  // Track visible message IDs for polling delta
   useEffect(() => {
     visibleIdsRef.current = new Set(messages.map((m) => m.id));
   }, [messages]);
 
-  // Polling for new messages (non-intrusive, sets pendingCount)
   useEffect(() => {
     const interval = setInterval(() => pollForNewMessages(), 15000);
     return () => clearInterval(interval);
   }, [pollForNewMessages]);
 
-  // Scroll messages container to bottom when messages change (initial load, send, manual reload)
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (el) el.scrollTop = el.scrollHeight;
@@ -193,14 +144,6 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
 
   async function handleSendMessage(): Promise<void> {
     if (!id || (!messageText.trim() && selectedFiles.length === 0)) return;
-    const remainingPlaceholders = detectPlaceholders(messageText);
-    if (remainingPlaceholders.length > 0) {
-      const keys = remainingPlaceholders.map((t) => `$${t.fullKey}`).join(', ');
-      setActionError(
-        `Senden nicht möglich – der Text enthält noch unausgefüllte Platzhalter: ${keys}. Bitte manuell korrigieren.`,
-      );
-      return;
-    }
     setIsSending(true);
     setActionError(undefined);
     try {
@@ -211,7 +154,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         for (let i = 0; i < selectedFiles.length; i++) {
           const fileData = await toBase64(selectedFiles[i]);
           const isLast = i === selectedFiles.length - 1;
-          await sendMessage(+id, {
+          await createMessage(+id, {
             author,
             message: isLast ? text : undefined,
             file: fileData,
@@ -219,7 +162,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
           });
         }
       } else {
-        await sendMessage(+id, { author, message: text });
+        await createMessage(+id, { author, message: text });
       }
 
       setMessageText('');
@@ -233,26 +176,10 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     }
   }
 
-  function handleTemplateInsert(content: string): void {
-    const ctx = { userData: userDataDetail, transactions: userTransactions, issue: issueData };
-    if (requiresArraySelection(content, ctx)) {
-      setPendingTemplateContent(content);
-      return;
-    }
-    insertTemplate(content, {});
-  }
-
-  function insertTemplate(content: string, selections: { transactionId?: number }): void {
-    setPendingTemplateContent(undefined);
-    const ctx = { userData: userDataDetail, transactions: userTransactions, issue: issueData };
-    const resolved = resolvePlaceholders(content, ctx, selections);
-    setMessageText((prev) => (prev ? `${prev}\n${resolved}` : resolved));
-  }
-
   async function openFile(msg: SupportMessageInfo): Promise<void> {
-    if (!issueData?.uid || !msg.fileName) return;
+    if (!issueData || !msg.fileName) return;
     try {
-      const { data, contentType } = await getMessageFile(issueData.uid, msg.id);
+      const { data, contentType } = await getFile(issueData.id, msg.id);
       if (!data || data.type !== 'Buffer' || !Array.isArray(data.data)) {
         setActionError('Invalid file type');
         return;
@@ -272,8 +199,6 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     };
   }, [filePreview]);
 
-  const unresolvedInMessage = useMemo(() => detectPlaceholders(messageText), [messageText]);
-
   if (loadError) return <ErrorHint message={loadError} />;
   if (isLoading || !issueData) return <StyledLoadingSpinner size={SpinnerSize.LG} />;
 
@@ -281,7 +206,8 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     <div ref={containerRef} className="w-full flex text-left">
       <div style={{ width: `${splitPercent}%` }} className="flex flex-col gap-6 min-w-0 pr-2">
         {actionError && <ErrorHint message={actionError} />}
-        {/* Info Panels - Row 1: Issue + Account */}
+
+        {/* Info Panels */}
         <div className="flex gap-4 flex-wrap">
           <InfoPanel title="Issue Details">
             <InfoRow label="ID" value={String(issueData.id)} mono />
@@ -296,13 +222,11 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
 
           <InfoPanel title="Account Data">
             <InfoRow
-              label="UserData ID"
+              label="Customer ID"
               value={
                 <button
                   className="text-dfxBlue-400 underline hover:text-dfxBlue-800"
-                  onClick={() =>
-                    navigate(`${canAccessCompliance ? '/compliance' : '/support'}/user/${issueData.account.id}`)
-                  }
+                  onClick={() => navigate(`/realunit/compliance/user/${issueData.account.id}`)}
                 >
                   {issueData.account.id}
                 </button>
@@ -313,14 +237,6 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             <InfoRow label="DFX Name" value={issueData.account.completeName ?? '-'} />
             <InfoRow label="Account Type" value={issueData.account.accountType ?? '-'} />
             <InfoRow label="KYC Level" value={String(issueData.account.kycLevel)} />
-            <InfoRow
-              label="Deposit Limit"
-              value={
-                issueData.account.depositLimit != null ? `${issueData.account.depositLimit.toLocaleString()} CHF` : '-'
-              }
-            />
-            <InfoRow label="Annual Volume" value={`${issueData.account.annualVolume.toLocaleString()} CHF`} />
-            <InfoRow label="KYC Hash" value={issueData.account.kycHash} mono />
             <InfoRow label="Country" value={issueData.account.country?.name ?? '-'} />
             <InfoRow
               label="Language"
@@ -330,89 +246,12 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                   : '-'
               }
             />
-            {isComplianceDept && (
-              <tr>
-                <td className="pr-4 py-1 font-medium whitespace-nowrap text-sm">Compliance:</td>
-                <td className="py-1">
-                  <button
-                    className="text-xs text-dfxBlue-400 underline hover:text-dfxBlue-800"
-                    onClick={() => navigate(`/compliance/user/${issueData.account.id}`)}
-                  >
-                    Open User
-                  </button>
-                </td>
-              </tr>
-            )}
           </InfoPanel>
         </div>
 
-        {/* Info Panels - Row 2: Transaction + Missing + Limit */}
-        {(issueData.transaction || issueData.transactionMissing || issueData.limitRequest) && (
-          <div className="flex gap-4 flex-wrap">
-            {issueData.transaction && (
-              <InfoPanel title="Transaction">
-                <InfoRow label="ID" value={String(issueData.transaction.id)} />
-                <InfoRow label="Source Type" value={issueData.transaction.sourceType} />
-                <InfoRow label="Type" value={issueData.transaction.type} />
-                {issueData.transaction.amlCheck && (
-                  <InfoRow label="AML Check" value={statusBadge(issueData.transaction.amlCheck)} />
-                )}
-                {issueData.transaction.amlReason && (
-                  <InfoRow label="AML Reason" value={issueData.transaction.amlReason} />
-                )}
-                {issueData.transaction.comment && <InfoRow label="Comment" value={issueData.transaction.comment} />}
-                {issueData.transaction.inputAmount != null && (
-                  <InfoRow
-                    label="Input"
-                    value={`${issueData.transaction.inputAmount} ${issueData.transaction.inputAsset ?? ''}`}
-                  />
-                )}
-                {issueData.transaction.outputAmount != null && (
-                  <InfoRow
-                    label="Output"
-                    value={`${issueData.transaction.outputAmount} ${issueData.transaction.outputAsset ?? ''}`}
-                  />
-                )}
-                {issueData.transaction.wallet && <InfoRow label="Wallet" value={issueData.transaction.wallet.name} />}
-                {issueData.transaction.isComplete != null && (
-                  <InfoRow label="Complete" value={issueData.transaction.isComplete ? 'Yes' : 'No'} />
-                )}
-              </InfoPanel>
-            )}
-
-            {issueData.transactionMissing && (
-              <InfoPanel title="Transaction Missing">
-                {issueData.transactionMissing.senderIban && (
-                  <InfoRow label="Sender IBAN" value={issueData.transactionMissing.senderIban} mono />
-                )}
-                {issueData.transactionMissing.receiverIban && (
-                  <InfoRow label="Receiver IBAN" value={issueData.transactionMissing.receiverIban} mono />
-                )}
-                {issueData.transactionMissing.date && (
-                  <InfoRow label="Date" value={formatDateTime(issueData.transactionMissing.date)} />
-                )}
-              </InfoPanel>
-            )}
-
-            {issueData.limitRequest && (
-              <InfoPanel title="Limit Request">
-                <InfoRow label="Requested" value={`${issueData.limitRequest.limit.toLocaleString()} CHF`} />
-                {issueData.limitRequest.acceptedLimit != null && (
-                  <InfoRow label="Accepted" value={`${issueData.limitRequest.acceptedLimit.toLocaleString()} CHF`} />
-                )}
-                <InfoRow label="Fund Origin" value={issueData.limitRequest.fundOrigin} />
-                <InfoRow label="Investment Date" value={issueData.limitRequest.investmentDate} />
-                {issueData.limitRequest.decision && (
-                  <InfoRow label="Decision" value={statusBadge(issueData.limitRequest.decision)} />
-                )}
-              </InfoPanel>
-            )}
-          </div>
-        )}
-
         {/* Update Controls */}
         <div className="bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-dfxGray-700 mb-3">Update Issue</h2>
+          <h2 className="text-dfxGray-700 mb-3">{translate('screens/support', 'Update Issue')}</h2>
           <div className="flex gap-3 flex-wrap items-end">
             <div className="flex flex-col gap-1">
               <label className="text-xs text-dfxGray-700">State</label>
@@ -471,7 +310,9 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         {/* Messages / Chat */}
         <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-dfxGray-700">Messages ({messages.length})</h2>
+            <h2 className="text-dfxGray-700">
+              {translate('screens/support', 'Messages')} ({messages.length})
+            </h2>
             {pendingCount > 0 && (
               <button
                 className="px-3 py-1 text-xs text-white bg-dfxRed-100 rounded-full hover:bg-dfxRed-150 transition-colors"
@@ -525,34 +366,12 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             >
               &#128206;
             </button>
-            <button
-              className="px-2 py-2 text-dfxGray-700 hover:text-dfxBlue-800 transition-colors disabled:opacity-30"
-              onClick={() => void openTemplatePicker()}
-              disabled={isUserDataLoading || issueData?.account.id == null}
-              title={isUserDataLoading ? 'Lade Userdaten...' : 'Vorlage einfügen'}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect width="18" height="7" x="3" y="3" rx="1" />
-                <rect width="9" height="7" x="3" y="14" rx="1" />
-                <rect width="5" height="7" x="16" y="14" rx="1" />
-              </svg>
-            </button>
             <textarea
               className="flex-1 px-3 py-2 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800 resize-y min-h-[40px] max-h-[300px]"
               value={messageText}
               rows={Math.min(8, Math.max(1, messageText.split('\n').length))}
               onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Type a message... (Shift+Enter = neue Zeile, Enter = senden)"
+              placeholder={translate('screens/support', 'Type a message...')}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -575,33 +394,14 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             <button
               className="px-4 py-2 bg-dfxBlue-400 text-white rounded text-sm hover:bg-dfxBlue-800 transition-colors disabled:opacity-50"
               onClick={() => handleSendMessage()}
-              disabled={
-                isSending || (!messageText.trim() && selectedFiles.length === 0) || unresolvedInMessage.length > 0
-              }
-              title={
-                unresolvedInMessage.length > 0
-                  ? `Text enthält noch Platzhalter: ${unresolvedInMessage.map((t) => `$${t.fullKey}`).join(', ')} – bitte manuell korrigieren.`
-                  : undefined
-              }
+              disabled={isSending || (!messageText.trim() && selectedFiles.length === 0)}
             >
               {isSending ? '...' : 'Send'}
             </button>
           </div>
-          {unresolvedInMessage.length > 0 ? (
-            <div className="text-xs text-dfxRed-150 mt-1">
-              Der Text enthält noch Platzhalter:{' '}
-              {unresolvedInMessage.map((t) => (
-                <span key={t.fullKey} className="font-mono">
-                  ${t.fullKey}{' '}
-                </span>
-              ))}
-              – bitte mit konkreten Werten ersetzen, bevor du sendest.
-            </div>
-          ) : (
-            <div className="text-xs text-dfxGray-700 mt-1">
-              Customer will be notified by email when you send a message.
-            </div>
-          )}
+          <div className="text-xs text-dfxGray-700 mt-1">
+            {translate('screens/support', 'Customer will be notified by email when you send a message.')}
+          </div>
         </div>
       </div>
 
@@ -610,7 +410,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         <div className="w-0.5 mx-auto bg-dfxGray-400 group-hover:bg-dfxBlue-400 transition-colors rounded-full" />
       </div>
 
-      {/* File Preview - always visible, sticky right */}
+      {/* File Preview */}
       <div style={{ width: `${100 - splitPercent}%` }} className="min-w-0 sticky top-4 self-start pl-2">
         <FilePreviewPanel
           preview={filePreview}
@@ -621,22 +421,6 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
           }}
         />
       </div>
-
-      <TemplatePickerModal
-        isOpen={templatePickerOpen}
-        context={{ userData: userDataDetail, transactions: userTransactions, issue: issueData }}
-        onClose={() => setTemplatePickerOpen(false)}
-        onInsert={handleTemplateInsert}
-      />
-
-      <TemplateArrayPickerModal
-        isOpen={pendingTemplateContent != null}
-        transactions={userTransactions}
-        onSelect={(transactionId) =>
-          pendingTemplateContent != null && insertTemplate(pendingTemplateContent, { transactionId })
-        }
-        onCancel={() => setPendingTemplateContent(undefined)}
-      />
     </div>
   );
 }
