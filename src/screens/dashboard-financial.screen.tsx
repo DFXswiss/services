@@ -8,6 +8,11 @@ const pages = [
   { path: '/dashboard/financial/history', title: 'History', description: 'Balance history over time' },
   { path: '/dashboard/financial/liquidity', title: 'Liquidity', description: 'Balance breakdown by type' },
   { path: '/dashboard/financial/history/expenses', title: 'Expenses', description: 'Revenue and cost details' },
+  {
+    path: '/dashboard/financial/log-validity',
+    title: 'Log Validity',
+    description: 'Set validity of log entries by ID or financial range',
+  },
 ];
 
 export default function DashboardFinancialScreen(): JSX.Element {
