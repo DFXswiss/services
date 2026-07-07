@@ -227,6 +227,15 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
               )}
               {session?.role === UserRole.ADMIN && (
                 <NavigationLink
+                  icon={IconVariant.FILE}
+                  label={translate('screens/dashboard-financial', 'Financial')}
+                  url="/dashboard/financial/overview"
+                  target="_self"
+                  onClose={() => setIsNavigationOpen(false)}
+                />
+              )}
+              {session?.role === UserRole.ADMIN && (
+                <NavigationLink
                   icon={IconVariant.MENU}
                   label={translate('screens/sitemap', 'Sitemap')}
                   url="/sitemap"
