@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { InfoPanel, InfoRow, SupportMessageList } from 'src/components/support/info-panel';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { RealUnitCustomerDetailDto } from 'src/dto/realunit-compliance.dto';
+import { RealUnitCheckEvidenceDto, RealUnitCustomerDetailDto } from 'src/dto/realunit-compliance.dto';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useRealunitCompliance } from 'src/hooks/realunit-compliance.hook';
@@ -125,24 +125,27 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
 
   const org = customer.organization;
 
-  // Mandatory check evidence: latest ident step (Sumsub) and latest Dilisense name-check file.
-  // Both rows must always be visible — a missing check is a compliance finding, not an empty state.
-  const latestFileOfType = (type: string) =>
-    [...customer.kycFiles]
-      .filter((f) => f.type === type)
-      .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())[0];
-
-  const identStep = [...customer.kycSteps]
-    .filter((s) => s.name === 'Ident')
-    .sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
-  const identFile = latestFileOfType('Identification');
-  const dilisenseFile = latestFileOfType('NameCheck');
-
-  const missingBadge = (
-    <span className="px-2 py-1 rounded text-xs bg-dfxGray-300 text-primary-red font-semibold">
-      {translate('screens/compliance', 'Missing')}
-    </span>
-  );
+  // Renders one api-resolved check evidence 1:1 (api = decision authority; which step/file counts is decided
+  // there). Both rows must always be visible — a missing check is a compliance finding, not an empty state.
+  const checkValue = (check?: RealUnitCheckEvidenceDto) =>
+    check ? (
+      <span className="inline-flex items-center gap-2">
+        {check.status && statusBadge(check.status)}
+        {formatDate(check.date)}
+        {check.fileUid && check.fileName && (
+          <button
+            className="px-2 py-1 text-xs font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors"
+            onClick={() => handleDownload(check.fileUid!, check.fileName!)}
+          >
+            {translate('general/actions', 'Download')}
+          </button>
+        )}
+      </span>
+    ) : (
+      <span className="px-2 py-1 rounded text-xs bg-dfxGray-300 text-primary-red font-semibold">
+        {translate('screens/compliance', 'Missing')}
+      </span>
+    );
 
   return (
     <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-6 p-4 md:p-6 text-left">
@@ -181,42 +184,11 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
         <InfoPanel title={translate('screens/compliance', 'Checks')}>
           <InfoRow
             label={translate('screens/compliance', 'Ident Check (Sumsub)')}
-            value={
-              identStep || identFile ? (
-                <span className="inline-flex items-center gap-2">
-                  {identStep && statusBadge(identStep.status)}
-                  {formatDate((identStep ?? identFile).created)}
-                  {identFile && (
-                    <button
-                      className="px-2 py-1 text-xs font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors"
-                      onClick={() => handleDownload(identFile.uid, identFile.name)}
-                    >
-                      {translate('general/actions', 'Download')}
-                    </button>
-                  )}
-                </span>
-              ) : (
-                missingBadge
-              )
-            }
+            value={checkValue(customer.checks.identCheck)}
           />
           <InfoRow
             label={translate('screens/compliance', 'Dilisense Check')}
-            value={
-              dilisenseFile ? (
-                <span className="inline-flex items-center gap-2">
-                  {formatDate(dilisenseFile.created)}
-                  <button
-                    className="px-2 py-1 text-xs font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors"
-                    onClick={() => handleDownload(dilisenseFile.uid, dilisenseFile.name)}
-                  >
-                    {translate('general/actions', 'Download')}
-                  </button>
-                </span>
-              ) : (
-                missingBadge
-              )
-            }
+            value={checkValue(customer.checks.nameCheck)}
           />
         </InfoPanel>
 
