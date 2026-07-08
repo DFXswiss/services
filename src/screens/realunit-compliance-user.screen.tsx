@@ -125,6 +125,21 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
 
   const org = customer.organization;
 
+  // Mandatory check evidence: latest ident step (Sumsub) and latest Dilisense name-check file.
+  // Both rows must always be visible — a missing check is a compliance finding, not an empty state.
+  const identStep = [...customer.kycSteps]
+    .filter((s) => s.name === 'Ident')
+    .sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
+  const dilisenseFile = [...customer.kycFiles]
+    .filter((f) => f.type === 'NameCheck')
+    .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())[0];
+
+  const missingBadge = (
+    <span className="px-2 py-1 rounded text-xs bg-dfxGray-300 text-primary-red font-semibold">
+      {translate('screens/compliance', 'Missing')}
+    </span>
+  );
+
   return (
     <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-6 p-4 md:p-6 text-left">
       {actionError && <ErrorHint message={actionError} />}
@@ -157,6 +172,40 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
           <InfoRow label="KYC Type" value={customer.kycType ?? '-'} />
           <InfoRow label="High Risk" value={bool(customer.highRisk)} />
           <InfoRow label="PEP" value={bool(customer.pep)} />
+        </InfoPanel>
+
+        <InfoPanel title={translate('screens/compliance', 'Checks')}>
+          <InfoRow
+            label={translate('screens/compliance', 'Ident Check (Sumsub)')}
+            value={
+              identStep ? (
+                <span className="inline-flex items-center gap-2">
+                  {statusBadge(identStep.status)}
+                  {formatDate(identStep.created)}
+                </span>
+              ) : (
+                missingBadge
+              )
+            }
+          />
+          <InfoRow
+            label={translate('screens/compliance', 'Dilisense Check')}
+            value={
+              dilisenseFile ? (
+                <span className="inline-flex items-center gap-2">
+                  {formatDate(dilisenseFile.created)}
+                  <button
+                    className="px-2 py-1 text-xs font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors"
+                    onClick={() => handleDownload(dilisenseFile.uid, dilisenseFile.name)}
+                  >
+                    {translate('general/actions', 'Download')}
+                  </button>
+                </span>
+              ) : (
+                missingBadge
+              )
+            }
+          />
         </InfoPanel>
 
         {org && (
