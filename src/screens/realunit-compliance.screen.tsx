@@ -1,5 +1,5 @@
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { RealUnitCustomerListDto } from 'src/dto/realunit-compliance.dto';
@@ -26,15 +26,21 @@ export default function RealunitComplianceScreen(): JSX.Element {
     noMaxWidth: true,
   });
 
-  function handleSearch(): void {
-    if (!searchKey.trim()) return;
+  // Load the complete customer list upfront; a search key narrows it down, an empty search shows all again.
+  useEffect(() => loadCustomers(), []);
+
+  function loadCustomers(key?: string): void {
     setIsLoading(true);
     setError(undefined);
     setResults(undefined);
-    searchCustomers(searchKey.trim())
+    searchCustomers(key)
       .then((res) => setResults(res))
       .catch((e: Error) => setError(e.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
+  }
+
+  function handleSearch(): void {
+    loadCustomers(searchKey.trim() || undefined);
   }
 
   return (
@@ -53,7 +59,7 @@ export default function RealunitComplianceScreen(): JSX.Element {
           <button
             className="px-4 py-1.5 bg-dfxBlue-400 text-white rounded text-sm hover:bg-dfxBlue-800 transition-colors disabled:opacity-50"
             onClick={handleSearch}
-            disabled={isLoading || !searchKey.trim()}
+            disabled={isLoading}
           >
             {isLoading ? '…' : translate('general/actions', 'Search')}
           </button>

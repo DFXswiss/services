@@ -22,7 +22,7 @@ import { createTestCredentials } from './test-wallet';
  * test fills the input and presses Enter (the screen's onKeyDown handler runs handleSearch).
  *
  * Intercepted endpoints (base `/v1/` is prepended by useApi):
- *   - GET realunit/compliance/customers?key=...   (search → RealUnitCustomerListDto[])
+ *   - GET realunit/compliance/customers[?key=...] (upfront list / search → RealUnitCustomerListDto[])
  *   - GET realunit/compliance/customers/:id        (dossier → RealUnitCustomerDetailDto)
  *
  * Synthetic fixtures: fake ids (7100+), fixed ISO dates, fake names/emails/IBANs — no production data.
@@ -314,6 +314,9 @@ test.describe('RealUnit Compliance dashboards - Visual Regression Tests', () => 
     await page.goto(`/realunit/compliance?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
+
+    // the complete customer list is loaded upfront (list request without a key)
+    await expect(page.getByText('ACME Example AG')).toBeVisible();
 
     // the screen exposes only a controlled input (no ?search= URL support) — type a key and submit via Enter
     const input = page.locator('input').first();

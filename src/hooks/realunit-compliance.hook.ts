@@ -12,9 +12,10 @@ import { useGuardedApi } from './guarded-api.hook';
 export function useRealunitCompliance() {
   const { call } = useGuardedApi();
 
-  async function searchCustomers(key: string): Promise<RealUnitCustomerListDto[]> {
+  // Without a key the api returns the complete tenant scope (all RealUnit customers).
+  async function searchCustomers(key?: string): Promise<RealUnitCustomerListDto[]> {
     return call<RealUnitCustomerListDto[]>({
-      url: `realunit/compliance/customers?key=${encodeURIComponent(key)}`,
+      url: `realunit/compliance/customers${key ? `?key=${encodeURIComponent(key)}` : ''}`,
       method: 'GET',
     });
   }
