@@ -127,12 +127,16 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
 
   // Mandatory check evidence: latest ident step (Sumsub) and latest Dilisense name-check file.
   // Both rows must always be visible — a missing check is a compliance finding, not an empty state.
+  const latestFileOfType = (type: string) =>
+    [...customer.kycFiles]
+      .filter((f) => f.type === type)
+      .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())[0];
+
   const identStep = [...customer.kycSteps]
     .filter((s) => s.name === 'Ident')
     .sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
-  const dilisenseFile = [...customer.kycFiles]
-    .filter((f) => f.type === 'NameCheck')
-    .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())[0];
+  const identFile = latestFileOfType('Identification');
+  const dilisenseFile = latestFileOfType('NameCheck');
 
   const missingBadge = (
     <span className="px-2 py-1 rounded text-xs bg-dfxGray-300 text-primary-red font-semibold">
@@ -178,10 +182,18 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
           <InfoRow
             label={translate('screens/compliance', 'Ident Check (Sumsub)')}
             value={
-              identStep ? (
+              identStep || identFile ? (
                 <span className="inline-flex items-center gap-2">
-                  {statusBadge(identStep.status)}
-                  {formatDate(identStep.created)}
+                  {identStep && statusBadge(identStep.status)}
+                  {formatDate((identStep ?? identFile).created)}
+                  {identFile && (
+                    <button
+                      className="px-2 py-1 text-xs font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors"
+                      onClick={() => handleDownload(identFile.uid, identFile.name)}
+                    >
+                      {translate('general/actions', 'Download')}
+                    </button>
+                  )}
                 </span>
               ) : (
                 missingBadge
