@@ -184,11 +184,11 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
         <InfoPanel title={translate('screens/compliance', 'Checks')}>
           <InfoRow
             label={translate('screens/compliance', 'Ident Check (Sumsub)')}
-            value={checkValue(customer.checks.identCheck)}
+            value={checkValue(customer.checks?.identCheck)}
           />
           <InfoRow
             label={translate('screens/compliance', 'Dilisense Check')}
-            value={checkValue(customer.checks.nameCheck)}
+            value={checkValue(customer.checks?.nameCheck)}
           />
         </InfoPanel>
 
