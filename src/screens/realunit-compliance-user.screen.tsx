@@ -71,10 +71,11 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
 
   const { id } = useParams();
   const { translate } = useSettingsContext();
-  const { getCustomer, downloadFile } = useRealunitCompliance();
+  const { getCustomer, downloadFile, downloadDossier } = useRealunitCompliance();
 
   const [customer, setCustomer] = useState<RealUnitCustomerDetailDto>();
   const [isLoading, setIsLoading] = useState(true);
+  const [isDossierLoading, setIsDossierLoading] = useState(false);
   const [loadError, setLoadError] = useState<string>();
   const [actionError, setActionError] = useState<string>();
 
@@ -120,6 +121,19 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
     [id, downloadFile],
   );
 
+  const handleDossierDownload = useCallback(async (): Promise<void> => {
+    if (!id) return;
+    setActionError(undefined);
+    setIsDossierLoading(true);
+    try {
+      await downloadDossier(+id);
+    } catch (e: unknown) {
+      setActionError(e instanceof Error ? e.message : 'Error downloading dossier');
+    } finally {
+      setIsDossierLoading(false);
+    }
+  }, [id, downloadDossier]);
+
   if (loadError) return <ErrorHint message={loadError} />;
   if (isLoading || !customer) return <StyledLoadingSpinner size={SpinnerSize.LG} />;
 
@@ -131,6 +145,7 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
     check ? (
       <span className="inline-flex items-center gap-2">
         {check.status && statusBadge(check.status)}
+        {check.type && <span className="text-dfxGray-700">{check.type}</span>}
         {formatDate(check.date)}
         {check.fileUid && check.fileName && (
           <button
@@ -150,6 +165,19 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
   return (
     <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-6 p-4 md:p-6 text-left">
       {actionError && <ErrorHint message={actionError} />}
+
+      {/* Full dossier export (ZIP of all visible files; audit-logged api-side) */}
+      <div className="flex justify-end">
+        <button
+          className="px-3 py-1.5 text-sm font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors disabled:opacity-50"
+          onClick={handleDossierDownload}
+          disabled={isDossierLoading}
+        >
+          {isDossierLoading
+            ? translate('screens/compliance', 'Preparing ZIP ...')
+            : translate('screens/compliance', 'Download dossier (ZIP)')}
+        </button>
+      </div>
 
       {/* Identity / KYC status */}
       <div className="flex gap-4 flex-wrap">

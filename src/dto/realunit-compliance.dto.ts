@@ -106,10 +106,12 @@ export interface RealUnitKycFileDto {
 }
 
 // Reduced KYC step: raw result/comment and the recommendation/referral graph are omitted by the api.
-// One resolved check evidence, decided by the api (which step/file counts). `status` only for step-backed checks
-// (ident); `fileUid`/`fileName` point at the downloadable evidence when one exists.
+// One resolved check evidence, decided by the api (which step/file counts). `status`/`type` only for step-backed
+// checks (ident; type = KycStepType, e.g. SumsubAuto/SumsubVideo/Video/Manual); `fileUid`/`fileName` point at the
+// downloadable evidence when one exists.
 export interface RealUnitCheckEvidenceDto {
   status?: string;
+  type?: string;
   date: string;
   fileUid?: string;
   fileName?: string;
