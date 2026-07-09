@@ -94,6 +94,15 @@ describe('useRealunitCompliance', () => {
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/compliance/customers?key=a%20b%40c', method: 'GET' });
   });
 
+  it('omits the query string for the keyless full-list request', async () => {
+    mockCall.mockResolvedValue([]);
+    const { result } = renderHook(() => useRealunitCompliance());
+
+    await result.current.searchCustomers();
+
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/compliance/customers', method: 'GET' });
+  });
+
   it('hits the reduced dossier and download endpoints', async () => {
     const { result } = renderHook(() => useRealunitCompliance());
 

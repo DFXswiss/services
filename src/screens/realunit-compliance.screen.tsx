@@ -52,7 +52,7 @@ export default function RealunitComplianceScreen(): JSX.Element {
             value={searchKey}
             onChange={(e) => setSearchKey(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSearch();
+              if (e.key === 'Enter' && !isLoading) handleSearch();
             }}
             placeholder={translate('screens/compliance', 'Search by ID, email, phone or name...')}
           />
