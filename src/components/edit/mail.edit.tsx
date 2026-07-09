@@ -1,4 +1,4 @@
-import { Utils, Validations, useUserContext } from '@dfx.swiss/react';
+import { ApiError, Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
   IconColor,
@@ -13,6 +13,7 @@ import {
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSettingsContext } from '../../contexts/settings.context';
+import { useMergedAccount } from '../../hooks/merged-account.hook';
 
 interface MailEditProps {
   infoText?: string;
@@ -51,6 +52,7 @@ export function MailEdit({
   } = useForm<FormData>({ mode: 'onTouched' });
   const { updateMail, isUserUpdating } = useUserContext();
   const { translate, translateError } = useSettingsContext();
+  const { handleMergedError } = useMergedAccount();
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string>();
@@ -62,7 +64,12 @@ export function MailEdit({
   }
 
   async function saveUser(email: string): Promise<void> {
-    return updateMail(email).then(() => onSubmit(email));
+    return updateMail(email)
+      .then(() => onSubmit(email))
+      .catch((e: ApiError) => {
+        if (handleMergedError(e)) return;
+        throw e;
+      });
   }
 
   const rules = Utils.createRules({
