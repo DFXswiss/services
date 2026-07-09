@@ -6,7 +6,10 @@ import { Validations } from '@dfx.swiss/react';
 // the ONLY guard for the bank-refund / payout path. Keep it at 8 for creditor zip fields.
 export const ZipValidation = [Validations.Required, Validations.Custom((v) => !v || v.length <= 8 || 'pattern')];
 
-// KYC / address zip. Not payout-bound, so it must accept international formats — US ZIP+4
-// "90210-1234" (10), Brazilian CEP "01310-100" (9). Cap at 10, which still keeps a combined
-// "<postcode> <city>" value (longer) out of the field.
+// KYC / address zip. Must accept international formats — US ZIP+4 "90210-1234" (10),
+// Brazilian CEP "01310-100" (9) — so it cannot share the OLKYPAY cap above. NOTE: this path
+// is still payout-bound: sell (BUY_FIAT) payouts copy userData.address into the fiat-output
+// creditor (api: fiat-output.service createInternal), so a 9-10 char zip can reach OLKYPAY.
+// That residual case must be normalized api-side (createPayer), not by rejecting valid codes
+// here. Cap at 10, which still keeps a combined "<postcode> <city>" value out of the field.
 export const AddressZipValidation = [Validations.Required, Validations.Custom((v) => !v || v.length <= 10 || 'pattern')];
