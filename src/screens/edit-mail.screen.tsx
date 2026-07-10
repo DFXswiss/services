@@ -14,12 +14,14 @@ import { ErrorHint } from 'src/components/error-hint';
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { useMergedAccount } from 'src/hooks/merged-account.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 
 export default function EditMailScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { updateMail, verifyMail } = useUserContext();
   const { navigate } = useNavigation();
+  const { handleMergedError } = useMergedAccount();
   const { user } = useUserContext();
   const { check2fa } = useKyc();
 
@@ -49,6 +51,8 @@ export default function EditMailScreen(): JSX.Element {
     return updateMail(newEmail)
       .then(() => setMailVerificationStep(true))
       .catch((e: ApiError) => {
+        if (handleMergedError(e)) return;
+
         if (e.statusCode === 409 && e.message?.includes('exists')) {
           if (e.message.includes('merge')) {
             setShowLinkHint(true);
@@ -69,7 +73,9 @@ export default function EditMailScreen(): JSX.Element {
     verifyMail(data.token)
       .then(() => navigate('/account'))
       .catch((e: ApiError) =>
-        e.statusCode === 403
+        handleMergedError(e)
+          ? undefined
+          : e.statusCode === 403
           ? setTokenInvalid(true)
           : e.statusCode === 409 && e.message?.includes('exists')
           ? e.message.includes('merge')
