@@ -106,6 +106,23 @@ export interface RealUnitKycFileDto {
 }
 
 // Reduced KYC step: raw result/comment and the recommendation/referral graph are omitted by the api.
+// One resolved check evidence, decided by the api (which step/file counts). `status`/`type` only for step-backed
+// checks (ident; type = KycStepType, e.g. SumsubAuto/SumsubVideo/Video/Manual); `fileUid`/`fileName` point at the
+// downloadable evidence when one exists.
+export interface RealUnitCheckEvidenceDto {
+  status?: string;
+  type?: string;
+  date: string;
+  fileUid?: string;
+  fileName?: string;
+}
+
+// Mandatory checks of the dossier. An absent member = check missing — render as a finding, never hide the row.
+export interface RealUnitChecksDto {
+  identCheck?: RealUnitCheckEvidenceDto;
+  nameCheck?: RealUnitCheckEvidenceDto;
+}
+
 export interface RealUnitDossierKycStepDto {
   id: number;
   name: string;
@@ -199,6 +216,9 @@ export interface RealUnitCustomerDetailDto {
   kycType?: string;
   highRisk?: boolean;
   pep?: boolean;
+
+  // --- Mandatory checks, resolved by the api (absent member = check missing) --- //
+  checks: RealUnitChecksDto;
 
   // --- Customer-scoped slices (reduced, AML work products structurally omitted) --- //
   kycFiles: RealUnitKycFileDto[];

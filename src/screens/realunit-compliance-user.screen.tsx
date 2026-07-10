@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { InfoPanel, InfoRow, SupportMessageList } from 'src/components/support/info-panel';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { RealUnitCustomerDetailDto } from 'src/dto/realunit-compliance.dto';
+import { RealUnitCheckEvidenceDto, RealUnitCustomerDetailDto } from 'src/dto/realunit-compliance.dto';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useRealunitCompliance } from 'src/hooks/realunit-compliance.hook';
@@ -71,10 +71,11 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
 
   const { id } = useParams();
   const { translate } = useSettingsContext();
-  const { getCustomer, downloadFile } = useRealunitCompliance();
+  const { getCustomer, downloadFile, downloadDossier } = useRealunitCompliance();
 
   const [customer, setCustomer] = useState<RealUnitCustomerDetailDto>();
   const [isLoading, setIsLoading] = useState(true);
+  const [isDossierLoading, setIsDossierLoading] = useState(false);
   const [loadError, setLoadError] = useState<string>();
   const [actionError, setActionError] = useState<string>();
 
@@ -120,14 +121,69 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
     [id, downloadFile],
   );
 
+  const handleDossierDownload = useCallback(async (): Promise<void> => {
+    if (!id) return;
+    setActionError(undefined);
+    setIsDossierLoading(true);
+    try {
+      await downloadDossier(+id);
+    } catch (e: unknown) {
+      setActionError(e instanceof Error ? e.message : 'Error downloading dossier');
+    } finally {
+      setIsDossierLoading(false);
+    }
+  }, [id, downloadDossier]);
+
   if (loadError) return <ErrorHint message={loadError} />;
   if (isLoading || !customer) return <StyledLoadingSpinner size={SpinnerSize.LG} />;
 
   const org = customer.organization;
 
+  // Renders one api-resolved check evidence 1:1 (api = decision authority; which step/file counts is decided
+  // there). Both rows must always be visible — a missing check is a compliance finding, not an empty state.
+  const checkValue = (check?: RealUnitCheckEvidenceDto) => {
+    if (!check)
+      return (
+        <span className="px-2 py-1 rounded text-xs bg-dfxGray-300 text-primary-red font-semibold">
+          {translate('screens/compliance', 'Missing')}
+        </span>
+      );
+
+    // capture as locals so the download closure keeps the narrowing without a non-null assertion
+    const { fileUid, fileName } = check;
+    return (
+      <span className="inline-flex items-center gap-2">
+        {check.status && statusBadge(check.status)}
+        {check.type && <span className="text-dfxGray-700">{check.type}</span>}
+        {formatDate(check.date)}
+        {fileUid && fileName && (
+          <button
+            className="px-2 py-1 text-xs font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors"
+            onClick={() => handleDownload(fileUid, fileName)}
+          >
+            {translate('general/actions', 'Download')}
+          </button>
+        )}
+      </span>
+    );
+  };
+
   return (
     <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-6 p-4 md:p-6 text-left">
       {actionError && <ErrorHint message={actionError} />}
+
+      {/* Full dossier export (ZIP of all visible files; audit-logged api-side) */}
+      <div className="flex justify-end">
+        <button
+          className="px-3 py-1.5 text-sm font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors disabled:opacity-50"
+          onClick={handleDossierDownload}
+          disabled={isDossierLoading}
+        >
+          {isDossierLoading
+            ? translate('screens/compliance', 'Preparing ZIP ...')
+            : translate('screens/compliance', 'Download dossier (ZIP)')}
+        </button>
+      </div>
 
       {/* Identity / KYC status */}
       <div className="flex gap-4 flex-wrap">
@@ -157,6 +213,17 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
           <InfoRow label="KYC Type" value={customer.kycType ?? '-'} />
           <InfoRow label="High Risk" value={bool(customer.highRisk)} />
           <InfoRow label="PEP" value={bool(customer.pep)} />
+        </InfoPanel>
+
+        <InfoPanel title={translate('screens/compliance', 'Checks')}>
+          <InfoRow
+            label={translate('screens/compliance', 'Ident Check (Sumsub)')}
+            value={checkValue(customer.checks?.identCheck)}
+          />
+          <InfoRow
+            label={translate('screens/compliance', 'Dilisense Check')}
+            value={checkValue(customer.checks?.nameCheck)}
+          />
         </InfoPanel>
 
         {org && (
