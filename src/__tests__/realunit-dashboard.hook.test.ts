@@ -9,6 +9,7 @@ jest.mock('@dfx.swiss/react', () => ({
   useApi: () => ({ call: mockCall }),
   Department: { SUPPORT: 'Support', COMPLIANCE: 'Compliance', MARKETING: 'Marketing' },
   TfaLevel: { STRICT: 'Strict' },
+  ResponseType: { BLOB: 'blob' },
 }));
 
 // useGuardedApi calls useNavigation (react-router hooks); stub it so renderHook works without a <Router> wrapper.
@@ -16,6 +17,14 @@ jest.mock('../hooks/navigation.hook', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
 }));
 
+// downloadDossier hands the blob to the shared saveFile util (utils.downloadFile), which touches the DOM; stub it
+// so the hook test can assert the api call without a real browser download.
+jest.mock('src/util/utils', () => ({
+  ...jest.requireActual('src/util/utils'),
+  downloadFile: jest.fn(),
+}));
+
+import { ResponseType } from '@dfx.swiss/react';
 import { useRealunitCompliance } from '../hooks/realunit-compliance.hook';
 import { useRealunitSupport } from '../hooks/realunit-support.hook';
 
@@ -94,6 +103,15 @@ describe('useRealunitCompliance', () => {
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/compliance/customers?key=a%20b%40c', method: 'GET' });
   });
 
+  it('omits the query string for the keyless full-list request', async () => {
+    mockCall.mockResolvedValue([]);
+    const { result } = renderHook(() => useRealunitCompliance());
+
+    await result.current.searchCustomers();
+
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/compliance/customers', method: 'GET' });
+  });
+
   it('hits the reduced dossier and download endpoints', async () => {
     const { result } = renderHook(() => useRealunitCompliance());
 
@@ -102,5 +120,18 @@ describe('useRealunitCompliance', () => {
 
     await result.current.downloadFile(9, 'file-uid');
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/compliance/customers/9/files/file-uid', method: 'GET' });
+  });
+
+  it('requests the dossier as a blob from the dossier endpoint', async () => {
+    mockCall.mockResolvedValue({ data: new Blob(['zip']), headers: {} });
+    const { result } = renderHook(() => useRealunitCompliance());
+
+    await result.current.downloadDossier(9);
+
+    expect(mockCall).toHaveBeenCalledWith({
+      url: 'realunit/compliance/customers/9/dossier',
+      method: 'GET',
+      responseType: ResponseType.BLOB,
+    });
   });
 });

@@ -1,9 +1,11 @@
+import { ResponseType } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import {
   RealUnitCustomerDetailDto,
   RealUnitCustomerListDto,
   RealUnitKycFileDownloadDto,
 } from 'src/dto/realunit-compliance.dto';
+import { downloadFile as saveFile, filenameDateFormat } from 'src/util/utils';
 import { useGuardedApi } from './guarded-api.hook';
 
 // RealUnit tenant compliance hook. READ-ONLY, strictly customer-scoped `/v1/realunit/compliance/*` endpoints over
@@ -12,9 +14,10 @@ import { useGuardedApi } from './guarded-api.hook';
 export function useRealunitCompliance() {
   const { call } = useGuardedApi();
 
-  async function searchCustomers(key: string): Promise<RealUnitCustomerListDto[]> {
+  // Without a key the api returns the complete tenant scope (all RealUnit customers).
+  async function searchCustomers(key?: string): Promise<RealUnitCustomerListDto[]> {
     return call<RealUnitCustomerListDto[]>({
-      url: `realunit/compliance/customers?key=${encodeURIComponent(key)}`,
+      url: `realunit/compliance/customers${key ? `?key=${encodeURIComponent(key)}` : ''}`,
       method: 'GET',
     });
   }
@@ -33,11 +36,23 @@ export function useRealunitCompliance() {
     });
   }
 
+  // Full dossier as ZIP (all allowlisted files, bundled and audit-logged api-side).
+  async function downloadDossier(id: number): Promise<void> {
+    const { data, headers } = await call<{ data: Blob; headers: Record<string, string> }>({
+      url: `realunit/compliance/customers/${id}/dossier`,
+      method: 'GET',
+      responseType: ResponseType.BLOB,
+    });
+
+    saveFile(data, headers, `RealUnit_dossier_${id}_${filenameDateFormat()}.zip`);
+  }
+
   return useMemo(
     () => ({
       searchCustomers,
       getCustomer,
       downloadFile,
+      downloadDossier,
     }),
     [call],
   );

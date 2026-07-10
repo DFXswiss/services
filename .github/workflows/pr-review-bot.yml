@@ -90,6 +90,9 @@ jobs:
           echo "count=$COUNT" >> $GITHUB_OUTPUT
 
       - name: Post PR comment
+        # Fork PRs run with a read-only GITHUB_TOKEN, so the issue-comment API returns 403 and fails the whole job.
+        # The bot can only post on same-repo PRs; skip cleanly on forks instead of turning the check red.
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
