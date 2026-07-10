@@ -322,7 +322,12 @@ test.describe('RealUnit Compliance dashboards - Visual Regression Tests', () => 
     const input = page.locator('input').first();
     await expect(input).toBeVisible();
     await input.fill('example');
+    // Enter must actually issue the keyed search request. Without this wait the assertions below would also pass on
+    // the upfront-loaded list alone (the mock serves the same fixture for both requests), so a broken onKeyDown →
+    // handleSearch → loadCustomers(key) wiring would still go green.
+    const keyedSearch = page.waitForRequest((req) => /\/realunit\/compliance\/customers\?key=example/.test(req.url()));
     await input.press('Enter');
+    await keyedSearch;
 
     // results table rendered
     await expect(page.getByText('ACME Example AG')).toBeVisible();
