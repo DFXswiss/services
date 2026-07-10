@@ -141,26 +141,32 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
 
   // Renders one api-resolved check evidence 1:1 (api = decision authority; which step/file counts is decided
   // there). Both rows must always be visible — a missing check is a compliance finding, not an empty state.
-  const checkValue = (check?: RealUnitCheckEvidenceDto) =>
-    check ? (
+  const checkValue = (check?: RealUnitCheckEvidenceDto) => {
+    if (!check)
+      return (
+        <span className="px-2 py-1 rounded text-xs bg-dfxGray-300 text-primary-red font-semibold">
+          {translate('screens/compliance', 'Missing')}
+        </span>
+      );
+
+    // capture as locals so the download closure keeps the narrowing without a non-null assertion
+    const { fileUid, fileName } = check;
+    return (
       <span className="inline-flex items-center gap-2">
         {check.status && statusBadge(check.status)}
         {check.type && <span className="text-dfxGray-700">{check.type}</span>}
         {formatDate(check.date)}
-        {check.fileUid && check.fileName && (
+        {fileUid && fileName && (
           <button
             className="px-2 py-1 text-xs font-medium bg-white border border-dfxGray-400 text-dfxBlue-800 rounded hover:bg-dfxGray-300 transition-colors"
-            onClick={() => handleDownload(check.fileUid!, check.fileName!)}
+            onClick={() => handleDownload(fileUid, fileName)}
           >
             {translate('general/actions', 'Download')}
           </button>
         )}
       </span>
-    ) : (
-      <span className="px-2 py-1 rounded text-xs bg-dfxGray-300 text-primary-red font-semibold">
-        {translate('screens/compliance', 'Missing')}
-      </span>
     );
+  };
 
   return (
     <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-6 p-4 md:p-6 text-left">
