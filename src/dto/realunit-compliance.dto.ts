@@ -90,6 +90,8 @@ export interface RealUnitVirtualIban {
 }
 
 export interface RealUnitCustomerListDto {
+  // current REALU holdings (share count, summed over all wallet addresses); undefined = could not be resolved
+  balance?: number;
   id: number;
   kycStatus: string;
   kycLevel?: string;
@@ -216,6 +218,9 @@ export interface RealUnitCustomerDetailDto {
   kycType?: string;
   highRisk?: boolean;
   pep?: boolean;
+
+  // current REALU holdings (share count, summed over all wallet addresses); undefined = could not be resolved
+  balance?: number;
 
   // --- Mandatory checks, resolved by the api (absent member = check missing) --- //
   checks: RealUnitChecksDto;

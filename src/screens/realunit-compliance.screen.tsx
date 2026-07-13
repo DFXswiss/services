@@ -93,6 +93,9 @@ export default function RealunitComplianceScreen(): JSX.Element {
                   <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
                     {translate('screens/kyc', 'KYC Level')}
                   </th>
+                  <th className="px-3 py-2 text-right font-semibold text-dfxBlue-800">
+                    {translate('screens/compliance', 'Balance (REALU)')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -108,6 +111,9 @@ export default function RealunitComplianceScreen(): JSX.Element {
                     <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white break-all">{u.mail ?? '-'}</td>
                     <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.kycStatus}</td>
                     <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{u.kycLevel ?? '-'}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-dfxBlue-800 group-hover:text-white">
+                      {u.balance != null ? u.balance.toLocaleString('de-CH') : '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
