@@ -213,6 +213,10 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
           <InfoRow label="KYC Type" value={customer.kycType ?? '-'} />
           <InfoRow label="High Risk" value={bool(customer.highRisk)} />
           <InfoRow label="PEP" value={bool(customer.pep)} />
+          <InfoRow
+            label={translate('screens/compliance', 'Balance (REALU)')}
+            value={customer.balance != null ? customer.balance.toLocaleString('de-CH') : '-'}
+          />
         </InfoPanel>
 
         <InfoPanel title={translate('screens/compliance', 'Checks')}>
