@@ -1,8 +1,9 @@
 // Frontend mirror of the api RealUnit reduced-compliance DTOs
 // (api: src/subdomains/supporting/realunit/dto/realunit-compliance.dto.ts).
 // Every field is a whitelist copy of the api DTO; Date fields arrive as ISO strings over the wire. This is the
-// REDUCED tenant view — it structurally contains NO DFX AML work product (no name-check, no amlCheck/amlReason,
-// no compliance notes, no limitRequest, no recommendation graph). Do not add such fields here or render them.
+// REDUCED tenant view — it structurally contains NO DFX AML work product (no amlCheck/amlReason, no compliance
+// notes, no limitRequest, no recommendation graph), with one deliberate exception: the mandatory check evidences
+// (ident + Dilisense name check, `checks`). Do not add other such fields here or render them.
 
 export interface CountrySupportInfo {
   name: string;
