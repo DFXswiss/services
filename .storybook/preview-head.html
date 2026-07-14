@@ -1,0 +1,10 @@
+<!-- Mirror the font loading from public/index.html so component stories render
+     with the same typography as the deployed app. The Playwright spec waits
+     on `document.fonts.ready` before snapshotting, so this keeps baselines
+     stable across browser/runner combinations. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+  rel="stylesheet"
+/>
