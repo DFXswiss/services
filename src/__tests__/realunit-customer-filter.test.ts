@@ -67,7 +67,7 @@ describe('isEmptyAccount', () => {
     expect(isEmptyAccount(customer({ kycLevel: null as unknown as string, balance: 0 }))).toBe(false);
   });
 
-  it("is false when kycLevel is a non-numeric string (NaN !== 0, fails open to visible)", () => {
+  it('is false when kycLevel is a non-numeric string (NaN !== 0, fails open to visible)', () => {
     expect(isEmptyAccount(customer({ kycLevel: 'unknown', balance: 0 }))).toBe(false);
   });
 
