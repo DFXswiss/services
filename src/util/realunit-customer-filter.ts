@@ -10,13 +10,15 @@ import { RealUnitCustomerListDto } from 'src/dto/realunit-compliance.dto';
 // An undefined balance means "could not be resolved" (e.g. indexer outage) and fails open to visible,
 // so an infrastructure failure can never hide a real REALU holder. Likewise a missing (undefined/null)
 // kycLevel is "could not be resolved" and fails open to visible; only a RESOLVED level of 0 counts as
-// "no progress".
+// "no progress". A blank/whitespace-only level string is a degenerate wire value, not a resolved level,
+// and fails open to visible as well.
 export function isEmptyAccount(customer: RealUnitCustomerListDto): boolean {
   return (
     !customer.name &&
     !customer.mail &&
     customer.kycStatus === 'NA' &&
     customer.kycLevel != null &&
+    String(customer.kycLevel).trim() !== '' &&
     Number(customer.kycLevel) === 0 &&
     customer.balance === 0
   );

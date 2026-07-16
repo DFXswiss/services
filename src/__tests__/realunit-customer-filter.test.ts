@@ -58,8 +58,13 @@ describe('isEmptyAccount', () => {
     expect(isEmptyAccount(customer({ kycLevel: -10 as unknown as string, balance: 0 }))).toBe(false);
   });
 
-  it("is true when kycLevel is an empty string (Number('') === 0 counts as no progress)", () => {
-    expect(isEmptyAccount(customer({ kycLevel: '', balance: 0 }))).toBe(true);
+  it('is false when kycLevel is a blank string (a degenerate wire value is not a resolved level)', () => {
+    expect(isEmptyAccount(customer({ kycLevel: '', balance: 0 }))).toBe(false);
+    expect(isEmptyAccount(customer({ kycLevel: '   ', balance: 0 }))).toBe(false);
+  });
+
+  it('is false when kycLevel is JSON null (unresolved, fails open to visible)', () => {
+    expect(isEmptyAccount(customer({ kycLevel: null as unknown as string, balance: 0 }))).toBe(false);
   });
 
   it("is false when kycLevel is a non-numeric string (NaN !== 0, fails open to visible)", () => {

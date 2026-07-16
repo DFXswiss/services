@@ -32,7 +32,8 @@ export default function RealunitComplianceScreen(): JSX.Element {
   });
 
   // Load the complete customer list upfront; a search key narrows it down, an empty search returns to the
-  // default view (filter re-engaged).
+  // unsearched view. The hide-empty toggle state deliberately persists across searches (user choice wins);
+  // "re-engaged" only means the search bypass ends.
   useEffect(() => loadCustomers(), []);
 
   function loadCustomers(key?: string): void {
