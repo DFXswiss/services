@@ -38,6 +38,17 @@ function severityBadge(severity?: string): JSX.Element {
   return <span className={`px-2 py-1 rounded text-xs font-semibold bg-dfxGray-300 ${textColor}`}>{severity}</span>;
 }
 
+// Risk badge for isHighRisk: red when true (the screening routes the tx to manual review), neutral when
+// false. NOT boolBadge — its true=green coloring would paint a high-risk screening as safe (inverse signal).
+function highRiskBadge(isHighRisk: boolean): JSX.Element {
+  const textColor = isHighRisk ? 'text-primary-red' : 'text-dfxBlue-800';
+  return (
+    <span className={`px-2 py-1 rounded text-xs font-semibold bg-dfxGray-300 ${textColor}`}>
+      {isHighRisk ? 'Yes' : 'No'}
+    </span>
+  );
+}
+
 interface ExposureRow extends ScorechainRiskDetail {
   bucket: string;
 }
@@ -205,7 +216,7 @@ export default function ComplianceScorechainScreen(): JSX.Element {
                   <td className="px-2 py-1.5 text-xs text-dfxBlue-800 align-top">{s.objectType}</td>
                   <td className="px-2 py-1.5 text-xs align-top">{severityBadge(s.severity)}</td>
                   <td className="px-2 py-1.5 text-xs text-dfxBlue-800 align-top">{num(s.riskScore)}</td>
-                  <td className="px-2 py-1.5 text-xs align-top">{boolBadge(s.isHighRisk)}</td>
+                  <td className="px-2 py-1.5 text-xs align-top">{highRiskBadge(s.isHighRisk)}</td>
                 </tr>
               ))}
             </tbody>
@@ -231,7 +242,7 @@ export default function ComplianceScorechainScreen(): JSX.Element {
             <InfoPanel title={translate('screens/compliance', 'Severity')}>
               <InfoRow label={translate('screens/compliance', 'Severity')} value={severityBadge(selected.severity)} />
               <InfoRow label={translate('screens/compliance', 'Risk score')} value={num(selected.riskScore)} />
-              <InfoRow label={translate('screens/compliance', 'High risk')} value={boolBadge(selected.isHighRisk)} />
+              <InfoRow label={translate('screens/compliance', 'High risk')} value={highRiskBadge(selected.isHighRisk)} />
               <InfoRow
                 label={translate('screens/compliance', 'Signature valid')}
                 value={boolBadge(selected.signatureValid)}
