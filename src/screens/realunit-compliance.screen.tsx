@@ -92,7 +92,7 @@ export default function RealunitComplianceScreen(): JSX.Element {
           <span className="font-semibold">
             {translate('screens/compliance', 'Customers')}: {results.length}
           </span>
-          {!isSearchActive && (
+          {!isSearchActive && emptyCount > 0 && (
             <label className="flex items-center gap-1.5 cursor-pointer">
               <input type="checkbox" checked={hideEmpty} onChange={(e) => setHideEmpty(e.target.checked)} />
               {translate('screens/compliance', 'Hide empty accounts')} ({emptyCount})
