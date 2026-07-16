@@ -400,7 +400,9 @@
     "AmlCheck": "AmlCheck",
     "No change": "aucun changement",
     "blocked": "bloqué",
-    "Pass only allowed when all errors are phone-related": "Pass autorisé uniquement si toutes les erreurs sont liées au téléphone"
+    "Pass only allowed when all errors are phone-related": "Pass autorisé uniquement si toutes les erreurs sont liées au téléphone",
+    "Hide empty accounts": "Masquer les comptes vides",
+    "All accounts are hidden by the filter above": "Tous les comptes sont masqués par le filtre ci-dessus"
   },
   "screens/2fa": {
     "2FA": "2FA",
