@@ -7,18 +7,16 @@ import { ErrorHint } from 'src/components/error-hint';
 import { InfoPanel, InfoRow } from 'src/components/support/info-panel';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import {
-  isSentinelSeverity,
-  parseScorechainHighlight,
   ScorechainRiskDetail,
   ScorechainRiskIndicatorData,
   ScorechainScreeningDto,
   ScorechainSeverity,
-  screeningMatchesHighlight,
 } from 'src/dto/scorechain.dto';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useScorechain } from 'src/hooks/scorechain.hook';
 import { boolBadge, formatDateTime } from 'src/util/compliance-helpers';
+import { isSentinelSeverity, parseScorechainHighlight, screeningMatchesHighlight } from 'src/util/scorechain.util';
 
 // Risk-band text colors. Sentinels (NoCoverage/NotFound/NotSupported) are handled separately as neutral.
 const severityTextColors: Record<string, string> = {

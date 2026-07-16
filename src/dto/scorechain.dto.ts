@@ -2,8 +2,8 @@
 // (api: GET support/:id/scorechain → ScorechainScreeningDto[], sorted created DESC).
 // Date fields arrive as ISO strings over the wire. Enum values mirror the wire strings 1:1; unknown/new
 // wire values must never crash the UI — fields whose set may still grow are typed as `string` so the raw
-// value can always be displayed. This module intentionally has NO imports so its pure helpers/predicate
-// stay trivially unit-testable.
+// value can always be displayed. Types-only by convention (all src/dto/*.ts are pure interfaces/enums);
+// the pure helpers/predicate live in src/util/scorechain.util.ts.
 
 export enum ScorechainObjectType {
   ADDRESS = 'ADDRESS',
@@ -42,17 +42,6 @@ export enum ScorechainSeverity {
   NOT_SUPPORTED = 'NotSupported',
   NO_COVERAGE = 'NoCoverage',
   NOT_FOUND = 'NotFound',
-}
-
-// The three sentinel severities that must be rendered neutrally (informational), not as a risk color.
-export const SCORECHAIN_SENTINEL_SEVERITIES: ReadonlySet<string> = new Set<string>([
-  ScorechainSeverity.NOT_SUPPORTED,
-  ScorechainSeverity.NO_COVERAGE,
-  ScorechainSeverity.NOT_FOUND,
-]);
-
-export function isSentinelSeverity(severity?: string): boolean {
-  return severity != null && SCORECHAIN_SENTINEL_SEVERITIES.has(severity);
 }
 
 // --- riskIndicatorData nested shape --- //
@@ -104,54 +93,14 @@ export interface ScorechainScreeningDto {
   relatedBuyFiatIds?: number[];
 }
 
-// Internal AML-error token the api writes into a transaction comment (';'-joined list) when a Scorechain
-// screening flagged the transaction as high risk. The manual-check UI turns it into a deep-link.
-export const SCORECHAIN_HIGH_RISK_TOKEN = 'ScorechainHighRisk';
-
-// True iff the comment carries the ScorechainHighRisk token as one of its ';'-joined members. Membership
-// (not substring) so a longer token that merely contains the string is not a false positive.
-export function hasScorechainHighRisk(comment?: string): boolean {
-  if (!comment) return false;
-  return comment
-    .split(';')
-    .map((token) => token.trim())
-    .includes(SCORECHAIN_HIGH_RISK_TOKEN);
-}
-
-// --- deep-link (highlight) plumbing shared by the link call-sites and the screen --- //
-
+// A transaction's related order ids, used to build the `?highlight=` deep-link into a screening.
 export interface ScorechainRelatedIds {
   buyCryptoId?: number;
   buyFiatId?: number;
 }
 
-// The `?highlight=` query value that deep-links to the screening related to a given transaction.
-// buyCrypto takes precedence over buyFiat; returns undefined when the tx has neither id.
-export function scorechainHighlightValue(ids: ScorechainRelatedIds): string | undefined {
-  if (ids.buyCryptoId != null) return `buyCrypto:${ids.buyCryptoId}`;
-  if (ids.buyFiatId != null) return `buyFiat:${ids.buyFiatId}`;
-  return undefined;
-}
-
+// A parsed `?highlight=` deep-link target (which related order a screening should be matched against).
 export interface ScorechainHighlight {
   kind: 'buyCrypto' | 'buyFiat';
   id: number;
-}
-
-// Parse a `?highlight=` query value back into a typed highlight; undefined for absent/malformed values.
-export function parseScorechainHighlight(value: string | null): ScorechainHighlight | undefined {
-  if (!value) return undefined;
-  const separatorIndex = value.indexOf(':');
-  if (separatorIndex < 0) return undefined;
-  const kind = value.slice(0, separatorIndex);
-  const id = Number(value.slice(separatorIndex + 1));
-  if ((kind === 'buyCrypto' || kind === 'buyFiat') && Number.isInteger(id)) return { kind, id };
-  return undefined;
-}
-
-// Does a screening relate to the highlighted transaction id?
-export function screeningMatchesHighlight(screening: ScorechainScreeningDto, highlight: ScorechainHighlight): boolean {
-  return highlight.kind === 'buyCrypto'
-    ? Boolean(screening.relatedBuyCryptoIds?.includes(highlight.id))
-    : Boolean(screening.relatedBuyFiatIds?.includes(highlight.id));
 }

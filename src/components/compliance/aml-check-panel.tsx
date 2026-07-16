@@ -1,9 +1,9 @@
 import { AmlReason, CallQueue, CheckStatus } from '@dfx.swiss/react';
 import { useState } from 'react';
-import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/dto/scorechain.dto';
 import { ComplianceUserData, TransactionInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { statusBadge } from 'src/util/compliance-helpers';
+import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/util/scorechain.util';
 
 function callQueueForReason(reason: string | undefined): CallQueue | undefined {
   return reason && (Object.values(CallQueue) as string[]).includes(reason) ? (reason as CallQueue) : undefined;

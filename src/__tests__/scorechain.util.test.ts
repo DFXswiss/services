@@ -1,15 +1,17 @@
 import {
-  hasScorechainHighRisk,
-  parseScorechainHighlight,
-  SCORECHAIN_HIGH_RISK_TOKEN,
   ScorechainAnalysisType,
   ScorechainContext,
   ScorechainObjectType,
   ScorechainScreeningDto,
   ScorechainTriggerType,
+} from 'src/dto/scorechain.dto';
+import {
+  hasScorechainHighRisk,
+  parseScorechainHighlight,
+  SCORECHAIN_HIGH_RISK_TOKEN,
   scorechainHighlightValue,
   screeningMatchesHighlight,
-} from 'src/dto/scorechain.dto';
+} from 'src/util/scorechain.util';
 
 // Minimal screening factory: only the fields a given assertion cares about are overridden.
 const screening = (overrides: Partial<ScorechainScreeningDto>): ScorechainScreeningDto => ({

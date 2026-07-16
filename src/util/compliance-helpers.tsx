@@ -1,8 +1,8 @@
 import { Transaction } from '@dfx.swiss/react';
 import { MrosStatus } from 'src/dto/mros.dto';
-import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/dto/scorechain.dto';
 import { KycStepInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/util/scorechain.util';
 
 export function DetailRow({
   label,
