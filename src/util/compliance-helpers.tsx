@@ -1,6 +1,8 @@
 import { Transaction } from '@dfx.swiss/react';
 import { MrosStatus } from 'src/dto/mros.dto';
+import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/dto/scorechain.dto';
 import { KycStepInfo } from 'src/hooks/compliance.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 
 export function DetailRow({
   label,
@@ -41,12 +43,31 @@ export function TransactionDetailRows({
   amlCheck,
   amlReason,
   comment,
+  scorechainLink,
 }: {
   tx: Transaction;
   amlCheck?: string;
   amlReason?: string;
   comment?: string;
+  // When set AND `comment` carries the ScorechainHighRisk token, the Comment value deep-links into the
+  // customer's Scorechain screenings. Omit it and this component renders exactly as before.
+  scorechainLink?: { userDataId: number; buyCryptoId?: number; buyFiatId?: number };
 }): JSX.Element {
+  const { navigate } = useNavigation();
+
+  const showScorechainLink = scorechainLink != null && hasScorechainHighRisk(comment);
+  function goToScorechain(): void {
+    if (scorechainLink == null) return;
+    const value = scorechainHighlightValue({
+      buyCryptoId: scorechainLink.buyCryptoId,
+      buyFiatId: scorechainLink.buyFiatId,
+    });
+    navigate(
+      { pathname: `/compliance/scorechain/user/${scorechainLink.userDataId}`, search: value ? `?highlight=${value}` : '' },
+      { clearParams: ['status', 'search'] },
+    );
+  }
+
   return (
     <table className="text-sm text-dfxBlue-800 text-left">
       <tbody>
@@ -54,7 +75,21 @@ export function TransactionDetailRows({
         <DetailRow label="Type" value={tx.type} />
         <DetailRow label="AmlCheck" value={amlCheck} />
         <DetailRow label="AmlReason" value={amlReason} />
-        <DetailRow label="Comment" value={comment} />
+        {showScorechainLink ? (
+          <tr>
+            <td className="pr-3 py-0.5 font-medium whitespace-nowrap">Comment:</td>
+            <td className="py-0.5">
+              <button
+                className="text-dfxBlue-300 underline hover:text-dfxBlue-800 text-left"
+                onClick={goToScorechain}
+              >
+                {comment}
+              </button>
+            </td>
+          </tr>
+        ) : (
+          <DetailRow label="Comment" value={comment} />
+        )}
         <DetailRow
           label="Input"
           value={

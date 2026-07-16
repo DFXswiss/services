@@ -1,5 +1,6 @@
 import { AmlReason, CallQueue, CheckStatus } from '@dfx.swiss/react';
 import { useState } from 'react';
+import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/dto/scorechain.dto';
 import { ComplianceUserData, TransactionInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { statusBadge } from 'src/util/compliance-helpers';
@@ -36,13 +37,16 @@ function TransactionEntry({
   onUpdate,
   onReset,
   isSaving,
+  userDataId,
 }: {
   tx: TransactionInfo;
   clerks: string[];
   onUpdate: (data: AmlCheckUpdate, clerk: string) => Promise<void>;
   onReset: (clerk: string) => Promise<void>;
   isSaving: boolean;
+  userDataId?: number;
 }): JSX.Element {
+  const { navigate } = useNavigation();
   const [amlCheck, setAmlCheck] = useState(tx.amlCheck ?? '');
   const [amlReason, setAmlReason] = useState<AmlReason>((tx.amlReason as AmlReason) ?? AmlReason.NA);
   const [setPriceDate, setSetPriceDate] = useState(false);
@@ -120,7 +124,25 @@ function TransactionEntry({
           <div className="flex items-start justify-between px-3 py-2 border-b border-dfxGray-300">
             <span className="text-sm text-dfxBlue-800">Comment</span>
             <span className="text-sm text-dfxBlue-800 text-right max-w-[60%] whitespace-pre-wrap">
-              {tx.comment ?? '-'}
+              {userDataId != null && hasScorechainHighRisk(tx.comment) ? (
+                <button
+                  className="text-dfxBlue-300 underline hover:text-dfxBlue-800 text-right"
+                  onClick={() => {
+                    const value = scorechainHighlightValue({ buyCryptoId: tx.buyCryptoId, buyFiatId: tx.buyFiatId });
+                    navigate(
+                      {
+                        pathname: `/compliance/scorechain/user/${userDataId}`,
+                        search: value ? `?highlight=${value}` : '',
+                      },
+                      { clearParams: ['status', 'search'] },
+                    );
+                  }}
+                >
+                  {tx.comment}
+                </button>
+              ) : (
+                (tx.comment ?? '-')
+              )}
             </span>
           </div>
           <div className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300">
@@ -352,6 +374,7 @@ export function AmlCheckPendingPanel({
             onUpdate={(updateData, clerk) => onUpdate(tx, updateData, clerk)}
             onReset={(clerk) => onReset(tx, clerk)}
             isSaving={isSaving}
+            userDataId={ud.id}
           />
         </div>
       ))}
