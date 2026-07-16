@@ -143,9 +143,11 @@ export default function ComplianceScorechainScreen(): JSX.Element {
     setIsRescreening(true);
     setActionError(undefined);
     try {
-      await retriggerBuyCrypto(rescreenBuyCryptoId);
+      const created = await retriggerBuyCrypto(rescreenBuyCryptoId);
       setConfirmRescreen(false);
       await fetchScreenings();
+      // focus the freshly created screening so the detail panel shows the new result, not stale data
+      setSelectedId(created.id);
     } catch (e) {
       setConfirmRescreen(false);
       setActionError(e instanceof Error ? e.message : 'Re-screen failed');
