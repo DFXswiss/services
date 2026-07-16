@@ -8,13 +8,16 @@ import { RealUnitCustomerListDto } from 'src/dto/realunit-compliance.dto';
 // AND level 0 in either direction — a terminated/rejected account has a non-NA status and a non-zero
 // level and stays visible), and a RESOLVED zero balance.
 // An undefined balance means "could not be resolved" (e.g. indexer outage) and fails open to visible,
-// so an infrastructure failure can never hide a real REALU holder.
+// so an infrastructure failure can never hide a real REALU holder. Likewise a missing (undefined/null)
+// kycLevel is "could not be resolved" and fails open to visible; only a RESOLVED level of 0 counts as
+// "no progress".
 export function isEmptyAccount(customer: RealUnitCustomerListDto): boolean {
   return (
     !customer.name &&
     !customer.mail &&
     customer.kycStatus === 'NA' &&
-    Number(customer.kycLevel ?? 0) === 0 &&
+    customer.kycLevel != null &&
+    Number(customer.kycLevel) === 0 &&
     customer.balance === 0
   );
 }

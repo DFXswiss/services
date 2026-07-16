@@ -125,4 +125,30 @@ describe('RealunitComplianceScreen empty-account filter', () => {
 
     expect(screen.queryByText(/Hide empty accounts/)).not.toBeInTheDocument();
   });
+
+  it('re-engages the filter when the search is cleared', async () => {
+    mockSearchCustomers.mockResolvedValue([FULL, EMPTY]);
+    render(<RealunitComplianceScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice Muster')).toBeInTheDocument();
+    });
+
+    const input = screen.getByPlaceholderText('Search by ID, email, phone or name...');
+    fireEvent.change(input, { target: { value: 'x' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(screen.getByRole('cell', { name: '2' })).toBeInTheDocument();
+    });
+
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(mockSearchCustomers).toHaveBeenLastCalledWith(undefined);
+      expect(screen.queryByRole('cell', { name: '2' })).not.toBeInTheDocument();
+      expect(screen.getByText(/Hide empty accounts/)).toHaveTextContent('Hide empty accounts (1)');
+    });
+  });
 });

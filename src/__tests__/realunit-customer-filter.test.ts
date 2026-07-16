@@ -12,8 +12,8 @@ describe('isEmptyAccount', () => {
     expect(isEmptyAccount(customer({ kycLevel: '0', balance: 0 }))).toBe(true);
   });
 
-  it('is true when kycLevel is missing entirely but the balance is a resolved zero', () => {
-    expect(isEmptyAccount(customer({ balance: 0 }))).toBe(true);
+  it('is false when kycLevel is missing entirely (an unresolved level fails open to visible)', () => {
+    expect(isEmptyAccount(customer({ balance: 0 }))).toBe(false);
   });
 
   it('is false when the balance is unresolved (undefined) — an outage must never hide a holder', () => {
