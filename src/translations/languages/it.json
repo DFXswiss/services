@@ -401,11 +401,8 @@
     "No change": "nessuna modifica",
     "blocked": "bloccato",
     "Pass only allowed when all errors are phone-related": "Pass consentito solo se tutti gli errori sono relativi al telefono",
-    "{{count}} customers": "{{count}} clienti",
-    "Hide empty accounts ({{count}})": "Nascondi conti vuoti ({{count}})",
-    "Hide test accounts ({{count}})": "Nascondi conti di test ({{count}})",
-    "Search results always include all accounts": "I risultati di ricerca includono sempre tutti i conti",
-    "{{count}} hidden": "{{count}} nascosti"
+    "Hide empty accounts": "Nascondi conti vuoti",
+    "All accounts are hidden by the filter above": "Tutti i conti sono nascosti dal filtro sopra"
   },
   "screens/2fa": {
     "2FA": "2FA",
