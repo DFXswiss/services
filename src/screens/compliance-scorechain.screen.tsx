@@ -24,7 +24,7 @@ import { boolBadge, formatDateTime } from 'src/util/compliance-helpers';
 const severityTextColors: Record<string, string> = {
   [ScorechainSeverity.CRITICAL_RISK]: 'text-primary-red',
   [ScorechainSeverity.HIGH_RISK]: 'text-primary-red',
-  [ScorechainSeverity.MEDIUM_RISK]: 'text-yellow-600',
+  [ScorechainSeverity.MEDIUM_RISK]: 'text-dfxYellow-700',
   [ScorechainSeverity.LOW_RISK]: 'text-dfxBlue-300',
   [ScorechainSeverity.NO_RISK]: 'text-dfxGreen-100',
 };
@@ -102,7 +102,7 @@ export default function ComplianceScorechainScreen(): JSX.Element {
 
   const fetchScreenings = useCallback(async (): Promise<void> => {
     if (!Number.isInteger(userDataId)) {
-      setError('Invalid user id');
+      setError(translate('screens/compliance', 'Invalid user id'));
       setIsLoading(false);
       return;
     }
@@ -111,11 +111,11 @@ export default function ComplianceScorechainScreen(): JSX.Element {
     try {
       setData(await getUserScreenings(userDataId));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setError(e instanceof Error ? e.message : translate('screens/compliance', 'Unknown error'));
     } finally {
       setIsLoading(false);
     }
-  }, [userDataId, getUserScreenings]);
+  }, [userDataId, getUserScreenings, translate]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -150,7 +150,7 @@ export default function ComplianceScorechainScreen(): JSX.Element {
       setSelectedId(created.id);
     } catch (e) {
       setConfirmRescreen(false);
-      setActionError(e instanceof Error ? e.message : 'Re-screen failed');
+      setActionError(e instanceof Error ? e.message : translate('screens/compliance', 'Re-screen failed'));
     } finally {
       setIsRescreening(false);
     }
