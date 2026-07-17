@@ -64,6 +64,7 @@ const ComplianceTransactionListScreen = lazy(() => import('./screens/compliance-
 const ComplianceKycStepScreen = lazy(() => import('./screens/compliance-kyc-step.screen'));
 const ComplianceSupportIssueScreen = lazy(() => import('./screens/compliance-support-issue.screen'));
 const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
+const ComplianceScorechainScreen = lazy(() => import('./screens/compliance-scorechain.screen'));
 const ComplianceCustodyOrdersScreen = lazy(() => import('./screens/compliance-custody-orders.screen'));
 const ComplianceMrosListScreen = lazy(() => import('./screens/compliance-mros-list.screen'));
 const ComplianceMrosCreateScreen = lazy(() => import('./screens/compliance-mros-create.screen'));
@@ -381,6 +382,10 @@ export const Routes = [
       {
         path: 'compliance/recommendations/:id',
         element: withSuspense(<ComplianceRecommendationGraphScreen />),
+      },
+      {
+        path: 'compliance/scorechain/user/:id',
+        element: withSuspense(<ComplianceScorechainScreen />),
       },
       {
         path: 'compliance/bank-tx/:id',
