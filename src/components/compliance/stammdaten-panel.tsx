@@ -2,7 +2,7 @@ import { Country } from '@dfx.swiss/react';
 import { useEffect, useState } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { ComplianceUserData, KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
-import { statusBadge, formatDateTime } from 'src/util/compliance-helpers';
+import { findLatestStep, statusBadge, formatDateTime } from 'src/util/compliance-helpers';
 
 interface StammdatenPanelProps {
   data: ComplianceUserData;
@@ -72,10 +72,6 @@ const changeSections: ChangeSection[] = [
   { label: 'Namensänderung', stepName: 'NameChange', fileType: 'NameChange' },
   { label: 'Adressänderung', stepName: 'AddressChange', fileType: 'AddressChange' },
 ];
-
-function findLatestStep(kycSteps: KycStepInfo[], stepName: string): KycStepInfo | undefined {
-  return kycSteps.filter((s) => s.name === stepName).sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
-}
 
 function safeString(value: unknown): string {
   if (value == null) return '-';
