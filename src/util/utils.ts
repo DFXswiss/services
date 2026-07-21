@@ -55,7 +55,7 @@ export function url({
   // Join via the slash-terminated base only when there is a path to append. With an empty path the base is
   // used exactly as provided: forcing a trailing slash onto it breaks targets that treat the two forms
   // differently (e.g. the referral link, where only the slash-less dfx.swiss URL redirects to the API).
-  const absoluteUrl = normalizedPath ? new URL(normalizedPath, normalizedBase) : new URL(base);
+  const absoluteUrl = normalizedPath ? new URL(normalizedPath, normalizedBase) : new URL(base ?? normalizedBase);
   if (params) absoluteUrl.search = params.toString();
   return absoluteUrl.href;
 }
