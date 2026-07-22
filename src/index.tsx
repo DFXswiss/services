@@ -22,13 +22,23 @@ if ((urlParams.has('address') && urlParams.has('signature')) || urlParams.has('s
 function isChunkLoadError(message?: string): boolean {
   return !!message && /Loading chunk [\w-]+ failed|ChunkLoadError|Loading CSS chunk [\w-]+ failed/i.test(message);
 }
+// A new deploy replaces the content-hashed chunks. A tab left open across a deploy can
+// request a chunk that no longer exists; the static host serves index.html (200) for it,
+// which surfaces as a ChunkLoadError. Reload once to pick up the new chunks. The guard
+// lives in localStorage (it survives the sessionStorage.clear() above that runs on
+// session/login URLs) and is time-boxed, so a persistent failure reloads at most once per
+// window instead of looping. Storage access is wrapped because embedded/iframe contexts
+// can block it.
 function reloadOnceForChunkError(): void {
-  const KEY = 'dfx.chunkReloadAt';
-  const last = Number(sessionStorage.getItem(KEY) ?? 0);
-  if (Date.now() - last > 10000) {
-    sessionStorage.setItem(KEY, String(Date.now()));
-    window.location.reload();
+  try {
+    const KEY = 'dfx.chunkReloadAt';
+    const last = Number(localStorage.getItem(KEY) ?? 0);
+    if (Date.now() - last < 30000) return;
+    localStorage.setItem(KEY, String(Date.now()));
+  } catch {
+    return; // storage blocked (e.g. embedded iframe) — skip to avoid an unguarded reload loop
   }
+  window.location.reload();
 }
 window.addEventListener('error', (event) => {
   if (isChunkLoadError(event?.message)) reloadOnceForChunkError();
