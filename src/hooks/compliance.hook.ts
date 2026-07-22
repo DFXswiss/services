@@ -1025,6 +1025,14 @@ export function useCompliance() {
     });
   }
 
+  async function openPaymentAgreement(userDataId: number): Promise<void> {
+    return call<void>({
+      url: 'kyc/admin/payment-agreement',
+      method: 'POST',
+      data: { userDataId },
+    });
+  }
+
   async function updateUserData(userDataId: number, data: Record<string, unknown>): Promise<void> {
     return call<void>({
       url: `userData/${userDataId}`,
@@ -1241,6 +1249,7 @@ export function useCompliance() {
       getRecalls,
       createRecall,
       updateKycStep,
+      openPaymentAgreement,
       updateUserData,
       createLimitRequest,
       chargebackTransaction,
