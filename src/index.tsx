@@ -15,6 +15,29 @@ if ((urlParams.has('address') && urlParams.has('signature')) || urlParams.has('s
   sessionStorage.clear();
 }
 
+// A new deploy replaces the content-hashed chunks. A tab left open across a deploy can
+// request a chunk that no longer exists; Cloudflare Pages then serves index.html (200)
+// for it, which surfaces as a ChunkLoadError. Reload once to pick up the new chunks,
+// guarded against a reload loop.
+function isChunkLoadError(message?: string): boolean {
+  return !!message && /Loading chunk [\w-]+ failed|ChunkLoadError|Loading CSS chunk [\w-]+ failed/i.test(message);
+}
+function reloadOnceForChunkError(): void {
+  const KEY = 'dfx.chunkReloadAt';
+  const last = Number(sessionStorage.getItem(KEY) ?? 0);
+  if (Date.now() - last > 10000) {
+    sessionStorage.setItem(KEY, String(Date.now()));
+    window.location.reload();
+  }
+}
+window.addEventListener('error', (event) => {
+  if (isChunkLoadError(event?.message)) reloadOnceForChunkError();
+});
+window.addEventListener('unhandledrejection', (event) => {
+  const message = (event?.reason as Error | undefined)?.message;
+  if (isChunkLoadError(message)) reloadOnceForChunkError();
+});
+
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(<Main />);
 
