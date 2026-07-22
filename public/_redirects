@@ -1,0 +1,3 @@
+# SPA deep-link fallback: unknown paths serve the app shell (client-side routing).
+# Real files (static/*, widget/*, favicon, ...) are matched by the host first.
+/*    /index.html    200
