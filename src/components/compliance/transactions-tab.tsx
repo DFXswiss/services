@@ -369,6 +369,11 @@ export function TransactionsTable({
                                   amlCheck={tx.amlCheck}
                                   amlReason={tx.amlReason}
                                   comment={tx.comment}
+                                  scorechainLink={{
+                                    userDataId,
+                                    buyCryptoId: tx.buyCryptoId,
+                                    buyFiatId: tx.buyFiatId,
+                                  }}
                                 />
                                 {(() => {
                                   const canStop = tx.type === 'BuyCrypto' && !tx.isCompleted;

@@ -85,13 +85,48 @@ interface RealUnitCustomerListDto {
   accountType?: string;
   mail?: string;
   name?: string;
+  // mirrors the real DTO field since the Balance column was added
+  balance?: number;
 }
 
-// ~3 synthetic search results.
+// ~4 synthetic search results (one empty account exercises the default hide-empty toggle).
 const SEARCH_RESULTS: RealUnitCustomerListDto[] = [
-  { id: 7101, kycStatus: 'Completed', kycLevel: '50', accountType: 'Organization', mail: 'ops@acme-example.com', name: 'ACME Example AG' },
-  { id: 7102, kycStatus: 'InProgress', kycLevel: '30', accountType: 'Personal', mail: 'alice@example.com', name: 'Alice Muster' },
-  { id: 7103, kycStatus: 'NA', kycLevel: '10', accountType: 'Personal', mail: 'bob@example.com', name: 'Bob Beispiel' },
+  {
+    id: 7101,
+    kycStatus: 'Completed',
+    kycLevel: '50',
+    accountType: 'Organization',
+    mail: 'ops@acme-example.com',
+    name: 'ACME Example AG',
+    balance: 1250,
+  },
+  {
+    id: 7102,
+    kycStatus: 'InProgress',
+    kycLevel: '30',
+    accountType: 'Personal',
+    mail: 'alice@example.com',
+    name: 'Alice Muster',
+    balance: 30.5,
+  },
+  // Bob stays visible despite balance 0 because name/mail are set — documents the filter semantics
+  {
+    id: 7103,
+    kycStatus: 'NA',
+    kycLevel: '10',
+    accountType: 'Personal',
+    mail: 'bob@example.com',
+    name: 'Bob Beispiel',
+    balance: 0,
+  },
+  // intentionally no name/mail/accountType — the only empty account; hidden by the toggle in the default
+  // view, shown in search because an active search bypasses the filter
+  {
+    id: 7104,
+    kycStatus: 'NA',
+    kycLevel: '0',
+    balance: 0,
+  },
 ];
 
 // One rich reduced dossier for CUSTOMER_ID (an organization account, so the Organization panel renders).
@@ -317,6 +352,10 @@ test.describe('RealUnit Compliance dashboards - Visual Regression Tests', () => 
 
     // the complete customer list is loaded upfront (list request without a key)
     await expect(page.getByText('ACME Example AG')).toBeVisible();
+    // empty-account toggle is available because the fixture set includes one empty account
+    await expect(page.getByText('Hide empty accounts')).toBeVisible();
+    // the empty account (id 7104) is hidden by the default filter before any search
+    await expect(page.getByText('7104')).not.toBeVisible();
 
     // the screen exposes only a controlled input (no ?search= URL support) — type a key and submit via Enter
     const input = page.locator('input').first();
@@ -332,6 +371,8 @@ test.describe('RealUnit Compliance dashboards - Visual Regression Tests', () => 
     // results table rendered
     await expect(page.getByText('ACME Example AG')).toBeVisible();
     await expect(page.getByText('bob@example.com')).toBeVisible();
+    // active search bypasses the empty filter — the empty account (id 7104) is visible too
+    await expect(page.getByText('7104')).toBeVisible();
     await page.waitForTimeout(500);
 
     await expect(page).toHaveScreenshot('realunit-compliance-01-search.png', {

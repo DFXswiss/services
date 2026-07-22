@@ -138,6 +138,17 @@ jobs:
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
               --no-wait
 
+      - name: Install Wrangler
+        run: npm install -g wrangler@4
+
+      # Dual-deploy transition: Azure (above) stays until the DNS cutover to Pages
+      # is verified; a follow-up PR removes the Azure step afterwards.
+      - name: Deploy to Cloudflare Pages (DEV)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: wrangler pages deploy build --project-name=dfx-app-dev --branch=develop
+
       - name: Logout
         run: |
           az logout

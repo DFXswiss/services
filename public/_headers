@@ -1,0 +1,23 @@
+# Cloudflare Pages edge headers — replicate the cache/CORS semantics the previous
+# CDN served, so the Pages deployment behaves identically.
+#
+# Fingerprinted build assets (content-hashed filenames) never change -> cache hard.
+/static/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# The embeddable widget is loaded cross-origin from third-party sites -> needs CORS.
+# Versioned in the path; match the previous CDN's 1h cache.
+/widget/*
+  Cache-Control: public, max-age=3600
+  Access-Control-Allow-Origin: *
+
+# Entry points must always revalidate so a new deploy goes live immediately.
+/
+  Cache-Control: no-cache, must-revalidate
+/index.html
+  Cache-Control: no-cache, must-revalidate
+/manifest.json
+  Cache-Control: no-cache, must-revalidate
+/asset-manifest.json
+  Cache-Control: no-cache, must-revalidate
