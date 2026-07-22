@@ -7,7 +7,9 @@
   Access-Control-Allow-Origin: *
 
 # The embeddable widget is loaded cross-origin from third-party sites -> needs CORS.
+# Versioned in the path; match the previous CDN's 1h cache.
 /widget/*
+  Cache-Control: public, max-age=3600
   Access-Control-Allow-Origin: *
 
 # Entry points must always revalidate so a new deploy goes live immediately.
