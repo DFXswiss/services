@@ -57,7 +57,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   };
 
   const hasActionDeepLink = (wallet: WalletInfo): boolean => {
-    return wallet.supportedMethods?.includes(Blockchain.LIGHTNING) ?? false;
+    return (wallet.supportedMethods?.includes(Blockchain.LIGHTNING) ?? false) || wallet.name === 'RealUnit';
   };
 
   const filteredPaymentLinkWallets = useMemo(() => {
@@ -120,6 +120,11 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
         const { uri: kucoinUri } =
           (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.KUCOINPAY)) ?? {};
         return kucoinUri;
+
+      case 'RealUnit': {
+        const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
+        return `${wallet.deepLink}lightning:${lightning}`;
+      }
 
       default:
         return getDeeplinkByCategory(wallet);
