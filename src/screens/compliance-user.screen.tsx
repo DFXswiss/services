@@ -262,6 +262,7 @@ export default function ComplianceUserScreen(): JSX.Element {
               bankTxs={data.bankTxs}
               cryptoInputs={data.cryptoInputs}
               bankDatas={data.bankDatas}
+              userData={data.userData}
               userDataId={numericUserDataId}
               expandedBankTxId={expandedBankTxId}
               expandedCryptoInputId={expandedCryptoInputId}
