@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ComplianceUserData, KycFile, KycStepInfo, IpLogInfo } from 'src/hooks/compliance.hook';
+import { ComplianceUserData, IpLogInfo, KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
 import { display, formatBirthday, refName, statusBadge, todayAsString } from 'src/util/compliance-helpers';
 import { renderResultTable } from './compliance-review-panel';
 
@@ -34,7 +34,9 @@ interface IdentResult {
 }
 
 function findLatestStep(kycSteps: KycStepInfo[], stepName: string): KycStepInfo | undefined {
-  return kycSteps.filter((s) => s.name === stepName).sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
+  const steps = kycSteps.filter((s) => s.name === stepName);
+  const manualReview = steps.filter((s) => s.status === 'ManualReview');
+  return (manualReview.length ? manualReview : steps).sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
 }
 
 function parseIdentResult(step: KycStepInfo): IdentResult | undefined {

@@ -11,15 +11,18 @@ import {
   CryptoInputInfo,
   RecallInfo,
   TransactionInfo,
+  UserDataDetail,
   useCompliance,
 } from 'src/hooks/compliance.hook';
 import { boolBadge, DetailRow, statusBadge, TransactionDetailRows, formatDate } from 'src/util/compliance-helpers';
+import { PdfLang } from 'src/util/pdf/support-pdf-common';
 
 interface TransactionsTableProps {
   transactions: TransactionInfo[];
   bankTxs: BankTxInfo[];
   cryptoInputs: CryptoInputInfo[];
   bankDatas: BankDataInfo[];
+  userData: UserDataDetail;
   userDataId: number;
   expandedBankTxId?: number;
   expandedCryptoInputId?: number;
@@ -38,6 +41,7 @@ export function TransactionsTable({
   bankTxs,
   cryptoInputs,
   bankDatas,
+  userData,
   userDataId,
   expandedBankTxId,
   expandedCryptoInputId,
@@ -95,6 +99,33 @@ export function TransactionsTable({
     } finally {
       setIsPdfDownloading(false);
     }
+  }
+
+  async function handleTxPdf(tx: TransactionInfo, ramp: 'onramp' | 'offramp', lang: PdfLang): Promise<void> {
+    const bankTx = bankTxs?.find((b) => b.transactionId === tx.id);
+    const cryptoInput = cryptoInputs?.find((c) => c.transactionId === tx.id);
+    const { generateTransactionPdf } = await import('src/util/pdf/support-tx-pdf');
+    generateTransactionPdf({
+      transaction: tx,
+      bankTx,
+      cryptoInput,
+      userData,
+      ramp,
+      lang,
+    });
+  }
+
+  async function handleAccountInfoPdf(tx: TransactionInfo, lang: PdfLang): Promise<void> {
+    const bankTx = bankTxs?.find((b) => b.transactionId === tx.id);
+    const bankData = tx.bankDataId != null ? bankDatas?.find((b) => b.id === tx.bankDataId) : undefined;
+    const { generateAccountInfoPdf } = await import('src/util/pdf/support-account-pdf');
+    generateAccountInfoPdf({
+      userData,
+      transaction: tx,
+      bankTx,
+      bankData,
+      lang,
+    });
   }
 
   function handleUidClick(uid: string): void {
@@ -390,9 +421,47 @@ export function TransactionsTable({
                                   const showStop = canStop && canPerformActions;
                                   const showChargeback = canChargeback && canPerformActions;
                                   const showRecall = canRecall && canPerformActions;
-                                  if (!showStop && !showChargeback && !showRecall && !existingRecall) return null;
+                                  const ramp: 'onramp' | 'offramp' | undefined =
+                                    tx.type === 'BuyCrypto' ? 'onramp' : tx.type === 'BuyFiat' ? 'offramp' : undefined;
+                                  const showRampPdf = ramp != null;
+                                  if (
+                                    !showStop &&
+                                    !showChargeback &&
+                                    !showRecall &&
+                                    !existingRecall &&
+                                    !showRampPdf
+                                  )
+                                    return null;
                                   return (
-                                    <div className="mt-3 pt-3 border-t border-dfxGray-400/50 flex gap-2">
+                                    <div className="mt-3 pt-3 border-t border-dfxGray-400/50 flex gap-2 flex-wrap">
+                                      {showRampPdf && (
+                                        <>
+                                          <button
+                                            className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
+                                            onClick={() => handleTxPdf(tx, ramp, 'de')}
+                                          >
+                                            Transaction PDF (DE)
+                                          </button>
+                                          <button
+                                            className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
+                                            onClick={() => handleTxPdf(tx, ramp, 'en')}
+                                          >
+                                            Transaction PDF (EN)
+                                          </button>
+                                          <button
+                                            className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
+                                            onClick={() => handleAccountInfoPdf(tx, 'de')}
+                                          >
+                                            Account PDF (DE)
+                                          </button>
+                                          <button
+                                            className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
+                                            onClick={() => handleAccountInfoPdf(tx, 'en')}
+                                          >
+                                            Account PDF (EN)
+                                          </button>
+                                        </>
+                                      )}
                                       {showStop && (
                                         <button
                                           className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
