@@ -91,6 +91,8 @@ On cancel or completion, a message will be sent on the window object of the brow
 
 DFX services can be integrated as a web component. See the [code example](#web-component-example) below. The desired parameters (see [below](#query-parameters)) can be supplied as attributes.
 
+Parameter attributes are read during initialization and need to be set before the element is connected. Changing them after initialization is not supported.
+
 For web component integration, a closing callback (`on-close` attribute) should be provided. On cancel or completion, this callback is called. See [below](#close-message) for details on the message format.
 
 #### React Component
