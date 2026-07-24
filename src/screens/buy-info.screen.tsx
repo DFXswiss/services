@@ -36,12 +36,25 @@ import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 
+/** Additive request fields not yet on the installed @dfx.swiss/react BuyPaymentInfo type. */
+type BuyPaymentInfoRequest = BuyPaymentInfo & {
+  personalIbanProvider?: string;
+};
+
 export default function BuyInfoScreen(): JSX.Element {
   useAddressGuard();
 
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
-  const { assetIn, assetOut, amountIn, amountOut, externalTransactionId, availableBlockchains } = useAppParams();
+  const {
+    assetIn,
+    assetOut,
+    amountIn,
+    amountOut,
+    externalTransactionId,
+    personalIbanProvider,
+    availableBlockchains,
+  } = useAppParams();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
@@ -70,7 +83,7 @@ export default function BuyInfoScreen(): JSX.Element {
     if (!currency) setCurrency(getCurrency(currencies, assetIn));
   }, [assetIn, getCurrency, currencies]);
 
-  useEffect(() => fetchData(), [asset, currency, amountIn, amountOut]);
+  useEffect(() => fetchData(), [asset, currency, amountIn, amountOut, personalIbanProvider]);
 
   function fetchData() {
     if (!(asset && currency && (amountIn || amountOut))) {
@@ -81,7 +94,12 @@ export default function BuyInfoScreen(): JSX.Element {
 
     setErrorMessage(undefined);
 
-    const request: BuyPaymentInfo = { asset, currency, externalTransactionId };
+    const request: BuyPaymentInfoRequest = {
+      asset,
+      currency,
+      externalTransactionId,
+      ...(personalIbanProvider ? { personalIbanProvider } : {}),
+    };
     if (amountIn) {
       request.amount = +amountIn;
     } else if (amountOut) {

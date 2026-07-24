@@ -83,7 +83,12 @@ interface FormData {
   address: Address;
 }
 
-interface ValidatedData extends BuyPaymentInfo {
+/** Additive request fields not yet on the installed @dfx.swiss/react BuyPaymentInfo type. */
+type BuyPaymentInfoRequest = BuyPaymentInfo & {
+  personalIbanProvider?: string;
+};
+
+interface ValidatedData extends BuyPaymentInfoRequest {
   sideToUpdate?: Side;
 }
 
@@ -106,6 +111,7 @@ export default function BuyScreen(): JSX.Element {
     blockchain,
     paymentMethod,
     externalTransactionId,
+    personalIbanProvider,
     flags,
     setParams,
     hideTargetSelection,
@@ -317,7 +323,11 @@ export default function BuyScreen(): JSX.Element {
 
     if (!validatedData) return;
 
-    const data: BuyPaymentInfo = { ...validatedData, externalTransactionId };
+    const data: BuyPaymentInfoRequest = {
+      ...validatedData,
+      externalTransactionId,
+      ...(personalIbanProvider ? { personalIbanProvider } : {}),
+    };
 
     setIsLoading(validatedData.sideToUpdate);
     receiveFor(data)
@@ -356,7 +366,7 @@ export default function BuyScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [useDebounce(validatedData, 500)]);
+  }, [useDebounce(validatedData, 500), personalIbanProvider]);
 
   function validateBuy(buy: Buy): void {
     setCustomAmountError(undefined);

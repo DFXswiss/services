@@ -48,6 +48,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   paymentMethod: 'string',
   bankAccount: 'string',
   externalTransactionId: 'string',
+  personalIbanProvider: 'string',
   onClose: 'function',
   service: 'string',
 };

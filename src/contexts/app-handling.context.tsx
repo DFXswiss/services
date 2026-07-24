@@ -57,6 +57,7 @@ const urlParamsToRemove = [
   'payment-method',
   'bank-account',
   'external-transaction-id',
+  'personal-iban',
   'trezor-connect-src',
 ];
 
@@ -107,6 +108,8 @@ export interface AppParams {
   paymentMethod?: string;
   bankAccount?: string;
   externalTransactionId?: string;
+  /** Explicit personal IBAN provider selector (URL: personal-iban). Forwarded as-is to the API. */
+  personalIbanProvider?: string;
 }
 
 export enum CloseType {
@@ -352,6 +355,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           paymentMethod: getParameter(query, 'payment-method'),
           bankAccount: getParameter(query, 'bank-account'),
           externalTransactionId: getParameter(query, 'external-transaction-id'),
+          personalIbanProvider: getParameter(query, 'personal-iban'),
         };
   }
 
