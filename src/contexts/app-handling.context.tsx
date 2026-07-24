@@ -108,7 +108,7 @@ export interface AppParams {
   paymentMethod?: string;
   bankAccount?: string;
   externalTransactionId?: string;
-  /** Explicit personal IBAN provider selector (URL: personal-iban). Forwarded as-is to the API. */
+  /** Explicit personal IBAN provider selector mapped from the lowercase public URL value. */
   personalIbanProvider?: string;
 }
 
@@ -355,7 +355,10 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           paymentMethod: getParameter(query, 'payment-method'),
           bankAccount: getParameter(query, 'bank-account'),
           externalTransactionId: getParameter(query, 'external-transaction-id'),
-          personalIbanProvider: getParameter(query, 'personal-iban'),
+          personalIbanProvider:
+            getParameter(query, 'personal-iban')?.toLowerCase() === 'frick'
+              ? 'Frick'
+              : getParameter(query, 'personal-iban'),
         };
   }
 
