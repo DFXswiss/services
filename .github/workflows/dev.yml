@@ -52,6 +52,12 @@ jobs:
           REACT_APP_BUILD_ID: ${{ github.run_number }}-${{ github.run_id }}
         run: npm run build:dev
 
+      - name: Build and stage DFX App 2.0
+        run: |
+          npm run app2:dev
+          mkdir -p ./build/app2
+          cp -R ./app2-dist/. ./build/app2/
+
       - name: Build widget
         run: |
           npm run widget:dev
@@ -126,6 +132,25 @@ jobs:
               --pattern "widget/*" \
               --content-cache-control "public, max-age=3600" \
               --overwrite
+
+            # Upload the isolated React App 2.0 artifact staged from app2-dist
+            az storage blob upload-batch \
+              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+              -d '$web' \
+              -s ./build \
+              --pattern "app2/*" \
+              --content-cache-control "public, max-age=3600" \
+              --overwrite
+            # entry HTML must always revalidate so redeploys are never served stale
+            if [ -f "./build/app2/index.html" ]; then
+              az storage blob upload \
+                --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+                -c '$web' \
+                -f "./build/app2/index.html" \
+                -n "app2/index.html" \
+                --content-cache-control "no-cache, must-revalidate" \
+                --overwrite
+            fi
 
       - name: Purge CDN endpoint (DEV)
         uses: azure/CLI@v2
