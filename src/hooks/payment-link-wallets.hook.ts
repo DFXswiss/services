@@ -46,7 +46,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const getDeeplinkByCategory = async (wallet: WalletInfo) => {
     if (!paymentIdentifier) return undefined;
 
-    if (wallet.supportedMethods?.includes(Blockchain.LIGHTNING)) {
+    if (wallet.hasActionDeepLink) {
       const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
       const suffix = 'lightning:';
       const prefix = wallet.deepLink && wallet.deepLink !== suffix ? wallet.deepLink : '';
@@ -57,7 +57,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   };
 
   const hasActionDeepLink = (wallet: WalletInfo): boolean => {
-    return (wallet.supportedMethods?.includes(Blockchain.LIGHTNING) ?? false) || wallet.name === 'RealUnit';
+    return (wallet.supportedMethods?.includes(Blockchain.LIGHTNING) ?? false) || wallet.hasActionDeepLink === true;
   };
 
   const filteredPaymentLinkWallets = useMemo(() => {
@@ -120,11 +120,6 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
         const { uri: kucoinUri } =
           (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.KUCOINPAY)) ?? {};
         return kucoinUri;
-
-      case 'RealUnit': {
-        const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
-        return `${wallet.deepLink}lightning:${lightning}`;
-      }
 
       default:
         return getDeeplinkByCategory(wallet);

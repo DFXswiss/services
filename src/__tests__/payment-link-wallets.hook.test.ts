@@ -28,8 +28,19 @@ const realUnitWallet = {
   name: 'RealUnit',
   iconUrl: 'https://example.com/realunit.png',
   deepLink: 'realunit-wallet:',
+  hasActionDeepLink: true,
   supportedMethods: ['Ethereum'],
   supportedAssets: [{ name: 'ZCHF', uniqueName: 'Ethereum:ZCHF' }],
+  active: true,
+  recommended: false,
+} as WalletInfo;
+
+const cakeWallet = {
+  id: 42,
+  name: 'Cake Wallet',
+  iconUrl: 'https://example.com/cake.png',
+  deepLink: 'cakewallet:',
+  supportedMethods: ['Bitcoin'],
   active: true,
   recommended: false,
 } as WalletInfo;
@@ -68,5 +79,25 @@ describe('usePaymentLinkWallets', () => {
 
     const deeplink = await result.current.getDeeplinkByWalletId(99);
     expect(deeplink).toBe(`realunit-wallet:lightning:${LNURL}`);
+  });
+
+  it('does not expose hasActionDeepLink for non-Lightning wallets without the backend flag', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [cakeWallet],
+    }) as unknown as typeof fetch;
+
+    const { result } = renderHook(() => usePaymentLinkWallets());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    const wallet = result.current.otherWallets.find((w) => w.id === 42);
+    expect(wallet).toBeDefined();
+    expect(wallet?.hasActionDeepLink).toBe(false);
+
+    const deeplink = await result.current.getDeeplinkByWalletId(42);
+    expect(deeplink).toBe('cakewallet:');
   });
 });
