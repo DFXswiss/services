@@ -1,4 +1,11 @@
 type AttributeChangedCallback = (name: string, oldValue: string | null, newValue: string | null) => void;
+const R2WC_RENDER = Symbol.for('r2wc.render');
+const R2WC_PROPS = Symbol.for('r2wc.props');
+
+type R2wcElement = HTMLElement & {
+  [R2WC_PROPS]?: Record<string, string | undefined>;
+  [R2WC_RENDER]?: () => void;
+};
 
 /**
  * Bridges a string attribute without dropping an explicit empty value.
@@ -19,7 +26,10 @@ export function preserveStringAttribute(
   return class extends BaseElement {
     attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
       if (name === attributeName) {
-        (this as unknown as Record<string, string | undefined>)[propertyName] = newValue ?? undefined;
+        const element = this as R2wcElement;
+        const props = element[R2WC_PROPS];
+        if (props) props[propertyName] = newValue ?? undefined;
+        element[R2WC_RENDER]?.();
         return;
       }
 
