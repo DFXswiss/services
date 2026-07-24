@@ -155,7 +155,7 @@ DFX services supports the following parameters. Note that for the React componen
   - Input asset: (`asset-in`): the asset to sell or swap (crypto asset or currency)
   - Output asset (`asset-out`): the asset to receive (crypto asset or currency)
   - External transaction ID (`external-transaction-id`): a custom ID to track the transaction
-  - Personal IBAN provider (`personal-iban`, React/Web Component: `personalIban`): explicit personal IBAN bank selection for buy (e.g. `frick` for Bank Frick). Example: `/buy?asset-in=EUR&personal-iban=frick`. Requires EUR, bank payment, and KYC50. Selection is fail-closed: empty or unknown values are rejected by the API and do not fall back to the default bank.
+  - Personal IBAN provider (`personal-iban`; React prop: `personalIban`): explicit personal IBAN bank selection for buy (e.g. `frick` for Bank Frick). Example: `/buy?asset-in=EUR&personal-iban=frick`. Requires EUR, bank payment, and KYC50. Selection is fail-closed: empty or unknown values are rejected by the API and do not fall back to the default bank.
 
 _Hint: Asset selection parameters may be overwritten when using [wallet login](#wallet-login)_
 
