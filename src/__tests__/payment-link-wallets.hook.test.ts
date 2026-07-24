@@ -45,6 +45,17 @@ const cakeWallet = {
   recommended: false,
 } as WalletInfo;
 
+const phoenixWallet = {
+  id: 7,
+  name: 'Phoenix',
+  iconUrl: 'https://example.com/phoenix.png',
+  deepLink: 'phoenix:',
+  supportedMethods: ['Lightning'],
+  supportedAssets: [],
+  active: true,
+  recommended: false,
+} as WalletInfo;
+
 describe('usePaymentLinkWallets', () => {
   const originalFetch = global.fetch;
 
@@ -99,5 +110,25 @@ describe('usePaymentLinkWallets', () => {
 
     const deeplink = await result.current.getDeeplinkByWalletId(42);
     expect(deeplink).toBe('cakewallet:');
+  });
+
+  it('exposes hasActionDeepLink for Lightning wallets via supportedMethods alone, without the backend flag', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [phoenixWallet],
+    }) as unknown as typeof fetch;
+
+    const { result } = renderHook(() => usePaymentLinkWallets());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    const wallet = result.current.otherWallets.find((w) => w.id === 7);
+    expect(wallet).toBeDefined();
+    expect(wallet?.hasActionDeepLink).toBe(true);
+
+    const deeplink = await result.current.getDeeplinkByWalletId(7);
+    expect(deeplink).toBe(`phoenix:lightning:${LNURL}`);
   });
 });
