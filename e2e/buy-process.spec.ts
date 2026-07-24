@@ -99,6 +99,43 @@ test.describe('Buy Process - UI Flow', () => {
       maxDiffPixels: 10000,
     });
   });
+
+  test('should forward the personal IBAN selector and display Bank Frick details', async ({ page, request }) => {
+    const token = await getToken(request);
+    let receivedProvider: unknown;
+
+    await page.route('**/v1/buy/paymentInfos', async (route) => {
+      const requestData = route.request().postDataJSON() as Record<string, unknown>;
+      receivedProvider = requestData.personalIbanProvider;
+
+      // Keep this visual test independent of Bank Frick and avoid allocating a real vIBAN.
+      const upstreamData = { ...requestData };
+      delete upstreamData.personalIbanProvider;
+      const response = await route.fetch({ postData: JSON.stringify(upstreamData) });
+      const paymentInfo = (await response.json()) as Record<string, unknown>;
+
+      await route.fulfill({
+        response,
+        json: {
+          ...paymentInfo,
+          bank: 'Bank Frick',
+          bic: 'BFRILI22XXX',
+          iban: 'LI21088100002324013AA',
+          remittanceInfo: undefined,
+          sepaInstant: false,
+        },
+      });
+    });
+
+    await page.goto(
+      `/buy?session=${token}&blockchain=Ethereum&asset-in=EUR&amount-in=100&personal-iban=frick`,
+    );
+
+    const bankLabel = page.getByText('Bank', { exact: true });
+    await expect(bankLabel).toBeVisible({ timeout: 15000 });
+    await expect.poll(() => receivedProvider).toBe('Frick');
+    await expect(bankLabel.locator('../../../..')).toHaveScreenshot('buy-bank-frick-payment-details.png');
+  });
 });
 
 test.describe('Buy Process - Wallet 2 (BIP-44 derived)', () => {

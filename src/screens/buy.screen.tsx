@@ -62,6 +62,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import { toPersonalIbanProviderRequest } from '../util/personal-iban';
 
 enum Side {
   SPEND = 'SPEND',
@@ -111,7 +112,7 @@ export default function BuyScreen(): JSX.Element {
     blockchain,
     paymentMethod,
     externalTransactionId,
-    personalIbanProvider,
+    personalIban,
     flags,
     setParams,
     hideTargetSelection,
@@ -326,7 +327,7 @@ export default function BuyScreen(): JSX.Element {
     const data: BuyPaymentInfoRequest = {
       ...validatedData,
       externalTransactionId,
-      ...(personalIbanProvider ? { personalIbanProvider } : {}),
+      ...toPersonalIbanProviderRequest(personalIban),
     };
 
     setIsLoading(validatedData.sideToUpdate);
@@ -366,7 +367,7 @@ export default function BuyScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [useDebounce(validatedData, 500), personalIbanProvider]);
+  }, [useDebounce(validatedData, 500), personalIban]);
 
   function validateBuy(buy: Buy): void {
     setCustomAmountError(undefined);

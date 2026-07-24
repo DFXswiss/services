@@ -5,6 +5,7 @@ import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
+import { normalizePersonalIban } from '../util/personal-iban';
 import { isSafeRedirectUri, relativeUrl, url } from '../util/utils';
 import { useBalanceContext } from './balance.context';
 
@@ -108,8 +109,8 @@ export interface AppParams {
   paymentMethod?: string;
   bankAccount?: string;
   externalTransactionId?: string;
-  /** Explicit personal IBAN provider selector mapped from the lowercase public URL value. */
-  personalIbanProvider?: string;
+  /** Explicit personal IBAN selector. Public URL name: `personal-iban`. */
+  personalIban?: string;
 }
 
 export enum CloseType {
@@ -305,6 +306,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
               },
               {} as { [key: string]: string },
             ),
+          personalIban: normalizePersonalIban(params.personalIban),
         }
       : {
           headless: getParameter(query, 'headless'),
@@ -355,10 +357,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           paymentMethod: getParameter(query, 'payment-method'),
           bankAccount: getParameter(query, 'bank-account'),
           externalTransactionId: getParameter(query, 'external-transaction-id'),
-          personalIbanProvider:
-            getParameter(query, 'personal-iban')?.toLowerCase() === 'frick'
-              ? 'Frick'
-              : getParameter(query, 'personal-iban'),
+          personalIban: normalizePersonalIban(getParameter(query, 'personal-iban')),
         };
   }
 

@@ -35,6 +35,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
+import { toPersonalIbanProviderRequest } from '../util/personal-iban';
 
 /** Additive request fields not yet on the installed @dfx.swiss/react BuyPaymentInfo type. */
 type BuyPaymentInfoRequest = BuyPaymentInfo & {
@@ -52,7 +53,7 @@ export default function BuyInfoScreen(): JSX.Element {
     amountIn,
     amountOut,
     externalTransactionId,
-    personalIbanProvider,
+    personalIban,
     availableBlockchains,
   } = useAppParams();
   const { getAssets } = useAssetContext();
@@ -83,7 +84,7 @@ export default function BuyInfoScreen(): JSX.Element {
     if (!currency) setCurrency(getCurrency(currencies, assetIn));
   }, [assetIn, getCurrency, currencies]);
 
-  useEffect(() => fetchData(), [asset, currency, amountIn, amountOut, personalIbanProvider]);
+  useEffect(() => fetchData(), [asset, currency, amountIn, amountOut, personalIban]);
 
   function fetchData() {
     if (!(asset && currency && (amountIn || amountOut))) {
@@ -98,7 +99,7 @@ export default function BuyInfoScreen(): JSX.Element {
       asset,
       currency,
       externalTransactionId,
-      ...(personalIbanProvider ? { personalIbanProvider } : {}),
+      ...toPersonalIbanProviderRequest(personalIban),
     };
     if (amountIn) {
       request.amount = +amountIn;
