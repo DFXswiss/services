@@ -141,6 +141,31 @@ jobs:
               --pattern "app2/*" \
               --content-cache-control "public, max-age=3600" \
               --overwrite
+
+            # app2/static/* (CRA's own content-hashed bundle output — js/css/media, same
+            # convention as the top-level static/* immutable rule above) and app2/*.wasm (the
+            # content-hashed WebAssembly module CRA emits at the artifact root, not under
+            # static/) both get swept into the app2/* pass just above by az's fnmatch "*", which
+            # also crosses "/" — leaving them on the short-lived 3600 tier. Setting them immutable
+            # last (after app2/*, and after the *.wasm/*.png passes further up, which the same
+            # cross-"/" matching also pulls app2's nested/root files into) is what makes the final
+            # cache-control the immutable one, regardless of which earlier pattern also touched
+            # these files.
+            az storage blob upload-batch \
+              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+              -d '$web' \
+              -s ./build \
+              --pattern "app2/static/*" \
+              --content-cache-control "public, max-age=31536000, immutable" \
+              --overwrite
+            az storage blob upload-batch \
+              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+              -d '$web' \
+              -s ./build \
+              --pattern "app2/*.wasm" \
+              --content-cache-control "public, max-age=31536000, immutable" \
+              --overwrite
+
             if [ -f "./build/app2/index.html" ]; then
               az storage blob upload \
                 --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
