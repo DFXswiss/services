@@ -62,7 +62,12 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { toPersonalIbanProviderRequest } from '../util/personal-iban';
+import { usePersonalIban } from '../hooks/personal-iban.hook';
+import {
+  getPersonalIbanErrorMessage,
+  isPersonalIbanApplicable,
+  toPersonalIbanProviderRequest,
+} from '../util/personal-iban';
 
 enum Side {
   SPEND = 'SPEND',
@@ -112,12 +117,12 @@ export default function BuyScreen(): JSX.Element {
     blockchain,
     paymentMethod,
     externalTransactionId,
-    personalIban,
     flags,
     setParams,
     hideTargetSelection,
     availableBlockchains,
   } = useAppParams();
+  const personalIban = usePersonalIban();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
@@ -130,6 +135,9 @@ export default function BuyScreen(): JSX.Element {
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
+  // Payment method of the currently displayed offer (Buy has no paymentMethod field).
+  // Kept in lockstep with paymentInfo so the mismatch hint never reads live form state.
+  const [paymentInfoPaymentMethod, setPaymentInfoPaymentMethod] = useState<FiatPaymentMethod>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
@@ -320,14 +328,23 @@ export default function BuyScreen(): JSX.Element {
 
     setErrorMessage(undefined);
     setPaymentInfo(undefined);
+    setPaymentInfoPaymentMethod(undefined);
     setIsLoading(undefined);
 
     if (!validatedData) return;
 
+    // Currency/method eligibility only — independent of whether the customer set a selector.
+    // Request building stays on eligibility alone (toPersonalIbanProviderRequest(undefined) is {}).
+    const isPersonalIbanEligible = isPersonalIbanApplicable(
+      validatedData.currency.name,
+      validatedData.paymentMethod,
+    );
+    // Personal-IBAN error copy only when the customer actually requested a personal IBAN.
+    const personalIbanErrorApplies = isPersonalIbanEligible && personalIban !== undefined;
     const data: BuyPaymentInfoRequest = {
       ...validatedData,
       externalTransactionId,
-      ...toPersonalIbanProviderRequest(personalIban),
+      ...(isPersonalIbanEligible ? toPersonalIbanProviderRequest(personalIban) : {}),
     };
 
     setIsLoading(validatedData.sideToUpdate);
@@ -336,6 +353,7 @@ export default function BuyScreen(): JSX.Element {
         if (isRunning) {
           validateBuy(buy);
           setPaymentInfo(buy);
+          setPaymentInfoPaymentMethod(data.paymentMethod);
 
           // load exact price
           if (buy) {
@@ -349,16 +367,25 @@ export default function BuyScreen(): JSX.Element {
             ? setVal('amount', info.amount.toString())
             : setVal('targetAmount', info.estimatedAmount.toString());
           setPaymentInfo(info);
+          setPaymentInfoPaymentMethod(data.paymentMethod);
         }
       })
       .catch((error: ApiError) => {
         if (isRunning) {
           setPaymentInfo(undefined);
-          const kycErrorFromMessage = getKycErrorFromMessage(error.message);
-          if (kycErrorFromMessage) {
-            setKycError(kycErrorFromMessage);
+          setPaymentInfoPaymentMethod(undefined);
+          const personalIbanErrorText = personalIbanErrorApplies
+            ? getPersonalIbanErrorMessage(error.message)
+            : undefined;
+          if (personalIbanErrorText) {
+            setErrorMessage(translate('screens/payment', personalIbanErrorText));
           } else {
-            setErrorMessage(error.message ?? 'Unknown error');
+            const kycErrorFromMessage = getKycErrorFromMessage(error.message);
+            if (kycErrorFromMessage) {
+              setKycError(kycErrorFromMessage);
+            } else {
+              setErrorMessage(error.message ?? 'Unknown error');
+            }
           }
         }
       })
@@ -636,6 +663,19 @@ export default function BuyScreen(): JSX.Element {
                                 <PaymentInformationContent info={paymentInfo} />
                               </div>
                               <SanctionHint />
+                              {personalIban !== undefined &&
+                                paymentInfoPaymentMethod !== undefined &&
+                                !isPersonalIbanApplicable(
+                                  paymentInfo.currency.name,
+                                  paymentInfoPaymentMethod,
+                                ) && (
+                                  <StyledInfoText iconColor={IconColor.BLUE}>
+                                    {translate(
+                                      'screens/payment',
+                                      'Your requested personal IBAN is only available for EUR bank transfers, so it was not used for this offer.',
+                                    )}
+                                  </StyledInfoText>
+                                )}
                               {!paymentInfo.isPersonalIban && selectedCurrency?.name !== 'EUR' && (
                                   <StyledVerticalStack gap={4}>
                                     <h2 className="text-dfxBlue-800 text-center">

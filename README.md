@@ -91,8 +91,6 @@ On cancel or completion, a message will be sent on the window object of the brow
 
 DFX services can be integrated as a web component. See the [code example](#web-component-example) below. The desired parameters (see [below](#query-parameters)) can be supplied as attributes.
 
-Parameter attributes are read during initialization and need to be set before the element is connected. Changing them after initialization is not supported.
-
 For web component integration, a closing callback (`on-close` attribute) should be provided. On cancel or completion, this callback is called. See [below](#close-message) for details on the message format.
 
 #### React Component
@@ -157,7 +155,7 @@ DFX services supports the following parameters. Note that for the React componen
   - Input asset: (`asset-in`): the asset to sell or swap (crypto asset or currency)
   - Output asset (`asset-out`): the asset to receive (crypto asset or currency)
   - External transaction ID (`external-transaction-id`): a custom ID to track the transaction
-  - Personal IBAN provider (`personal-iban`; React prop: `personalIban`): explicit personal IBAN bank selection for buy (e.g. `frick` for Bank Frick). Example: `/buy?asset-in=EUR&personal-iban=frick`. Requires EUR, bank payment, and KYC50. Selection is fail-closed: empty or unknown values are rejected by the API and do not fall back to the default bank.
+  - Personal IBAN provider (`personal-iban`; React prop: `personalIban`): explicit personal IBAN bank selection for buy (e.g. `frick` for Bank Frick). Example: `/buy?asset-in=EUR&personal-iban=frick`. Requires EUR, bank payment, and KYC50. Selection is fail-closed for invalid or unknown provider values: the API rejects them and there is no fallback to the default bank. Known QuoteError tokens for this path (payment method, KYC level 50, issuance failure, unsupported provider, currency mismatch) have translated customer messages; other raw API error texts are shown as returned. On the web component, later attribute **and** property changes on an already-connected element (set, empty string, or remove) update the active purchase without a full re-init. Other widget parameters remain init-time only. In the standalone/browser integration, `personal-iban` is kept in the address bar after init (unlike most other query parameters, which are removed once read) — it is the durable, re-derived selector for the whole session, so it survives a reload or browser back/forward. Reopening a past transaction's invoice or receipt (transaction list) can separately fail to reconstruct a stored personal IBAN / bank selection (e.g. bank no longer available or no longer active); those failures show their own translated, row-scoped error message (a different mapping from the buy-flow tokens above), with the raw API text as fallback for unrecognized errors.
 
 _Hint: Asset selection parameters may be overwritten when using [wallet login](#wallet-login)_
 

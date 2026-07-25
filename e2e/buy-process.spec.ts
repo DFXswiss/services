@@ -123,6 +123,7 @@ test.describe('Buy Process - UI Flow', () => {
           iban: 'LI21088100002324013AA',
           remittanceInfo: undefined,
           sepaInstant: false,
+          isPersonalIban: true,
         },
       });
     });

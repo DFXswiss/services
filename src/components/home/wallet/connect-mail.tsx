@@ -14,6 +14,7 @@ import { useAppParams } from 'src/hooks/app-params.hook';
 import { useAppHandlingContext } from '../../../contexts/app-handling.context';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { useNavigation } from '../../../hooks/navigation.hook';
+import { relativeUrl } from '../../../util/utils';
 import { ConnectError, ConnectProps } from '../connect-shared';
 
 interface FormData {
@@ -35,7 +36,15 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   const mail = new URLSearchParams(search).get('user') || undefined;
 
   const win: Window = window;
-  const redirectUri = redirectPath && `${win.location.origin}${redirectPath}`;
+  // Merge redirectPath with the current search via relativeUrl (double-`?`-safe) so external
+  // magic-link return keeps personal-iban and other live query params, even when redirectPath
+  // itself already carries a query (e.g. /support/issue?issue-type=TransactionIssue).
+  const redirectUri =
+    redirectPath &&
+    `${win.location.origin}${relativeUrl({
+      path: redirectPath,
+      params: new URLSearchParams(win.location.search),
+    })}`;
 
   const {
     control,

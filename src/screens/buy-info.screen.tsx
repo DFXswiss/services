@@ -4,6 +4,7 @@ import {
   Buy,
   BuyPaymentInfo,
   Fiat,
+  FiatPaymentMethod,
   TransactionError,
   TransactionType,
   Utils,
@@ -35,7 +36,13 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
-import { toPersonalIbanProviderRequest } from '../util/personal-iban';
+import { usePersonalIban } from '../hooks/personal-iban.hook';
+import { getKycErrorFromMessage } from '../util/api-error';
+import {
+  getPersonalIbanErrorMessage,
+  isPersonalIbanApplicable,
+  toPersonalIbanProviderRequest,
+} from '../util/personal-iban';
 
 /** Additive request fields not yet on the installed @dfx.swiss/react BuyPaymentInfo type. */
 type BuyPaymentInfoRequest = BuyPaymentInfo & {
@@ -53,9 +60,9 @@ export default function BuyInfoScreen(): JSX.Element {
     amountIn,
     amountOut,
     externalTransactionId,
-    personalIban,
     availableBlockchains,
   } = useAppParams();
+  const personalIban = usePersonalIban();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
@@ -71,6 +78,8 @@ export default function BuyInfoScreen(): JSX.Element {
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
+  // Bumps to re-run the guarded fetch from the Retry button without a second unguarded code path.
+  const [retryToken, setRetryToken] = useState(0);
 
   // default params
   useEffect(() => {
@@ -84,22 +93,31 @@ export default function BuyInfoScreen(): JSX.Element {
     if (!currency) setCurrency(getCurrency(currencies, assetIn));
   }, [assetIn, getCurrency, currencies]);
 
-  useEffect(() => fetchData(), [asset, currency, amountIn, amountOut, personalIban]);
+  // Race-protected quote fetch: a stale response must never overwrite a newer one after
+  // personalIban / inputs change at runtime (widget attribute, browser back/forward).
+  useEffect(() => {
+    let isRunning = true;
 
-  function fetchData() {
     if (!(asset && currency && (amountIn || amountOut))) {
       const inputIsComplete = (amountIn || amountOut) && assetIn && assetOut;
-      !inputIsComplete && setErrorMessage('Missing required information');
-      return;
+      if (!inputIsComplete && isRunning) setErrorMessage('Missing required information');
+      return () => {
+        isRunning = false;
+      };
     }
 
-    setErrorMessage(undefined);
+    if (isRunning) setErrorMessage(undefined);
 
+    // Currency/method eligibility only — independent of whether the customer set a selector.
+    // Request building stays on eligibility alone (toPersonalIbanProviderRequest(undefined) is {}).
+    const isPersonalIbanEligible = isPersonalIbanApplicable(currency?.name, FiatPaymentMethod.BANK);
+    // Personal-IBAN error copy only when the customer actually requested a personal IBAN.
+    const personalIbanErrorApplies = isPersonalIbanEligible && personalIban !== undefined;
     const request: BuyPaymentInfoRequest = {
       asset,
       currency,
       externalTransactionId,
-      ...toPersonalIbanProviderRequest(personalIban),
+      ...(isPersonalIbanEligible ? toPersonalIbanProviderRequest(personalIban) : {}),
     };
     if (amountIn) {
       request.amount = +amountIn;
@@ -107,16 +125,37 @@ export default function BuyInfoScreen(): JSX.Element {
       request.targetAmount = +amountOut;
     }
 
-    setIsLoading(true);
+    if (isRunning) setIsLoading(true);
     receiveFor(request)
-      .then(validateBuy)
-      .then(setPaymentInfo)
-      .catch((error: ApiError) => {
-        setPaymentInfo(undefined);
-        setErrorMessage(error.message ?? 'Unknown error');
+      .then((buy) => {
+        if (!isRunning) return;
+        setPaymentInfo(validateBuy(buy));
       })
-      .finally(() => setIsLoading(false));
-  }
+      .catch((error: ApiError) => {
+        if (!isRunning) return;
+        setPaymentInfo(undefined);
+        const personalIbanErrorText = personalIbanErrorApplies
+          ? getPersonalIbanErrorMessage(error.message)
+          : undefined;
+        if (personalIbanErrorText) {
+          setErrorMessage(translate('screens/payment', personalIbanErrorText));
+        } else {
+          const kycErrorFromMessage = getKycErrorFromMessage(error.message);
+          if (kycErrorFromMessage) {
+            setKycError(kycErrorFromMessage);
+          } else {
+            setErrorMessage(error.message ?? 'Unknown error');
+          }
+        }
+      })
+      .finally(() => {
+        if (isRunning) setIsLoading(false);
+      });
+
+    return () => {
+      isRunning = false;
+    };
+  }, [asset, currency, amountIn, amountOut, personalIban, retryToken]);
 
   function validateBuy(buy: Buy): Buy | undefined {
     setCustomAmountError(undefined);
@@ -174,7 +213,7 @@ export default function BuyInfoScreen(): JSX.Element {
           <StyledButton
             width={StyledButtonWidth.MIN}
             label={translate('general/actions', 'Retry')}
-            onClick={fetchData}
+            onClick={() => setRetryToken((t) => t + 1)}
             className="mt-4"
             color={StyledButtonColor.STURDY_WHITE}
           />
@@ -198,6 +237,16 @@ export default function BuyInfoScreen(): JSX.Element {
         paymentInfo && (
           <>
             <PaymentInformationContent info={paymentInfo} />
+
+            {personalIban !== undefined &&
+              !isPersonalIbanApplicable(paymentInfo.currency.name, FiatPaymentMethod.BANK) && (
+                <StyledInfoText invertedIcon>
+                  {translate(
+                    'screens/payment',
+                    'Your requested personal IBAN is only available for EUR bank transfers, so it was not used for this offer.',
+                  )}
+                </StyledInfoText>
+              )}
 
             <div className="pt-4 leading-none">
               <StyledLink

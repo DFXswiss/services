@@ -2,7 +2,7 @@ import createWebComponent from '@r2wc/react-to-web-component';
 import { WidgetParams } from './App';
 import MainWidget from './Main.widget';
 import './index.css';
-import { preserveEmptyStringAttribute } from './util/web-component';
+import { preserveStringAttribute } from './util/web-component';
 
 const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'function' | 'json' } = {
   headless: 'string',
@@ -55,6 +55,6 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
 };
 
 const BaseDfxServices = createWebComponent(MainWidget, { shadow: 'closed', props });
-const DfxServices = preserveEmptyStringAttribute(BaseDfxServices, 'personal-iban', 'personalIban');
+const DfxServices = preserveStringAttribute(BaseDfxServices, 'personal-iban', 'personalIban');
 
 customElements.define('dfx-services', DfxServices);

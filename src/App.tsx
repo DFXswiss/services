@@ -1,7 +1,7 @@
 import { DfxContextProvider, PaymentRoutesContextProvider, SupportChatContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useRef } from 'react';
 import { LoaderFunctionArgs, Outlet, RouteObject, RouterProvider, redirect } from 'react-router-dom';
 import { LayoutWrapper } from './components/layout-wrapper';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
@@ -602,10 +602,18 @@ interface AppProps {
 }
 
 function App({ routerFactory, params }: AppProps) {
-  const router = routerFactory(Routes);
+  const routerRef = useRef<Router>();
+  if (!routerRef.current) {
+    routerRef.current = routerFactory(Routes);
+  }
+  const router = routerRef.current;
 
-  const home = params?.service && `/${params.service}`;
-  if (home) router.navigate(home);
+  const hasNavigatedHomeRef = useRef(false);
+  if (!hasNavigatedHomeRef.current) {
+    hasNavigatedHomeRef.current = true;
+    const home = params?.service && `/${params.service}`;
+    if (home) router.navigate(home);
+  }
 
   return (
     <WindowContextProvider>

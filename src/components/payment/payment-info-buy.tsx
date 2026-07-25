@@ -91,7 +91,7 @@ function PaymentInformationText({ info }: PaymentInformationContentProps): JSX.E
           {info.bic}
           <CopyButton onCopy={() => copy(info.bic)} />
         </StyledDataTableRow>
-        {info.bank && (
+        {info.isPersonalIban && info.bank && (
           <StyledDataTableRow label={translate('screens/payment', 'Bank')}>
             {info.bank}
             <CopyButton onCopy={() => copy(info.bank)} />

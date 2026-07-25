@@ -5,12 +5,15 @@ import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
-import { normalizePersonalIban } from '../util/personal-iban';
 import { isSafeRedirectUri, relativeUrl, url } from '../util/utils';
 import { useBalanceContext } from './balance.context';
 
 // --- INTERFACES --- //
 // CAUTION: params need to be added to index-widget.tsx
+// Session-hygiene list: strip one-shot auth/session/PII/config values from the address bar after
+// init so they do not linger. `personal-iban` is intentionally NOT listed — it is a public,
+// non-secret customer intent selector and the durable source of truth for the current purchase
+// (visible in the address bar for the whole lifetime of the selection).
 const urlParamsToRemove = [
   'headless',
   'borderless',
@@ -58,7 +61,6 @@ const urlParamsToRemove = [
   'payment-method',
   'bank-account',
   'external-transaction-id',
-  'personal-iban',
   'trezor-connect-src',
 ];
 
@@ -168,6 +170,13 @@ interface AppHandlingContextInterface {
   hasSession: boolean;
   isEmbedded: boolean;
   isDfxHosted: boolean;
+  /** True when running as the embedded web component (not standalone browser). */
+  isWidget: boolean;
+  /**
+   * Live widget `personal-iban` / `personalIban` attribute/property value (widget only).
+   * Derived by consumers via usePersonalIban(); not part of params state.
+   */
+  widgetPersonalIban?: string;
   availableBlockchains?: Blockchain[];
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
@@ -190,6 +199,21 @@ const AppHandlingContext = createContext<AppHandlingContextInterface>(undefined 
 
 export function useAppHandlingContext(): AppHandlingContextInterface {
   return useContext(AppHandlingContext);
+}
+
+// personalIban has no state or lifecycle: it is derived fresh from its source on every read — the
+// `personal-iban` URL param (standalone) or the live widget attribute/property (embedded). See
+// src/hooks/personal-iban.hook.ts.
+export function removeNonStorageParams(params: AppParams): AppParams {
+  const copy = { ...params };
+
+  delete copy.address;
+  delete copy.signature;
+  delete copy.pubkey;
+  delete copy.session;
+  delete copy.autoStart;
+
+  return copy;
 }
 
 export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.Element {
@@ -245,18 +269,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     return Boolean(params?.session || (params?.address && params.signature));
   }
 
-  function removeNonStorageParams(params: AppParams): AppParams {
-    const copy = { ...params };
-
-    delete copy.address;
-    delete copy.signature;
-    delete copy.pubkey;
-    delete copy.session;
-    delete copy.autoStart;
-
-    return copy;
-  }
-
   function loadQueryParams(): AppParams {
     const queryParams = extractUrlParams(props.params);
     const storeParams = removeNonStorageParams(queryParams);
@@ -298,7 +310,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
           ...Object.entries(params)
-            .filter(([_, val]) => typeof val === 'string')
+            // personalIban is never copied into params state — consumers use usePersonalIban().
+            .filter(([key, val]) => typeof val === 'string' && key !== 'personalIban')
             .reduce(
               (prev, [key, val]) => {
                 prev[key] = val;
@@ -306,7 +319,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
               },
               {} as { [key: string]: string },
             ),
-          personalIban: normalizePersonalIban(params.personalIban),
         }
       : {
           headless: getParameter(query, 'headless'),
@@ -357,7 +369,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           paymentMethod: getParameter(query, 'payment-method'),
           bankAccount: getParameter(query, 'bank-account'),
           externalTransactionId: getParameter(query, 'external-transaction-id'),
-          personalIban: normalizePersonalIban(getParameter(query, 'personal-iban')),
         };
   }
 
@@ -466,6 +477,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const context = useMemo(
     () => ({
       isEmbedded: props.isWidget || isUsedByIframe,
+      isWidget: props.isWidget,
+      widgetPersonalIban: props.isWidget ? props.params?.personalIban : undefined,
       hasSession,
       isDfxHosted: window.location.hostname?.split('.').slice(-2).join('.') === 'dfx.swiss',
       closeServices,
@@ -487,6 +500,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     }),
     [
       props.isWidget,
+      props.params?.personalIban,
       props.service,
       isUsedByIframe,
       redirectUri,
