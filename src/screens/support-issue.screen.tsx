@@ -91,10 +91,13 @@ const AddAccount = 'Add bank account';
 const selectTxButtonLabel = 'Select transaction';
 
 const ReceiverIbanCheckDelay = 500;
+// Shortest IBAN in use is 15 characters. Below that the input is still incomplete and must not be judged.
+const ReceiverIbanCheckMinLength = 15;
 
 const ReceiverIbanHints: { [s in ReceiveIbanStatus]: string } = {
   [ReceiveIbanStatus.DFX_IBAN]: 'We have recognized this IBAN.',
-  [ReceiveIbanStatus.NOT_MATCHED]: 'We could not assign this IBAN to a DFX account. Please check that it is correct.',
+  [ReceiveIbanStatus.NOT_MATCHED]:
+    'We could not assign this IBAN to a DFX account. You can submit your request anyway.',
   [ReceiveIbanStatus.INVALID_IBAN]: 'This does not look like a valid IBAN.',
   [ReceiveIbanStatus.LOGIN_REQUIRED]: 'Please log in so that we can also check your personal IBAN.',
 };
@@ -241,11 +244,22 @@ export default function SupportIssueScreen(): JSX.Element {
     setValue('transaction', undefined);
   }, [selectedReason]);
 
+  // Runs on the raw input, so a hint never outlives the value it was given for. Must stay above the check below:
+  // if both ever commit together, the check has to claim the newest id last.
   useEffect(() => {
-    const iban = debouncedReceiver?.split(' ').join('');
+    receiverIbanCheckId.current++;
+    setReceiverIbanStatus(undefined);
+    setIsReceiverIbanCheckUnavailable(false);
+    setIsCheckingReceiverIban(false);
+  }, [selectedReceiver]);
 
-    // The check is purely advisory, so any request that is no longer relevant simply clears the hint.
-    if (selectedReason !== SupportIssueReason.TRANSACTION_MISSING || !iban) {
+  useEffect(() => {
+    const iban = debouncedReceiver?.split(' ').join('') ?? '';
+
+    // The check is purely advisory, so any request that is no longer relevant simply clears the hint. A still
+    // incomplete input is one of those: the API answers it with InvalidIban by design, and asking at all would
+    // spend a rate limit that is shared by everyone behind the same network.
+    if (selectedReason !== SupportIssueReason.TRANSACTION_MISSING || iban.length < ReceiverIbanCheckMinLength) {
       receiverIbanCheckId.current++;
       setReceiverIbanStatus(undefined);
       setIsReceiverIbanCheckUnavailable(false);
@@ -349,7 +363,12 @@ export default function SupportIssueScreen(): JSX.Element {
       (selectedReason === SupportIssueReason.TRANSACTION_MISSING || isFundsNotReceivedRequest) && Validations.Required,
       !!orderParam && Validations.Iban(allowedCountries),
     ],
-    receiverIban: selectedReason === SupportIssueReason.TRANSACTION_MISSING && Validations.Required,
+    receiverIban: [
+      selectedReason === SupportIssueReason.TRANSACTION_MISSING && Validations.Required,
+      // Emptiness check only - a blank-only entry is no entry. Never a judgement on the IBAN itself.
+      selectedReason === SupportIssueReason.TRANSACTION_MISSING &&
+        Validations.Custom((iban) => (!iban || iban.trim().length > 0 ? true : 'required')),
+    ],
     date: [
       (selectedReason === SupportIssueReason.TRANSACTION_MISSING || isFundsNotReceivedRequest) && Validations.Required,
       Validations.Custom((date) => (!date || /\d{4}-\d{2}-\d{2}/g.test(date) ? true : 'pattern')),
@@ -493,6 +512,8 @@ export default function SupportIssueScreen(): JSX.Element {
 
                     {selectedReason === SupportIssueReason.TRANSACTION_MISSING && (
                       <StyledVerticalStack gap={1} full center>
+                        {/* No autocomplete on purpose: this is not the customer's own IBAN, and the sender field
+                            above already claims the browser's IBAN autofill. */}
                         <StyledInput
                           name="receiverIban"
                           label={translate('screens/support', 'Receiver IBAN')}
