@@ -1015,6 +1015,11 @@
     "Please provide us with all relevant information about the transaction you are missing.": "Bitte gib uns alle relevanten Informationen über die fehlende Transaktion an.",
     "Sender IBAN": "Absender-IBAN",
     "Receiver IBAN": "Empfänger-IBAN",
+    "We have recognized this IBAN.": "Wir haben diese IBAN erkannt.",
+    "We could not assign this IBAN to a DFX account. Please check that it is correct.": "Wir konnten diese IBAN keinem DFX-Konto zuordnen. Bitte prüfe, ob sie korrekt ist.",
+    "This does not look like a valid IBAN.": "Das sieht nicht nach einer gültigen IBAN aus.",
+    "Please log in so that we can also check your personal IBAN.": "Bitte melde Dich an, damit wir auch Deine persönliche IBAN prüfen können.",
+    "We could not check this IBAN at the moment. You can submit your request anyway.": "Wir konnten diese IBAN gerade nicht prüfen. Du kannst Deine Anfrage trotzdem absenden.",
     "Date of the transaction": "Datum der Transaktion",
 
     "FAQ": "FAQ",

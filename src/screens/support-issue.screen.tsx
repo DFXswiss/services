@@ -1,11 +1,11 @@
 import {
   ApiError,
-  Bank,
   CreateSupportIssue,
   FundOrigin,
   InvestmentDate,
   KycLevel,
   Limit,
+  ReceiveIbanStatus,
   SupportIssueReason,
   SupportIssueType,
   TransactionState,
@@ -29,7 +29,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -37,6 +37,7 @@ import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { LimitRequestFields } from 'src/components/support-issue/limit-request-fields';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useLayoutContext } from 'src/contexts/layout.context';
+import useDebounce from 'src/hooks/debounce.hook';
 import { ErrorHint } from '../components/error-hint';
 import { IssueReasonLabels, IssueTypeLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -89,6 +90,17 @@ const NoIban = 'No IBAN, only account number';
 const AddAccount = 'Add bank account';
 const selectTxButtonLabel = 'Select transaction';
 
+const ReceiverIbanCheckDelay = 500;
+
+const ReceiverIbanHints: { [s in ReceiveIbanStatus]: string } = {
+  [ReceiveIbanStatus.DFX_IBAN]: 'We have recognized this IBAN.',
+  [ReceiveIbanStatus.NOT_MATCHED]: 'We could not assign this IBAN to a DFX account. Please check that it is correct.',
+  [ReceiveIbanStatus.INVALID_IBAN]: 'This does not look like a valid IBAN.',
+  [ReceiveIbanStatus.LOGIN_REQUIRED]: 'Please log in so that we can also check your personal IBAN.',
+};
+
+const ReceiverIbanCheckUnavailable = 'We could not check this IBAN at the moment. You can submit your request anyway.';
+
 const formDefaultValues = {
   type: undefined,
   senderIban: undefined,
@@ -110,7 +122,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const { translate, translateError, allowedCountries } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn, logout } = useSessionContext();
-  const { getBanks } = useBank();
+  const { checkReceiveIban } = useBank();
   const { bankAccounts } = useBankAccountContext();
   const [urlParams] = useSearchParams();
   const {
@@ -124,8 +136,11 @@ export default function SupportIssueScreen(): JSX.Element {
   const [error, setError] = useState<string>();
   const [selectTransaction, setSelectTransaction] = useState(false);
   const [isKycComplete, setIsKycComplete] = useState<boolean>();
-  const [banks, setBanks] = useState<Bank[]>();
   const [selectedTxState, setSelectedTxState] = useState<TransactionState>();
+  const [receiverIbanStatus, setReceiverIbanStatus] = useState<ReceiveIbanStatus>();
+  const [isReceiverIbanCheckUnavailable, setIsReceiverIbanCheckUnavailable] = useState(false);
+  const [isCheckingReceiverIban, setIsCheckingReceiverIban] = useState(false);
+  const receiverIbanCheckId = useRef(0);
 
   const {
     control,
@@ -139,6 +154,8 @@ export default function SupportIssueScreen(): JSX.Element {
   const selectedReason = useWatch({ control, name: 'reason' });
   const selectedTransaction = useWatch({ control, name: 'transaction' });
   const selectedSender = useWatch({ control, name: 'senderIban' });
+  const selectedReceiver = useWatch({ control, name: 'receiverIban' });
+  const debouncedReceiver = useDebounce(selectedReceiver, ReceiverIbanCheckDelay);
 
   const issues = Object.values(SupportIssueType);
   const reasons = IssueReasons[selectedType] ?? [];
@@ -225,10 +242,39 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [selectedReason]);
 
   useEffect(() => {
-    getBanks()
-      .then(setBanks)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
-  }, []);
+    const iban = debouncedReceiver?.split(' ').join('');
+
+    // The check is purely advisory, so any request that is no longer relevant simply clears the hint.
+    if (selectedReason !== SupportIssueReason.TRANSACTION_MISSING || !iban) {
+      receiverIbanCheckId.current++;
+      setReceiverIbanStatus(undefined);
+      setIsReceiverIbanCheckUnavailable(false);
+      setIsCheckingReceiverIban(false);
+      return;
+    }
+
+    const checkId = ++receiverIbanCheckId.current;
+    const isCurrent = () => checkId === receiverIbanCheckId.current;
+
+    setIsCheckingReceiverIban(true);
+
+    checkReceiveIban(iban)
+      .then((check) => {
+        // A slow answer to an earlier input must not overwrite the answer to the current one.
+        if (!isCurrent()) return;
+        setReceiverIbanStatus(check.status);
+        setIsReceiverIbanCheckUnavailable(false);
+      })
+      .catch(() => {
+        // Any failure, including rate limiting (HTTP 429), means the check is unavailable - never a form error.
+        if (!isCurrent()) return;
+        setReceiverIbanStatus(undefined);
+        setIsReceiverIbanCheckUnavailable(true);
+      })
+      .finally(() => {
+        if (isCurrent()) setIsCheckingReceiverIban(false);
+      });
+  }, [debouncedReceiver, selectedReason]);
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
@@ -288,6 +334,14 @@ export default function SupportIssueScreen(): JSX.Element {
   }
 
   const isFundsNotReceivedRequest = selectedReason === SupportIssueReason.FUNDS_NOT_RECEIVED && isRequestOnly === true;
+
+  const receiverIbanHint = receiverIbanStatus
+    ? ReceiverIbanHints[receiverIbanStatus]
+    : isReceiverIbanCheckUnavailable
+      ? ReceiverIbanCheckUnavailable
+      : undefined;
+  const receiverIbanHintColor =
+    receiverIbanStatus === ReceiveIbanStatus.DFX_IBAN ? 'text-dfxGreen-100' : 'text-dfxGray-800';
 
   const rules = Utils.createRules({
     type: Validations.Required,
@@ -437,16 +491,21 @@ export default function SupportIssueScreen(): JSX.Element {
                       />
                     )}
 
-                    {selectedReason === SupportIssueReason.TRANSACTION_MISSING && banks && (
-                      <StyledDropdown<string>
-                        rootRef={rootRef}
-                        label={translate('screens/support', 'Receiver IBAN')}
-                        items={banks.map((b) => b.iban)}
-                        labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
-                        name="receiverIban"
-                        placeholder={translate('general/actions', 'Select') + '...'}
-                        full
-                      />
+                    {selectedReason === SupportIssueReason.TRANSACTION_MISSING && (
+                      <StyledVerticalStack gap={1} full center>
+                        <StyledInput
+                          name="receiverIban"
+                          label={translate('screens/support', 'Receiver IBAN')}
+                          placeholder="XX XXXX XXXX XXXX XXXX X"
+                          loading={isCheckingReceiverIban}
+                          full
+                        />
+                        {receiverIbanHint && (
+                          <p className={`w-full text-start text-sm pl-3 ${receiverIbanHintColor}`}>
+                            {translate('screens/support', receiverIbanHint)}
+                          </p>
+                        )}
+                      </StyledVerticalStack>
                     )}
 
                     <StyledInput
