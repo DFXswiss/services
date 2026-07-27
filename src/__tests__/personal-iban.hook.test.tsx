@@ -7,7 +7,7 @@
 
 // normalizePersonalIban lives in util/personal-iban.ts which imports @dfx.swiss/react at
 // module scope; mock the package so Jest does not try to parse its ESM build.
-jest.mock('@dfx.swiss/react', () => ({}));
+jest.mock('@dfx.swiss/react', () => ({ PersonalIbanProvider: { FRICK: 'Frick' } }));
 
 const mockAppHandling = jest.fn();
 

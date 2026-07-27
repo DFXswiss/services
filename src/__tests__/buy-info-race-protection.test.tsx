@@ -8,6 +8,7 @@ const mockPersonalIban = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({
   FiatPaymentMethod: { BANK: 'Bank', INSTANT: 'Instant', CARD: 'Card' },
+  PersonalIbanProvider: { FRICK: 'Frick' },
   TransactionError: {
     AMOUNT_TOO_LOW: 'AmountTooLow',
     AMOUNT_TOO_HIGH: 'AmountTooHigh',
@@ -106,13 +107,13 @@ function baseAppParams(overrides: Record<string, unknown> = {}) {
 
 describe('BuyInfoScreen quote race protection', () => {
   it('discards a stale, slower-resolving quote in favor of a newer, faster one', async () => {
-    mockPersonalIban.mockReturnValue('A');
+    mockPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams());
 
-    function offerFor(provider: string) {
+    function offerFor(provider: string | undefined) {
       return {
-        id: provider === 'A' ? 1 : 2,
-        amount: provider === 'A' ? 111 : 222,
+        id: provider === undefined ? 1 : 2,
+        amount: provider === undefined ? 111 : 222,
         currency: { name: 'EUR' },
         estimatedAmount: 0.01,
         asset: { name: 'BTC' },
@@ -123,20 +124,20 @@ describe('BuyInfoScreen quote race protection', () => {
 
     mockReceiveFor.mockImplementation((req: any) => {
       const provider = req.personalIbanProvider;
-      const delay = provider === 'A' ? 250 : 0;
+      const delay = provider === undefined ? 250 : 0;
       return new Promise((resolve) => setTimeout(() => resolve(offerFor(provider)), delay));
     });
 
     const { rerender } = render(<BuyInfoScreen />);
 
     await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
-    expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('A');
+    expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBeUndefined();
 
-    mockPersonalIban.mockReturnValue('B');
+    mockPersonalIban.mockReturnValue('frick');
     rerender(<BuyInfoScreen />);
 
     await waitFor(() =>
-      expect(mockReceiveFor.mock.calls.some((c: any) => c[0].personalIbanProvider === 'B')).toBe(true),
+      expect(mockReceiveFor.mock.calls.some((c: any) => c[0].personalIbanProvider === 'Frick')).toBe(true),
     );
 
     await waitFor(() => expect(screen.getByTestId('payment-info')).toHaveTextContent('222'));

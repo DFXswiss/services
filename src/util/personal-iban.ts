@@ -1,13 +1,28 @@
-import { FiatPaymentMethod } from '@dfx.swiss/react';
+import { FiatPaymentMethod, PersonalIbanProvider } from '@dfx.swiss/react';
 
 export function normalizePersonalIban(value: string | undefined): string | undefined {
-  return value?.toLowerCase() === 'frick' ? 'Frick' : value;
+  return value?.toLowerCase() === PersonalIbanProvider.FRICK.toLowerCase()
+    ? PersonalIbanProvider.FRICK
+    : value;
 }
 
 export function toPersonalIbanProviderRequest(
   value: string | undefined,
-): { personalIbanProvider?: string } {
-  return value === undefined ? {} : { personalIbanProvider: normalizePersonalIban(value) };
+): { personalIbanProvider?: PersonalIbanProvider } {
+  const normalized = value === undefined ? undefined : normalizePersonalIban(value);
+  return normalized === PersonalIbanProvider.FRICK ? { personalIbanProvider: PersonalIbanProvider.FRICK } : {};
+}
+
+/**
+ * True when the customer set a personal-IBAN selector that is not a recognized
+ * PersonalIbanProvider member (e.g. a typo, or a provider not (yet) supported). The API used to
+ * be the sole source of truth for this (fail-closed @IsEnum validation on the backend DTO); the
+ * frontend now has the same authoritative provider set via the SDK enum, so this fails closed
+ * locally with the identical PersonalIbanProviderUnsupported copy instead of silently building
+ * a request that omits the selector and falls back to an ordinary bank-transfer quote.
+ */
+export function isUnrecognizedPersonalIbanSelector(value: string | undefined): boolean {
+  return value !== undefined && normalizePersonalIban(value) !== PersonalIbanProvider.FRICK;
 }
 
 export function isPersonalIbanApplicable(

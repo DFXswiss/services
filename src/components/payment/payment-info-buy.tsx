@@ -15,11 +15,8 @@ import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
 import { PaymentQrCode } from './payment-qr-code';
 
-/** Additive response fields not yet on the installed @dfx.swiss/react Buy type. */
-type BuyWithBank = Buy & { bank?: string };
-
 interface PaymentInformationContentProps {
-  info: BuyWithBank;
+  info: Buy;
 }
 
 export function PaymentInformationContent({ info }: PaymentInformationContentProps): JSX.Element {

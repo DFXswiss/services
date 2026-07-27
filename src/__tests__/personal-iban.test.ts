@@ -8,31 +8,39 @@ jest.mock('@dfx.swiss/react', () => ({
     INSTANT: 'Instant',
     CARD: 'Card',
   },
+  PersonalIbanProvider: { FRICK: 'Frick' },
 }));
 
-import { FiatPaymentMethod } from '@dfx.swiss/react';
+import { FiatPaymentMethod, PersonalIbanProvider } from '@dfx.swiss/react';
 import {
   getPersonalIbanErrorMessage,
   getStoredPaymentDetailErrorMessage,
   isPersonalIbanApplicable,
+  isUnrecognizedPersonalIbanSelector,
   normalizePersonalIban,
   toPersonalIbanProviderRequest,
 } from '../util/personal-iban';
 
 describe('personal IBAN selector mapping', () => {
   it.each(['frick', 'FRICK', 'Frick'])('maps the public %s value to the API enum', (value) => {
-    expect(normalizePersonalIban(value)).toBe('Frick');
-    expect(toPersonalIbanProviderRequest(value)).toEqual({ personalIbanProvider: 'Frick' });
+    expect(normalizePersonalIban(value)).toBe(PersonalIbanProvider.FRICK);
+    expect(toPersonalIbanProviderRequest(value)).toEqual({ personalIbanProvider: PersonalIbanProvider.FRICK });
+    expect(isUnrecognizedPersonalIbanSelector(value)).toBe(false);
   });
 
-  it.each(['', 'unknown'])('preserves an explicit invalid value for fail-closed API validation', (value) => {
-    expect(normalizePersonalIban(value)).toBe(value);
-    expect(toPersonalIbanProviderRequest(value)).toEqual({ personalIbanProvider: value });
-  });
+  it.each(['', 'unknown'])(
+    'omits an unrecognized value from the request (fail-closed now happens locally, not via the API round trip)',
+    (value) => {
+      expect(normalizePersonalIban(value)).toBe(value);
+      expect(toPersonalIbanProviderRequest(value)).toEqual({});
+      expect(isUnrecognizedPersonalIbanSelector(value)).toBe(true);
+    },
+  );
 
-  it('omits only an absent selector', () => {
+  it('omits an absent selector and does not flag it as unrecognized', () => {
     expect(normalizePersonalIban(undefined)).toBeUndefined();
     expect(toPersonalIbanProviderRequest(undefined)).toEqual({});
+    expect(isUnrecognizedPersonalIbanSelector(undefined)).toBe(false);
   });
 });
 

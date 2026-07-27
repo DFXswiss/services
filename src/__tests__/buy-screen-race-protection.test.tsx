@@ -29,6 +29,7 @@ const mockPrefCurrency = { name: 'CHF' };
 jest.mock('@dfx.swiss/react', () => ({
   AssetCategory: { PUBLIC: 'Public', PRIVATE: 'Private' },
   FiatPaymentMethod: { BANK: 'Bank', INSTANT: 'Instant', CARD: 'Card' },
+  PersonalIbanProvider: { FRICK: 'Frick' },
   TransactionError: {
     AMOUNT_TOO_LOW: 'AmountTooLow',
     AMOUNT_TOO_HIGH: 'AmountTooHigh',
@@ -216,13 +217,13 @@ describe('BuyScreen quote race protection', () => {
   });
 
   it('discards a stale, slower-resolving quote in favor of a newer, faster one', async () => {
-    mockPersonalIban.mockReturnValue('A');
+    mockPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
 
-    function offerFor(provider: string) {
+    function offerFor(provider: string | undefined) {
       return {
-        id: provider === 'A' ? 1 : 2,
-        amount: provider === 'A' ? 111 : 222,
+        id: provider === undefined ? 1 : 2,
+        amount: provider === undefined ? 111 : 222,
         currency: { name: 'EUR' },
         estimatedAmount: 0.01,
         asset: { name: 'BTC', uniqueName: 'Bitcoin' },
@@ -238,7 +239,7 @@ describe('BuyScreen quote race protection', () => {
 
     mockReceiveFor.mockImplementation((req: any) => {
       const provider = req.personalIbanProvider;
-      const delay = provider === 'A' ? 250 : 0;
+      const delay = provider === undefined ? 250 : 0;
       return new Promise((resolve) => setTimeout(() => resolve(offerFor(provider)), delay));
     });
 
@@ -246,16 +247,16 @@ describe('BuyScreen quote race protection', () => {
 
     // Real 500ms debounce before the first (slow) flight fires.
     await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
-    expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('A');
+    expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBeUndefined();
 
     // personalIban is NOT itself debounced (only validatedData is) — changing it re-runs the
     // effect immediately with the current validatedData, firing the second (fast) flight
     // before the first (slow) one has resolved.
-    mockPersonalIban.mockReturnValue('B');
+    mockPersonalIban.mockReturnValue('frick');
     rerender(<BuyScreen />);
 
     await waitFor(() =>
-      expect(mockReceiveFor.mock.calls.some((c: any) => c[0].personalIbanProvider === 'B')).toBe(true),
+      expect(mockReceiveFor.mock.calls.some((c: any) => c[0].personalIbanProvider === 'Frick')).toBe(true),
     );
 
     // The fast flight wins first.

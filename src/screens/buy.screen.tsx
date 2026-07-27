@@ -66,6 +66,7 @@ import { usePersonalIban } from '../hooks/personal-iban.hook';
 import {
   getPersonalIbanErrorMessage,
   isPersonalIbanApplicable,
+  isUnrecognizedPersonalIbanSelector,
   toPersonalIbanProviderRequest,
 } from '../util/personal-iban';
 
@@ -89,12 +90,7 @@ interface FormData {
   address: Address;
 }
 
-/** Additive request fields not yet on the installed @dfx.swiss/react BuyPaymentInfo type. */
-type BuyPaymentInfoRequest = BuyPaymentInfo & {
-  personalIbanProvider?: string;
-};
-
-interface ValidatedData extends BuyPaymentInfoRequest {
+interface ValidatedData extends BuyPaymentInfo {
   sideToUpdate?: Side;
 }
 
@@ -341,7 +337,20 @@ export default function BuyScreen(): JSX.Element {
     );
     // Personal-IBAN error copy only when the customer actually requested a personal IBAN.
     const personalIbanErrorApplies = isPersonalIbanEligible && personalIban !== undefined;
-    const data: BuyPaymentInfoRequest = {
+
+    if (isPersonalIbanEligible && isUnrecognizedPersonalIbanSelector(personalIban)) {
+      const personalIbanErrorText = getPersonalIbanErrorMessage('PersonalIbanProviderUnsupported');
+      setPaymentInfo(undefined);
+      setPaymentInfoPaymentMethod(undefined);
+      setErrorMessage(
+        personalIbanErrorText ? translate('screens/payment', personalIbanErrorText) : 'Unknown error',
+      );
+      return () => {
+        isRunning = false;
+      };
+    }
+
+    const data: BuyPaymentInfo = {
       ...validatedData,
       externalTransactionId,
       ...(isPersonalIbanEligible ? toPersonalIbanProviderRequest(personalIban) : {}),

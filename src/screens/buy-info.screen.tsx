@@ -41,13 +41,9 @@ import { getKycErrorFromMessage } from '../util/api-error';
 import {
   getPersonalIbanErrorMessage,
   isPersonalIbanApplicable,
+  isUnrecognizedPersonalIbanSelector,
   toPersonalIbanProviderRequest,
 } from '../util/personal-iban';
-
-/** Additive request fields not yet on the installed @dfx.swiss/react BuyPaymentInfo type. */
-type BuyPaymentInfoRequest = BuyPaymentInfo & {
-  personalIbanProvider?: string;
-};
 
 export default function BuyInfoScreen(): JSX.Element {
   useAddressGuard();
@@ -113,7 +109,21 @@ export default function BuyInfoScreen(): JSX.Element {
     const isPersonalIbanEligible = isPersonalIbanApplicable(currency?.name, FiatPaymentMethod.BANK);
     // Personal-IBAN error copy only when the customer actually requested a personal IBAN.
     const personalIbanErrorApplies = isPersonalIbanEligible && personalIban !== undefined;
-    const request: BuyPaymentInfoRequest = {
+
+    if (isPersonalIbanEligible && isUnrecognizedPersonalIbanSelector(personalIban)) {
+      const personalIbanErrorText = getPersonalIbanErrorMessage('PersonalIbanProviderUnsupported');
+      if (isRunning) {
+        setPaymentInfo(undefined);
+        setErrorMessage(
+          personalIbanErrorText ? translate('screens/payment', personalIbanErrorText) : 'Unknown error',
+        );
+      }
+      return () => {
+        isRunning = false;
+      };
+    }
+
+    const request: BuyPaymentInfo = {
       asset,
       currency,
       externalTransactionId,

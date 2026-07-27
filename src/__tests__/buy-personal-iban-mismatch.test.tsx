@@ -28,6 +28,7 @@ const mockPrefCurrency = { name: 'CHF' };
 jest.mock('@dfx.swiss/react', () => ({
   AssetCategory: { PUBLIC: 'Public', PRIVATE: 'Private' },
   FiatPaymentMethod: { BANK: 'Bank', INSTANT: 'Instant', CARD: 'Card' },
+  PersonalIbanProvider: { FRICK: 'Frick' },
   TransactionError: {
     AMOUNT_TOO_LOW: 'AmountTooLow',
     AMOUNT_TOO_HIGH: 'AmountTooHigh',
