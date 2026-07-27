@@ -1,64 +1,57 @@
-import createWebComponent from '@r2wc/react-to-web-component';
-import { WidgetParams } from './App';
-import MainWidget from './Main.widget';
+import ReactDOM from 'react-dom/client';
+import Main from './Main';
 import './index.css';
-import { preserveStringAttribute } from './util/web-component';
+import reportWebVitals from './reportWebVitals';
 
-const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'function' | 'json' } = {
-  headless: 'string',
-  borderless: 'string',
-  hideTargetSelection: 'string',
-  flags: 'string',
-  lang: 'string',
-  address: 'string',
-  signature: 'string',
-  pubkey: 'string',
-  mail: 'string',
-  accountType: 'string',
-  firstName: 'string',
-  lastName: 'string',
-  street: 'string',
-  houseNumber: 'string',
-  zip: 'string',
-  city: 'string',
-  country: 'string',
-  organizationName: 'string',
-  organizationStreet: 'string',
-  organizationHouseNumber: 'string',
-  organizationZip: 'string',
-  organizationCity: 'string',
-  organizationCountry: 'string',
-  phone: 'string',
-  wallet: 'string',
-  wallets: 'string',
-  refcode: 'string',
-  specialCode: 'string',
-  recommendationCode: 'string',
-  session: 'string',
-  redirectUri: 'string',
-  autoStart: 'string',
-  mode: 'string',
-  blockchain: 'string',
-  blockchains: 'string',
-  balances: 'string',
-  amountIn: 'string',
-  amountOut: 'string',
-  assets: 'string',
-  assetIn: 'string',
-  assetOut: 'string',
-  paymentMethod: 'string',
-  bankAccount: 'string',
-  externalTransactionId: 'string',
-  personalIban: 'string',
-  onClose: 'function',
-  service: 'string',
-};
+// Clear session data when URL contains new login credentials
+// This must happen BEFORE React initializes to prevent the @dfx.swiss/react
+// package from loading a stale session from storage
+// Only clear session-related keys, preserve user preferences (language, etc.)
+const urlParams = new URLSearchParams(window.location.search);
+if ((urlParams.has('address') && urlParams.has('signature')) || urlParams.has('session')) {
+  localStorage.removeItem('dfx.authenticationToken');
+  localStorage.removeItem('dfx.srv.activeWallet');
+  localStorage.removeItem('dfx.srv.queryParams');
+  sessionStorage.clear();
+}
 
-const BaseDfxServices = createWebComponent(MainWidget, { shadow: 'closed', props });
-const DfxServices = preserveStringAttribute(
-  BaseDfxServices,
-  'personal-iban',
-  'personalIban',
-);
+// A new deploy replaces the content-hashed chunks. A tab left open across a deploy can
+// request a chunk that no longer exists; Cloudflare Pages then serves index.html (200)
+// for it, which surfaces as a ChunkLoadError. Reload once to pick up the new chunks,
+// guarded against a reload loop.
+function isChunkLoadError(message?: string): boolean {
+  return !!message && /Loading chunk [\w-]+ failed|ChunkLoadError|Loading CSS chunk [\w-]+ failed/i.test(message);
+}
+// A new deploy replaces the content-hashed chunks. A tab left open across a deploy can
+// request a chunk that no longer exists; the static host serves index.html (200) for it,
+// which surfaces as a ChunkLoadError. Reload once to pick up the new chunks. The guard
+// lives in localStorage (it survives the sessionStorage.clear() above that runs on
+// session/login URLs) and is time-boxed, so a persistent failure reloads at most once per
+// window instead of looping. Storage access is wrapped because embedded/iframe contexts
+// can block it.
+function reloadOnceForChunkError(): void {
+  try {
+    const KEY = 'dfx.chunkReloadAt';
+    const last = Number(localStorage.getItem(KEY) ?? 0);
+    if (Date.now() - last < 30000) return;
+    localStorage.setItem(KEY, String(Date.now()));
+  } catch {
+    return; // storage blocked (e.g. embedded iframe) — skip to avoid an unguarded reload loop
+  }
+  window.location.reload();
+}
+window.addEventListener('error', (event) => {
+  if (isChunkLoadError(event?.message)) reloadOnceForChunkError();
+});
+window.addEventListener('unhandledrejection', (event) => {
+  const message = (event?.reason as Error | undefined)?.message;
+  if (isChunkLoadError(message)) reloadOnceForChunkError();
+});
 
-customElements.define('dfx-services', DfxServices);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render(<Main />);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
