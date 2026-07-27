@@ -12,6 +12,7 @@ const mockCheckReceiveIban = jest.fn();
 const mockCreateSupportIssue = jest.fn();
 const mockNavigate = jest.fn();
 const mockClearParams = jest.fn();
+const mockTranslate = jest.fn((_ns: string, key: string) => key);
 
 jest.mock('@dfx.swiss/react', () => {
   const SupportIssueType = {
@@ -71,14 +72,15 @@ jest.mock('@dfx.swiss/react', () => {
 
   // Mirrors the screen's only three calls into the real Validations: Required returns a react-hook-form
   // "required" rule with message 'required'; Custom wraps an arbitrary validator function as a
-  // react-hook-form "validate" rule (the validator itself decides pass/fail per field); Iban is not
-  // exercised by any assertion in this file and always validates as true.
+  // react-hook-form "validate" rule (the validator itself decides pass/fail per field); Iban fails
+  // with a sentinel so that if the receiver field ever gained Validations.Iban, submission tests
+  // with non-IBAN free text would fail instead of staying green.
   const Validations = {
     get Required() {
       return { required: { value: true, message: 'required' } };
     },
     Custom: (validator: (value: any) => true | string) => ({ validate: validator }),
-    Iban: (_countries: unknown[]) => ({ validate: () => true }),
+    Iban: (_countries: unknown[]) => ({ validate: () => 'iban' }),
   };
 
   return {
@@ -265,7 +267,7 @@ jest.mock('src/contexts/layout.context', () => ({
 
 jest.mock('src/contexts/settings.context', () => ({
   useSettingsContext: () => ({
-    translate: (_ns: string, key: string) => key,
+    translate: (ns: string, key: string) => mockTranslate(ns, key),
     translateError: (message: string) => message,
     allowedCountries: [],
   }),
@@ -435,6 +437,7 @@ describe('SupportIssueScreen receiver IBAN check', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
+    mockTranslate.mockImplementation((_ns: string, key: string) => key);
     mockCheckReceiveIban.mockReset();
     mockCreateSupportIssue.mockReset();
     mockCreateSupportIssue.mockResolvedValue('issue-uid-1');
@@ -747,6 +750,16 @@ describe('SupportIssueScreen receiver IBAN check', () => {
     expect(element).toHaveClass(colorClass);
   });
 
+  it('passes the receiver IBAN hint through translate with the screens/support namespace', async () => {
+    mockCheckReceiveIban.mockResolvedValue({ status: ReceiveIbanStatus.DFX_IBAN });
+    renderScreen();
+    await typeReceiverIban(VALID_NORMALIZED);
+    await advanceDebounce();
+
+    expect(mockTranslate).toHaveBeenCalledWith('screens/support', HINTS[ReceiveIbanStatus.DFX_IBAN]);
+    expect(screen.getByText(HINTS[ReceiveIbanStatus.DFX_IBAN])).toBeInTheDocument();
+  });
+
   // --- J. Failure / rate limit ---
   it('shows the unavailable hint after a rejected check without treating it as a form error', async () => {
     mockCheckReceiveIban.mockRejectedValue({ statusCode: 429, message: 'Too Many Requests' });
@@ -823,6 +836,23 @@ describe('SupportIssueScreen receiver IBAN check', () => {
     expect(screen.getByText(HINTS[ReceiveIbanStatus.INVALID_IBAN])).toBeInTheDocument();
     expect(within(getReceiverIbanFieldRoot()).queryByText('required')).not.toBeInTheDocument();
     expect(getNextButton()).not.toBeDisabled();
+  });
+
+  it('does not set a receiverIban field error or disable submit for a non-IBAN free-text value', async () => {
+    // Below the check threshold, so no backend call; still non-empty free text that Validations.Iban
+    // would reject if it were ever added to the receiverIban rules.
+    renderScreen('');
+    selectTransactionMissingViaUi();
+    fillTransactionMissingForm('not-a-valid-iban!!');
+    fireEvent.blur(getReceiverIbanInput());
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(within(getReceiverIbanFieldRoot()).queryByText('required')).not.toBeInTheDocument();
+    expect(within(getReceiverIbanFieldRoot()).queryByText('iban')).not.toBeInTheDocument();
+    expect(getNextButton()).not.toBeDisabled();
+    expect(mockCheckReceiveIban).not.toHaveBeenCalled();
   });
 
   it('does not disable submit while a check is still in flight', async () => {

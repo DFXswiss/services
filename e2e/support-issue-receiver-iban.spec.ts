@@ -15,7 +15,7 @@ import { getCachedAuth } from './helpers/auth-cache';
  * (TransactionIssue / TransactionMissing).
  *
  * The receiver-IBAN check endpoint is MOCKED with synthetic status responses via page.route(...), so
- * the six baselines are deterministic and contain NO real production data. Only PUT bank/receiveIban
+ * the baselines are deterministic and contain NO real production data. Only PUT bank/receiveIban
  * (full URL /v1/bank/receiveIban after useApi) is intercepted; everything else
  * (auth/user/settings/…) is passed through via route.continue().
  *
@@ -92,7 +92,8 @@ function receiverIbanSpinner(page: Page) {
 }
 
 function supportIssueUrl(token: string): string {
-  return `/support/issue?session=${token}&issue-type=TransactionIssue&reason=TransactionMissing`;
+  // Force English so text selectors stay stable regardless of the test account's language preference.
+  return `/support/issue?session=${token}&lang=en&issue-type=TransactionIssue&reason=TransactionMissing`;
 }
 
 async function waitForReceiveIbanPut(page: Page) {
@@ -245,6 +246,27 @@ test.describe('Support Issue - Receiver IBAN check - Visual Regression Tests', (
 
     await page.waitForTimeout(1500);
     await expect(page).toHaveScreenshot('support-issue-receiver-iban-06-unavailable.png', {
+      fullPage: true,
+      maxDiffPixels: 5000,
+    });
+  });
+
+  test('login-required IBAN shows LoginRequired hint after blur', async ({ page }) => {
+    await installReceiveIbanRoutes(page, { status: 'LoginRequired' });
+
+    await page.goto(supportIssueUrl(token));
+    await page.waitForLoadState('networkidle');
+
+    const input = receiverIbanInput(page);
+    const responsePromise = waitForReceiveIbanPut(page);
+    await input.fill(EXAMPLE_RECEIVER_IBAN);
+    await responsePromise;
+    await input.blur();
+
+    await expect(page.getByText('Please log in so that we can also check your personal IBAN.')).toBeVisible();
+
+    await page.waitForTimeout(1500);
+    await expect(page).toHaveScreenshot('support-issue-receiver-iban-07-login-required.png', {
       fullPage: true,
       maxDiffPixels: 5000,
     });

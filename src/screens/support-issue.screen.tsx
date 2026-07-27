@@ -94,10 +94,13 @@ const ReceiverIbanCheckDelay = 500;
 // Shortest IBAN in use is 15 characters. Below that the input is still incomplete and must not be judged.
 const ReceiverIbanCheckMinLength = 15;
 
-// Same normalization the API applies before it looks an IBAN up, so threshold and request agree with the server.
+// Strip everything except letters and digits so the length threshold and the value sent
+// to the check count the same characters.
 function normalizeIban(iban?: string): string {
   return iban?.replace(/[^A-Za-z0-9]/g, '') ?? '';
 }
+
+type ReceiverIbanResult = { iban: string; status: ReceiveIbanStatus } | { iban: string; unavailable: true };
 
 const ReceiverIbanHints: { [s in ReceiveIbanStatus]: string } = {
   [ReceiveIbanStatus.DFX_IBAN]: 'We have recognized this IBAN.',
@@ -145,8 +148,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const [selectTransaction, setSelectTransaction] = useState(false);
   const [isKycComplete, setIsKycComplete] = useState<boolean>();
   const [selectedTxState, setSelectedTxState] = useState<TransactionState>();
-  const [receiverIbanStatus, setReceiverIbanStatus] = useState<ReceiveIbanStatus>();
-  const [isReceiverIbanCheckUnavailable, setIsReceiverIbanCheckUnavailable] = useState(false);
+  const [receiverIbanResult, setReceiverIbanResult] = useState<ReceiverIbanResult>();
   const [isCheckingReceiverIban, setIsCheckingReceiverIban] = useState(false);
   const [isReceiverIbanFocused, setIsReceiverIbanFocused] = useState(false);
   const receiverIbanCheckId = useRef(0);
@@ -252,18 +254,17 @@ export default function SupportIssueScreen(): JSX.Element {
     setValue('transaction', undefined);
   }, [selectedReason]);
 
-  // Runs on the entered value, so a hint never outlives the value it was given for.
+  // Invalidate in-flight checks and stop the spinner when the normalized value changes. Hint staleness is
+  // handled by binding the stored result to the IBAN it was computed for (see getReceiverIbanHint).
   useEffect(() => {
     receiverIbanCheckId.current++;
-    setReceiverIbanStatus(undefined);
-    setIsReceiverIbanCheckUnavailable(false);
     setIsCheckingReceiverIban(false);
   }, [normalizedReceiver]);
 
   useEffect(() => {
     const iban = debouncedReceiver ?? '';
 
-    // The check is purely advisory, so any request that is no longer relevant simply clears the hint. Two are:
+    // The check is purely advisory, so any request that is no longer relevant is simply skipped. Two are:
     // a still incomplete input, which the API answers with InvalidIban by design and which would spend a rate
     // limit shared by everyone behind the same network; and a debounced value the customer has meanwhile
     // changed, which must never be asked about no matter how the two updates were committed.
@@ -273,8 +274,6 @@ export default function SupportIssueScreen(): JSX.Element {
       iban !== normalizedReceiver
     ) {
       receiverIbanCheckId.current++;
-      setReceiverIbanStatus(undefined);
-      setIsReceiverIbanCheckUnavailable(false);
       setIsCheckingReceiverIban(false);
       return;
     }
@@ -288,14 +287,12 @@ export default function SupportIssueScreen(): JSX.Element {
       .then((check) => {
         // A slow answer to an earlier input must not overwrite the answer to the current one.
         if (!isCurrent()) return;
-        setReceiverIbanStatus(check.status);
-        setIsReceiverIbanCheckUnavailable(false);
+        setReceiverIbanResult({ iban, status: check.status });
       })
       .catch(() => {
         // Any failure, including rate limiting (HTTP 429), means the check is unavailable - never a form error.
         if (!isCurrent()) return;
-        setReceiverIbanStatus(undefined);
-        setIsReceiverIbanCheckUnavailable(true);
+        setReceiverIbanResult({ iban, unavailable: true });
       })
       .finally(() => {
         if (isCurrent()) setIsCheckingReceiverIban(false);
@@ -361,20 +358,26 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const isFundsNotReceivedRequest = selectedReason === SupportIssueReason.FUNDS_NOT_RECEIVED && isRequestOnly === true;
 
+  // Only show a hint that was computed for the value currently in the field.
+  const result = receiverIbanResult?.iban === normalizedReceiver ? receiverIbanResult : undefined;
+
   function getReceiverIbanHint(): string | undefined {
+    if (!result) return undefined;
     // A positive confirmation can only mean the IBAN is complete and matched, so it may appear right away.
-    if (receiverIbanStatus === ReceiveIbanStatus.DFX_IBAN) return ReceiverIbanHints[receiverIbanStatus];
+    if ('status' in result && result.status === ReceiveIbanStatus.DFX_IBAN) return ReceiverIbanHints[result.status];
     // Everything else waits until the field is left: the threshold proves length, not completeness, and a verdict
     // on a half-typed IBAN would be wrong and would make the form jump.
     if (isReceiverIbanFocused) return undefined;
-    if (receiverIbanStatus) return ReceiverIbanHints[receiverIbanStatus];
-    if (isReceiverIbanCheckUnavailable) return ReceiverIbanCheckUnavailable;
+    if ('status' in result) return ReceiverIbanHints[result.status];
+    if ('unavailable' in result) return ReceiverIbanCheckUnavailable;
     return undefined;
   }
 
   const receiverIbanHint = getReceiverIbanHint();
   const receiverIbanHintColor =
-    receiverIbanStatus === ReceiveIbanStatus.DFX_IBAN ? 'text-dfxGreen-100' : 'text-dfxGray-800';
+    result && 'status' in result && result.status === ReceiveIbanStatus.DFX_IBAN
+      ? 'text-dfxGreen-100'
+      : 'text-dfxGray-800';
 
   const rules = Utils.createRules({
     type: Validations.Required,
