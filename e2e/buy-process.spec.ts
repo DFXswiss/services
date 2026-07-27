@@ -131,6 +131,18 @@ test.describe('Buy Process - UI Flow', () => {
     await page.goto(
       `/buy?session=${token}&blockchain=Ethereum&asset-in=EUR&amount-in=100&personal-iban=frick`,
     );
+
+    const confirmation = page
+      .getByText(
+        'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?',
+      )
+      .locator(
+        'xpath=ancestor::div[.//button[normalize-space()="Request and use personal IBAN"] and .//button[normalize-space()="Continue without personal IBAN"]][1]',
+      );
+    await expect(confirmation).toHaveScreenshot(
+      'buy-bank-frick-confirmation.png',
+    );
+
     await page
       .getByRole('button', { name: 'Request and use personal IBAN' })
       .click();

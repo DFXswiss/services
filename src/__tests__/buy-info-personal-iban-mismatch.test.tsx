@@ -278,14 +278,22 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
   it('does not delay a selector-free quote while authentication is unsettled', async () => {
     mockPersonalIban.mockReturnValue(undefined);
     mockHasAuthenticatedCustomer.mockReturnValue(false);
+    mockWalletInitialized.mockReturnValue(false);
 
-    render(<BuyInfoScreen />);
+    const rendered = render(<BuyInfoScreen />);
 
     await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
     await settle();
+    expect(mockReceiveFor).toHaveBeenCalledTimes(1);
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty(
       'personalIbanProvider',
     );
+
+    mockHasAuthenticatedCustomer.mockReturnValue(true);
+    mockWalletInitialized.mockReturnValue(true);
+    rendered.rerender(<BuyInfoScreen />);
+    await settle();
+    expect(mockReceiveFor).toHaveBeenCalledTimes(1);
   });
 
   it('does not show the mismatch hint while paymentInfo is absent (loading)', async () => {

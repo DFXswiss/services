@@ -446,6 +446,11 @@ export default function BuyScreen(): JSX.Element {
   const hasApplicableFrickRequest =
     isPersonalIbanEligible &&
     isExplicitFrickPersonalIbanRequest(personalIbanSelector);
+  const shouldWaitForApplicableFrickCustomer =
+    hasApplicableFrickRequest &&
+    (!isWalletInitialized ||
+      !hasAuthenticatedCustomer ||
+      requiresCustomerConfirmation);
   const showPersonalIbanConfirmation =
     hasApplicableFrickRequest && requiresCustomerConfirmation;
   const personalIbanErrorApplies =
@@ -464,11 +469,7 @@ export default function BuyScreen(): JSX.Element {
       };
     }
 
-    if (
-      !isWalletInitialized ||
-      (hasApplicableFrickRequest &&
-        (!hasAuthenticatedCustomer || requiresCustomerConfirmation))
-    ) {
+    if (shouldWaitForApplicableFrickCustomer) {
       setPaymentInfo(undefined);
       setPaymentInfoPaymentMethod(undefined);
       setErrorMessage(undefined);
@@ -586,11 +587,8 @@ export default function BuyScreen(): JSX.Element {
     debouncedValidatedData,
     requestPersonalIbanProvider,
     hasUnsupportedPersonalIbanRequest,
-    hasApplicableFrickRequest,
-    hasAuthenticatedCustomer,
-    isWalletInitialized,
     personalIbanErrorApplies,
-    requiresCustomerConfirmation,
+    shouldWaitForApplicableFrickCustomer,
     retryToken,
   ]);
 
@@ -758,10 +756,7 @@ export default function BuyScreen(): JSX.Element {
     !continueWithoutPersonalIban &&
     ((paymentInfoPaymentMethod !== undefined &&
       !isPersonalIbanApplicable(paymentInfo.currency.name, paymentInfoPaymentMethod)) ||
-      (isExplicitFrickPersonalIbanRequest(personalIbanSelector) &&
-        paymentInfoPaymentMethod !== undefined &&
-        isPersonalIbanApplicable(paymentInfo.currency.name, paymentInfoPaymentMethod) &&
-        !verifiedFrick));
+      (requestedFrick && !verifiedFrick));
 
   const isUnrecognizedBlocked =
     validatedData != null &&

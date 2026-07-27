@@ -604,23 +604,20 @@ interface AppProps {
 }
 
 function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
+  if (
+    params?.personalIban !== undefined &&
+    personalIbanOccurrence === undefined
+  ) {
+    throw new Error(
+      'personalIbanOccurrence is required when a widget supplies personalIban',
+    );
+  }
+
   const routerRef = useRef<Router>();
   if (!routerRef.current) {
     routerRef.current = routerFactory(Routes);
   }
   const router = routerRef.current;
-
-  // MainLib and the Web Component supply an occurrence counter. Keep a
-  // transition-based internal counter as a defensive path for direct internal
-  // App mounts so an omitted counter never collapses every selector to one identity.
-  const previousPersonalIban = useRef<string>();
-  const inferredPersonalIbanOccurrence = useRef(0);
-  if (previousPersonalIban.current !== params?.personalIban) {
-    previousPersonalIban.current = params?.personalIban;
-    inferredPersonalIbanOccurrence.current += 1;
-  }
-  const effectivePersonalIbanOccurrence =
-    personalIbanOccurrence ?? inferredPersonalIbanOccurrence.current;
 
   const hasNavigatedHomeRef = useRef(false);
   if (!hasNavigatedHomeRef.current) {
@@ -639,7 +636,7 @@ function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
               service={params?.service}
               closeCallback={params?.onClose}
               params={params}
-              personalIbanOccurrence={effectivePersonalIbanOccurrence}
+              personalIbanOccurrence={personalIbanOccurrence}
               router={router}
             >
               <SettingsContextProvider>

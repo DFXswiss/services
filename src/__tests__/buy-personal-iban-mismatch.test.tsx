@@ -7,7 +7,11 @@
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
 const mockPersonalIban = jest.fn();
+const mockRequestedPersonalIban = jest.fn();
 const mockRequiresCustomerConfirmation = jest.fn();
+const mockHasAuthenticatedCustomer = jest.fn();
+const mockWalletInitialized = jest.fn();
+const mockDeclineForCurrentCustomer = jest.fn();
 const mockSetParams = jest.fn();
 
 const mockAssets = [
@@ -194,7 +198,11 @@ jest.mock('../contexts/settings.context', () => ({
   }),
 }));
 jest.mock('../contexts/wallet.context', () => ({
-  useWalletContext: () => ({ blockchain: undefined, isInitialized: true, switchBlockchain: jest.fn() }),
+  useWalletContext: () => ({
+    blockchain: undefined,
+    isInitialized: mockWalletInitialized(),
+    switchBlockchain: jest.fn(),
+  }),
 }));
 jest.mock('src/contexts/window.context', () => ({
   useWindowContext: () => ({ width: 800 }),
@@ -205,12 +213,12 @@ jest.mock('../hooks/app-params.hook', () => ({
 jest.mock('../hooks/personal-iban.hook', () => ({
   usePersonalIban: () => mockPersonalIban(),
   usePersonalIbanConfirmation: () => ({
-    requestedPersonalIban: mockPersonalIban(),
+    requestedPersonalIban: mockRequestedPersonalIban(),
     personalIban: mockPersonalIban(),
     requiresCustomerConfirmation: mockRequiresCustomerConfirmation(),
-    hasAuthenticatedCustomer: true,
+    hasAuthenticatedCustomer: mockHasAuthenticatedCustomer(),
     confirmForCurrentCustomer: jest.fn(),
-    declineForCurrentCustomer: jest.fn(),
+    declineForCurrentCustomer: mockDeclineForCurrentCustomer,
   }),
 }));
 jest.mock('../hooks/blockchain.hook', () => ({
@@ -315,7 +323,10 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPersonalIban.mockReturnValue('Frick');
+    mockRequestedPersonalIban.mockReturnValue('Frick');
     mockRequiresCustomerConfirmation.mockReturnValue(false);
+    mockHasAuthenticatedCustomer.mockReturnValue(true);
+    mockWalletInitialized.mockReturnValue(true);
     // A6: fail on unexpected act() / React warnings so terminal state is awaited properly.
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
       const msg = String(args[0] ?? '');
@@ -382,6 +393,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
   it('does not show the mismatch hint or personal-IBAN promo for customers without personal-iban', async () => {
     mockPersonalIban.mockReturnValue(undefined);
+    mockRequestedPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
     mockReceiveFor.mockResolvedValue(chfOffer());
 
@@ -392,6 +404,75 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     expect(screen.queryByText(MISMATCH_HINT)).not.toBeInTheDocument();
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
     expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'false');
+  });
+
+  it('does not delay a selector-free quote while wallet initialization is unsettled', async () => {
+    mockPersonalIban.mockReturnValue(undefined);
+    mockRequestedPersonalIban.mockReturnValue(undefined);
+    mockHasAuthenticatedCustomer.mockReturnValue(false);
+    mockWalletInitialized.mockReturnValue(false);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
+    mockReceiveFor.mockResolvedValue(ordinaryEurOffer());
+
+    const rendered = render(<BuyScreen />);
+
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(2), {
+      timeout: 3000,
+    });
+    await settle();
+    expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty(
+      'personalIbanProvider',
+    );
+    expect(screen.getByTestId('payment-info')).toBeInTheDocument();
+
+    mockHasAuthenticatedCustomer.mockReturnValue(true);
+    mockWalletInitialized.mockReturnValue(true);
+    rendered.rerender(<BuyScreen />);
+    await settle();
+    expect(mockReceiveFor).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows ordinary payment details directly after declining the Frick confirmation', async () => {
+    mockRequiresCustomerConfirmation.mockReturnValue(true);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
+    mockReceiveFor.mockResolvedValue(ordinaryEurOffer());
+    mockDeclineForCurrentCustomer.mockImplementation(() => {
+      mockPersonalIban.mockReturnValue(undefined);
+      mockRequiresCustomerConfirmation.mockReturnValue(false);
+    });
+
+    const rendered = render(<BuyScreen />);
+
+    await waitFor(
+      () =>
+        expect(
+          screen.getByText(
+            'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?',
+          ),
+        ).toBeInTheDocument(),
+      { timeout: 3000 },
+    );
+    expect(mockReceiveFor).not.toHaveBeenCalled();
+
+    await act(async () => {
+      screen.getByRole('button', { name: CONTINUE_WITHOUT }).click();
+      rendered.rerender(<BuyScreen />);
+    });
+
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument(), {
+      timeout: 3000,
+    });
+    await settle();
+    expect(mockDeclineForCurrentCustomer).toHaveBeenCalledTimes(1);
+    expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty(
+      'personalIbanProvider',
+    );
+    expect(screen.queryByText(MISMATCH_HINT)).not.toBeInTheDocument();
+    expect(screen.queryByText(VERIFY_HINT)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: CONTINUE_WITHOUT }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
   });
 
   it('does not flash the mismatch hint while a quote is still loading (no paymentInfo)', async () => {
@@ -412,6 +493,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     // No selector: no acknowledgement gate can hide payment-info for unrelated reasons.
     // Without immediate invalidation, the CHF offer would stay actionable during the 500ms debounce.
     mockPersonalIban.mockReturnValue(undefined);
+    mockRequestedPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
     mockReceiveFor.mockResolvedValue(chfOffer());
 
@@ -435,6 +517,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
   it('discards a pending quote when the customer clears the only amount', async () => {
     mockPersonalIban.mockReturnValue(undefined);
+    mockRequestedPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
 
     let resolveQuote!: (offer: ReturnType<typeof chfOffer>) => void;
@@ -469,6 +552,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
   it('keeps a pending quote when the customer only changes the numeric amount representation (A2)', async () => {
     mockPersonalIban.mockReturnValue(undefined);
+    mockRequestedPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
 
     let resolveQuote!: (offer: ReturnType<typeof chfOffer>) => void;
@@ -500,6 +584,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
   it('keeps the exact-price result visible when its synchronized form uses canonical numeric values (B1)', async () => {
     mockPersonalIban.mockReturnValue(undefined);
+    mockRequestedPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
 
     let resolveExactPrice!: (offer: ReturnType<typeof chfOffer>) => void;
@@ -567,6 +652,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
   it('uses generic KYC path for EUR bank transfer without personal-iban selector (KycRequired)', async () => {
     mockPersonalIban.mockReturnValue(undefined);
+    mockRequestedPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
     mockReceiveFor.mockRejectedValue({ message: 'KycRequired' });
 
@@ -584,6 +670,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
   it('uses generic path for EUR bank transfer without personal-iban selector (PaymentMethodNotAllowed)', async () => {
     mockPersonalIban.mockReturnValue(undefined);
+    mockRequestedPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
     mockReceiveFor.mockRejectedValue({ message: 'PaymentMethodNotAllowed' });
 
@@ -669,6 +756,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
   it('offers continue-without for an unrecognized selector instead of Retry-only (A3)', async () => {
     mockPersonalIban.mockReturnValue('unknown-provider');
+    mockRequestedPersonalIban.mockReturnValue('unknown-provider');
     mockRequiresCustomerConfirmation.mockReturnValue(true);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
     mockReceiveFor.mockResolvedValue(chfOffer());

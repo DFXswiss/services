@@ -110,6 +110,11 @@ export default function BuyInfoScreen(): JSX.Element {
   const hasApplicableFrickRequest =
     isPersonalIbanEligible &&
     isExplicitFrickPersonalIbanRequest(personalIbanSelector);
+  const shouldWaitForApplicableFrickCustomer =
+    hasApplicableFrickRequest &&
+    (!isWalletInitialized ||
+      !hasAuthenticatedCustomer ||
+      requiresCustomerConfirmation);
   const showPersonalIbanConfirmation =
     hasApplicableFrickRequest && requiresCustomerConfirmation;
 
@@ -137,11 +142,7 @@ export default function BuyInfoScreen(): JSX.Element {
     let isRunning = true;
     const generation = ++quoteGeneration.current;
 
-    if (
-      !isWalletInitialized ||
-      (hasApplicableFrickRequest &&
-        (!hasAuthenticatedCustomer || requiresCustomerConfirmation))
-    ) {
+    if (shouldWaitForApplicableFrickCustomer) {
       setPaymentInfo(undefined);
       setErrorMessage(undefined);
       setKycError(undefined);
@@ -246,10 +247,7 @@ export default function BuyInfoScreen(): JSX.Element {
     amountOut,
     effectivePersonalIban,
     personalIbanSelector,
-    hasApplicableFrickRequest,
-    hasAuthenticatedCustomer,
-    isWalletInitialized,
-    requiresCustomerConfirmation,
+    shouldWaitForApplicableFrickCustomer,
     retryToken,
   ]);
 
