@@ -37,7 +37,7 @@ test.describe('DFX Safe - Full Baseline Coverage', () => {
     await page.clock.setFixedTime(new Date('2026-06-15T12:00:00Z'));
 
     // ========================================
-    // STEP 1: Loaded Safe portfolio (EUR), transaction interface and activity list
+    // STEP 1: Loaded Safe portfolio (EUR), the three actions and the activity list
     // ========================================
     await page.goto(`/safe?session=${token}`);
     await page.waitForLoadState('networkidle');
@@ -48,6 +48,12 @@ test.describe('DFX Safe - Full Baseline Coverage', () => {
     await expect(page.getByText(/ZCHF|dEURO|ETH/).first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'Deposit', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Recent Activity' })).toBeVisible({ timeout: 15000 });
+
+    // Nothing is preselected: the three actions are offered, but no form is open until one
+    // of them is chosen. `Type:` and the amount field belong to the deposit form and must be
+    // absent here — otherwise the screen would put a form in front of a user who asked for none.
+    await expect(page.getByText('Type:')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Next' })).toHaveCount(0);
 
     await expect(page).toHaveScreenshot('01-safe-portfolio.png', screenshotOpts);
 
