@@ -27,6 +27,15 @@ enum Status {
   ERROR = 'ERROR',
 }
 
+const MISSING_CURRENCY_MESSAGE =
+  'No currency specified. Please go back and select a currency.';
+
+const OWN_NAME_SUCCESS_MESSAGE =
+  'Your personal IBAN for {{currency}} transactions is now available. Future bank transfers will be made to this IBAN in your own name.';
+
+const DEDICATED_IBAN_SUCCESS_MESSAGE =
+  'Your personal IBAN for {{currency}} transactions is now available. Future bank transfers will be made to this dedicated IBAN, which is assigned only to you.';
+
 export default function PersonalIbanScreen(): JSX.Element {
   useAddressGuard('/login');
 
@@ -35,7 +44,8 @@ export default function PersonalIbanScreen(): JSX.Element {
   const { createPersonalIban } = useVirtualIban();
   const [params] = useSearchParams();
 
-  const currency = params.get('currency') ?? 'EUR';
+  // No silent currency default — missing param is an explicit error (EUR vs CHF use different providers).
+  const currency = params.get('currency') ?? undefined;
 
   const [status, setStatus] = useState<Status>(Status.INITIAL);
   const [error, setError] = useState<string>();
@@ -54,6 +64,12 @@ export default function PersonalIbanScreen(): JSX.Element {
   }, []);
 
   async function generateIban() {
+    if (!currency) {
+      setError(translate('screens/personal-iban', MISSING_CURRENCY_MESSAGE));
+      setStatus(Status.ERROR);
+      return;
+    }
+
     setStatus(Status.LOADING);
     setError(undefined);
 
@@ -95,7 +111,7 @@ export default function PersonalIbanScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
 
-      {status === Status.SUCCESS && virtualIban && (
+      {status === Status.SUCCESS && virtualIban && currency && (
         <StyledVerticalStack gap={4} full>
           <div className="bg-dfxGray-300/50 rounded-md p-4">
             <StyledVerticalStack gap={2}>
@@ -107,11 +123,9 @@ export default function PersonalIbanScreen(): JSX.Element {
           </div>
 
           <StyledInfoText iconColor={IconColor.BLUE}>
-            {translate(
-              'screens/personal-iban',
-              'Your personal IBAN for {{currency}} transactions is now available. Future bank transfers will be made to this IBAN in your own name.',
-              { currency },
-            )}
+            {currency === 'EUR'
+              ? translate('screens/personal-iban', DEDICATED_IBAN_SUCCESS_MESSAGE, { currency })
+              : translate('screens/personal-iban', OWN_NAME_SUCCESS_MESSAGE, { currency })}
           </StyledInfoText>
 
           <StyledButton
