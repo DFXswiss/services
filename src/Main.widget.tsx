@@ -1,7 +1,9 @@
 import { createMemoryRouter } from 'react-router-dom';
 import App, { WidgetParams } from './App';
 
-function MainWidget(params: WidgetParams) {
+type InternalWidgetParams = WidgetParams & { personalIbanRevision?: number };
+
+function MainWidget(params: InternalWidgetParams) {
   return (
     <>
       <link type="text/css" rel="stylesheet" href="main-widget.css" />

@@ -17,7 +17,9 @@ function TestComponent({ personalIban, personalIbanRevision }: TestProps): JSX.E
 
 function defineTestElement(name: string): CustomElementConstructor {
   const BaseElement = createWebComponent(TestComponent, {
-    props: { personalIban: 'string', personalIbanRevision: 'number' },
+    // The revision is deliberately not a registered Web Component prop. The string wrapper
+    // writes it only into r2wc's internal props bag.
+    props: { personalIban: 'string' },
   });
   const TestElement = preserveStringAttribute(
     BaseElement,
@@ -88,6 +90,7 @@ describe('Web Component string selector handling', () => {
       'personal-iban-selector-prop-empty-after-set-test',
     ) as HTMLElement & TestProps;
     await act(async () => document.body.append(element));
+    expect('personalIbanRevision' in element).toBe(false);
 
     await act(async () => {
       element.personalIban = 'frick';

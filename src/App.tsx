@@ -594,13 +594,11 @@ export enum Service {
 export interface WidgetParams extends AppParams {
   service?: Service;
   onClose?: (data: CloseMessageData) => void;
-  /** Internal Web Component write counter used to distinguish equal-value selector reassertions. */
-  personalIbanRevision?: number;
 }
 
 interface AppProps {
   routerFactory: (routes: RouteObject[]) => Router;
-  params?: WidgetParams;
+  params?: WidgetParams & { personalIbanRevision?: number };
 }
 
 function App({ routerFactory, params }: AppProps) {

@@ -6,6 +6,19 @@ const mockUseSessionContext = jest.fn();
 const mockUseAuthContext = jest.fn();
 const mockReceiveQuote = jest.fn();
 
+function sessionToken(account: number): string {
+  const encode = (value: object) =>
+    window
+      .btoa(JSON.stringify(value))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
+    account,
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  })}.signature`;
+}
+
 jest.mock('@dfx.swiss/react', () => ({
   Blockchain: {},
   PersonalIbanProvider: { FRICK: 'Frick' },
@@ -170,13 +183,16 @@ describe('personal-iban logout cleanup (B2)', () => {
     );
   });
 
-  it('lets incoming widget credentials install before quoting with their explicit selector (A1)', async () => {
-    localStorage.setItem('dfx.authenticationToken', 'persisted-expired-token');
+  it('keeps the incoming session and selector pending while valid persisted customer A is observed (B1)', async () => {
+    const customerASession = sessionToken(51);
+    const customerBSession = sessionToken(52);
+    localStorage.setItem('dfx.authenticationToken', customerASession);
     mockUseSessionContext.mockReturnValue({
       isInitialized: true,
-      isLoggedIn: false,
+      isLoggedIn: true,
       availableBlockchains: [],
     });
+    mockUseAuthContext.mockReturnValue({ session: { account: 51 } });
 
     const router = createMemoryRouter(
       [{ path: '*', element: <CustomerQuoteProbe /> }],
@@ -188,9 +204,8 @@ describe('personal-iban logout cleanup (B2)', () => {
         <AppHandlingContextProvider
           isWidget
           params={{
-            session: 'incoming-customer-session',
+            session: customerBSession,
             personalIban: 'frick',
-            personalIbanRevision: 1,
           }}
           router={router}
         >
@@ -200,22 +215,17 @@ describe('personal-iban logout cleanup (B2)', () => {
       rerender = result.rerender;
     });
 
-    expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick');
+    // B's pending selector must not be consumed by or exposed to persisted customer A.
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
 
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
-    });
     mockUseAuthContext.mockReturnValue({ session: { account: 52 } });
     await act(async () => {
       rerender!(
         <AppHandlingContextProvider
           isWidget
           params={{
-            session: 'incoming-customer-session',
+            session: customerBSession,
             personalIban: 'frick',
-            personalIbanRevision: 1,
           }}
           router={router}
         >
@@ -230,6 +240,7 @@ describe('personal-iban logout cleanup (B2)', () => {
         personalIbanProvider: 'Frick',
       }),
     );
+    expect(mockReceiveQuote).not.toHaveBeenCalledWith({ customer: 52 });
   });
 
   it('keeps standalone suppression through Back and the next customer login (B2)', async () => {
@@ -365,7 +376,7 @@ describe('personal-iban logout cleanup (B2)', () => {
     );
   });
 
-  it('restores a same-value widget selector reasserted after a live logout', async () => {
+  it('restores a Web Component selector after logout when its internal write revision changes', async () => {
     mockUseSessionContext.mockReturnValue({
       isInitialized: true,
       isLoggedIn: true,
@@ -417,5 +428,99 @@ describe('personal-iban logout cleanup (B2)', () => {
       );
     });
     expect(screen.getByTestId('widget-selector')).toHaveTextContent('frick');
+  });
+
+  it('treats changed React credentials plus the same selector as customer B intent after logout (A1)', async () => {
+    const customerBSession = sessionToken(82);
+    mockUseSessionContext.mockReturnValue({
+      isInitialized: true,
+      isLoggedIn: true,
+      availableBlockchains: [],
+    });
+    mockUseAuthContext.mockReturnValue({ session: { account: 81 } });
+
+    const router = createMemoryRouter(
+      [{ path: '*', element: <CustomerQuoteProbe /> }],
+      { initialEntries: ['/buy'] },
+    );
+    let rerender: (ui: React.ReactElement) => void;
+    await act(async () => {
+      const result = render(
+        <AppHandlingContextProvider
+          isWidget
+          params={{ personalIban: 'frick' }}
+          router={router}
+        >
+          <RouterProvider router={router} />
+        </AppHandlingContextProvider>,
+      );
+      rerender = result.rerender;
+    });
+    await waitFor(() =>
+      expect(mockReceiveQuote).toHaveBeenCalledWith({
+        customer: 81,
+        personalIbanProvider: 'Frick',
+      }),
+    );
+
+    mockUseSessionContext.mockReturnValue({
+      isInitialized: true,
+      isLoggedIn: false,
+      availableBlockchains: [],
+    });
+    mockUseAuthContext.mockReturnValue({ session: undefined });
+    await act(async () => {
+      rerender!(
+        <AppHandlingContextProvider
+          isWidget
+          params={{ personalIban: 'frick' }}
+          router={router}
+        >
+          <RouterProvider router={router} />
+        </AppHandlingContextProvider>,
+      );
+    });
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
+
+    // The React host changes credentials and supplies its unchanged selector in the same params.
+    await act(async () => {
+      rerender!(
+        <AppHandlingContextProvider
+          isWidget
+          params={{ session: customerBSession, personalIban: 'frick' }}
+          router={router}
+        >
+          <RouterProvider router={router} />
+        </AppHandlingContextProvider>,
+      );
+    });
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
+
+    mockReceiveQuote.mockClear();
+    mockUseSessionContext.mockReturnValue({
+      isInitialized: true,
+      isLoggedIn: true,
+      availableBlockchains: [],
+    });
+    mockUseAuthContext.mockReturnValue({ session: { account: 82 } });
+    await act(async () => {
+      rerender!(
+        <AppHandlingContextProvider
+          isWidget
+          params={{ session: customerBSession, personalIban: 'frick' }}
+          router={router}
+        >
+          <RouterProvider router={router} />
+        </AppHandlingContextProvider>,
+      );
+    });
+
+    await waitFor(() =>
+      expect(mockReceiveQuote).toHaveBeenCalledWith({
+        customer: 82,
+        personalIbanProvider: 'Frick',
+      }),
+    );
+    expect(mockReceiveQuote).not.toHaveBeenCalledWith({ customer: 82 });
   });
 });

@@ -97,7 +97,11 @@ jest.mock('@dfx.swiss/react-components', () => {
     Form: ({ children, control }: any) => <div>{enrich(children, control)}</div>,
     IconColor: { BLUE: 'blue' },
     SpinnerSize: { SM: 'sm', LG: 'lg' },
-    StyledButton: () => null,
+    StyledButton: ({ label, onClick }: any) => (
+      <button type="button" onClick={onClick}>
+        {label}
+      </button>
+    ),
     StyledButtonColor: { STURDY_WHITE: 'sturdy-white' },
     StyledButtonWidth: { MIN: 'min', FULL: 'full' },
     StyledDropdown: ({ name, items, labelFunc, control }: any) => (
@@ -275,5 +279,56 @@ describe('BuyScreen quote race protection', () => {
     // Stale slow data must never overwrite the newer fast data.
     expect(screen.getByTestId('payment-info')).toHaveTextContent('222');
     expect(screen.queryByText('111')).not.toBeInTheDocument();
+  });
+
+  it('uses a pending CHF response after the live selector toggles on an offer that cannot carry it (A2)', async () => {
+    mockPersonalIban.mockReturnValue(undefined);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
+
+    const offer = {
+      id: 3,
+      amount: 333,
+      currency: { name: 'CHF' },
+      estimatedAmount: 0.03,
+      asset: { name: 'BTC', uniqueName: 'Bitcoin' },
+      minVolume: 1,
+      maxVolume: 100000,
+      isValid: true,
+      exchangeRate: 1,
+      rate: 1,
+      fees: {},
+      priceSteps: [],
+      isPersonalIban: false,
+      name: 'DFX AG',
+    };
+    let resolvePending!: (value: typeof offer) => void;
+    const pending = new Promise<typeof offer>((resolve) => {
+      resolvePending = resolve;
+    });
+    mockReceiveFor.mockImplementationOnce(() => pending).mockResolvedValue(offer);
+
+    const { rerender } = render(<BuyScreen />);
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(1), { timeout: 3000 });
+    expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
+
+    mockPersonalIban.mockReturnValue('frick');
+    rerender(<BuyScreen />);
+
+    await act(async () => {
+      resolvePending(offer);
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          'Your requested personal IBAN is only available for EUR bank transfers, so it was not used for this offer.',
+        ),
+      ).toBeInTheDocument(),
+    );
+    await act(async () => {
+      screen.getByRole('button', { name: 'Continue without personal IBAN' }).click();
+    });
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toHaveTextContent('333'));
+    expect(mockReceiveFor.mock.calls.every((call: any) => !('personalIbanProvider' in call[0]))).toBe(true);
   });
 });

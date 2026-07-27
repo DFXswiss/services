@@ -168,7 +168,7 @@ export default function BuyScreen(): JSX.Element {
     currencyName: string;
     assetUniqueName: string;
     paymentMethod?: FiatPaymentMethod;
-    personalIban?: string;
+    personalIbanProvider?: BuyPaymentInfo['personalIbanProvider'];
   }>();
 
   const effectivePersonalIban = suppressPersonalIban ? undefined : personalIban;
@@ -348,13 +348,19 @@ export default function BuyScreen(): JSX.Element {
 
   const hasCompleteSpendSide = Boolean(selectedAmount && selectedCurrency && selectedPaymentMethod);
   const hasCompleteGetSide = Boolean(selectedTargetAmount && selectedAsset);
+  const selectedPersonalIbanProvider = isPersonalIbanApplicable(
+    selectedCurrency?.name,
+    selectedPaymentMethod,
+  )
+    ? toPersonalIbanProviderRequest(effectivePersonalIban).personalIbanProvider
+    : undefined;
   const quoteRequestSignature = JSON.stringify({
     amount: selectedAmount ? Number(selectedAmount) : undefined,
     targetAmount: selectedTargetAmount ? Number(selectedTargetAmount) : undefined,
     currency: selectedCurrency?.name,
     asset: selectedAsset?.uniqueName,
     paymentMethod: selectedPaymentMethod,
-    personalIban: effectivePersonalIban,
+    personalIbanProvider: selectedPersonalIbanProvider,
     hasCompleteSpendSide,
     hasCompleteGetSide,
   });
@@ -375,7 +381,7 @@ export default function BuyScreen(): JSX.Element {
       selectedCurrency?.name === synchronizedForm.currencyName &&
       selectedAsset?.uniqueName === synchronizedForm.assetUniqueName &&
       selectedPaymentMethod === synchronizedForm.paymentMethod &&
-      effectivePersonalIban === synchronizedForm.personalIban;
+      selectedPersonalIbanProvider === synchronizedForm.personalIbanProvider;
 
     // Exact-price synchronization writes the calculated opposite amount into the form. It is
     // not a customer edit and must not invalidate the response it came from.
@@ -396,12 +402,27 @@ export default function BuyScreen(): JSX.Element {
     }
   }, [quoteRequestSignature]);
 
-  // Unrecognized-selector suppression is scoped to the current selector value only.
+  // Selector-scoped UI state changes with the live intent even when the request cannot carry it.
   useEffect(() => {
+    setContinueWithoutPersonalIban(false);
     setSuppressPersonalIban(false);
   }, [personalIban]);
 
   const debouncedValidatedData = useDebounce(validatedData, 500);
+  const isPersonalIbanEligible =
+    debouncedValidatedData &&
+    isPersonalIbanApplicable(
+      debouncedValidatedData.currency.name,
+      debouncedValidatedData.paymentMethod,
+    );
+  const requestPersonalIbanProvider = isPersonalIbanEligible
+    ? toPersonalIbanProviderRequest(effectivePersonalIban).personalIbanProvider
+    : undefined;
+  const hasUnsupportedPersonalIbanRequest =
+    isPersonalIbanEligible && isUnrecognizedPersonalIbanSelector(effectivePersonalIban);
+  const personalIbanErrorApplies =
+    isPersonalIbanEligible &&
+    (requestPersonalIbanProvider !== undefined || hasUnsupportedPersonalIbanRequest);
 
   // load payment infos
   useEffect(() => {
@@ -415,16 +436,7 @@ export default function BuyScreen(): JSX.Element {
       };
     }
 
-    // Currency/method eligibility only — independent of whether the customer set a selector.
-    // Request building stays on eligibility alone (toPersonalIbanProviderRequest(undefined) is {}).
-    const isPersonalIbanEligible = isPersonalIbanApplicable(
-      debouncedValidatedData.currency.name,
-      debouncedValidatedData.paymentMethod,
-    );
-    // Personal-IBAN error copy only when the customer actually requested a personal IBAN.
-    const personalIbanErrorApplies = isPersonalIbanEligible && effectivePersonalIban !== undefined;
-
-    if (isPersonalIbanEligible && isUnrecognizedPersonalIbanSelector(effectivePersonalIban)) {
+    if (hasUnsupportedPersonalIbanRequest) {
       const personalIbanErrorText = getPersonalIbanErrorMessage('PersonalIbanProviderUnsupported');
       if (isRunning && generation === quoteGeneration.current) {
         setPaymentInfo(undefined);
@@ -444,7 +456,9 @@ export default function BuyScreen(): JSX.Element {
     const data: BuyPaymentInfo = {
       ...debouncedValidatedData,
       externalTransactionId,
-      ...(isPersonalIbanEligible ? toPersonalIbanProviderRequest(effectivePersonalIban) : {}),
+      ...(requestPersonalIbanProvider !== undefined
+        ? { personalIbanProvider: requestPersonalIbanProvider }
+        : {}),
     };
 
     if (generation === quoteGeneration.current) {
@@ -480,7 +494,7 @@ export default function BuyScreen(): JSX.Element {
           currencyName: debouncedValidatedData.currency.name,
           assetUniqueName: debouncedValidatedData.asset.uniqueName,
           paymentMethod: debouncedValidatedData.paymentMethod,
-          personalIban: effectivePersonalIban,
+          personalIbanProvider: data.personalIbanProvider,
         };
         debouncedValidatedData.sideToUpdate === Side.SPEND
           ? setVal('amount', info.amount.toString())
@@ -522,7 +536,13 @@ export default function BuyScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [debouncedValidatedData, effectivePersonalIban, retryToken]);
+  }, [
+    debouncedValidatedData,
+    requestPersonalIbanProvider,
+    hasUnsupportedPersonalIbanRequest,
+    personalIbanErrorApplies,
+    retryToken,
+  ]);
 
   function validateBuy(buy: Buy): void {
     setCustomAmountError(undefined);

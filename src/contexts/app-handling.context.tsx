@@ -1,6 +1,16 @@
 import { Blockchain, Buy, Sell, Swap, useAuthContext, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import {
+  PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
@@ -164,6 +174,42 @@ export type CloseServicesParams =
   | SwapServicesParams
   | PaymentLinkServicesParams;
 
+type WidgetCredentials = Pick<AppParams, 'session' | 'address' | 'signature'>;
+
+interface PendingWidgetCredentialIntent {
+  credentials: WidgetCredentials;
+  personalIban?: string;
+  revision?: number;
+  sessionIdentity?: number;
+}
+
+function widgetCredentials(params?: AppParams): WidgetCredentials {
+  return {
+    session: params?.session,
+    address: params?.address,
+    signature: params?.signature,
+  };
+}
+
+function hasWidgetCredentials(credentials: WidgetCredentials): boolean {
+  return Boolean(credentials.session || (credentials.address && credentials.signature));
+}
+
+function areWidgetCredentialsEqual(a: WidgetCredentials, b: WidgetCredentials): boolean {
+  return a.session === b.session && a.address === b.address && a.signature === b.signature;
+}
+
+function sessionCustomerIdentity(token?: string): number | undefined {
+  if (!token) return undefined;
+
+  try {
+    const account = jwtDecode<{ account?: number }>(token).account;
+    return typeof account === 'number' ? account : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // --- CONTEXT --- //
 interface AppHandlingContextInterface {
   isInitialized: boolean;
@@ -181,6 +227,8 @@ interface AppHandlingContextInterface {
   personalIbanSuppressed: boolean;
   /** Lift standalone suppression when navigation introduces a new explicit selector intent. */
   restorePersonalIban: () => void;
+  /** Associate applied widget credentials with the identity they authenticated. */
+  establishWidgetCredentials: (credentials: WidgetCredentials, customerIdentity: number) => void;
   availableBlockchains?: Blockchain[];
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
@@ -235,33 +283,76 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   // A genuine customer boundary suppresses the selector for the rest of this mounted app.
   // Standalone navigation or a widget write can explicitly restore it.
   const [personalIbanSuppressed, setPersonalIbanSuppressed] = useState(false);
+  const [establishedWidgetCredentials, setEstablishedWidgetCredentials] = useState<{
+    credentials: WidgetCredentials;
+    customerIdentity: number;
+  }>();
   const lastWidgetPersonalIban = useRef(props.params?.personalIban);
   const lastWidgetPersonalIbanRevision = useRef(props.params?.personalIbanRevision);
   const observedCustomerIdentity = useRef(isLoggedIn ? session?.account : undefined);
-  const widgetIntentAtObservedIdentity = useRef({
-    personalIban: props.params?.personalIban,
-    revision: props.params?.personalIbanRevision,
-  });
-  const widgetCredentialsAtObservedIdentity = useRef({
-    session: props.params?.session,
-    address: props.params?.address,
-    signature: props.params?.signature,
-  });
+  // Credentials and their supplied selector are one pending intent. Initial credentials are
+  // deliberately compared with "none", not with whichever persisted identity renders first.
+  const lastObservedWidgetCredentials = useRef<WidgetCredentials>({});
+  const pendingWidgetCredentialIntent = useRef<PendingWidgetCredentialIntent>();
+  const currentWidgetCredentials = widgetCredentials(props.params);
+  if (
+    props.isWidget &&
+    !areWidgetCredentialsEqual(currentWidgetCredentials, lastObservedWidgetCredentials.current)
+  ) {
+    lastObservedWidgetCredentials.current = currentWidgetCredentials;
+    pendingWidgetCredentialIntent.current =
+      hasWidgetCredentials(currentWidgetCredentials)
+        ? {
+            credentials: currentWidgetCredentials,
+            personalIban: props.params?.personalIban,
+            revision: props.params?.personalIbanRevision,
+            sessionIdentity: sessionCustomerIdentity(currentWidgetCredentials.session),
+          }
+        : undefined;
+  } else if (
+    pendingWidgetCredentialIntent.current &&
+    areWidgetCredentialsEqual(
+      currentWidgetCredentials,
+      pendingWidgetCredentialIntent.current.credentials,
+    ) &&
+    (props.params?.personalIban !== pendingWidgetCredentialIntent.current.personalIban ||
+      props.params?.personalIbanRevision !== pendingWidgetCredentialIntent.current.revision)
+  ) {
+    // Attribute/property writes can arrive separately from credentials. Keep the still-unconsumed
+    // pair current without assigning it to the transient authenticated customer.
+    pendingWidgetCredentialIntent.current = {
+      ...pendingWidgetCredentialIntent.current,
+      personalIban: props.params?.personalIban,
+      revision: props.params?.personalIbanRevision,
+    };
+  }
+
   const authenticatedCustomerIdentity = isLoggedIn ? session?.account : undefined;
-  const widgetHasNewSelectorIntent =
-    props.isWidget &&
-    (props.params?.personalIban !== widgetIntentAtObservedIdentity.current.personalIban ||
-      props.params?.personalIbanRevision !== widgetIntentAtObservedIdentity.current.revision);
-  const widgetHasIncomingCredentials =
-    props.isWidget &&
-    (props.params?.session !== widgetCredentialsAtObservedIdentity.current.session ||
-      props.params?.address !== widgetCredentialsAtObservedIdentity.current.address ||
-      props.params?.signature !== widgetCredentialsAtObservedIdentity.current.signature);
+  const pendingWidgetIntent = pendingWidgetCredentialIntent.current;
+  const establishedCredentialIdentity =
+    establishedWidgetCredentials &&
+    pendingWidgetIntent &&
+    areWidgetCredentialsEqual(
+      establishedWidgetCredentials.credentials,
+      pendingWidgetIntent.credentials,
+    )
+      ? establishedWidgetCredentials.customerIdentity
+      : undefined;
+  const establishedPendingIdentity =
+    pendingWidgetIntent?.sessionIdentity ?? establishedCredentialIdentity;
+  const widgetCredentialsBelongToAuthenticatedCustomer =
+    pendingWidgetIntent != null &&
+    establishedPendingIdentity != null &&
+    establishedPendingIdentity === authenticatedCustomerIdentity;
   const widgetIntentBelongsToIncomingCustomer =
-    widgetHasNewSelectorIntent && widgetHasIncomingCredentials;
+    widgetCredentialsBelongToAuthenticatedCustomer &&
+    pendingWidgetIntent?.personalIban !== undefined;
+  const widgetIntentIsPending =
+    pendingWidgetIntent?.personalIban !== undefined &&
+    !widgetCredentialsBelongToAuthenticatedCustomer;
   // Hide the selector on the very render that exposes a different authenticated account, before
-  // quote effects in descendants can run. A simultaneous widget write is the new customer's
-  // explicit selector intent and therefore wins over suppression.
+  // quote effects in descendants can run. A credential-bound intent wins only when those exact
+  // credentials have established the rendered identity.
   const authenticatedCustomerChanged =
     authenticatedCustomerIdentity != null &&
     observedCustomerIdentity.current != null &&
@@ -285,41 +376,38 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
     const previousIdentity = observedCustomerIdentity.current;
     if (previousIdentity === authenticatedCustomerIdentity) {
-      // A selector write made without incoming credentials belongs to the current customer. Mark
-      // it consumed so a later credential-only account switch cannot inherit it.
-      if (!widgetHasIncomingCredentials) {
-        widgetIntentAtObservedIdentity.current = {
-          personalIban: props.params?.personalIban,
-          revision: props.params?.personalIbanRevision,
-        };
+      if (widgetCredentialsBelongToAuthenticatedCustomer) {
+        pendingWidgetCredentialIntent.current = undefined;
+        setEstablishedWidgetCredentials(undefined);
+        if (widgetIntentBelongsToIncomingCustomer) setPersonalIbanSuppressed(false);
       }
       return;
     }
 
     observedCustomerIdentity.current = authenticatedCustomerIdentity;
-    widgetIntentAtObservedIdentity.current = {
-      personalIban: props.params?.personalIban,
-      revision: props.params?.personalIbanRevision,
-    };
-    widgetCredentialsAtObservedIdentity.current = {
-      session: props.params?.session,
-      address: props.params?.address,
-      signature: props.params?.signature,
-    };
+    if (widgetCredentialsBelongToAuthenticatedCustomer) {
+      // Consume the credential and selector together only after their authenticated identity is
+      // present. This is intentionally atomic: neither is baselined against a transient customer.
+      pendingWidgetCredentialIntent.current = undefined;
+      setEstablishedWidgetCredentials(undefined);
+      if (widgetIntentBelongsToIncomingCustomer) setPersonalIbanSuppressed(false);
+    }
 
     if (previousIdentity != null && previousIdentity !== authenticatedCustomerIdentity) {
       clearCustomerSessionState(!widgetIntentBelongsToIncomingCustomer);
     }
   }, [
     authenticatedCustomerIdentity,
-    props.params?.address,
-    props.params?.personalIban,
-    props.params?.personalIbanRevision,
-    props.params?.session,
-    props.params?.signature,
-    widgetHasIncomingCredentials,
+    widgetCredentialsBelongToAuthenticatedCustomer,
     widgetIntentBelongsToIncomingCustomer,
   ]);
+
+  const establishWidgetCredentials = useCallback(
+    (credentials: WidgetCredentials, customerIdentity: number) => {
+      setEstablishedWidgetCredentials({ credentials, customerIdentity });
+    },
+    [],
+  );
 
   // Host changed or reasserted the widget property → lift logout suppression.
   useEffect(() => {
@@ -590,16 +678,26 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     }
   }
 
+  const widgetPersonalIban = !props.isWidget
+    ? undefined
+    : widgetIntentBelongsToIncomingCustomer
+    ? pendingWidgetIntent?.personalIban
+    : personalIbanSuppressed || authenticatedCustomerChanged || widgetIntentIsPending
+    ? undefined
+    : props.params?.personalIban;
+  const isPersonalIbanSuppressed =
+    (personalIbanSuppressed && !widgetIntentBelongsToIncomingCustomer) ||
+    authenticatedCustomerChanged ||
+    widgetIntentIsPending;
+
   const context = useMemo(
     () => ({
       isEmbedded: props.isWidget || isUsedByIframe,
       isWidget: props.isWidget,
-      widgetPersonalIban:
-        props.isWidget && !(personalIbanSuppressed || authenticatedCustomerChanged)
-          ? props.params?.personalIban
-          : undefined,
-      personalIbanSuppressed: personalIbanSuppressed || authenticatedCustomerChanged,
+      widgetPersonalIban,
+      personalIbanSuppressed: isPersonalIbanSuppressed,
       restorePersonalIban: () => setPersonalIbanSuppressed(false),
+      establishWidgetCredentials,
       hasSession,
       isDfxHosted: window.location.hostname?.split('.').slice(-2).join('.') === 'dfx.swiss',
       closeServices,
@@ -621,10 +719,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     }),
     [
       props.isWidget,
-      props.params?.personalIban,
-      personalIbanSuppressed,
-      authenticatedCustomerChanged,
-      authenticatedCustomerIdentity,
+      widgetPersonalIban,
+      isPersonalIbanSuppressed,
+      establishWidgetCredentials,
       props.service,
       isUsedByIframe,
       redirectUri,
