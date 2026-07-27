@@ -7,11 +7,12 @@ import { getCachedAuth } from './helpers/auth-cache';
  * Documents the full Safe feature surface (`/safe`) with numbered screenshots for
  * code-review diffs. Not a CI regression gate — see CONTRIBUTING.md.
  *
- * Every screenshot is a distinct state. Two states are deliberately NOT captured
- * separately because they are already contained in the shots below:
- * - "Deposit / Fiat" is the initial state of the transaction interface and is therefore
- *   visible in 01-03.
+ * Every screenshot is a distinct state. One state is deliberately NOT captured separately
+ * because it is already contained in the shots below:
  * - The "Recent Activity" list sits below the interface and is visible in every shot.
+ *
+ * 01-03 show the screen as it opens: no action selected, so no form. Each form therefore
+ * needs its own shot — "Deposit / Fiat" included, which used to be the preselected state.
  */
 
 test.describe('DFX Safe - Full Baseline Coverage', () => {
@@ -74,11 +75,20 @@ test.describe('DFX Safe - Full Baseline Coverage', () => {
     await expect(page).toHaveScreenshot('03-safe-portfolio-usd.png', screenshotOpts);
 
     // ========================================
+    // STEP 3b: Deposit, type Fiat — the form that opens on the first click
+    // ========================================
+    // Fiat is the default type once Deposit is chosen, so this is what a user sees first.
+    await page.getByRole('button', { name: 'Deposit', exact: true }).click();
+    await expect(page.getByText('Type:')).toBeVisible();
+    await expect(page.getByText('Standard bank transaction')).toBeVisible();
+
+    await expect(page).toHaveScreenshot('03b-safe-deposit-fiat.png', screenshotOpts);
+
+    // ========================================
     // STEP 4: Deposit, type Crypto (receive interface)
     // ========================================
     // note: the QR code and payment address only appear once an asset and amount are set and
     // a receive order exists. Documented here is the reachable form itself.
-    await page.getByRole('button', { name: 'Deposit', exact: true }).click();
     await page.getByRole('button', { name: 'Crypto', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Next' })).toBeVisible();
     await expect(page.getByText('Asset', { exact: true }).first()).toBeVisible();
