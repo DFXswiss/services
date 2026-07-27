@@ -267,4 +267,18 @@ describe('TransactionList document error display', () => {
       'This bank no longer accepts payments. Please start a new purchase.',
     );
   });
+
+  it('uses error.message directly without a silent Unknown error fallback (A5)', async () => {
+    mockGetTransactionInvoice.mockRejectedValue({ message: 'Network failure detail' });
+
+    renderList();
+
+    const openInvoice = await screen.findByRole('button', { name: 'Open invoice' });
+    await userEvent.click(openInvoice);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('error-hint')).toHaveTextContent('Network failure detail');
+    });
+    expect(screen.queryByText('Unknown error')).not.toBeInTheDocument();
+  });
 });

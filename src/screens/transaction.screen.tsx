@@ -886,7 +886,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                       key: tx.uid,
                                       message: storedDetailErrorText
                                         ? translate('screens/payment', storedDetailErrorText)
-                                        : (error.message ?? 'Unknown error'),
+                                        : error.message,
                                     });
                                   })
                                   .finally(() => setIsInvoiceLoading(undefined));
@@ -912,7 +912,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                       key: String(tx.id),
                                       message: storedDetailErrorText
                                         ? translate('screens/payment', storedDetailErrorText)
-                                        : (error.message ?? 'Unknown error'),
+                                        : error.message,
                                     });
                                   })
                                   .finally(() => setIsReceiptLoading(undefined));

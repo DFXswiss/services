@@ -1,5 +1,6 @@
 // Focused unit test for PaymentInformationContent Bank-row gating.
-// Mounts the REAL component (not mocked) so info.isPersonalIban && info.bank is exercised.
+// Mounts the REAL component (not mocked) so the explicit showBank prop is exercised.
+// Must NOT gate on generic isPersonalIban — legacy Yapeal personal IBANs also set that flag.
 
 const mockCopy = jest.fn();
 
@@ -79,10 +80,11 @@ describe('PaymentInformationContent Bank row', () => {
     jest.clearAllMocks();
   });
 
-  it('shows the Bank row with the bank name when isPersonalIban is true and bank is set', () => {
+  it('shows the Bank row when showBank is true and bank is set', () => {
     render(
       <PaymentInformationContent
-        info={baseInfo({ isPersonalIban: true, bank: 'Bank Frick' })}
+        info={baseInfo({ isPersonalIban: true, bank: 'Bank Frick', name: 'DFX AG' })}
+        showBank
       />,
     );
 
@@ -90,14 +92,32 @@ describe('PaymentInformationContent Bank row', () => {
     expect(screen.getByTestId('row-value-Bank')).toHaveTextContent('Bank Frick');
   });
 
-  it('does not show the Bank row for a normal buy (isPersonalIban falsy)', () => {
-    render(<PaymentInformationContent info={baseInfo({ isPersonalIban: false, bank: 'Bank Frick' })} />);
+  it('does not show the Bank row for a normal buy even when isPersonalIban is true (B5)', () => {
+    // Legacy Yapeal virtual-IBAN path returns isPersonalIban: true + bank without a Frick selector.
+    render(
+      <PaymentInformationContent
+        info={baseInfo({ isPersonalIban: true, bank: 'Yapeal', name: 'Alice Example' })}
+      />,
+    );
 
     expect(screen.queryByTestId('row-Bank')).not.toBeInTheDocument();
   });
 
-  it('does not show the Bank row when bank is absent even if isPersonalIban is true', () => {
-    render(<PaymentInformationContent info={baseInfo({ isPersonalIban: true, bank: undefined })} />);
+  it('does not show the Bank row when showBank is false despite bank present', () => {
+    render(
+      <PaymentInformationContent
+        info={baseInfo({ isPersonalIban: true, bank: 'Bank Frick' })}
+        showBank={false}
+      />,
+    );
+
+    expect(screen.queryByTestId('row-Bank')).not.toBeInTheDocument();
+  });
+
+  it('does not show the Bank row when bank is absent even if showBank is true', () => {
+    render(
+      <PaymentInformationContent info={baseInfo({ isPersonalIban: true, bank: undefined })} showBank />,
+    );
 
     expect(screen.queryByTestId('row-Bank')).not.toBeInTheDocument();
   });

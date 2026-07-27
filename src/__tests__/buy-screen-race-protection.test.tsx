@@ -234,6 +234,10 @@ describe('BuyScreen quote race protection', () => {
         rate: 1,
         fees: {},
         priceSteps: [],
+        // Verified Frick fields so B1/C1 acknowledgement does not hide payment-info.
+        ...(provider !== undefined
+          ? { isPersonalIban: true, bank: 'Bank Frick', name: 'DFX AG' }
+          : { isPersonalIban: false, name: 'DFX AG' }),
       };
     }
 

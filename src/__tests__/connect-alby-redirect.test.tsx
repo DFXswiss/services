@@ -146,6 +146,23 @@ describe('ConnectAlby login redirect', () => {
     expect(redirect?.startsWith('/buy')).toBe(true);
   });
 
+  it('copies personal-iban from the live search when present, but no other query keys (A4)', async () => {
+    mockRedirectPath.mockReturnValue('/buy');
+    locationStub.search = '?user=alice@example.com&personal-iban=frick&arbitrary=value';
+    locationStub.href = 'http://localhost/connect?user=alice@example.com&personal-iban=frick&arbitrary=value';
+
+    await act(async () => {
+      renderConnectAlby();
+    });
+
+    await waitFor(() => expect(capturedLocation).toBeDefined());
+
+    const redirect = getRedirectParamFromCapturedLocation();
+    expect(redirect).toContain('personal-iban=frick');
+    expect(redirect).not.toContain('user=');
+    expect(redirect).not.toContain('arbitrary=');
+  });
+
   it('does not append a query string when redirectPath has no extra params', async () => {
     mockRedirectPath.mockReturnValue('/buy');
     locationStub.search = '';

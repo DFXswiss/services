@@ -119,6 +119,10 @@ describe('BuyInfoScreen quote race protection', () => {
         asset: { name: 'BTC' },
         minVolume: 1,
         maxVolume: 10000,
+        // Verified Frick fields so B1/C1 acknowledgement does not hide payment-info.
+        ...(provider !== undefined
+          ? { isPersonalIban: true, bank: 'Bank Frick', name: 'DFX AG' }
+          : { isPersonalIban: false, name: 'DFX AG' }),
       };
     }
 

@@ -37,7 +37,7 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -65,8 +65,12 @@ import { useNavigation } from '../hooks/navigation.hook';
 import { usePersonalIban } from '../hooks/personal-iban.hook';
 import {
   getPersonalIbanErrorMessage,
+  getPersonalIbanKycMessage,
+  isExplicitFrickPersonalIbanRequest,
+  isKycRequiredMessage,
   isPersonalIbanApplicable,
   isUnrecognizedPersonalIbanSelector,
+  isVerifiedFrickPersonalIbanResponse,
   toPersonalIbanProviderRequest,
 } from '../util/personal-iban';
 
@@ -137,6 +141,7 @@ export default function BuyScreen(): JSX.Element {
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
+  const [kycMessageOverride, setKycMessageOverride] = useState<string>();
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [showsNameForm, setShowsNameForm] = useState(false);
@@ -144,6 +149,18 @@ export default function BuyScreen(): JSX.Element {
   const [isContinue, setIsContinue] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
+  // Explicit acknowledgement before showing ordinary details when the selector is set but
+  // inapplicable or the Frick response failed compatibility checks (A2 / B1 / C1).
+  const [continueWithoutPersonalIban, setContinueWithoutPersonalIban] = useState(false);
+  // Suppress an unrecognized selector so the customer can continue with an ordinary quote (A3).
+  const [suppressPersonalIban, setSuppressPersonalIban] = useState(false);
+
+  // Live-input generation: bumps immediately when form inputs or selector change so stale
+  // debounced responses and confirm actions never commit against a newer form state (B4).
+  const quoteGeneration = useRef(0);
+  const committedQuoteGeneration = useRef(0);
+
+  const effectivePersonalIban = suppressPersonalIban ? undefined : personalIban;
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>();
@@ -318,96 +335,134 @@ export default function BuyScreen(): JSX.Element {
     }
   }, [showsNameForm, paymentInfo?.isValid]);
 
+  // Immediate invalidation when live form inputs or the selector change (B4). Debounce only
+  // launches the replacement request; display must never stay actionable against stale values.
+  useEffect(() => {
+    quoteGeneration.current += 1;
+    setErrorMessage(undefined);
+    setKycError(undefined);
+    setKycMessageOverride(undefined);
+    setPaymentInfo(undefined);
+    setPaymentInfoPaymentMethod(undefined);
+    setContinueWithoutPersonalIban(false);
+    setIsLoading(validatedData ? validatedData.sideToUpdate : undefined);
+  }, [validatedData, personalIban]);
+
+  // Unrecognized-selector suppression is scoped to the current selector value only.
+  useEffect(() => {
+    setSuppressPersonalIban(false);
+  }, [personalIban]);
+
+  const debouncedValidatedData = useDebounce(validatedData, 500);
+
   // load payment infos
   useEffect(() => {
     let isRunning = true;
+    const generation = quoteGeneration.current;
 
-    setErrorMessage(undefined);
-    setPaymentInfo(undefined);
-    setPaymentInfoPaymentMethod(undefined);
-    setIsLoading(undefined);
-
-    if (!validatedData) return;
+    if (!debouncedValidatedData) {
+      setIsLoading(undefined);
+      return () => {
+        isRunning = false;
+      };
+    }
 
     // Currency/method eligibility only — independent of whether the customer set a selector.
     // Request building stays on eligibility alone (toPersonalIbanProviderRequest(undefined) is {}).
     const isPersonalIbanEligible = isPersonalIbanApplicable(
-      validatedData.currency.name,
-      validatedData.paymentMethod,
+      debouncedValidatedData.currency.name,
+      debouncedValidatedData.paymentMethod,
     );
     // Personal-IBAN error copy only when the customer actually requested a personal IBAN.
-    const personalIbanErrorApplies = isPersonalIbanEligible && personalIban !== undefined;
+    const personalIbanErrorApplies = isPersonalIbanEligible && effectivePersonalIban !== undefined;
 
-    if (isPersonalIbanEligible && isUnrecognizedPersonalIbanSelector(personalIban)) {
+    if (isPersonalIbanEligible && isUnrecognizedPersonalIbanSelector(effectivePersonalIban)) {
       const personalIbanErrorText = getPersonalIbanErrorMessage('PersonalIbanProviderUnsupported');
-      setPaymentInfo(undefined);
-      setPaymentInfoPaymentMethod(undefined);
-      setErrorMessage(
-        personalIbanErrorText ? translate('screens/payment', personalIbanErrorText) : 'Unknown error',
-      );
+      if (isRunning && generation === quoteGeneration.current) {
+        setPaymentInfo(undefined);
+        setPaymentInfoPaymentMethod(undefined);
+        setErrorMessage(
+          personalIbanErrorText
+            ? translate('screens/payment', personalIbanErrorText)
+            : translate('screens/payment', 'The requested personal IBAN provider is not recognized.'),
+        );
+        setIsLoading(undefined);
+      }
       return () => {
         isRunning = false;
       };
     }
 
     const data: BuyPaymentInfo = {
-      ...validatedData,
+      ...debouncedValidatedData,
       externalTransactionId,
-      ...(isPersonalIbanEligible ? toPersonalIbanProviderRequest(personalIban) : {}),
+      ...(isPersonalIbanEligible ? toPersonalIbanProviderRequest(effectivePersonalIban) : {}),
     };
 
-    setIsLoading(validatedData.sideToUpdate);
+    if (generation === quoteGeneration.current) {
+      setIsLoading(debouncedValidatedData.sideToUpdate);
+    }
     receiveFor(data)
       .then((buy) => {
-        if (isRunning) {
-          validateBuy(buy);
-          setPaymentInfo(buy);
-          setPaymentInfoPaymentMethod(data.paymentMethod);
+        if (!isRunning || generation !== quoteGeneration.current) return;
+        validateBuy(buy);
+        setPaymentInfo(buy);
+        setPaymentInfoPaymentMethod(data.paymentMethod);
+        committedQuoteGeneration.current = generation;
 
-          // load exact price
-          if (buy) {
-            return receiveFor({ ...data, exactPrice: true });
-          }
+        // load exact price
+        if (buy) {
+          return receiveFor({ ...data, exactPrice: true });
         }
       })
       .then((info) => {
-        if (isRunning && info) {
-          validatedData.sideToUpdate === Side.SPEND
-            ? setVal('amount', info.amount.toString())
-            : setVal('targetAmount', info.estimatedAmount.toString());
-          setPaymentInfo(info);
-          setPaymentInfoPaymentMethod(data.paymentMethod);
-        }
+        if (!isRunning || generation !== quoteGeneration.current || !info) return;
+        debouncedValidatedData.sideToUpdate === Side.SPEND
+          ? setVal('amount', info.amount.toString())
+          : setVal('targetAmount', info.estimatedAmount.toString());
+        setPaymentInfo(info);
+        setPaymentInfoPaymentMethod(data.paymentMethod);
+        committedQuoteGeneration.current = generation;
       })
       .catch((error: ApiError) => {
-        if (isRunning) {
-          setPaymentInfo(undefined);
-          setPaymentInfoPaymentMethod(undefined);
-          const personalIbanErrorText = personalIbanErrorApplies
-            ? getPersonalIbanErrorMessage(error.message)
-            : undefined;
-          if (personalIbanErrorText) {
-            setErrorMessage(translate('screens/payment', personalIbanErrorText));
+        if (!isRunning || generation !== quoteGeneration.current) return;
+        setPaymentInfo(undefined);
+        setPaymentInfoPaymentMethod(undefined);
+        // KycRequired with an actual selector → action-capable KYC path + feature explanation (A3/B3).
+        if (personalIbanErrorApplies && isKycRequiredMessage(error.message)) {
+          setKycError(TransactionError.KYC_REQUIRED);
+          setKycMessageOverride(translate('screens/payment', getPersonalIbanKycMessage()));
+          setErrorMessage(undefined);
+          return;
+        }
+        const personalIbanErrorText = personalIbanErrorApplies
+          ? getPersonalIbanErrorMessage(error.message)
+          : undefined;
+        if (personalIbanErrorText) {
+          setErrorMessage(translate('screens/payment', personalIbanErrorText));
+        } else {
+          const kycErrorFromMessage = getKycErrorFromMessage(error.message);
+          if (kycErrorFromMessage) {
+            setKycError(kycErrorFromMessage);
+            setKycMessageOverride(undefined);
           } else {
-            const kycErrorFromMessage = getKycErrorFromMessage(error.message);
-            if (kycErrorFromMessage) {
-              setKycError(kycErrorFromMessage);
-            } else {
-              setErrorMessage(error.message ?? 'Unknown error');
-            }
+            setErrorMessage(error.message ?? 'Unknown error');
           }
         }
       })
-      .finally(() => isRunning && setIsLoading(undefined));
+      .finally(() => {
+        if (isRunning && generation === quoteGeneration.current) setIsLoading(undefined);
+      });
 
     return () => {
       isRunning = false;
     };
-  }, [useDebounce(validatedData, 500), personalIban]);
+  }, [debouncedValidatedData, effectivePersonalIban]);
 
   function validateBuy(buy: Buy): void {
     setCustomAmountError(undefined);
     setKycError(undefined);
+    setKycMessageOverride(undefined);
 
     switch (buy.error) {
       case TransactionError.AMOUNT_TOO_LOW:
@@ -489,6 +544,9 @@ export default function BuyScreen(): JSX.Element {
   }
 
   function confirm(id: number) {
+    // Refuse confirmation against a quote that no longer matches the live form generation (B4).
+    if (committedQuoteGeneration.current !== quoteGeneration.current) return;
+
     setIsConfirming(true);
 
     confirmFor(id).finally(() => {
@@ -535,6 +593,32 @@ export default function BuyScreen(): JSX.Element {
     onBack: showsNameForm ? () => setShowsNameForm(false) : undefined,
     textStart: true,
   });
+
+  const requestedFrick =
+    paymentInfoPaymentMethod !== undefined &&
+    isPersonalIbanApplicable(paymentInfo?.currency.name, paymentInfoPaymentMethod) &&
+    isExplicitFrickPersonalIbanRequest(effectivePersonalIban);
+  const verifiedFrick = paymentInfo != null && isVerifiedFrickPersonalIbanResponse(paymentInfo);
+  const showBank = Boolean(requestedFrick && verifiedFrick);
+
+  // Selector present but not used for this offer (inapplicable), or Frick request whose
+  // response failed compatibility — require explicit continue before payment details (A2 / B1 / C1).
+  const needsPersonalIbanAcknowledgement =
+    paymentInfo != null &&
+    effectivePersonalIban !== undefined &&
+    !continueWithoutPersonalIban &&
+    ((paymentInfoPaymentMethod !== undefined &&
+      !isPersonalIbanApplicable(paymentInfo.currency.name, paymentInfoPaymentMethod)) ||
+      (isExplicitFrickPersonalIbanRequest(effectivePersonalIban) &&
+        paymentInfoPaymentMethod !== undefined &&
+        isPersonalIbanApplicable(paymentInfo.currency.name, paymentInfoPaymentMethod) &&
+        !verifiedFrick));
+
+  const isUnrecognizedBlocked =
+    validatedData != null &&
+    isPersonalIbanApplicable(validatedData.currency.name, validatedData.paymentMethod) &&
+    isUnrecognizedPersonalIbanSelector(effectivePersonalIban) &&
+    errorMessage != null;
 
   return (
     <>
@@ -629,9 +713,23 @@ export default function BuyScreen(): JSX.Element {
                   </StyledVerticalStack>
                 ) : (
                   <>
-                    {kycError && <QuoteErrorHint type={TransactionType.BUY} error={kycError} />}
+                    {kycError && (
+                      <QuoteErrorHint type={TransactionType.BUY} error={kycError} message={kycMessageOverride} />
+                    )}
 
-                    {errorMessage && (
+                    {isUnrecognizedBlocked && (
+                      <StyledVerticalStack center className="text-center" gap={4}>
+                        <ErrorHint message={errorMessage} />
+                        <StyledButton
+                          width={StyledButtonWidth.FULL}
+                          label={translate('screens/payment', 'Continue without personal IBAN')}
+                          onClick={() => setSuppressPersonalIban(true)}
+                          color={StyledButtonColor.STURDY_WHITE}
+                        />
+                      </StyledVerticalStack>
+                    )}
+
+                    {errorMessage && !isUnrecognizedBlocked && (
                       <StyledVerticalStack center className="text-center">
                         <ErrorHint message={errorMessage} />
 
@@ -651,6 +749,29 @@ export default function BuyScreen(): JSX.Element {
                       !customAmountError &&
                       (selectedAsset?.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
                         <PrivateAssetHint asset={selectedAsset} />
+                      ) : needsPersonalIbanAcknowledgement ? (
+                        <StyledVerticalStack center className="text-center" gap={4}>
+                          <StyledInfoText iconColor={IconColor.BLUE}>
+                            {isExplicitFrickPersonalIbanRequest(effectivePersonalIban) &&
+                            paymentInfoPaymentMethod !== undefined &&
+                            isPersonalIbanApplicable(paymentInfo.currency.name, paymentInfoPaymentMethod) &&
+                            !verifiedFrick
+                              ? translate(
+                                  'screens/payment',
+                                  'The personal IBAN response could not be verified for this offer. You can continue with the standard payment details, or cancel.',
+                                )
+                              : translate(
+                                  'screens/payment',
+                                  'Your requested personal IBAN is only available for EUR bank transfers, so it was not used for this offer.',
+                                )}
+                          </StyledInfoText>
+                          <StyledButton
+                            width={StyledButtonWidth.FULL}
+                            label={translate('screens/payment', 'Continue without personal IBAN')}
+                            onClick={() => setContinueWithoutPersonalIban(true)}
+                            color={StyledButtonColor.STURDY_WHITE}
+                          />
+                        </StyledVerticalStack>
                       ) : (
                         <>
                           <ExchangeRate
@@ -669,10 +790,10 @@ export default function BuyScreen(): JSX.Element {
                           {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
                             <>
                               <div>
-                                <PaymentInformationContent info={paymentInfo} />
+                                <PaymentInformationContent info={paymentInfo} showBank={showBank} />
                               </div>
                               <SanctionHint />
-                              {personalIban !== undefined &&
+                              {effectivePersonalIban !== undefined &&
                                 paymentInfoPaymentMethod !== undefined &&
                                 !isPersonalIbanApplicable(
                                   paymentInfo.currency.name,
@@ -685,7 +806,17 @@ export default function BuyScreen(): JSX.Element {
                                     )}
                                   </StyledInfoText>
                                 )}
-                              {!paymentInfo.isPersonalIban && selectedCurrency?.name !== 'EUR' && (
+                              {requestedFrick && !verifiedFrick && continueWithoutPersonalIban && (
+                                <StyledInfoText iconColor={IconColor.BLUE}>
+                                  {translate(
+                                    'screens/payment',
+                                    'The personal IBAN response could not be verified for this offer. You can continue with the standard payment details, or cancel.',
+                                  )}
+                                </StyledInfoText>
+                              )}
+                              {!paymentInfo.isPersonalIban &&
+                                selectedCurrency?.name !== 'EUR' &&
+                                effectivePersonalIban === undefined && (
                                   <StyledVerticalStack gap={4}>
                                     <h2 className="text-dfxBlue-800 text-center">
                                       {translate('screens/payment', 'New: Personal IBAN in your own name!')}

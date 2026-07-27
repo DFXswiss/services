@@ -1,6 +1,6 @@
 import { Blockchain, Buy, Sell, Swap, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
@@ -227,6 +227,10 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const [redirectUri, setRedirectUri] = useState<string>();
   const [params, setParams] = useState<AppParams>({});
   const [redirectPath, setRedirectPath] = useState<string>();
+  // After a genuine logout in widget mode, suppress the host's personal-iban until the host
+  // changes or reasserts the property — otherwise the next customer inherits the prior selector (B2).
+  const [widgetPersonalIbanSuppressed, setWidgetPersonalIbanSuppressed] = useState(false);
+  const lastWidgetPersonalIban = useRef(props.params?.personalIban);
 
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
@@ -237,8 +241,35 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       storeRedirectUri.remove();
       setParams({});
       setRedirectUri(undefined);
+
+      // Strip personal-iban only on logged-in → logged-out. Must not run during the initial
+      // unauthenticated login redirect (A4 needs the selector to survive that path).
+      if (props.isWidget) {
+        setWidgetPersonalIbanSuppressed(true);
+      } else {
+        const currentQuery = new URLSearchParams((window as Window).location.search);
+        if (currentQuery.has('personal-iban')) {
+          currentQuery.delete('personal-iban');
+          const path = props.router.state.location.pathname;
+          props.router.navigate(relativeUrl({ path, params: currentQuery }), { replace: true });
+          const { location, history } = window;
+          history.replaceState(
+            undefined,
+            '',
+            url({ base: location.origin, path: location.pathname, params: currentQuery }),
+          );
+        }
+      }
     }
   }, isLoggedIn);
+
+  // Host changed or reasserted the widget property → lift logout suppression.
+  useEffect(() => {
+    if (props.params?.personalIban !== lastWidgetPersonalIban.current) {
+      lastWidgetPersonalIban.current = props.params?.personalIban;
+      setWidgetPersonalIbanSuppressed(false);
+    }
+  }, [props.params?.personalIban]);
 
   useEffect(() => {
     isSessionInitialized && init();
@@ -478,7 +509,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     () => ({
       isEmbedded: props.isWidget || isUsedByIframe,
       isWidget: props.isWidget,
-      widgetPersonalIban: props.isWidget ? props.params?.personalIban : undefined,
+      widgetPersonalIban:
+        props.isWidget && !widgetPersonalIbanSuppressed ? props.params?.personalIban : undefined,
       hasSession,
       isDfxHosted: window.location.hostname?.split('.').slice(-2).join('.') === 'dfx.swiss',
       closeServices,
@@ -501,6 +533,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     [
       props.isWidget,
       props.params?.personalIban,
+      widgetPersonalIbanSuppressed,
       props.service,
       isUsedByIframe,
       redirectUri,

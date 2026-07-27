@@ -12,6 +12,7 @@ import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType } from '../../../contexts/wallet.context';
 import { useAlby } from '../../../hooks/wallets/alby.hook';
 import { AbortError } from '../../../util/abort-error';
+import { personalIbanOnlyParams } from '../../../util/personal-iban';
 import { delay, relativeUrl, url } from '../../../util/utils';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
@@ -36,13 +37,12 @@ export default function ConnectAlby(props: ConnectProps): JSX.Element {
       const win: Window = window;
       const redirectUrl = new URL(win.location.href);
       redirectUrl.searchParams.set('type', WalletType.ALBY);
-      // Merge redirectPath with the current search via relativeUrl (double-`?`-safe) so
-      // wallet.context's post-login navigate lands on e.g. /buy?personal-iban=frick even when
-      // redirectPath already carries a query. searchParams.set treats the result as one opaque string.
+      // Merge redirectPath with an allowlisted callback param set (only personal-iban when present).
+      // Do not copy the entire live search into the Alby redirect.
       redirectPath &&
         redirectUrl.searchParams.set(
           'redirect',
-          relativeUrl({ path: redirectPath, params: new URLSearchParams(win.location.search) }),
+          relativeUrl({ path: redirectPath, params: personalIbanOnlyParams(win.location.search) }),
         );
 
       const params = new URLSearchParams({ redirectUri: redirectUrl.toString() });

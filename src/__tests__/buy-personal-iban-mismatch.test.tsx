@@ -1,4 +1,5 @@
-// Wiring test: BuyScreen personal-IBAN mismatch hint and issuance-error mapping.
+// Wiring test: BuyScreen personal-IBAN mismatch acknowledgement, Frick validation,
+// KYC routing, and live-input quote invalidation.
 // Mounts the real default-exported BuyScreen (react-hook-form runs for real;
 // quote fetch is gated by useDebounce(validatedData, 500) — use generous waitFor).
 // personalIban comes from usePersonalIban() (not useAppParams).
@@ -96,7 +97,11 @@ jest.mock('@dfx.swiss/react-components', () => {
     Form: ({ children, control }: any) => <div>{enrich(children, control)}</div>,
     IconColor: { BLUE: 'blue' },
     SpinnerSize: { SM: 'sm', LG: 'lg' },
-    StyledButton: () => null,
+    StyledButton: ({ label, onClick }: any) => (
+      <button type="button" onClick={onClick}>
+        {label}
+      </button>
+    ),
     StyledButtonColor: { STURDY_WHITE: 'sturdy-white' },
     StyledButtonWidth: { MIN: 'min', FULL: 'full' },
     StyledDropdown: ({ name, items, labelFunc, control }: any) => (
@@ -123,21 +128,32 @@ jest.mock('@dfx.swiss/react-components', () => {
     StyledInfoText: ({ children }: any) => <div>{children}</div>,
     StyledInput: () => null,
     StyledLink: ({ children, label }: any) => <div>{label ?? children}</div>,
-    StyledLoadingSpinner: () => null,
+    StyledLoadingSpinner: () => <div data-testid="loading-spinner" />,
     StyledSearchDropdown: () => null,
     StyledVerticalStack: ({ children }: any) => <div>{children}</div>,
   };
 });
 
-jest.mock('src/components/payment/payment-info-buy', () => ({ PaymentInformationContent: () => null }));
+jest.mock('src/components/payment/payment-info-buy', () => ({
+  PaymentInformationContent: ({ showBank }: any) => (
+    <div data-testid="payment-info" data-show-bank={showBank ? 'true' : 'false'} />
+  ),
+}));
 jest.mock('../components/edit/name.edit', () => ({ NameEdit: () => null }));
-jest.mock('../components/error-hint', () => ({ ErrorHint: ({ message }: any) => <div>{message}</div> }));
-jest.mock('../components/exchange-rate', () => ({ ExchangeRate: () => null }));
+jest.mock('../components/error-hint', () => ({
+  ErrorHint: ({ message }: any) => <div data-testid="error-hint">{message}</div>,
+}));
+jest.mock('../components/exchange-rate', () => ({ ExchangeRate: () => <div data-testid="exchange-rate" /> }));
 jest.mock('../components/payment/address-switch', () => ({ AddressSwitch: () => null }));
 jest.mock('../components/payment/buy-completion', () => ({ BuyCompletion: () => null }));
 jest.mock('../components/private-asset-hint', () => ({ PrivateAssetHint: () => null }));
 jest.mock('../components/quote-error-hint', () => ({
-  QuoteErrorHint: ({ error }: any) => <div data-testid="quote-error-hint">{error}</div>,
+  QuoteErrorHint: ({ error, message }: any) => (
+    <div data-testid="quote-error-hint">
+      <span data-testid="quote-error-code">{error}</span>
+      {message && <span data-testid="quote-error-message">{message}</span>}
+    </div>
+  ),
 }));
 jest.mock('../components/sanction-hint', () => ({ SanctionHint: () => null }));
 
@@ -211,6 +227,10 @@ function baseAppParams(overrides: Record<string, unknown> = {}) {
 
 const MISMATCH_HINT =
   'Your requested personal IBAN is only available for EUR bank transfers, so it was not used for this offer.';
+const CONTINUE_WITHOUT = 'Continue without personal IBAN';
+const VERIFY_HINT =
+  'The personal IBAN response could not be verified for this offer. You can continue with the standard payment details, or cancel.';
+const TRANSFER_BUTTON = 'Click here once you have issued the transfer';
 
 function chfOffer() {
   return {
@@ -226,29 +246,91 @@ function chfOffer() {
     rate: 1,
     fees: {},
     priceSteps: [],
+    isPersonalIban: false,
+    name: 'DFX AG',
   };
 }
 
+function frickOffer(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 2,
+    amount: 300,
+    currency: { name: 'EUR' },
+    estimatedAmount: 0.01,
+    asset: { name: 'BTC', uniqueName: 'Bitcoin' },
+    minVolume: 1,
+    maxVolume: 100000,
+    isValid: true,
+    exchangeRate: 1,
+    rate: 1,
+    fees: {},
+    priceSteps: [],
+    isPersonalIban: true,
+    bank: 'Bank Frick',
+    name: 'DFX AG',
+    iban: 'LI21088110102979K002E',
+    bic: 'BFRILI22',
+    remittanceInfo: 'DFX-BUY-2',
+    ...overrides,
+  };
+}
+
+function ordinaryEurOffer() {
+  return frickOffer({
+    isPersonalIban: false,
+    bank: undefined,
+    name: 'DFX AG',
+    remittanceInfo: 'DFX-BUY-ORD',
+  });
+}
+
 describe('BuyScreen personal IBAN mismatch and error handling', () => {
+  let consoleErrorSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockPersonalIban.mockReturnValue('Frick');
+    // A6: fail on unexpected act() / React warnings so terminal state is awaited properly.
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      const msg = String(args[0] ?? '');
+      if (msg.includes('not wrapped in act') || msg.includes('Warning: An update to')) {
+        throw new Error(`Unexpected console.error in test: ${msg}`);
+      }
+    });
   });
 
-  it('omits personalIbanProvider and shows the mismatch hint when currency is not EUR', async () => {
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  async function settle() {
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+  }
+
+  it('omits personalIbanProvider and requires continue acknowledgement before payment details (A2)', async () => {
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
     mockReceiveFor.mockResolvedValue(chfOffer());
 
     render(<BuyScreen />);
 
-    // Real useDebounce(validatedData, 500) — allow time for form population + debounce.
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByText(MISMATCH_HINT)).toBeInTheDocument(), { timeout: 3000 });
+    await settle();
 
     const request = mockReceiveFor.mock.calls[0][0];
     expect(request.personalIbanProvider).toBeUndefined();
     expect(request).not.toHaveProperty('personalIbanProvider');
+    expect(screen.queryByTestId('payment-info')).not.toBeInTheDocument();
+    expect(screen.queryByText(TRANSFER_BUTTON)).not.toBeInTheDocument();
 
-    await waitFor(() => expect(screen.getByText(MISMATCH_HINT)).toBeInTheDocument());
+    await act(async () => {
+      screen.getByRole('button', { name: CONTINUE_WITHOUT }).click();
+    });
+
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
+    expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
   });
 
   it('does not show the mismatch hint or personal-IBAN promo for customers without personal-iban', async () => {
@@ -258,12 +340,11 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
-    await waitFor(() => expect(screen.queryByText(MISMATCH_HINT)).not.toBeInTheDocument());
-    // Promo block is for non-EUR offers without personal IBAN on the response — also gated
-    // on !paymentInfo.isPersonalIban. Without the selector it may still appear; the mismatch
-    // hint and personalIbanProvider must not.
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument(), { timeout: 3000 });
+    await settle();
+    expect(screen.queryByText(MISMATCH_HINT)).not.toBeInTheDocument();
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
+    expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'false');
   });
 
   it('does not flash the mismatch hint while a quote is still loading (no paymentInfo)', async () => {
@@ -274,73 +355,38 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     render(<BuyScreen />);
 
     await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
-    // Allow a beat past debounce; hint must stay absent without a displayed offer.
-    await new Promise((r) => setTimeout(r, 100));
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 100));
+    });
     expect(screen.queryByText(MISMATCH_HINT)).not.toBeInTheDocument();
   });
 
-  it('keeps the mismatch hint aligned with the displayed CHF offer (not live form state)', async () => {
-    // Pre-fix bug: hint used live validatedData (immediate) while PaymentInformationContent
-    // used paymentInfo (debounced). Binding both to paymentInfo means the hint cannot flip
-    // before the displayed bank details do.
-    //
-    // Setup: CHF offer is on screen → hint shows. Then switch live form currency to EUR
-    // (which WOULD make isPersonalIbanApplicable true) while the next quote is still pending
-    // (never resolves) — within the 500ms debounce window paymentInfo stays CHF, so the hint
-    // must remain even though live form currency is now EUR.
+  it('clears the displayed CHF offer immediately when the live form currency changes (B4)', async () => {
+    // No selector: no acknowledgement gate can hide payment-info for unrelated reasons.
+    // Without immediate invalidation, the CHF offer would stay actionable during the 500ms debounce.
+    mockPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
     mockReceiveFor.mockResolvedValue(chfOffer());
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
-    await waitFor(() => expect(screen.getByText(MISMATCH_HINT)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument(), { timeout: 3000 });
+    await settle();
+    expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
 
-    const callsBeforeCurrencyChange = mockReceiveFor.mock.calls.length;
-
-    // Subsequent quote fetch must not resolve — keeps the displayed CHF paymentInfo frozen.
+    // Subsequent quote fetch must not resolve — keeps any new offer from landing.
     mockReceiveFor.mockReturnValue(new Promise(() => {}));
 
-    // Change live form currency to EUR (would flip applicability if the hint read live state).
     await act(async () => {
       screen.getByTestId('select-currency-EUR').click();
     });
 
-    // Live form is now EUR, but paymentInfo is still the CHF offer (debounce has not yet
-    // cleared it). Hint must stay — proving it is bound to paymentInfo, not live form state.
-    expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.BANK)).toBe(true);
-    expect(isPersonalIbanApplicable('CHF', FiatPaymentMethod.BANK)).toBe(false);
-    expect(screen.getByText(MISMATCH_HINT)).toBeInTheDocument();
-
-    // Give the debounce a chance to fire a new request; paymentInfo still CHF because the
-    // hanging promise never resolves. Hint must still be present.
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 600));
-    });
-
-    // A new fetch may have been kicked off, but without a resolved EUR offer the displayed
-    // paymentInfo either remains CHF (hint stays) or was cleared for loading (hint gone is
-    // also correct — still not reflecting live EUR form as a positive EUR match). We assert
-    // it never shows as "EUR applicable" while only CHF was ever displayed:
-    // i.e. if the hint is gone, it is because paymentInfo was cleared — not because live EUR won.
-    const hintStillPresent = screen.queryByText(MISMATCH_HINT) != null;
-    if (hintStillPresent) {
-      // Still showing CHF offer → correct binding.
-      expect(screen.getByText(MISMATCH_HINT)).toBeInTheDocument();
-    } else {
-      // paymentInfo cleared for in-flight reload; no EUR offer was rendered either.
-      // The key invariant: we never rendered a state that treats live EUR as the offer.
-      expect(mockReceiveFor.mock.calls.length).toBeGreaterThan(callsBeforeCurrencyChange);
-    }
-
-    // Strongest immediate assertion (pre-debounce window) already passed above. Re-assert
-    // the binding condition source is paymentInfo.currency, not form:
-    expect(isPersonalIbanApplicable('CHF', FiatPaymentMethod.BANK)).toBe(false);
+    // Live inputs changed: quote must be cleared immediately, not after 500ms debounce.
+    expect(screen.queryByTestId('payment-info')).not.toBeInTheDocument();
+    expect(screen.queryByText(TRANSFER_BUTTON)).not.toBeInTheDocument();
   });
 
   it('treats EUR with non-BANK payment methods as a personal-IBAN mismatch (payment-method half)', () => {
-    // Buy UI currently only exposes BANK, but the applicability gate (and the hint condition
-    // that reads paymentInfoPaymentMethod) must still reject Instant/Card.
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.INSTANT)).toBe(false);
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.CARD)).toBe(false);
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.BANK)).toBe(true);
@@ -348,23 +394,23 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
   it('shows a translated error when the personal IBAN request fails to issue', async () => {
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
-    // prefCurrency is CHF but assetIn EUR: currency effect prefers selectedCurrency then assetIn.
     mockReceiveFor.mockRejectedValue({ message: 'PersonalIbanIssuanceFailed' });
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
-
-    const request = mockReceiveFor.mock.calls[0][0];
-    expect(request.personalIbanProvider).toBe('Frick');
-
-    await waitFor(() =>
-      expect(
-        screen.getByText(
-          'We could not issue your personal IBAN. Please try again later or contact support if the problem persists.',
-        ),
-      ).toBeInTheDocument(),
+    await waitFor(
+      () =>
+        expect(
+          screen.getByText(
+            'We could not issue your personal IBAN. Please try again later or contact support if the problem persists.',
+          ),
+        ).toBeInTheDocument(),
+      { timeout: 3000 },
     );
+    await settle();
+    expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('Frick');
+    // Transient issuance failure keeps Retry (A3).
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 
   it('uses generic KYC path for EUR bank transfer without personal-iban selector (KycRequired)', async () => {
@@ -374,10 +420,13 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByTestId('quote-error-hint')).toBeInTheDocument(), {
+      timeout: 3000,
+    });
+    await settle();
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
-
-    await waitFor(() => expect(screen.getByTestId('quote-error-hint')).toHaveTextContent('KycRequired'));
+    expect(screen.getByTestId('quote-error-code')).toHaveTextContent('KycRequired');
+    expect(screen.queryByTestId('quote-error-message')).not.toBeInTheDocument();
     expect(screen.queryByText('Personal IBANs require KYC level 50.')).not.toBeInTheDocument();
   });
 
@@ -388,29 +437,95 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
-
-    await waitFor(() =>
-      expect(screen.getByTestId('quote-error-hint')).toHaveTextContent('PaymentMethodNotAllowed'),
+    await waitFor(
+      () => expect(screen.getByTestId('quote-error-hint')).toHaveTextContent('PaymentMethodNotAllowed'),
+      { timeout: 3000 },
     );
+    await settle();
     expect(
       screen.queryByText('Personal IBANs require the bank transfer payment method.'),
     ).not.toBeInTheDocument();
   });
 
-  it('keeps personal-IBAN KYC wording when selector is set and server returns KycRequired', async () => {
+  it('routes personal-IBAN KycRequired through QuoteErrorHint with feature explanation (A3/B3)', async () => {
     mockPersonalIban.mockReturnValue('Frick');
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
     mockReceiveFor.mockRejectedValue({ message: 'KycRequired' });
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByTestId('quote-error-hint')).toBeInTheDocument(), {
+      timeout: 3000,
+    });
+    await settle();
     expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('Frick');
+    expect(screen.getByTestId('quote-error-code')).toHaveTextContent('KycRequired');
+    expect(screen.getByTestId('quote-error-message')).toHaveTextContent(
+      'Personal IBANs require KYC level 50.',
+    );
+    // Must not dead-end on ErrorHint + Retry only.
+    expect(screen.queryByTestId('error-hint')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  });
+
+  it('requires acknowledgement when a Frick request gets ordinary payment details (B1/C1)', async () => {
+    mockPersonalIban.mockReturnValue('Frick');
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
+    mockReceiveFor.mockResolvedValue(ordinaryEurOffer());
+
+    render(<BuyScreen />);
+
+    await waitFor(() => expect(screen.getByText(VERIFY_HINT)).toBeInTheDocument(), { timeout: 3000 });
+    await settle();
+    expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('Frick');
+    expect(screen.queryByTestId('payment-info')).not.toBeInTheDocument();
+    expect(screen.queryByText(TRANSFER_BUTTON)).not.toBeInTheDocument();
+
+    await act(async () => {
+      screen.getByRole('button', { name: CONTINUE_WITHOUT }).click();
+    });
+
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
+    expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'false');
+    expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
+  });
+
+  it('shows Bank row flag for a verified Frick response without acknowledgement (B5)', async () => {
+    mockPersonalIban.mockReturnValue('Frick');
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
+    mockReceiveFor.mockResolvedValue(frickOffer());
+
+    render(<BuyScreen />);
+
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument(), { timeout: 3000 });
+    await settle();
+    expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'true');
+    expect(screen.queryByText(VERIFY_HINT)).not.toBeInTheDocument();
+    expect(screen.queryByText(CONTINUE_WITHOUT)).not.toBeInTheDocument();
+  });
+
+  it('offers continue-without for an unrecognized selector instead of Retry-only (A3)', async () => {
+    mockPersonalIban.mockReturnValue('unknown-provider');
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
+    mockReceiveFor.mockResolvedValue(ordinaryEurOffer());
+
+    render(<BuyScreen />);
 
     await waitFor(() =>
-      expect(screen.getByText('Personal IBANs require KYC level 50.')).toBeInTheDocument(),
+      expect(screen.getByText('The requested personal IBAN provider is not recognized.')).toBeInTheDocument(),
     );
-    expect(screen.queryByTestId('quote-error-hint')).not.toBeInTheDocument();
+    await settle();
+    expect(screen.getByRole('button', { name: CONTINUE_WITHOUT })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    // No request with the unrecognized selector.
+    expect(mockReceiveFor).not.toHaveBeenCalled();
+
+    await act(async () => {
+      screen.getByRole('button', { name: CONTINUE_WITHOUT }).click();
+    });
+
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
+    await settle();
+    expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
   });
 });

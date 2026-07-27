@@ -13,11 +13,18 @@ jest.mock('@dfx.swiss/react', () => ({
 
 import { FiatPaymentMethod, PersonalIbanProvider } from '@dfx.swiss/react';
 import {
+  FRICK_ACCOUNT_HOLDER_NAME,
+  FRICK_BANK_NAME,
   getPersonalIbanErrorMessage,
+  getPersonalIbanKycMessage,
   getStoredPaymentDetailErrorMessage,
+  isExplicitFrickPersonalIbanRequest,
+  isKycRequiredMessage,
   isPersonalIbanApplicable,
   isUnrecognizedPersonalIbanSelector,
+  isVerifiedFrickPersonalIbanResponse,
   normalizePersonalIban,
+  personalIbanOnlyParams,
   toPersonalIbanProviderRequest,
 } from '../util/personal-iban';
 
@@ -87,8 +94,10 @@ describe('getPersonalIbanErrorMessage', () => {
     );
   });
 
-  it('maps KycRequired to the personal-IBAN KYC level 50 message', () => {
-    expect(getPersonalIbanErrorMessage('KycRequired')).toBe('Personal IBANs require KYC level 50.');
+  it('does not map KycRequired (routed through QuoteErrorHint with a separate feature message)', () => {
+    expect(getPersonalIbanErrorMessage('KycRequired')).toBeUndefined();
+    expect(isKycRequiredMessage('KycRequired')).toBe(true);
+    expect(getPersonalIbanKycMessage()).toBe('Personal IBANs require KYC level 50.');
   });
 
   it('maps PersonalIbanCurrencyNotSupported to the EUR-only rejection message', () => {
@@ -163,5 +172,71 @@ describe('getStoredPaymentDetailErrorMessage', () => {
 
   it('returns undefined for undefined message', () => {
     expect(getStoredPaymentDetailErrorMessage(undefined)).toBeUndefined();
+  });
+});
+
+describe('isVerifiedFrickPersonalIbanResponse', () => {
+  it('accepts a Bank Frick response held by DFX AG', () => {
+    expect(
+      isVerifiedFrickPersonalIbanResponse({
+        isPersonalIban: true,
+        bank: FRICK_BANK_NAME,
+        name: FRICK_ACCOUNT_HOLDER_NAME,
+      }),
+    ).toBe(true);
+  });
+
+  it('rejects ordinary bank details (rollback / stripped selector)', () => {
+    expect(
+      isVerifiedFrickPersonalIbanResponse({
+        isPersonalIban: false,
+        bank: undefined,
+        name: 'DFX AG',
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects legacy Frick-style responses that name the customer as holder', () => {
+    expect(
+      isVerifiedFrickPersonalIbanResponse({
+        isPersonalIban: true,
+        bank: FRICK_BANK_NAME,
+        name: 'Alice Example',
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects Yapeal-style personal IBAN without Bank Frick', () => {
+    expect(
+      isVerifiedFrickPersonalIbanResponse({
+        isPersonalIban: true,
+        bank: 'Yapeal',
+        name: 'Alice Example',
+      }),
+    ).toBe(false);
+  });
+});
+
+describe('isExplicitFrickPersonalIbanRequest', () => {
+  it('is true only for a recognized Frick selector', () => {
+    expect(isExplicitFrickPersonalIbanRequest('Frick')).toBe(true);
+    expect(isExplicitFrickPersonalIbanRequest('frick')).toBe(true);
+    expect(isExplicitFrickPersonalIbanRequest('unknown')).toBe(false);
+    expect(isExplicitFrickPersonalIbanRequest(undefined)).toBe(false);
+  });
+});
+
+describe('personalIbanOnlyParams', () => {
+  it('copies only personal-iban when present', () => {
+    const params = personalIbanOnlyParams('?user=alice@example.com&personal-iban=frick&arbitrary=value');
+    expect(params.get('personal-iban')).toBe('frick');
+    expect(params.get('user')).toBeNull();
+    expect(params.get('arbitrary')).toBeNull();
+    expect([...params.keys()]).toEqual(['personal-iban']);
+  });
+
+  it('returns an empty set when personal-iban is absent', () => {
+    const params = personalIbanOnlyParams('?user=alice@example.com&arbitrary=value');
+    expect([...params.keys()]).toEqual([]);
   });
 });

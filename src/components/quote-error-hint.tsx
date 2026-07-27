@@ -10,7 +10,16 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function QuoteErrorHint({ type, error }: { type: TransactionType; error: TransactionError }): JSX.Element {
+export function QuoteErrorHint({
+  type,
+  error,
+  message,
+}: {
+  type: TransactionType;
+  error: TransactionError;
+  /** Optional feature-specific explanation; keeps the standard KYC/limit actions. */
+  message?: string;
+}): JSX.Element {
   const { translate } = useSettingsContext();
   const { start, startStep, limit, defaultLimit, limitToString, isComplete } = useKycHelper();
   const { navigate } = useNavigation();
@@ -101,7 +110,7 @@ export function QuoteErrorHint({ type, error }: { type: TransactionType; error: 
     }
   }
 
-  const hint = getHint(error);
+  const hint = message ?? getHint(error);
 
   return hint != null ? (
     <StyledVerticalStack gap={4} full center>

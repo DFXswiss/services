@@ -108,6 +108,24 @@ describe('ConnectMail login redirect', () => {
     expect(redirectUri.startsWith('http://localhost/buy')).toBe(true);
   });
 
+  it('copies personal-iban from the live search when present, but no other query keys (A4)', async () => {
+    mockRedirectPath.mockReturnValue('/buy');
+    locationStub.search = '?user=alice@example.com&personal-iban=frick&arbitrary=value';
+
+    renderConnectMail();
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'Next' }).click();
+    });
+
+    await waitFor(() => expect(mockSignInWithMail).toHaveBeenCalled());
+
+    const redirectUri = mockSignInWithMail.mock.calls[0][1] as string;
+    expect(redirectUri).toContain('personal-iban=frick');
+    expect(redirectUri).not.toContain('user=');
+    expect(redirectUri).not.toContain('arbitrary=');
+  });
+
   it('does not append a query string when redirectPath has no extra params', async () => {
     mockRedirectPath.mockReturnValue('/buy');
     locationStub.search = '';
