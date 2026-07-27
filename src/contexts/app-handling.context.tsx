@@ -1,4 +1,4 @@
-import { Blockchain, Buy, Sell, Swap, useSessionContext } from '@dfx.swiss/react';
+import { Blockchain, Buy, Sell, Swap, useAuthContext, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useChange } from 'src/hooks/change.hook';
@@ -177,6 +177,10 @@ interface AppHandlingContextInterface {
    * Derived by consumers via usePersonalIban(); not part of params state.
    */
   widgetPersonalIban?: string;
+  /** Selector suppression after an observed customer boundary in this mounted app. */
+  personalIbanSuppressed: boolean;
+  /** Lift standalone suppression when navigation introduces a new explicit selector intent. */
+  restorePersonalIban: () => void;
   availableBlockchains?: Blockchain[];
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
@@ -201,9 +205,9 @@ export function useAppHandlingContext(): AppHandlingContextInterface {
   return useContext(AppHandlingContext);
 }
 
-// personalIban has no state or lifecycle: it is derived fresh from its source on every read — the
-// `personal-iban` URL param (standalone) or the live widget attribute/property (embedded). See
-// src/hooks/personal-iban.hook.ts.
+// personalIban is never copied into params state: its source remains the `personal-iban` URL
+// parameter (standalone) or live widget property (embedded). See src/hooks/personal-iban.hook.ts
+// for source derivation plus customer-boundary suppression.
 export function removeNonStorageParams(params: AppParams): AppParams {
   const copy = { ...params };
 
@@ -221,47 +225,101 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const { isUsedByIframe, sendMessage } = useIframe();
   const { readBalances } = useBalanceContext();
   const { isInitialized: isSessionInitialized, isLoggedIn, availableBlockchains } = useSessionContext();
+  const { session } = useAuthContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [redirectUri, setRedirectUri] = useState<string>();
   const [params, setParams] = useState<AppParams>({});
   const [redirectPath, setRedirectPath] = useState<string>();
-  // After a genuine logout in widget mode, suppress the host's personal-iban until the host
-  // changes or reasserts the property — otherwise the next customer inherits the prior selector (B2).
-  const [widgetPersonalIbanSuppressed, setWidgetPersonalIbanSuppressed] = useState(false);
+  // A genuine customer boundary suppresses the selector for the rest of this mounted app.
+  // Standalone navigation or a widget write can explicitly restore it.
+  const [personalIbanSuppressed, setPersonalIbanSuppressed] = useState(false);
   const lastWidgetPersonalIban = useRef(props.params?.personalIban);
   const lastWidgetPersonalIbanRevision = useRef(props.params?.personalIbanRevision);
-  const hadPersistedAuthTokenAtMount = useRef(
-    window.localStorage.getItem('dfx.authenticationToken') !== null,
-  );
-  const sessionWasLoggedIn = useRef(isLoggedIn);
-  const expiredSessionWasHandled = useRef(false);
-  if (isLoggedIn) sessionWasLoggedIn.current = true;
+  const observedCustomerIdentity = useRef(isLoggedIn ? session?.account : undefined);
+  const widgetIntentAtObservedIdentity = useRef({
+    personalIban: props.params?.personalIban,
+    revision: props.params?.personalIbanRevision,
+  });
+  const widgetCredentialsAtObservedIdentity = useRef({
+    session: props.params?.session,
+    address: props.params?.address,
+    signature: props.params?.signature,
+  });
+  const authenticatedCustomerIdentity = isLoggedIn ? session?.account : undefined;
+  const widgetHasNewSelectorIntent =
+    props.isWidget &&
+    (props.params?.personalIban !== widgetIntentAtObservedIdentity.current.personalIban ||
+      props.params?.personalIbanRevision !== widgetIntentAtObservedIdentity.current.revision);
+  const widgetHasIncomingCredentials =
+    props.isWidget &&
+    (props.params?.session !== widgetCredentialsAtObservedIdentity.current.session ||
+      props.params?.address !== widgetCredentialsAtObservedIdentity.current.address ||
+      props.params?.signature !== widgetCredentialsAtObservedIdentity.current.signature);
+  const widgetIntentBelongsToIncomingCustomer =
+    widgetHasNewSelectorIntent && widgetHasIncomingCredentials;
+  // Hide the selector on the very render that exposes a different authenticated account, before
+  // quote effects in descendants can run. A simultaneous widget write is the new customer's
+  // explicit selector intent and therefore wins over suppression.
+  const authenticatedCustomerChanged =
+    authenticatedCustomerIdentity != null &&
+    observedCustomerIdentity.current != null &&
+    authenticatedCustomerIdentity !== observedCustomerIdentity.current &&
+    !widgetIntentBelongsToIncomingCustomer;
 
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
 
   useChange((newVal, oldVal) => {
     if (!newVal && oldVal) {
+      observedCustomerIdentity.current = undefined;
       clearCustomerSessionState();
     }
   }, isLoggedIn);
 
-  // The SDK starts with isLoggedIn=false before reading localStorage. Once initialized, a
-  // persisted-but-expired session is distinguishable from a genuinely tokenless first visit.
+  // Only an authenticated identity that this mounted app has already observed can establish an
+  // identity-change boundary. An expired persisted token or tokenless mount never reaches here.
   useEffect(() => {
-    if (
-      isSessionInitialized &&
-      !isLoggedIn &&
-      hadPersistedAuthTokenAtMount.current &&
-      !sessionWasLoggedIn.current &&
-      !expiredSessionWasHandled.current
-    ) {
-      expiredSessionWasHandled.current = true;
-      clearCustomerSessionState();
+    if (authenticatedCustomerIdentity == null) return;
+
+    const previousIdentity = observedCustomerIdentity.current;
+    if (previousIdentity === authenticatedCustomerIdentity) {
+      // A selector write made without incoming credentials belongs to the current customer. Mark
+      // it consumed so a later credential-only account switch cannot inherit it.
+      if (!widgetHasIncomingCredentials) {
+        widgetIntentAtObservedIdentity.current = {
+          personalIban: props.params?.personalIban,
+          revision: props.params?.personalIbanRevision,
+        };
+      }
+      return;
     }
-  }, [isSessionInitialized, isLoggedIn]);
+
+    observedCustomerIdentity.current = authenticatedCustomerIdentity;
+    widgetIntentAtObservedIdentity.current = {
+      personalIban: props.params?.personalIban,
+      revision: props.params?.personalIbanRevision,
+    };
+    widgetCredentialsAtObservedIdentity.current = {
+      session: props.params?.session,
+      address: props.params?.address,
+      signature: props.params?.signature,
+    };
+
+    if (previousIdentity != null && previousIdentity !== authenticatedCustomerIdentity) {
+      clearCustomerSessionState(!widgetIntentBelongsToIncomingCustomer);
+    }
+  }, [
+    authenticatedCustomerIdentity,
+    props.params?.address,
+    props.params?.personalIban,
+    props.params?.personalIbanRevision,
+    props.params?.session,
+    props.params?.signature,
+    widgetHasIncomingCredentials,
+    widgetIntentBelongsToIncomingCustomer,
+  ]);
 
   // Host changed or reasserted the widget property → lift logout suppression.
   useEffect(() => {
@@ -271,7 +329,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     ) {
       lastWidgetPersonalIban.current = props.params?.personalIban;
       lastWidgetPersonalIbanRevision.current = props.params?.personalIbanRevision;
-      setWidgetPersonalIbanSuppressed(false);
+      setPersonalIbanSuppressed(false);
     }
   }, [props.params?.personalIban, props.params?.personalIbanRevision]);
 
@@ -288,16 +346,14 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     return query.get(key) ?? undefined;
   }
 
-  function clearCustomerSessionState() {
+  function clearCustomerSessionState(suppressSelector = true) {
     storeQueryParams.remove();
     storeRedirectUri.remove();
     setParams({});
     setRedirectUri(undefined);
+    setPersonalIbanSuppressed(suppressSelector);
 
-    if (props.isWidget) {
-      setWidgetPersonalIbanSuppressed(true);
-      return;
-    }
+    if (props.isWidget || !suppressSelector) return;
 
     const currentQuery = new URLSearchParams((window as Window).location.search);
     if (!currentQuery.has('personal-iban')) return;
@@ -539,7 +595,11 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       isEmbedded: props.isWidget || isUsedByIframe,
       isWidget: props.isWidget,
       widgetPersonalIban:
-        props.isWidget && !widgetPersonalIbanSuppressed ? props.params?.personalIban : undefined,
+        props.isWidget && !(personalIbanSuppressed || authenticatedCustomerChanged)
+          ? props.params?.personalIban
+          : undefined,
+      personalIbanSuppressed: personalIbanSuppressed || authenticatedCustomerChanged,
+      restorePersonalIban: () => setPersonalIbanSuppressed(false),
       hasSession,
       isDfxHosted: window.location.hostname?.split('.').slice(-2).join('.') === 'dfx.swiss',
       closeServices,
@@ -562,7 +622,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     [
       props.isWidget,
       props.params?.personalIban,
-      widgetPersonalIbanSuppressed,
+      personalIbanSuppressed,
+      authenticatedCustomerChanged,
+      authenticatedCustomerIdentity,
       props.service,
       isUsedByIframe,
       redirectUri,

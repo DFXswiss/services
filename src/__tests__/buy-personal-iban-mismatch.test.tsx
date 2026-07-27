@@ -432,15 +432,48 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
   });
 
+  it('keeps a pending quote when the customer only changes the numeric amount representation (A2)', async () => {
+    mockPersonalIban.mockReturnValue(undefined);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
+
+    let resolveQuote!: (offer: ReturnType<typeof chfOffer>) => void;
+    const pendingQuote = new Promise<ReturnType<typeof chfOffer>>((resolve) => {
+      resolveQuote = resolve;
+    });
+    mockReceiveFor
+      .mockImplementationOnce(() => pendingQuote)
+      .mockImplementation(() => new Promise(() => {}));
+
+    render(<BuyScreen />);
+
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(1), { timeout: 3000 });
+    expect(screen.getByTestId('input-amount')).toHaveValue('300');
+
+    await act(async () => {
+      fireEvent.change(screen.getByTestId('input-amount'), { target: { value: '300.0' } });
+    });
+    expect(screen.getByTestId('input-amount')).toHaveValue('300.0');
+
+    await act(async () => {
+      resolveQuote(chfOffer());
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
+    expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
+  });
+
   it('treats EUR with non-BANK payment methods as a personal-IBAN mismatch (payment-method half)', () => {
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.INSTANT)).toBe(false);
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.CARD)).toBe(false);
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.BANK)).toBe(true);
   });
 
-  it('shows a translated error when the personal IBAN request fails to issue', async () => {
+  it('retries a transient personal-IBAN issuance failure and reaches payment details (B3)', async () => {
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
-    mockReceiveFor.mockRejectedValue({ message: 'PersonalIbanIssuanceFailed' });
+    mockReceiveFor
+      .mockRejectedValueOnce({ message: 'PersonalIbanIssuanceFailed' })
+      .mockResolvedValue(frickOffer());
 
     render(<BuyScreen />);
 
@@ -455,8 +488,15 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     );
     await settle();
     expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('Frick');
-    // Transient issuance failure keeps Retry (A3).
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'Retry' }).click();
+    });
+
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(3), { timeout: 3000 });
+    expect(mockReceiveFor.mock.calls[1][0].personalIbanProvider).toBe('Frick');
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
+    expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
   });
 
   it('uses generic KYC path for EUR bank transfer without personal-iban selector (KycRequired)', async () => {

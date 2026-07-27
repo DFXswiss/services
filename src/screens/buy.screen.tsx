@@ -149,6 +149,8 @@ export default function BuyScreen(): JSX.Element {
   const [isContinue, setIsContinue] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
+  // Re-run the guarded quote effect when Retry is clicked even if the canonical request is equal.
+  const [retryToken, setRetryToken] = useState(0);
   // Explicit acknowledgement before showing ordinary details when the selector is set but
   // inapplicable or the Frick response failed compatibility checks (A2 / B1 / C1).
   const [continueWithoutPersonalIban, setContinueWithoutPersonalIban] = useState(false);
@@ -159,7 +161,7 @@ export default function BuyScreen(): JSX.Element {
   // debounced responses and confirm actions never commit against a newer form state (B4).
   const quoteGeneration = useRef(0);
   const committedQuoteGeneration = useRef(0);
-  const lastEffectivePersonalIban = useRef<string>();
+  const lastQuoteRequestSignature = useRef<string>();
   const pendingFormSynchronization = useRef<{
     amount?: string;
     targetAmount?: string;
@@ -346,14 +348,26 @@ export default function BuyScreen(): JSX.Element {
 
   const hasCompleteSpendSide = Boolean(selectedAmount && selectedCurrency && selectedPaymentMethod);
   const hasCompleteGetSide = Boolean(selectedTargetAmount && selectedAsset);
+  const quoteRequestSignature = JSON.stringify({
+    amount: selectedAmount ? Number(selectedAmount) : undefined,
+    targetAmount: selectedTargetAmount ? Number(selectedTargetAmount) : undefined,
+    currency: selectedCurrency?.name,
+    asset: selectedAsset?.uniqueName,
+    paymentMethod: selectedPaymentMethod,
+    personalIban: effectivePersonalIban,
+    hasCompleteSpendSide,
+    hasCompleteGetSide,
+  });
 
-  // Immediate invalidation comes from raw live inputs and the effective selector. Debounce only
-  // launches a replacement request; clearing the last complete side must also clear request state.
+  // Invalidate against the canonical API request rather than raw strings/object identities.
+  // Debounce only launches a replacement request; clearing the last complete side must also clear
+  // request state.
   useEffect(() => {
+    if (quoteRequestSignature === lastQuoteRequestSignature.current) return;
+    lastQuoteRequestSignature.current = quoteRequestSignature;
+
     const synchronizedForm = pendingFormSynchronization.current;
     pendingFormSynchronization.current = undefined;
-    const selectorChanged = effectivePersonalIban !== lastEffectivePersonalIban.current;
-    lastEffectivePersonalIban.current = effectivePersonalIban;
     const isExactPriceSynchronization =
       synchronizedForm != null &&
       selectedAmount === synchronizedForm.amount &&
@@ -365,7 +379,7 @@ export default function BuyScreen(): JSX.Element {
 
     // Exact-price synchronization writes the calculated opposite amount into the form. It is
     // not a customer edit and must not invalidate the response it came from.
-    if (!selectorChanged && isExactPriceSynchronization) return;
+    if (isExactPriceSynchronization) return;
 
     quoteGeneration.current += 1;
     setErrorMessage(undefined);
@@ -380,14 +394,7 @@ export default function BuyScreen(): JSX.Element {
     } else {
       setIsLoading(hasCompleteSpendSide ? Side.GET : Side.SPEND);
     }
-  }, [
-    selectedAmount,
-    selectedCurrency,
-    selectedAsset,
-    selectedTargetAmount,
-    selectedPaymentMethod,
-    effectivePersonalIban,
-  ]);
+  }, [quoteRequestSignature]);
 
   // Unrecognized-selector suppression is scoped to the current selector value only.
   useEffect(() => {
@@ -441,6 +448,9 @@ export default function BuyScreen(): JSX.Element {
     };
 
     if (generation === quoteGeneration.current) {
+      setErrorMessage(undefined);
+      setKycError(undefined);
+      setKycMessageOverride(undefined);
       setIsLoading(debouncedValidatedData.sideToUpdate);
     }
     receiveFor(data)
@@ -512,7 +522,7 @@ export default function BuyScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [debouncedValidatedData, effectivePersonalIban]);
+  }, [debouncedValidatedData, effectivePersonalIban, retryToken]);
 
   function validateBuy(buy: Buy): void {
     setCustomAmountError(undefined);
@@ -791,7 +801,7 @@ export default function BuyScreen(): JSX.Element {
                         <StyledButton
                           width={StyledButtonWidth.MIN}
                           label={translate('general/actions', 'Retry')}
-                          onClick={() => updateData(Side.GET)}
+                          onClick={() => setRetryToken((token) => token + 1)}
                           className="mt-4"
                           color={StyledButtonColor.STURDY_WHITE}
                         />

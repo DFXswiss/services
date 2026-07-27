@@ -12,6 +12,7 @@ const mockNavigate = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({
   Blockchain: {},
+  useAuthContext: () => ({ session: undefined }),
   useSessionContext: () => ({ isInitialized: true, isLoggedIn: false, availableBlockchains: [] }),
 }));
 
