@@ -32,6 +32,10 @@ test.describe('DFX Safe - Full Baseline Coverage', () => {
     // screenshots document the feature, so a content change has to show up as a diff.
     const screenshotOpts = { fullPage: true, maxDiffPixels: 200, timeout: 10000 } as const;
 
+    // Pin time before navigating. The PDF modal prefills the current date via `new Date()`
+    // (safe.screen.tsx), which would otherwise bake a moving value into the committed baseline.
+    await page.clock.setFixedTime(new Date('2026-06-15T12:00:00Z'));
+
     // ========================================
     // STEP 1: Loaded Safe portfolio (EUR), transaction interface and activity list
     // ========================================
