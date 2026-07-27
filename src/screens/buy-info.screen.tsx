@@ -100,6 +100,18 @@ export default function BuyInfoScreen(): JSX.Element {
   const quoteGeneration = useRef(0);
 
   const effectivePersonalIban = suppressPersonalIban ? undefined : personalIban;
+  const personalIbanSelector = suppressPersonalIban
+    ? undefined
+    : requestedPersonalIban;
+  const isPersonalIbanEligible = isPersonalIbanApplicable(
+    currency?.name,
+    FiatPaymentMethod.BANK,
+  );
+  const hasApplicableFrickRequest =
+    isPersonalIbanEligible &&
+    isExplicitFrickPersonalIbanRequest(personalIbanSelector);
+  const showPersonalIbanConfirmation =
+    hasApplicableFrickRequest && requiresCustomerConfirmation;
 
   // default params
   useEffect(() => {
@@ -127,7 +139,7 @@ export default function BuyInfoScreen(): JSX.Element {
 
     if (
       !isWalletInitialized ||
-      (requestedPersonalIban !== undefined &&
+      (hasApplicableFrickRequest &&
         (!hasAuthenticatedCustomer || requiresCustomerConfirmation))
     ) {
       setPaymentInfo(undefined);
@@ -157,11 +169,11 @@ export default function BuyInfoScreen(): JSX.Element {
 
     // Currency/method eligibility only — independent of whether the customer set a selector.
     // Request building stays on eligibility alone (toPersonalIbanProviderRequest(undefined) is {}).
-    const isPersonalIbanEligible = isPersonalIbanApplicable(currency?.name, FiatPaymentMethod.BANK);
     // Personal-IBAN error copy only when the customer actually requested a personal IBAN.
-    const personalIbanErrorApplies = isPersonalIbanEligible && effectivePersonalIban !== undefined;
+    const personalIbanErrorApplies =
+      isPersonalIbanEligible && personalIbanSelector !== undefined;
 
-    if (isPersonalIbanEligible && isUnrecognizedPersonalIbanSelector(effectivePersonalIban)) {
+    if (isUnrecognizedPersonalIbanSelector(personalIbanSelector)) {
       const personalIbanErrorText = getPersonalIbanErrorMessage('PersonalIbanProviderUnsupported');
       if (isRunning && generation === quoteGeneration.current) {
         setPaymentInfo(undefined);
@@ -233,6 +245,8 @@ export default function BuyInfoScreen(): JSX.Element {
     amountIn,
     amountOut,
     effectivePersonalIban,
+    personalIbanSelector,
+    hasApplicableFrickRequest,
     hasAuthenticatedCustomer,
     isWalletInitialized,
     requiresCustomerConfirmation,
@@ -306,15 +320,14 @@ export default function BuyInfoScreen(): JSX.Element {
   // request whose response failed compatibility — require explicit continue (A2 / B1 / C1).
   const needsPersonalIbanAcknowledgement =
     paymentInfo != null &&
-    effectivePersonalIban !== undefined &&
+    personalIbanSelector !== undefined &&
     !continueWithoutPersonalIban &&
     ((!isPersonalIbanApplicable(paymentInfo.currency.name, FiatPaymentMethod.BANK) &&
       !isPersonalIbanApplicable(currency?.name, FiatPaymentMethod.BANK)) ||
       (requestedFrick && !verifiedFrick));
 
   const isUnrecognizedBlocked =
-    isPersonalIbanApplicable(currency?.name, FiatPaymentMethod.BANK) &&
-    isUnrecognizedPersonalIbanSelector(effectivePersonalIban) &&
+    isUnrecognizedPersonalIbanSelector(personalIbanSelector) &&
     errorMessage != null;
 
   useLayoutOptions({ textStart: true, backButton: false });
@@ -323,7 +336,7 @@ export default function BuyInfoScreen(): JSX.Element {
     <>
       {showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose={false} />
-      ) : requiresCustomerConfirmation ? (
+      ) : showPersonalIbanConfirmation ? (
         <PersonalIbanConfirmationPrompt
           onConfirm={confirmForCurrentCustomer}
           onDecline={declineForCurrentCustomer}

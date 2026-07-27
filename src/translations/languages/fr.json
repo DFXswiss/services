@@ -691,7 +691,7 @@
     "Personal IBANs require KYC level 50.": "Les IBAN personnels nécessitent le niveau KYC 50.",
     "We could not issue your personal IBAN. Please try again later or contact support if the problem persists.": "Nous n'avons pas pu émettre votre IBAN personnel. Veuillez réessayer plus tard ou contacter le support si le problème persiste.",
     "The requested personal IBAN provider is not recognized.": "Le fournisseur d'IBAN personnel demandé n'est pas reconnu.",
-    "Personal IBANs are currently only available for EUR.": "Les IBAN personnels ne sont actuellement disponibles qu'en EUR.",
+    "Bank Frick personal IBANs are currently only available for EUR.": "Les IBAN personnels de Bank Frick ne sont actuellement disponibles qu'en EUR.",
     "This stored payment detail is incomplete. Please start a new purchase.": "Ce détail de paiement enregistré est incomplet. Veuillez démarrer un nouvel achat.",
     "The bank for this payment is no longer available. Please start a new purchase.": "La banque pour ce paiement n'est plus disponible. Veuillez démarrer un nouvel achat.",
     "This stored personal IBAN is no longer valid for your account. Please start a new purchase.": "Cet IBAN personnel enregistré n'est plus valide pour votre compte. Veuillez démarrer un nouvel achat.",

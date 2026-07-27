@@ -16,6 +16,9 @@ jest.mock('@dfx.swiss/react', () => ({
 
 import { FiatPaymentMethod, PersonalIbanProvider, TransactionError } from '@dfx.swiss/react';
 import { readFileSync } from 'fs';
+import de from '../translations/languages/de.json';
+import fr from '../translations/languages/fr.json';
+import italian from '../translations/languages/it.json';
 import {
   FRICK_ACCOUNT_HOLDER_NAME,
   FRICK_BANK_NAME,
@@ -135,11 +138,28 @@ describe('getPersonalIbanErrorMessage', () => {
     expect(getPersonalIbanKycMessage()).toBe('Personal IBANs require KYC level 50.');
   });
 
-  it('maps PersonalIbanCurrencyNotSupported to the EUR-only rejection message', () => {
+  it('qualifies the EUR-only rejection as Bank Frick-specific', () => {
     expect(getPersonalIbanErrorMessage('PersonalIbanCurrencyNotSupported')).toBe(
-      'Personal IBANs are currently only available for EUR.',
+      'Bank Frick personal IBANs are currently only available for EUR.',
     );
   });
+
+  it.each([
+    ['de', de['screens/payment'], /Bank Frick/i],
+    ['fr', fr['screens/payment'], /Bank Frick/i],
+    ['it', italian['screens/payment'], /Bank Frick/i],
+  ])(
+    'qualifies the %s currency rejection as Bank Frick-specific',
+    (_locale, translations, bankFrick) => {
+      const message =
+        translations[
+          'Bank Frick personal IBANs are currently only available for EUR.'
+        ];
+
+      expect(message).toMatch(bankFrick);
+      expect(message).toMatch(/EUR/i);
+    },
+  );
 
   it('maps CurrencyUnsupported to the currency-unavailable message', () => {
     expect(getPersonalIbanErrorMessage('CurrencyUnsupported')).toBe(

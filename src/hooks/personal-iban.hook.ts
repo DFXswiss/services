@@ -6,7 +6,10 @@ import {
   PersonalIbanAnswer,
   usePersonalIbanConfirmationContext,
 } from '../contexts/personal-iban-confirmation.context';
-import { normalizePersonalIban } from '../util/personal-iban';
+import {
+  isExplicitFrickPersonalIbanRequest,
+  normalizePersonalIban,
+} from '../util/personal-iban';
 
 export interface PersonalIbanConfirmation {
   /** Selector requested by the URL or widget, before confirmation is applied. */
@@ -40,7 +43,7 @@ function usePersonalIbanSelection(): PersonalIbanSelection {
       isWidget ? widgetPersonalIban : urlPersonalIban,
     ),
     occurrence: isWidget
-      ? `widget:${widgetPersonalIbanOccurrence}`
+      ? `widget:${widgetPersonalIbanOccurrence}:navigation:${location.key}`
       : `navigation:${location.key}`,
   };
 }
@@ -67,16 +70,23 @@ export function usePersonalIbanConfirmation(): PersonalIbanConfirmation {
   const confirmed = answer?.answer === 'confirmed';
   const declinedForOccurrence =
     answer?.answer === 'declined' && answer.occurrence === occurrence;
+  const isRecognizedFrickRequest =
+    isExplicitFrickPersonalIbanRequest(requestedPersonalIban);
   const requiresCustomerConfirmation =
-    requestedPersonalIban !== undefined &&
+    isRecognizedFrickRequest &&
     customerIdentity !== undefined &&
     !confirmed &&
     !declinedForOccurrence;
-  const personalIban = confirmed ? requestedPersonalIban : undefined;
+  const personalIban =
+    confirmed && isRecognizedFrickRequest ? requestedPersonalIban : undefined;
 
   const saveAnswer = useCallback(
     (nextAnswer: PersonalIbanAnswer) => {
-      if (customerIdentity === undefined || requestedPersonalIban === undefined) return;
+      if (
+        customerIdentity === undefined ||
+        !isExplicitFrickPersonalIbanRequest(requestedPersonalIban)
+      )
+        return;
 
       saveInMemoryAnswer(customerIdentity, nextAnswer);
     },

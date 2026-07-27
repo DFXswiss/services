@@ -15,6 +15,7 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { useEffect, useRef, useState } from 'react';
 import {
   createMemoryRouter,
+  MemoryRouter,
   RouterProvider,
   useLocation,
   useNavigate,
@@ -26,6 +27,7 @@ import { PersonalIbanConfirmationContextProvider } from '../contexts/personal-ib
 
 function ConfirmationQuoteProbe(): JSX.Element {
   const confirmation = usePersonalIbanConfirmation();
+  const navigate = useNavigate();
   const previousQuote = useRef<string>();
   const customer = mockUseAuthContext().session?.account as number | undefined;
 
@@ -66,6 +68,20 @@ function ConfirmationQuoteProbe(): JSX.Element {
       </button>
       <button type="button" onClick={confirmation.declineForCurrentCustomer}>
         decline
+      </button>
+      <button
+        type="button"
+        data-testid="navigate-account"
+        onClick={() => navigate('/account')}
+      >
+        leave buy
+      </button>
+      <button
+        type="button"
+        data-testid="navigate-buy"
+        onClick={() => navigate('/buy')}
+      >
+        start another buy
       </button>
     </>
   );
@@ -287,6 +303,51 @@ describe('personal-IBAN in-memory confirmation workflows', () => {
 
     await act(async () => router.navigate('/buy?personal-iban=frick'));
     expect(screen.getByTestId('decision')).toHaveTextContent('required');
+  });
+
+  it('a mounted widget asks again when a customer leaves and starts a later purchase after declining', async () => {
+    mockUseAuthContext.mockReturnValue({ session: { account: 73 } });
+    mockAppHandling.mockReturnValue({
+      isWidget: true,
+      widgetPersonalIban: 'frick',
+      widgetPersonalIbanOccurrence: 1,
+    });
+    render(
+      <PersonalIbanConfirmationContextProvider>
+        <MemoryRouter initialEntries={['/buy']}>
+          <ConfirmationQuoteProbe />
+        </MemoryRouter>
+      </PersonalIbanConfirmationContextProvider>,
+    );
+
+    await act(async () =>
+      screen.getByRole('button', { name: 'decline' }).click(),
+    );
+    expect(screen.getByTestId('decision')).toHaveTextContent(/^not-required$/);
+
+    await act(async () =>
+      screen.getByTestId('navigate-account').dispatchEvent(
+        new MouseEvent('click', { bubbles: true }),
+      ),
+    );
+    await act(async () =>
+      screen.getByTestId('navigate-buy').dispatchEvent(
+        new MouseEvent('click', { bubbles: true }),
+      ),
+    );
+
+    expect(screen.getByTestId('decision')).toHaveTextContent(/^required$/);
+  });
+
+  it('does not offer confirmation for an unrecognized provider selector', () => {
+    mockUseAuthContext.mockReturnValue({ session: { account: 74 } });
+    createFlow(['/buy?personal-iban=unknown-provider']);
+
+    expect(screen.getByTestId('requested')).toHaveTextContent(
+      'unknown-provider',
+    );
+    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
   });
 
   it('a new app instance after declining asks again', async () => {

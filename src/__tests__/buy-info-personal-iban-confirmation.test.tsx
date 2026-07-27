@@ -206,6 +206,20 @@ describe('BuyInfoScreen personal-IBAN confirmation transitions', () => {
     );
   });
 
+  it('a mistyped selector shows the local provider rejection without the Bank Frick prompt', async () => {
+    renderFlow('/buy/info?personal-iban=unknown-provider');
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          'The requested personal IBAN provider is not recognized.',
+        ),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
+    expect(mockReceiveFor).not.toHaveBeenCalled();
+  });
+
   it('a new app instance after confirmation asks again before sending a provider request', async () => {
     const { element } = renderFlow();
     await act(async () => screen.getByRole('button', { name: CONFIRM }).click());

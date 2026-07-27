@@ -101,7 +101,7 @@ export function getPersonalIbanErrorMessage(message: string | undefined): string
     return 'The requested personal IBAN provider is not recognized.';
   }
   if (message.includes('PersonalIbanCurrencyNotSupported')) {
-    return 'Personal IBANs are currently only available for EUR.';
+    return 'Bank Frick personal IBANs are currently only available for EUR.';
   }
   if (message.includes('CurrencyUnsupported')) {
     return 'The selected currency is not available. Please try a different currency or contact support.';

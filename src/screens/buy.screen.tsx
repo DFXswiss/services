@@ -199,6 +199,9 @@ export default function BuyScreen(): JSX.Element {
   const pendingFormSynchronization = useRef<string>();
 
   const effectivePersonalIban = suppressPersonalIban ? undefined : personalIban;
+  const personalIbanSelector = suppressPersonalIban
+    ? undefined
+    : requestedPersonalIban;
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>();
@@ -439,10 +442,15 @@ export default function BuyScreen(): JSX.Element {
     ? toPersonalIbanProviderRequest(effectivePersonalIban).personalIbanProvider
     : undefined;
   const hasUnsupportedPersonalIbanRequest =
-    isPersonalIbanEligible && isUnrecognizedPersonalIbanSelector(effectivePersonalIban);
-  const personalIbanErrorApplies =
+    isUnrecognizedPersonalIbanSelector(personalIbanSelector);
+  const hasApplicableFrickRequest =
     isPersonalIbanEligible &&
-    (requestPersonalIbanProvider !== undefined || hasUnsupportedPersonalIbanRequest);
+    isExplicitFrickPersonalIbanRequest(personalIbanSelector);
+  const showPersonalIbanConfirmation =
+    hasApplicableFrickRequest && requiresCustomerConfirmation;
+  const personalIbanErrorApplies =
+    (isPersonalIbanEligible && requestPersonalIbanProvider !== undefined) ||
+    hasUnsupportedPersonalIbanRequest;
 
   // load payment infos
   useEffect(() => {
@@ -458,7 +466,7 @@ export default function BuyScreen(): JSX.Element {
 
     if (
       !isWalletInitialized ||
-      (requestedPersonalIban !== undefined &&
+      (hasApplicableFrickRequest &&
         (!hasAuthenticatedCustomer || requiresCustomerConfirmation))
     ) {
       setPaymentInfo(undefined);
@@ -578,6 +586,7 @@ export default function BuyScreen(): JSX.Element {
     debouncedValidatedData,
     requestPersonalIbanProvider,
     hasUnsupportedPersonalIbanRequest,
+    hasApplicableFrickRequest,
     hasAuthenticatedCustomer,
     isWalletInitialized,
     personalIbanErrorApplies,
@@ -745,19 +754,18 @@ export default function BuyScreen(): JSX.Element {
   // response failed compatibility — require explicit continue before payment details (A2 / B1 / C1).
   const needsPersonalIbanAcknowledgement =
     paymentInfo != null &&
-    effectivePersonalIban !== undefined &&
+    personalIbanSelector !== undefined &&
     !continueWithoutPersonalIban &&
     ((paymentInfoPaymentMethod !== undefined &&
       !isPersonalIbanApplicable(paymentInfo.currency.name, paymentInfoPaymentMethod)) ||
-      (isExplicitFrickPersonalIbanRequest(effectivePersonalIban) &&
+      (isExplicitFrickPersonalIbanRequest(personalIbanSelector) &&
         paymentInfoPaymentMethod !== undefined &&
         isPersonalIbanApplicable(paymentInfo.currency.name, paymentInfoPaymentMethod) &&
         !verifiedFrick));
 
   const isUnrecognizedBlocked =
     validatedData != null &&
-    isPersonalIbanApplicable(validatedData.currency.name, validatedData.paymentMethod) &&
-    isUnrecognizedPersonalIbanSelector(effectivePersonalIban) &&
+    isUnrecognizedPersonalIbanSelector(personalIbanSelector) &&
     errorMessage != null;
 
   return (
@@ -766,7 +774,7 @@ export default function BuyScreen(): JSX.Element {
         <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose />
-      ) : requiresCustomerConfirmation ? (
+      ) : showPersonalIbanConfirmation ? (
         <PersonalIbanConfirmationPrompt
           onConfirm={confirmForCurrentCustomer}
           onDecline={declineForCurrentCustomer}

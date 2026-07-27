@@ -6,6 +6,7 @@ const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
 const mockPersonalIban = jest.fn();
 const mockHasAuthenticatedCustomer = jest.fn();
+const mockRequiresCustomerConfirmation = jest.fn();
 const mockWalletInitialized = jest.fn();
 const mockCloseServices = jest.fn();
 
@@ -103,7 +104,7 @@ jest.mock('src/hooks/personal-iban.hook', () => ({
   usePersonalIbanConfirmation: () => ({
     requestedPersonalIban: mockPersonalIban(),
     personalIban: mockPersonalIban(),
-    requiresCustomerConfirmation: false,
+    requiresCustomerConfirmation: mockRequiresCustomerConfirmation(),
     hasAuthenticatedCustomer: mockHasAuthenticatedCustomer(),
     confirmForCurrentCustomer: jest.fn(),
     declineForCurrentCustomer: jest.fn(),
@@ -178,6 +179,7 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
     jest.clearAllMocks();
     mockPersonalIban.mockReturnValue('Frick');
     mockHasAuthenticatedCustomer.mockReturnValue(true);
+    mockRequiresCustomerConfirmation.mockReturnValue(false);
     mockWalletInitialized.mockReturnValue(true);
     mockUseAppParams.mockReturnValue(baseAppParams());
     mockReceiveFor.mockResolvedValue(chfOffer());
@@ -241,6 +243,23 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
 
     await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
     expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
+  });
+
+  it('checks CHF applicability before showing an irreversible Frick confirmation', async () => {
+    mockRequiresCustomerConfirmation.mockReturnValue(true);
+
+    render(<BuyInfoScreen />);
+
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
+    expect(
+      screen.queryByText(
+        'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?',
+      ),
+    ).not.toBeInTheDocument();
+    expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty(
+      'personalIbanProvider',
+    );
+    await waitFor(() => expect(screen.getByText(MISMATCH_HINT)).toBeInTheDocument());
   });
 
   it('does not show the mismatch hint for customers without personal-iban', async () => {
@@ -402,8 +421,9 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
 
   it('offers continue-without and Close for an unrecognized selector (A3)', async () => {
     mockPersonalIban.mockReturnValue('unknown-provider');
-    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
-    mockReceiveFor.mockResolvedValue(frickOffer({ isPersonalIban: false, bank: undefined }));
+    mockRequiresCustomerConfirmation.mockReturnValue(true);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
+    mockReceiveFor.mockResolvedValue(chfOffer());
 
     render(<BuyInfoScreen />);
 
@@ -412,6 +432,11 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
     );
     await settle();
     expect(screen.getByRole('button', { name: CONTINUE_WITHOUT })).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?',
+      ),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
     expect(mockReceiveFor).not.toHaveBeenCalled();
