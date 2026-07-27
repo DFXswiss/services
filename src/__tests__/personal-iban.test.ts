@@ -1,3 +1,7 @@
+// Literal QuoteError token strings must stay in sync with
+// api/src/subdomains/supporting/payment/dto/transaction-helper/quote-error.enum.ts.
+// These tests are the contract safety net for personal-IBAN error mappers.
+
 jest.mock('@dfx.swiss/react', () => ({
   FiatPaymentMethod: {
     BANK: 'Bank',
@@ -54,6 +58,8 @@ describe('isPersonalIbanApplicable', () => {
   });
 });
 
+// Tokens must match QuoteError string values for the buy/purchase path
+// (resolveBankInfo / getOrCreateFrickForUser / DTO validation).
 describe('getPersonalIbanErrorMessage', () => {
   it('maps PaymentMethodNotAllowed to the bank-transfer requirement message', () => {
     expect(getPersonalIbanErrorMessage('PaymentMethodNotAllowed')).toBe(
@@ -83,6 +89,18 @@ describe('getPersonalIbanErrorMessage', () => {
     );
   });
 
+  it('maps CurrencyUnsupported to the currency-unavailable message', () => {
+    expect(getPersonalIbanErrorMessage('CurrencyUnsupported')).toBe(
+      'The selected currency is not available. Please try a different currency or contact support.',
+    );
+  });
+
+  it('maps NoBankAvailableForThisCurrency to the no-bank message', () => {
+    expect(getPersonalIbanErrorMessage('NoBankAvailableForThisCurrency')).toBe(
+      'No bank is available for this currency. Please try a different currency or contact support.',
+    );
+  });
+
   it('does not match raw untokenized backend texts', () => {
     // Intentionally unmapped BadRequestException free-text (not a QuoteError token).
     expect(getPersonalIbanErrorMessage('Asset not found')).toBeUndefined();
@@ -97,6 +115,7 @@ describe('getPersonalIbanErrorMessage', () => {
   });
 });
 
+// Tokens must match QuoteError string values for getBankInfoForRequest (stored-detail reconstruction).
 describe('getStoredPaymentDetailErrorMessage', () => {
   it.each([
     [
@@ -108,26 +127,30 @@ describe('getStoredPaymentDetailErrorMessage', () => {
       'The bank for this payment is no longer available. Please start a new purchase.',
     ],
     [
-      'StoredPersonalIbanDoesNotBelongToThisUser',
+      'StoredPersonalIbanUserMismatch',
       'This stored personal IBAN is no longer valid for your account. Please start a new purchase.',
     ],
     [
-      'StoredPersonalIbanDoesNotMatchThisTransactionRequest',
+      'StoredPersonalIbanTransactionRequestMismatch',
       'This stored personal IBAN does not match this transaction. Please start a new purchase.',
     ],
     ['StoredPersonalIbanIsNoLongerActive', 'This personal IBAN is no longer active. Please start a new purchase.'],
     ['StoredBankNoLongerAcceptsPayments', 'This bank no longer accepts payments. Please start a new purchase.'],
-    [
-      'CurrencyNotFound',
-      'The selected currency is not available. Please try a different currency or contact support.',
-    ],
-    [
-      'NoBankAvailableForThisCurrency',
-      'No bank is available for this currency. Please try a different currency or contact support.',
-    ],
   ] as const)('maps %s to customer-facing copy', (token, text) => {
     expect(getStoredPaymentDetailErrorMessage(token)).toBe(text);
     expect(getStoredPaymentDetailErrorMessage(token)).toBeTruthy();
+  });
+
+  it.each([
+    'StoredPersonalIbanDoesNotBelongToThisUser',
+    'StoredPersonalIbanDoesNotMatchThisTransactionRequest',
+    'CurrencyNotFound',
+  ] as const)('does not match obsolete/wrong token %s', (token) => {
+    expect(getStoredPaymentDetailErrorMessage(token)).toBeUndefined();
+  });
+
+  it('does not map NoBankAvailableForThisCurrency (buy-path token only)', () => {
+    expect(getStoredPaymentDetailErrorMessage('NoBankAvailableForThisCurrency')).toBeUndefined();
   });
 
   it('returns undefined for undefined message', () => {

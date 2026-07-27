@@ -26,8 +26,11 @@ export function isPersonalIbanApplicable(
  * invalid-provider validation message is also feature-specific. Returns untranslated
  * English defaults; callers translate via translate('screens/payment', text).
  *
- * Only maps QuoteError tokens for the purchase/selection flow. Raw backend
- * BadRequestException texts (e.g. 'Asset not found') are intentionally not matched.
+ * Maps QuoteError tokens thrown on the purchase/selection path (resolveBankInfo /
+ * getOrCreateFrickForUser / DTO validation): PaymentMethodNotAllowed, KycRequired,
+ * PersonalIbanIssuanceFailed, PersonalIbanProviderUnsupported,
+ * PersonalIbanCurrencyNotSupported, CurrencyUnsupported, NoBankAvailableForThisCurrency.
+ * Raw backend BadRequestException texts (e.g. 'Asset not found') are intentionally not matched.
  */
 export function getPersonalIbanErrorMessage(message: string | undefined): string | undefined {
   if (!message) return undefined;
@@ -47,6 +50,12 @@ export function getPersonalIbanErrorMessage(message: string | undefined): string
   if (message.includes('PersonalIbanCurrencyNotSupported')) {
     return 'Personal IBANs are currently only available for EUR.';
   }
+  if (message.includes('CurrencyUnsupported')) {
+    return 'The selected currency is not available. Please try a different currency or contact support.';
+  }
+  if (message.includes('NoBankAvailableForThisCurrency')) {
+    return 'No bank is available for this currency. Please try a different currency or contact support.';
+  }
 
   return undefined;
 }
@@ -57,9 +66,12 @@ export function getPersonalIbanErrorMessage(message: string | undefined): string
  * describe missing or obsolete stored selection state, not buy-quote failures. Returns
  * untranslated English defaults; callers translate via translate('screens/payment', text).
  *
- * Only maps stored-detail reconstruction tokens. Unrelated or buy-flow tokens (e.g.
- * KycRequired) are intentionally not matched so invoice/receipt errors never show
- * purchase-flow wording.
+ * Maps QuoteError tokens thrown by getBankInfoForRequest only:
+ * StoredTransactionRequestBankSelectionIncomplete, StoredTransactionRequestBankNoLongerExists,
+ * StoredPersonalIbanUserMismatch, StoredPersonalIbanTransactionRequestMismatch,
+ * StoredPersonalIbanIsNoLongerActive, StoredBankNoLongerAcceptsPayments.
+ * Buy-flow tokens (e.g. KycRequired, CurrencyUnsupported, NoBankAvailableForThisCurrency)
+ * are intentionally not matched so invoice/receipt errors never show purchase-flow wording.
  */
 export function getStoredPaymentDetailErrorMessage(message: string | undefined): string | undefined {
   if (!message) return undefined;
@@ -70,10 +82,10 @@ export function getStoredPaymentDetailErrorMessage(message: string | undefined):
   if (message.includes('StoredTransactionRequestBankNoLongerExists')) {
     return 'The bank for this payment is no longer available. Please start a new purchase.';
   }
-  if (message.includes('StoredPersonalIbanDoesNotBelongToThisUser')) {
+  if (message.includes('StoredPersonalIbanUserMismatch')) {
     return 'This stored personal IBAN is no longer valid for your account. Please start a new purchase.';
   }
-  if (message.includes('StoredPersonalIbanDoesNotMatchThisTransactionRequest')) {
+  if (message.includes('StoredPersonalIbanTransactionRequestMismatch')) {
     return 'This stored personal IBAN does not match this transaction. Please start a new purchase.';
   }
   if (message.includes('StoredPersonalIbanIsNoLongerActive')) {
@@ -81,12 +93,6 @@ export function getStoredPaymentDetailErrorMessage(message: string | undefined):
   }
   if (message.includes('StoredBankNoLongerAcceptsPayments')) {
     return 'This bank no longer accepts payments. Please start a new purchase.';
-  }
-  if (message.includes('CurrencyNotFound')) {
-    return 'The selected currency is not available. Please try a different currency or contact support.';
-  }
-  if (message.includes('NoBankAvailableForThisCurrency')) {
-    return 'No bank is available for this currency. Please try a different currency or contact support.';
   }
 
   return undefined;
