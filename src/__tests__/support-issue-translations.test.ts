@@ -59,7 +59,7 @@ describe('receiver IBAN support translations', () => {
       const support = languages[lang]['screens/support'];
 
       for (const key of RECEIVER_IBAN_KEYS) {
-        // Keys contain periods and colons — always index the object directly, never split on '.'.
+        // Keys contain periods — always index the object directly, never split on '.'.
         const value = support[key];
         expect(value).toBe(EXPECTED[lang][key]);
       }

@@ -236,8 +236,8 @@ jest.mock('@dfx.swiss/react-components', () => {
     });
   }
 
-  function StyledButton({ label, onClick, disabled, type }: any) {
-    return React.createElement('button', { type: type ?? 'button', onClick, disabled }, label);
+  function StyledButton({ label, onClick, disabled, isLoading, type }: any) {
+    return React.createElement('button', { type: type ?? 'button', onClick, disabled: disabled || isLoading }, label);
   }
 
   const StyledVerticalStack = ({ children }: any) => React.createElement('div', null, children);

@@ -265,9 +265,8 @@ export default function SupportIssueScreen(): JSX.Element {
     const iban = debouncedReceiver ?? '';
 
     // The check is purely advisory, so any request that is no longer relevant is simply skipped. Two are:
-    // a still incomplete input, which the API answers with InvalidIban by design and which would spend a rate
-    // limit shared by everyone behind the same network; and a debounced value the customer has meanwhile
-    // changed, which must never be asked about no matter how the two updates were committed.
+    // an input that is still incomplete, which should not be checked; and a debounced value the customer has
+    // meanwhile changed, which must never be requested no matter how the two updates were committed.
     if (
       selectedReason !== SupportIssueReason.TRANSACTION_MISSING ||
       iban.length < ReceiverIbanCheckMinLength ||
@@ -534,9 +533,9 @@ export default function SupportIssueScreen(): JSX.Element {
 
                     {selectedReason === SupportIssueReason.TRANSACTION_MISSING && (
                       <StyledVerticalStack gap={1} full center>
-                        {/* Focus is tracked on the wrapper: StyledInput takes no focus handlers, and the ones it
-                            passes on would replace the form's own. No autocomplete on purpose either - this is not
-                            the customer's own IBAN, and the sender field above already claims the IBAN autofill. */}
+                        {/* Focus is tracked on the surrounding div so the hint(s) only appear after the field has
+                            been blurred (left). Autocomplete is intentionally omitted here because this is not the
+                            customer's own IBAN, and the sender field above already claims the IBAN autofill. */}
                         <div
                           className="w-full"
                           onFocus={() => setIsReceiverIbanFocused(true)}

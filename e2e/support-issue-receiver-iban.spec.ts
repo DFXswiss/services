@@ -14,15 +14,15 @@ import { getCachedAuth } from './helpers/auth-cache';
  * (issue-type / reason) and the SupportIssueType / SupportIssueReason string enums
  * (TransactionIssue / TransactionMissing).
  *
- * The receiver-IBAN check endpoint is MOCKED with synthetic status responses via page.route(...), so
- * the baselines are deterministic and contain NO real production data. Only PUT bank/receiveIban
+ * The receiver-IBAN check endpoint is MOCKED with synthetic status responses via page.route(...), which
+ * makes each of the tested check states reproducible on demand. Only PUT bank/receiveIban
  * (full URL /v1/bank/receiveIban after useApi) is intercepted; everything else
- * (auth/user/settings/…) is passed through via route.continue().
+ * (auth/user/settings/…) is passed through via route.continue() to the local running stack.
  *
  * Intercepted endpoint (base `/v1/` is prepended by useApi):
  *   - PUT bank/receiveIban   body { iban }; success body { status: ReceiveIbanStatus }
  *
- * Synthetic fixtures: fixed example IBAN string — no production data.
+ * Synthetic fixtures: fixed example IBAN string.
  */
 
 // Example Swiss IBAN (21 alphanumerics once normalized); length is above ReceiverIbanCheckMinLength (15).
