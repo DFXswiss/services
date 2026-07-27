@@ -761,18 +761,38 @@ describe('SupportIssueScreen receiver IBAN check', () => {
   });
 
   // --- J. Failure / rate limit ---
-  it('shows the unavailable hint after a rejected check without treating it as a form error', async () => {
-    mockCheckReceiveIban.mockRejectedValue({ statusCode: 429, message: 'Too Many Requests' });
-    renderScreen();
-    const input = await typeReceiverIban(VALID_NORMALIZED);
-    await advanceDebounce();
-    fireEvent.blur(input);
+  it.each([
+    [429, { statusCode: 429, message: 'Too Many Requests' }],
+    [500, { statusCode: 500, message: 'Internal Server Error' }],
+  ] as const)(
+    'shows the unavailable hint after a rejected check (%s) without treating it as a form error, and submits the raw receiver IBAN',
+    async (_statusCode, rejection) => {
+      mockCheckReceiveIban.mockRejectedValue(rejection);
+      renderScreen('');
+      selectTransactionMissingViaUi();
+      fillTransactionMissingForm(VALID_FORMATTED);
+      await advanceDebounce();
+      fireEvent.blur(getReceiverIbanInput());
 
-    expect(screen.getByText(UNAVAILABLE_HINT)).toBeInTheDocument();
-    expect(screen.queryByTestId('error-hint')).not.toBeInTheDocument();
-    // No validation error message attached to the receiver field from the check failure.
-    expect(within(getReceiverIbanFieldRoot()).queryByText('required')).not.toBeInTheDocument();
-  });
+      expect(screen.getByText(UNAVAILABLE_HINT)).toBeInTheDocument();
+      expect(screen.queryByTestId('error-hint')).not.toBeInTheDocument();
+      // No validation error message attached to the receiver field from the check failure.
+      expect(within(getReceiverIbanFieldRoot()).queryByText('required')).not.toBeInTheDocument();
+      expect(getNextButton()).not.toBeDisabled();
+
+      await act(async () => {
+        fireEvent.click(getNextButton());
+      });
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(mockCreateSupportIssue).toHaveBeenCalled();
+      const request = mockCreateSupportIssue.mock.calls[0][0];
+      expect(request.transaction.receiverIban).toBe(VALID_FORMATTED);
+    },
+  );
 
   // --- K. Spinner ---
   it('sets loading on the input while the check runs and clears it on success', async () => {
@@ -888,28 +908,6 @@ describe('SupportIssueScreen receiver IBAN check', () => {
       jest.advanceTimersByTime(ReceiverIbanCheckDelay);
     });
     expect(receiverHasLoadingSpinner()).toBe(true);
-
-    await act(async () => {
-      fireEvent.click(getNextButton());
-    });
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(mockCreateSupportIssue).toHaveBeenCalled();
-    const request = mockCreateSupportIssue.mock.calls[0][0];
-    expect(request.transaction.receiverIban).toBe(VALID_FORMATTED);
-  });
-
-  it('submits the raw receiver IBAN after the check has been rejected (429)', async () => {
-    mockCheckReceiveIban.mockRejectedValue({ statusCode: 429 });
-    renderScreen('');
-    selectTransactionMissingViaUi();
-    fillTransactionMissingForm(VALID_FORMATTED);
-    await advanceDebounce();
-    fireEvent.blur(getReceiverIbanInput());
-    expect(screen.getByText(UNAVAILABLE_HINT)).toBeInTheDocument();
 
     await act(async () => {
       fireEvent.click(getNextButton());
