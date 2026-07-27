@@ -48,15 +48,10 @@ function usePersonalIbanSelection(): PersonalIbanSelection {
   };
 }
 
-/** Derives the selector directly from its live URL or Web Component source. */
-export function usePersonalIban(): string | undefined {
-  return usePersonalIbanSelection().requestedPersonalIban;
-}
-
 /**
  * Requires an explicit personal-IBAN answer per running app instance and authenticated customer.
  * Confirmations last for that app instance. Declines last only for the current selector occurrence,
- * so a new navigation or widget/React property occurrence asks again.
+ * so a new navigation or changed widget/React selector asks again.
  */
 export function usePersonalIbanConfirmation(): PersonalIbanConfirmation {
   const { requestedPersonalIban, occurrence } = usePersonalIbanSelection();

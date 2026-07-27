@@ -490,27 +490,4 @@ describe('personal-IBAN in-memory confirmation workflows', () => {
     ).toBe(false);
   });
 
-  it('same-value Web Component property occurrence asks again after a decline', async () => {
-    mockUseAuthContext.mockReturnValue({ session: { account: 121 } });
-    mockAppHandling.mockReturnValue({
-      isWidget: true,
-      widgetPersonalIban: 'frick',
-      widgetPersonalIbanOccurrence: 1,
-    });
-    const { element, rendered } = createFlow(['/buy']);
-
-    await act(async () => screen.getByRole('button', { name: 'decline' }).click());
-    await waitFor(() =>
-      expect(screen.getByTestId('decision')).toHaveTextContent('not-required'),
-    );
-
-    mockAppHandling.mockReturnValue({
-      isWidget: true,
-      widgetPersonalIban: 'frick',
-      widgetPersonalIbanOccurrence: 2,
-    });
-    rendered.rerender(element);
-
-    expect(screen.getByTestId('decision')).toHaveTextContent('required');
-  });
 });

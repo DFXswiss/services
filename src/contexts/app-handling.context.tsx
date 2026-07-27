@@ -181,10 +181,10 @@ interface AppHandlingContextInterface {
   isWidget: boolean;
   /**
    * Live widget `personal-iban` / `personalIban` attribute/property value (widget only).
-   * Derived by consumers via usePersonalIban(); not part of params state.
+   * Read by the confirmation hook; not part of params state.
    */
   widgetPersonalIban?: string;
-  /** Internal write counter; not part of the Web Component's public properties. */
+  /** Internal value-change counter; not part of the Web Component's public properties. */
   widgetPersonalIbanOccurrence?: number;
   availableBlockchains?: Blockchain[];
   params: AppParams;
@@ -323,7 +323,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
           ...Object.entries(params)
-            // personalIban is never copied into params state — consumers use usePersonalIban().
+            // personalIban stays live and is read by the confirmation hook.
             .filter(([key, val]) => typeof val === 'string' && key !== 'personalIban')
             .reduce(
               (prev, [key, val]) => {

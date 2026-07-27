@@ -2,7 +2,7 @@
 // KYC routing, and live-input quote invalidation.
 // Mounts the real default-exported BuyScreen (react-hook-form runs for real;
 // quote fetch is gated by useDebounce(validatedData, 500) — use generous waitFor).
-// personalIban comes from usePersonalIban() (not useAppParams).
+// personalIban comes from usePersonalIbanConfirmation() (not useAppParams).
 
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
@@ -211,7 +211,6 @@ jest.mock('../hooks/app-params.hook', () => ({
   useAppParams: () => mockUseAppParams(),
 }));
 jest.mock('../hooks/personal-iban.hook', () => ({
-  usePersonalIban: () => mockPersonalIban(),
   usePersonalIbanConfirmation: () => ({
     requestedPersonalIban: mockRequestedPersonalIban(),
     personalIban: mockPersonalIban(),

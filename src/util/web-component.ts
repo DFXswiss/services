@@ -16,11 +16,12 @@ function applyStringProp(
   element: R2wcElement,
   propertyName: string,
   value: string | null | undefined,
+  createsOccurrence: boolean,
 ): void {
   const props = element[R2WC_PROPS];
   if (props) {
     props[propertyName] = value ?? undefined;
-    if (propertyName === 'personalIban') {
+    if (propertyName === 'personalIban' && createsOccurrence) {
       const occurrence = props[PERSONAL_IBAN_OCCURRENCE_PROP];
       props[PERSONAL_IBAN_OCCURRENCE_PROP] =
         typeof occurrence === 'number' ? occurrence + 1 : 1;
@@ -58,7 +59,12 @@ export function preserveStringAttribute(
   class PreservedAttributeElement extends BaseElement {
     attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
       if (name === attributeName) {
-        applyStringProp(this as R2wcElement, propertyName, newValue);
+        applyStringProp(
+          this as R2wcElement,
+          propertyName,
+          newValue,
+          oldValue !== newValue,
+        );
         return;
       }
 
@@ -81,7 +87,7 @@ export function preserveStringAttribute(
           // removeAttribute → attributeChangedCallback(null) → applyStringProp(undefined)
           this.removeAttribute(attributeName);
         } else {
-          applyStringProp(this, propertyName, undefined);
+          applyStringProp(this, propertyName, undefined, false);
         }
         return;
       }
@@ -89,9 +95,10 @@ export function preserveStringAttribute(
       const stringValue = String(value);
       // setAttribute is a no-op for attributeChangedCallback when the value is
       // unchanged — still push into props and re-render so property-only writes
-      // with the same string stay consistent.
+      // with the same string stay consistent, without creating a new selector
+      // occurrence.
       if (this.getAttribute(attributeName) === stringValue) {
-        applyStringProp(this, propertyName, stringValue);
+        applyStringProp(this, propertyName, stringValue, false);
         return;
       }
 

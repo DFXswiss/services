@@ -101,4 +101,22 @@ describe('MainLib personal-IBAN selector occurrences', () => {
     expect(screen.getByTestId('occurrence')).toHaveTextContent('3');
     expect(screen.getByTestId('decision')).toHaveTextContent('required');
   });
+
+  it('keeps a same-value decline for one customer but asks a new customer', async () => {
+    const { rerender } = render(<MainLib personalIban="frick" />);
+
+    await act(async () =>
+      screen.getByRole('button', { name: 'decline' }).click(),
+    );
+    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
+
+    rerender(<MainLib personalIban="frick" />);
+    expect(screen.getByTestId('occurrence')).toHaveTextContent('1');
+    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
+
+    mockUseAuthContext.mockReturnValue({ session: { account: 302 } });
+    rerender(<MainLib personalIban="frick" />);
+    expect(screen.getByTestId('occurrence')).toHaveTextContent('1');
+    expect(screen.getByTestId('decision')).toHaveTextContent('required');
+  });
 });

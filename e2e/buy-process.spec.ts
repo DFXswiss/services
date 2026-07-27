@@ -121,6 +121,7 @@ test.describe('Buy Process - UI Flow', () => {
           bank: 'Bank Frick',
           bic: 'BFRILI22XXX',
           iban: 'LI21088100002324013AA',
+          name: 'DFX AG',
           remittanceInfo: undefined,
           sepaInstant: false,
           isPersonalIban: true,
@@ -150,7 +151,13 @@ test.describe('Buy Process - UI Flow', () => {
     const bankLabel = page.getByText('Bank', { exact: true });
     await expect(bankLabel).toBeVisible({ timeout: 15000 });
     await expect.poll(() => receivedProvider).toBe('Frick');
-    await expect(bankLabel.locator('../../../..')).toHaveScreenshot(
+    const paymentDetails = page
+      .getByRole('heading', { name: 'Payment Information' })
+      .locator('..');
+    await expect(
+      paymentDetails.getByText('DFX AG', { exact: true }),
+    ).toBeVisible();
+    await expect(paymentDetails).toHaveScreenshot(
       'buy-bank-frick-payment-details.png',
     );
   });

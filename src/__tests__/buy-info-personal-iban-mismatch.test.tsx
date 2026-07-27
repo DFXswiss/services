@@ -1,6 +1,6 @@
 // Wiring test: when personalIban is set but currency is not EUR, BuyInfoScreen omits
 // personalIbanProvider from the quote request AND requires continue acknowledgement (A2).
-// personalIban comes from usePersonalIban() (not useAppParams).
+// personalIban comes from usePersonalIbanConfirmation() (not useAppParams).
 
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
@@ -100,7 +100,6 @@ jest.mock('src/hooks/app-params.hook', () => ({
   useAppParams: () => mockUseAppParams(),
 }));
 jest.mock('src/hooks/personal-iban.hook', () => ({
-  usePersonalIban: () => mockPersonalIban(),
   usePersonalIbanConfirmation: () => ({
     requestedPersonalIban: mockPersonalIban(),
     personalIban: mockPersonalIban(),

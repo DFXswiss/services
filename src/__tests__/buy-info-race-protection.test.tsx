@@ -1,6 +1,6 @@
 // Race-protection test: BuyInfoScreen must discard a stale, slower-resolving quote
 // when a newer fetch (triggered by personalIban change) already resolved.
-// personalIban comes from usePersonalIban() (not useAppParams).
+// personalIban comes from usePersonalIbanConfirmation() (not useAppParams).
 
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
@@ -81,7 +81,6 @@ jest.mock('src/hooks/app-params.hook', () => ({
   useAppParams: () => mockUseAppParams(),
 }));
 jest.mock('src/hooks/personal-iban.hook', () => ({
-  usePersonalIban: () => mockPersonalIban(),
   usePersonalIbanConfirmation: () => ({
     requestedPersonalIban: mockPersonalIban(),
     personalIban: mockPersonalIban(),
