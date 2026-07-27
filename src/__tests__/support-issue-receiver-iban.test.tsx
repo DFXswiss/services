@@ -912,8 +912,13 @@ describe('SupportIssueScreen receiver IBAN check', () => {
     expect(request.transaction.receiverIban).toBe(VALID_FORMATTED);
   });
 
-  it('submits the raw, unnormalized receiver IBAN the customer typed', async () => {
-    mockCheckReceiveIban.mockResolvedValue({ status: ReceiveIbanStatus.NOT_MATCHED });
+  it.each([
+    ReceiveIbanStatus.DFX_IBAN,
+    ReceiveIbanStatus.NOT_MATCHED,
+    ReceiveIbanStatus.INVALID_IBAN,
+    ReceiveIbanStatus.LOGIN_REQUIRED,
+  ] as const)('submits the raw, unnormalized receiver IBAN the customer typed for %s', async (status) => {
+    mockCheckReceiveIban.mockResolvedValue({ status });
     renderScreen('');
     selectTransactionMissingViaUi();
     fillTransactionMissingForm(VALID_FORMATTED);
