@@ -1,6 +1,4 @@
-// Literal QuoteError token strings must stay in sync with
-// api/src/subdomains/supporting/payment/dto/transaction-helper/quote-error.enum.ts.
-// These tests are the contract safety net for personal-IBAN error mappers.
+// Published SDK members are the contract safety net for shared transaction errors.
 
 jest.mock('@dfx.swiss/react', () => ({
   FiatPaymentMethod: {
@@ -9,9 +7,13 @@ jest.mock('@dfx.swiss/react', () => ({
     CARD: 'Card',
   },
   PersonalIbanProvider: { FRICK: 'Frick' },
+  TransactionError: {
+    PAYMENT_METHOD_NOT_ALLOWED: 'SdkPaymentMethodNotAllowed',
+    KYC_REQUIRED: 'SdkKycRequired',
+  },
 }));
 
-import { FiatPaymentMethod, PersonalIbanProvider } from '@dfx.swiss/react';
+import { FiatPaymentMethod, PersonalIbanProvider, TransactionError } from '@dfx.swiss/react';
 import {
   FRICK_ACCOUNT_HOLDER_NAME,
   FRICK_BANK_NAME,
@@ -77,9 +79,10 @@ describe('isPersonalIbanApplicable', () => {
 // (resolveBankInfo / getOrCreateFrickForUser / DTO validation).
 describe('getPersonalIbanErrorMessage', () => {
   it('maps PaymentMethodNotAllowed to the bank-transfer requirement message', () => {
-    expect(getPersonalIbanErrorMessage('PaymentMethodNotAllowed')).toBe(
+    expect(getPersonalIbanErrorMessage(TransactionError.PAYMENT_METHOD_NOT_ALLOWED)).toBe(
       'Personal IBANs require the bank transfer payment method.',
     );
+    expect(getPersonalIbanErrorMessage('PaymentMethodNotAllowed')).toBeUndefined();
   });
 
   it('maps PersonalIbanIssuanceFailed to a retry-or-support message', () => {
@@ -95,8 +98,9 @@ describe('getPersonalIbanErrorMessage', () => {
   });
 
   it('does not map KycRequired (routed through QuoteErrorHint with a separate feature message)', () => {
-    expect(getPersonalIbanErrorMessage('KycRequired')).toBeUndefined();
-    expect(isKycRequiredMessage('KycRequired')).toBe(true);
+    expect(getPersonalIbanErrorMessage(TransactionError.KYC_REQUIRED)).toBeUndefined();
+    expect(isKycRequiredMessage(TransactionError.KYC_REQUIRED)).toBe(true);
+    expect(isKycRequiredMessage('KycRequired')).toBe(false);
     expect(getPersonalIbanKycMessage()).toBe('Personal IBANs require KYC level 50.');
   });
 

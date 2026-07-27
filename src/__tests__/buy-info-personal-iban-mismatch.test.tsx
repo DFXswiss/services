@@ -5,6 +5,11 @@
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
 const mockPersonalIban = jest.fn();
+const mockRecordPersonalIbanApplication = jest.fn();
+const mockConfirmPersonalIban = jest.fn();
+const mockDeclinePersonalIban = jest.fn();
+const mockRequiresCustomerDecision = jest.fn();
+const mockWalletInitialized = jest.fn();
 const mockCloseServices = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({
@@ -98,6 +103,18 @@ jest.mock('src/hooks/app-params.hook', () => ({
 }));
 jest.mock('src/hooks/personal-iban.hook', () => ({
   usePersonalIban: () => mockPersonalIban(),
+  usePersonalIbanIdentityBinding: () => ({
+    requestedPersonalIban: mockPersonalIban(),
+    personalIban: mockPersonalIban(),
+    requiresCustomerDecision: mockRequiresCustomerDecision(),
+    hasAuthenticatedCustomer: true,
+    confirmForCurrentCustomer: mockConfirmPersonalIban,
+    declineForCurrentCustomer: mockDeclinePersonalIban,
+    recordApplicationForCurrentCustomer: mockRecordPersonalIbanApplication,
+  }),
+}));
+jest.mock('src/contexts/wallet.context', () => ({
+  useWalletContext: () => ({ isInitialized: mockWalletInitialized() }),
 }));
 jest.mock('src/hooks/guard.hook', () => ({
   useAddressGuard: () => undefined,
@@ -164,6 +181,8 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPersonalIban.mockReturnValue('Frick');
+    mockRequiresCustomerDecision.mockReturnValue(false);
+    mockWalletInitialized.mockReturnValue(true);
     mockUseAppParams.mockReturnValue(baseAppParams());
     mockReceiveFor.mockResolvedValue(chfOffer());
     // A6: fail on unexpected act() / React warnings so terminal state is awaited properly.
@@ -186,6 +205,41 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
       await Promise.resolve();
     });
   }
+
+  it('asks a different customer to confirm or decline before making any quote request', async () => {
+    mockRequiresCustomerDecision.mockReturnValue(true);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
+
+    render(<BuyInfoScreen />);
+
+    expect(
+      screen.getByText(
+        'A personal IBAN was requested for a different signed-in customer. Do you want to use it for your account?',
+      ),
+    ).toBeInTheDocument();
+    expect(mockReceiveFor).not.toHaveBeenCalled();
+
+    await act(async () => screen.getByRole('button', { name: 'Use requested personal IBAN' }).click());
+    expect(mockConfirmPersonalIban).toHaveBeenCalledTimes(1);
+
+    await act(async () => screen.getByRole('button', { name: CONTINUE_WITHOUT }).click());
+    expect(mockDeclinePersonalIban).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not quote the persisted customer while an incoming widget session is authenticating', async () => {
+    mockWalletInitialized.mockReturnValue(false);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
+
+    const rendered = render(<BuyInfoScreen />);
+    await settle();
+    expect(mockReceiveFor).not.toHaveBeenCalled();
+
+    mockWalletInitialized.mockReturnValue(true);
+    rendered.rerender(<BuyInfoScreen />);
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
+    await settle();
+    expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('Frick');
+  });
 
   it('omits personalIbanProvider and requires continue acknowledgement before payment details (A2)', async () => {
     render(<BuyInfoScreen />);
@@ -320,6 +374,30 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
     expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'false');
   });
 
+  it('offers Close when the fresh selector-free fallback request fails (B2)', async () => {
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
+    const rejected = frickOffer({ name: 'Customer B', iban: 'LI-REJECTED-PERSONAL' });
+    mockReceiveFor.mockImplementation((request: { personalIbanProvider?: string }) =>
+      request.personalIbanProvider
+        ? Promise.resolve(rejected)
+        : Promise.reject({ message: 'Fallback request failed' }),
+    );
+
+    render(<BuyInfoScreen />);
+    await waitFor(() => expect(screen.getByText(VERIFY_HINT)).toBeInTheDocument());
+
+    await act(async () => {
+      screen.getByRole('button', { name: CONTINUE_WITHOUT }).click();
+    });
+
+    await waitFor(() => expect(screen.getByText('Fallback request failed')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+
+    await act(async () => screen.getByRole('button', { name: 'Close' }).click());
+    expect(mockCloseServices).toHaveBeenCalledWith({ type: 'cancel' }, false);
+  });
+
   it('shows verified Frick details immediately with showBank (B5)', async () => {
     mockPersonalIban.mockReturnValue('Frick');
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
@@ -329,6 +407,7 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
 
     await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
     await settle();
+    expect(mockRecordPersonalIbanApplication).toHaveBeenCalled();
     expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'true');
     expect(screen.queryByText(CONTINUE_WITHOUT)).not.toBeInTheDocument();
   });

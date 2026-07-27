@@ -7,6 +7,7 @@
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
 const mockPersonalIban = jest.fn();
+const mockRecordPersonalIbanApplication = jest.fn();
 const mockSetParams = jest.fn();
 
 const mockAssets = [
@@ -170,7 +171,7 @@ jest.mock('../contexts/settings.context', () => ({
   }),
 }));
 jest.mock('../contexts/wallet.context', () => ({
-  useWalletContext: () => ({ blockchain: undefined, switchBlockchain: jest.fn() }),
+  useWalletContext: () => ({ blockchain: undefined, isInitialized: true, switchBlockchain: jest.fn() }),
 }));
 jest.mock('src/contexts/window.context', () => ({
   useWindowContext: () => ({ width: 800 }),
@@ -180,6 +181,15 @@ jest.mock('../hooks/app-params.hook', () => ({
 }));
 jest.mock('../hooks/personal-iban.hook', () => ({
   usePersonalIban: () => mockPersonalIban(),
+  usePersonalIbanIdentityBinding: () => ({
+    requestedPersonalIban: mockPersonalIban(),
+    personalIban: mockPersonalIban(),
+    requiresCustomerDecision: false,
+    hasAuthenticatedCustomer: true,
+    confirmForCurrentCustomer: jest.fn(),
+    declineForCurrentCustomer: jest.fn(),
+    recordApplicationForCurrentCustomer: mockRecordPersonalIbanApplication,
+  }),
 }));
 jest.mock('../hooks/blockchain.hook', () => ({
   useBlockchain: () => ({ toString: () => '' }),

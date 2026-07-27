@@ -1,4 +1,4 @@
-import { FiatPaymentMethod, PersonalIbanProvider } from '@dfx.swiss/react';
+import { FiatPaymentMethod, PersonalIbanProvider, TransactionError } from '@dfx.swiss/react';
 
 /** Bank Frick personal-IBAN accounts are held by DFX AG (routing sub-account), never the customer. */
 export const FRICK_BANK_NAME = 'Bank Frick';
@@ -91,7 +91,7 @@ export function personalIbanOnlyParams(search: string): URLSearchParams {
 export function getPersonalIbanErrorMessage(message: string | undefined): string | undefined {
   if (!message) return undefined;
 
-  if (message.includes('PaymentMethodNotAllowed')) {
+  if (message.includes(TransactionError.PAYMENT_METHOD_NOT_ALLOWED)) {
     return 'Personal IBANs require the bank transfer payment method.';
   }
   if (message.includes('PersonalIbanIssuanceFailed')) {
@@ -120,7 +120,7 @@ export function getPersonalIbanKycMessage(): string {
 
 /** True when the error token is KycRequired (buy-path personal-IBAN or generic). */
 export function isKycRequiredMessage(message: string | undefined): boolean {
-  return Boolean(message?.includes('KycRequired'));
+  return Boolean(message?.includes(TransactionError.KYC_REQUIRED));
 }
 
 /**

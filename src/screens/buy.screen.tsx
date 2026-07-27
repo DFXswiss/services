@@ -40,6 +40,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
+import { PersonalIbanIdentityAcknowledgement } from 'src/components/payment/personal-iban-identity-acknowledgement';
 import { useWindowContext } from 'src/contexts/window.context';
 import { getKycErrorFromMessage } from 'src/util/api-error';
 import { blankedAddress } from 'src/util/utils';
@@ -62,7 +63,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { usePersonalIban } from '../hooks/personal-iban.hook';
+import { usePersonalIbanIdentityBinding } from '../hooks/personal-iban.hook';
 import {
   getPersonalIbanErrorMessage,
   getPersonalIbanKycMessage,
@@ -144,11 +145,23 @@ export default function BuyScreen(): JSX.Element {
     hideTargetSelection,
     availableBlockchains,
   } = useAppParams();
-  const personalIban = usePersonalIban();
+  const {
+    requestedPersonalIban,
+    personalIban,
+    requiresCustomerDecision,
+    hasAuthenticatedCustomer,
+    confirmForCurrentCustomer,
+    declineForCurrentCustomer,
+    recordApplicationForCurrentCustomer,
+  } = usePersonalIbanIdentityBinding();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
-  const { blockchain: walletBlockchain, switchBlockchain } = useWalletContext();
+  const {
+    blockchain: walletBlockchain,
+    isInitialized: isWalletInitialized,
+    switchBlockchain,
+  } = useWalletContext();
   const { scrollToTop } = useLayoutContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
@@ -414,7 +427,7 @@ export default function BuyScreen(): JSX.Element {
   useEffect(() => {
     setContinueWithoutPersonalIban(false);
     setSuppressPersonalIban(false);
-  }, [personalIban]);
+  }, [requestedPersonalIban]);
 
   const debouncedValidatedData = useDebounce(validatedData, 500);
   const isPersonalIbanEligible =
@@ -438,6 +451,18 @@ export default function BuyScreen(): JSX.Element {
     const generation = quoteGeneration.current;
 
     if (!debouncedValidatedData) {
+      setIsLoading(undefined);
+      return () => {
+        isRunning = false;
+      };
+    }
+
+    if (!isWalletInitialized || !hasAuthenticatedCustomer || requiresCustomerDecision) {
+      setPaymentInfo(undefined);
+      setPaymentInfoPaymentMethod(undefined);
+      setErrorMessage(undefined);
+      setKycError(undefined);
+      setKycMessageOverride(undefined);
       setIsLoading(undefined);
       return () => {
         isRunning = false;
@@ -469,6 +494,9 @@ export default function BuyScreen(): JSX.Element {
         : {}),
     };
 
+    if (data.personalIbanProvider !== undefined) {
+      recordApplicationForCurrentCustomer();
+    }
     if (generation === quoteGeneration.current) {
       setErrorMessage(undefined);
       setKycError(undefined);
@@ -550,7 +578,11 @@ export default function BuyScreen(): JSX.Element {
     debouncedValidatedData,
     requestPersonalIbanProvider,
     hasUnsupportedPersonalIbanRequest,
+    hasAuthenticatedCustomer,
+    isWalletInitialized,
     personalIbanErrorApplies,
+    recordApplicationForCurrentCustomer,
+    requiresCustomerDecision,
     retryToken,
   ]);
 
@@ -735,6 +767,11 @@ export default function BuyScreen(): JSX.Element {
         <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose />
+      ) : requiresCustomerDecision ? (
+        <PersonalIbanIdentityAcknowledgement
+          onConfirm={confirmForCurrentCustomer}
+          onDecline={declineForCurrentCustomer}
+        />
       ) : showsNameForm ? (
         <NameEdit onSuccess={() => updateData(Side.GET)} />
       ) : (

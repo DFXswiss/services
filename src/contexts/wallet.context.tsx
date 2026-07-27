@@ -183,7 +183,6 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const {
     isInitialized: isParamsInitialized,
     params: appParams,
-    establishWidgetCredentials,
   } = useAppHandlingContext();
   const { getSignMessage } = useAuth();
   const { readBalances } = useBalanceContext();
@@ -235,10 +234,9 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         // Set credentials BEFORE async call to prevent race conditions (React StrictMode double-render)
         const credentials = { address: appParams.address, signature: appParams.signature };
         lastAppliedCredentials.current = credentials;
-        const token = await createSession(appParams.address, appParams.signature, appParams.pubkey);
-        establishWidgetCredentials(credentials, authenticatedCustomerIdentity(token));
+        await createSession(appParams.address, appParams.signature, appParams.pubkey);
         return true;
-      } else if (appParams.session && Utils.isJwt(appParams.session)) {
+      } else if (appParams.session) {
         // Skip if same session was already applied
         if (lastCreds.session === appParams.session) {
           return false;
@@ -247,7 +245,10 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         // Set session BEFORE call to prevent race conditions
         const credentials = { session: appParams.session };
         lastAppliedCredentials.current = credentials;
-        establishWidgetCredentials(credentials, authenticatedCustomerIdentity(appParams.session));
+        if (!Utils.isJwt(appParams.session)) {
+          throw new Error('Invalid session');
+        }
+        authenticatedCustomerIdentity(appParams.session);
         updateSession(appParams.session);
         return true;
       }

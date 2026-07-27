@@ -7,6 +7,10 @@
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
 const mockPersonalIban = jest.fn();
+const mockRecordPersonalIbanApplication = jest.fn();
+const mockConfirmPersonalIban = jest.fn();
+const mockDeclinePersonalIban = jest.fn();
+const mockRequiresCustomerDecision = jest.fn();
 const mockSetParams = jest.fn();
 
 const mockAssets = [
@@ -193,7 +197,7 @@ jest.mock('../contexts/settings.context', () => ({
   }),
 }));
 jest.mock('../contexts/wallet.context', () => ({
-  useWalletContext: () => ({ blockchain: undefined, switchBlockchain: jest.fn() }),
+  useWalletContext: () => ({ blockchain: undefined, isInitialized: true, switchBlockchain: jest.fn() }),
 }));
 jest.mock('src/contexts/window.context', () => ({
   useWindowContext: () => ({ width: 800 }),
@@ -203,6 +207,15 @@ jest.mock('../hooks/app-params.hook', () => ({
 }));
 jest.mock('../hooks/personal-iban.hook', () => ({
   usePersonalIban: () => mockPersonalIban(),
+  usePersonalIbanIdentityBinding: () => ({
+    requestedPersonalIban: mockPersonalIban(),
+    personalIban: mockPersonalIban(),
+    requiresCustomerDecision: mockRequiresCustomerDecision(),
+    hasAuthenticatedCustomer: true,
+    confirmForCurrentCustomer: mockConfirmPersonalIban,
+    declineForCurrentCustomer: mockDeclinePersonalIban,
+    recordApplicationForCurrentCustomer: mockRecordPersonalIbanApplication,
+  }),
 }));
 jest.mock('../hooks/blockchain.hook', () => ({
   useBlockchain: () => ({ toString: () => '' }),
@@ -306,6 +319,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPersonalIban.mockReturnValue('Frick');
+    mockRequiresCustomerDecision.mockReturnValue(false);
     // A6: fail on unexpected act() / React warnings so terminal state is awaited properly.
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
       const msg = String(args[0] ?? '');
@@ -325,6 +339,25 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
       await Promise.resolve();
     });
   }
+
+  it('warns and offers both choices in the React buy flow before quoting for a different customer', async () => {
+    mockRequiresCustomerDecision.mockReturnValue(true);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
+
+    render(<BuyScreen />);
+
+    expect(
+      screen.getByText(
+        'A personal IBAN was requested for a different signed-in customer. Do you want to use it for your account?',
+      ),
+    ).toBeInTheDocument();
+    expect(mockReceiveFor).not.toHaveBeenCalled();
+
+    await act(async () => screen.getByRole('button', { name: 'Use requested personal IBAN' }).click());
+    await act(async () => screen.getByRole('button', { name: CONTINUE_WITHOUT }).click());
+    expect(mockConfirmPersonalIban).toHaveBeenCalledTimes(1);
+    expect(mockDeclinePersonalIban).toHaveBeenCalledTimes(1);
+  });
 
   it('omits personalIbanProvider and requires continue acknowledgement before payment details (A2)', async () => {
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));

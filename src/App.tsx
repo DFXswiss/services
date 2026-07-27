@@ -598,7 +598,7 @@ export interface WidgetParams extends AppParams {
 
 interface AppProps {
   routerFactory: (routes: RouteObject[]) => Router;
-  params?: WidgetParams & { personalIbanRevision?: number };
+  params?: WidgetParams;
 }
 
 function App({ routerFactory, params }: AppProps) {

@@ -27,16 +27,18 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Urls } from 'src/config/urls';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
+import { PersonalIbanIdentityAcknowledgement } from 'src/components/payment/personal-iban-identity-acknowledgement';
 import { ErrorHint } from '../components/error-hint';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { QuoteErrorHint } from '../components/quote-error-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useLayoutContext } from '../contexts/layout.context';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
-import { usePersonalIban } from '../hooks/personal-iban.hook';
+import { usePersonalIbanIdentityBinding } from '../hooks/personal-iban.hook';
 import { getKycErrorFromMessage } from '../util/api-error';
 import {
   getPersonalIbanErrorMessage,
@@ -62,12 +64,21 @@ export default function BuyInfoScreen(): JSX.Element {
     externalTransactionId,
     availableBlockchains,
   } = useAppParams();
-  const personalIban = usePersonalIban();
+  const {
+    requestedPersonalIban,
+    personalIban,
+    requiresCustomerDecision,
+    hasAuthenticatedCustomer,
+    confirmForCurrentCustomer,
+    declineForCurrentCustomer,
+    recordApplicationForCurrentCustomer,
+  } = usePersonalIbanIdentityBinding();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
   const { currencies, receiveFor } = useBuy();
   const { closeServices } = useAppHandlingContext();
+  const { isInitialized: isWalletInitialized } = useWalletContext();
   const { scrollToTop } = useLayoutContext();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -107,13 +118,24 @@ export default function BuyInfoScreen(): JSX.Element {
   useEffect(() => {
     setContinueWithoutPersonalIban(false);
     setSuppressPersonalIban(false);
-  }, [personalIban, asset, currency, amountIn, amountOut]);
+  }, [requestedPersonalIban, asset, currency, amountIn, amountOut]);
 
   // Race-protected quote fetch: a stale response must never overwrite a newer one after
   // personalIban / inputs change at runtime (widget attribute, browser back/forward).
   useEffect(() => {
     let isRunning = true;
     const generation = ++quoteGeneration.current;
+
+    if (!isWalletInitialized || !hasAuthenticatedCustomer || requiresCustomerDecision) {
+      setPaymentInfo(undefined);
+      setErrorMessage(undefined);
+      setKycError(undefined);
+      setKycMessageOverride(undefined);
+      setIsLoading(false);
+      return () => {
+        isRunning = false;
+      };
+    }
 
     if (!(asset && currency && (amountIn || amountOut))) {
       const inputIsComplete = (amountIn || amountOut) && assetIn && assetOut;
@@ -164,6 +186,9 @@ export default function BuyInfoScreen(): JSX.Element {
       request.targetAmount = +amountOut;
     }
 
+    if (request.personalIbanProvider !== undefined) {
+      recordApplicationForCurrentCustomer();
+    }
     if (isRunning) setIsLoading(true);
     receiveFor(request)
       .then((buy) => {
@@ -202,7 +227,18 @@ export default function BuyInfoScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [asset, currency, amountIn, amountOut, effectivePersonalIban, retryToken]);
+  }, [
+    asset,
+    currency,
+    amountIn,
+    amountOut,
+    effectivePersonalIban,
+    hasAuthenticatedCustomer,
+    isWalletInitialized,
+    recordApplicationForCurrentCustomer,
+    requiresCustomerDecision,
+    retryToken,
+  ]);
 
   function validateBuy(buy: Buy): Buy | undefined {
     setCustomAmountError(undefined);
@@ -288,6 +324,11 @@ export default function BuyInfoScreen(): JSX.Element {
     <>
       {showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose={false} />
+      ) : requiresCustomerDecision ? (
+        <PersonalIbanIdentityAcknowledgement
+          onConfirm={confirmForCurrentCustomer}
+          onDecline={declineForCurrentCustomer}
+        />
       ) : isUnrecognizedBlocked ? (
         <StyledVerticalStack center className="text-center" gap={4}>
           <ErrorHint message={errorMessage} />
@@ -313,6 +354,11 @@ export default function BuyInfoScreen(): JSX.Element {
             onClick={() => setRetryToken((t) => t + 1)}
             className="mt-4"
             color={StyledButtonColor.STURDY_WHITE}
+          />
+          <StyledButton
+            width={StyledButtonWidth.FULL}
+            label={translate('general/actions', 'Close')}
+            onClick={() => closeServices({ type: CloseType.CANCEL }, false)}
           />
         </StyledVerticalStack>
       ) : isLoading ? (

@@ -59,7 +59,6 @@ const DfxServices = preserveStringAttribute(
   BaseDfxServices,
   'personal-iban',
   'personalIban',
-  'personalIbanRevision',
 );
 
 customElements.define('dfx-services', DfxServices);

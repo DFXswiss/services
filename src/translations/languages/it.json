@@ -684,6 +684,8 @@
     "Personal IBAN created successfully: {{iban}}": "IBAN personale creato con successo: {{iban}}",
     "Your requested personal IBAN is only available for EUR bank transfers, so it was not used for this offer.": "L'IBAN personale richiesto è disponibile solo per i bonifici bancari in EUR e non è stato quindi utilizzato per questa offerta.",
     "Continue without personal IBAN": "Continua senza IBAN personale",
+    "A personal IBAN was requested for a different signed-in customer. Do you want to use it for your account?": "È stato richiesto un IBAN personale per un altro cliente autenticato. Vuoi utilizzarlo per il tuo conto?",
+    "Use requested personal IBAN": "Usa l'IBAN personale richiesto",
     "The personal IBAN response could not be verified for this offer. You can continue with the standard payment details, or cancel.": "La risposta dell'IBAN personale non ha potuto essere verificata per questa offerta. Puoi continuare con i dettagli di pagamento standard oppure annullare.",
     "Personal IBANs require the bank transfer payment method.": "Gli IBAN personali richiedono il metodo di pagamento bonifico bancario.",
     "Personal IBANs require KYC level 50.": "Gli IBAN personali richiedono il livello KYC 50.",

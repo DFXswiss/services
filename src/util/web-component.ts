@@ -14,14 +14,11 @@ type R2wcElement = HTMLElement & {
 function applyStringProp(
   element: R2wcElement,
   propertyName: string,
-  revisionPropertyName: string,
   value: string | null | undefined,
 ): void {
   const props = element[R2WC_PROPS];
   if (props) {
     props[propertyName] = value ?? undefined;
-    const revision = props[revisionPropertyName];
-    props[revisionPropertyName] = typeof revision === 'number' ? revision + 1 : 1;
   }
   element[R2WC_RENDER]?.();
 }
@@ -47,7 +44,6 @@ export function preserveStringAttribute(
   BaseElement: CustomElementConstructor,
   attributeName: string,
   propertyName: string,
-  revisionPropertyName: string,
 ): CustomElementConstructor {
   const baseAttributeChanged = BaseElement.prototype.attributeChangedCallback as
     | AttributeChangedCallback
@@ -56,7 +52,7 @@ export function preserveStringAttribute(
   class PreservedAttributeElement extends BaseElement {
     attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
       if (name === attributeName) {
-        applyStringProp(this as R2wcElement, propertyName, revisionPropertyName, newValue);
+        applyStringProp(this as R2wcElement, propertyName, newValue);
         return;
       }
 
@@ -79,7 +75,7 @@ export function preserveStringAttribute(
           // removeAttribute → attributeChangedCallback(null) → applyStringProp(undefined)
           this.removeAttribute(attributeName);
         } else {
-          applyStringProp(this, propertyName, revisionPropertyName, undefined);
+          applyStringProp(this, propertyName, undefined);
         }
         return;
       }
@@ -89,7 +85,7 @@ export function preserveStringAttribute(
       // unchanged — still push into props and re-render so property-only writes
       // with the same string stay consistent.
       if (this.getAttribute(attributeName) === stringValue) {
-        applyStringProp(this, propertyName, revisionPropertyName, stringValue);
+        applyStringProp(this, propertyName, stringValue);
         return;
       }
 

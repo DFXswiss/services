@@ -4,28 +4,20 @@ import { preserveStringAttribute } from '../util/web-component';
 
 interface TestProps {
   personalIban?: string;
-  personalIbanRevision?: number;
 }
 
-function TestComponent({ personalIban, personalIbanRevision }: TestProps): JSX.Element {
-  return (
-    <span data-revision={personalIbanRevision}>
-      {personalIban === undefined ? 'absent' : JSON.stringify(personalIban)}
-    </span>
-  );
+function TestComponent({ personalIban }: TestProps): JSX.Element {
+  return <span>{personalIban === undefined ? 'absent' : JSON.stringify(personalIban)}</span>;
 }
 
 function defineTestElement(name: string): CustomElementConstructor {
   const BaseElement = createWebComponent(TestComponent, {
-    // The revision is deliberately not a registered Web Component prop. The string wrapper
-    // writes it only into r2wc's internal props bag.
     props: { personalIban: 'string' },
   });
   const TestElement = preserveStringAttribute(
     BaseElement,
     'personal-iban',
     'personalIban',
-    'personalIbanRevision',
   );
   customElements.define(name, TestElement);
   return TestElement;
@@ -90,8 +82,6 @@ describe('Web Component string selector handling', () => {
       'personal-iban-selector-prop-empty-after-set-test',
     ) as HTMLElement & TestProps;
     await act(async () => document.body.append(element));
-    expect('personalIbanRevision' in element).toBe(false);
-
     await act(async () => {
       element.personalIban = 'frick';
     });
@@ -102,25 +92,6 @@ describe('Web Component string selector handling', () => {
     });
     expect(element.textContent).toBe('""');
     expect(element.personalIban).toBe('');
-  });
-
-  it('increments the selector revision when the same property value is deliberately reasserted', async () => {
-    defineTestElement('personal-iban-selector-same-value-revision-test');
-
-    const element = document.createElement(
-      'personal-iban-selector-same-value-revision-test',
-    ) as HTMLElement & TestProps;
-    await act(async () => document.body.append(element));
-
-    await act(async () => {
-      element.personalIban = 'frick';
-    });
-    expect(element.querySelector('span')).toHaveAttribute('data-revision', '1');
-
-    await act(async () => {
-      element.personalIban = 'frick';
-    });
-    expect(element.querySelector('span')).toHaveAttribute('data-revision', '2');
   });
 
   it('renders an attribute that was already set before the element was connected (initial markup case)', async () => {

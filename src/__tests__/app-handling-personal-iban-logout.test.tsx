@@ -1,545 +1,164 @@
-// Customer-boundary regression coverage for standalone and embedded selectors. These tests
-// exercise the quote-facing hook so they assert what the next customer actually sends.
+// Customer-facing regression coverage for durable selector identity binding.
 
-const mockNavigate = jest.fn();
-const mockUseSessionContext = jest.fn();
 const mockUseAuthContext = jest.fn();
-const mockReceiveQuote = jest.fn();
-
-function sessionToken(account: number): string {
-  const encode = (value: object) =>
-    window
-      .btoa(JSON.stringify(value))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
-  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
-    account,
-    exp: Math.floor(Date.now() / 1000) + 3600,
-  })}.signature`;
-}
+const mockAppHandling = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({
-  Blockchain: {},
   PersonalIbanProvider: { FRICK: 'Frick' },
+  TransactionError: {
+    PAYMENT_METHOD_NOT_ALLOWED: 'PaymentMethodNotAllowed',
+    KYC_REQUIRED: 'KycRequired',
+  },
   useAuthContext: () => mockUseAuthContext(),
-  useSessionContext: () => mockUseSessionContext(),
 }));
 
-jest.mock('../contexts/balance.context', () => ({
-  useBalanceContext: () => ({ readBalances: jest.fn(), getBalances: () => [], hasBalance: false }),
+jest.mock('../contexts/app-handling.context', () => ({
+  useAppHandlingContext: () => mockAppHandling(),
 }));
 
-import { act, render, screen, waitFor } from '@testing-library/react';
-import { Router } from '@remix-run/router';
-import { useEffect } from 'react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import {
-  AppHandlingContextProvider,
-  useAppHandlingContext,
-} from '../contexts/app-handling.context';
-import { usePersonalIban } from '../hooks/personal-iban.hook';
+  PERSONAL_IBAN_BINDINGS_STORAGE_KEY,
+  usePersonalIbanIdentityBinding,
+} from '../hooks/personal-iban.hook';
 
-function fakeRouter(pathname: string): Router {
-  return {
-    state: { location: { pathname } },
-    navigate: mockNavigate,
-  } as unknown as Router;
+function BindingProbe(): JSX.Element {
+  const binding = usePersonalIbanIdentityBinding();
+
+  return (
+    <>
+      <div data-testid="requested">{binding.requestedPersonalIban ?? 'absent'}</div>
+      <div data-testid="quote-selector">{binding.personalIban ?? 'absent'}</div>
+      <div data-testid="decision">{binding.requiresCustomerDecision ? 'required' : 'not-required'}</div>
+      <button type="button" onClick={binding.recordApplicationForCurrentCustomer}>
+        request quote
+      </button>
+      <button type="button" onClick={binding.confirmForCurrentCustomer}>
+        use personal IBAN
+      </button>
+      <button type="button" onClick={binding.declineForCurrentCustomer}>
+        use ordinary details
+      </button>
+    </>
+  );
 }
 
-function WidgetSelectorProbe(): JSX.Element {
-  const { widgetPersonalIban } = useAppHandlingContext();
-  return <div data-testid="widget-selector">{widgetPersonalIban === undefined ? 'absent' : widgetPersonalIban}</div>;
+function renderStandalone(path = '/buy?personal-iban=frick') {
+  const router = createMemoryRouter([{ path: '*', element: <BindingProbe /> }], {
+    initialEntries: [path],
+  });
+  return render(<RouterProvider router={router} />);
 }
 
-function CustomerQuoteProbe(): JSX.Element {
-  const personalIban = usePersonalIban();
-  const customer = mockUseAuthContext().session?.account as number | undefined;
-
-  useEffect(() => {
-    if (customer != null) {
-      mockReceiveQuote({
-        customer,
-        ...(personalIban ? { personalIbanProvider: personalIban } : {}),
-      });
-    }
-  }, [customer, personalIban]);
-
-  return <div data-testid="quote-selector">{personalIban ?? 'absent'}</div>;
+function storedBinding() {
+  return JSON.parse(localStorage.getItem(PERSONAL_IBAN_BINDINGS_STORAGE_KEY) ?? '{}').Frick;
 }
 
-describe('personal-iban logout cleanup (B2)', () => {
+describe('personal-IBAN identity binding', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    cleanup();
     localStorage.clear();
-    window.history.pushState({}, '', '/');
+    mockAppHandling.mockReturnValue({ isWidget: false });
     mockUseAuthContext.mockReturnValue({ session: undefined });
   });
 
-  it('strips personal-iban from router and browser URL on logout', async () => {
-    window.history.pushState({}, '', '/buy?personal-iban=frick&asset-in=EUR');
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
-    });
-
-    let rerender: (ui: React.ReactElement) => void;
-    await act(async () => {
-      const result = render(
-        <AppHandlingContextProvider isWidget={false} router={fakeRouter('/buy')}>
-          <div>probe</div>
-        </AppHandlingContextProvider>,
-      );
-      rerender = result.rerender;
-    });
-
-    // Still logged in — personal-iban must remain.
-    expect(window.location.search).toContain('personal-iban=frick');
-
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: false,
-      availableBlockchains: [],
-    });
-
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider isWidget={false} router={fakeRouter('/buy')}>
-          <div>probe</div>
-        </AppHandlingContextProvider>,
-      );
-    });
-
-    expect(mockNavigate).toHaveBeenCalled();
-    const navigatedTo = mockNavigate.mock.calls[mockNavigate.mock.calls.length - 1][0] as string;
-    expect(navigatedTo).not.toContain('personal-iban=');
-    expect(window.location.search).not.toContain('personal-iban=');
-  });
-
-  it('does not strip personal-iban during initial unauthenticated setup', async () => {
-    window.history.pushState({}, '', '/buy?personal-iban=frick');
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: false,
-      availableBlockchains: [],
-    });
-
-    await act(async () => {
-      render(
-        <AppHandlingContextProvider isWidget={false} router={fakeRouter('/buy')}>
-          <div>probe</div>
-        </AppHandlingContextProvider>,
-      );
-    });
-
-    expect(window.location.search).toContain('personal-iban=frick');
-  });
-
-  it('preserves an explicit arrival selector through expired-token login into the customer quote (B1)', async () => {
-    window.history.pushState({}, '', '/buy?personal-iban=frick');
-    localStorage.setItem('dfx.authenticationToken', 'persisted-expired-token');
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: false,
-      availableBlockchains: [],
-    });
-
-    const router = createMemoryRouter(
-      [{ path: '*', element: <CustomerQuoteProbe /> }],
-      { initialEntries: ['/buy?personal-iban=frick'] },
-    );
-    let rerender: (ui: React.ReactElement) => void;
-    await act(async () => {
-      const result = render(
-        <AppHandlingContextProvider isWidget={false} router={router}>
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-      rerender = result.rerender;
-    });
-
-    expect(window.location.search).toContain('personal-iban=frick');
-
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
-    });
+  it('applies on first use and records the authenticated identity', async () => {
     mockUseAuthContext.mockReturnValue({ session: { account: 41 } });
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider isWidget={false} router={router}>
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-    });
+    renderStandalone();
 
-    await waitFor(() =>
-      expect(mockReceiveQuote).toHaveBeenCalledWith({
-        customer: 41,
-        personalIbanProvider: 'Frick',
-      }),
-    );
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick');
+    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
+
+    await act(async () => screen.getByRole('button', { name: 'request quote' }).click());
+
+    expect(storedBinding()).toEqual({ customerIdentity: 41, usePersonalIban: true });
   });
 
-  it('keeps the incoming session and selector pending while valid persisted customer A is observed (B1)', async () => {
-    const customerASession = sessionToken(51);
-    const customerBSession = sessionToken(52);
-    localStorage.setItem('dfx.authenticationToken', customerASession);
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
+  it('keeps an expired-token arrival selector through login and records it only when applied', async () => {
+    const router = createMemoryRouter([{ path: '*', element: <BindingProbe /> }], {
+      initialEntries: ['/login?personal-iban=frick'],
     });
+    const rendered = render(<RouterProvider router={router} />);
+
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick');
+    expect(localStorage.getItem(PERSONAL_IBAN_BINDINGS_STORAGE_KEY)).toBeNull();
+
+    mockUseAuthContext.mockReturnValue({ session: { account: 42 } });
+    await act(async () => router.navigate('/buy?personal-iban=frick'));
+    rendered.rerender(<RouterProvider router={router} />);
+
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick');
+    await act(async () => screen.getByRole('button', { name: 'request quote' }).click());
+    expect(storedBinding()).toEqual({ customerIdentity: 42, usePersonalIban: true });
+  });
+
+  it('after logout, Back and reload ask the next customer instead of applying silently', async () => {
     mockUseAuthContext.mockReturnValue({ session: { account: 51 } });
+    renderStandalone();
+    await act(async () => screen.getByRole('button', { name: 'request quote' }).click());
+    cleanup();
 
-    const router = createMemoryRouter(
-      [{ path: '*', element: <CustomerQuoteProbe /> }],
-      { initialEntries: ['/buy'] },
-    );
-    let rerender: (ui: React.ReactElement) => void;
-    await act(async () => {
-      const result = render(
-        <AppHandlingContextProvider
-          isWidget
-          params={{
-            session: customerBSession,
-            personalIban: 'frick',
-          }}
-          router={router}
-        >
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-      rerender = result.rerender;
-    });
-
-    // B's pending selector must not be consumed by or exposed to persisted customer A.
-    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
-
+    // This fresh render models Back to the older URL followed by a full reload.
     mockUseAuthContext.mockReturnValue({ session: { account: 52 } });
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider
-          isWidget
-          params={{
-            session: customerBSession,
-            personalIban: 'frick',
-          }}
-          router={router}
-        >
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-    });
+    renderStandalone();
 
-    await waitFor(() =>
-      expect(mockReceiveQuote).toHaveBeenCalledWith({
-        customer: 52,
-        personalIbanProvider: 'Frick',
-      }),
-    );
-    expect(mockReceiveQuote).not.toHaveBeenCalledWith({ customer: 52 });
+    expect(screen.getByTestId('requested')).toHaveTextContent('Frick');
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
+    expect(screen.getByTestId('decision')).toHaveTextContent('required');
   });
 
-  it('keeps standalone suppression through Back and the next customer login (B2)', async () => {
-    window.history.pushState({}, '', '/buy?personal-iban=frick');
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
-    });
-    mockUseAuthContext.mockReturnValue({ session: { account: 61 } });
-
-    const router = createMemoryRouter(
-      [{ path: '*', element: <CustomerQuoteProbe /> }],
-      {
-        initialEntries: ['/login?personal-iban=frick', '/buy?personal-iban=frick'],
-        initialIndex: 1,
-      },
+  it('records the next customer confirmation and applies the selector', async () => {
+    localStorage.setItem(
+      PERSONAL_IBAN_BINDINGS_STORAGE_KEY,
+      JSON.stringify({ Frick: { customerIdentity: 61, usePersonalIban: true } }),
     );
-    let rerender: (ui: React.ReactElement) => void;
-    await act(async () => {
-      const result = render(
-        <AppHandlingContextProvider isWidget={false} router={router}>
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-      rerender = result.rerender;
-    });
-
-    mockReceiveQuote.mockClear();
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: false,
-      availableBlockchains: [],
-    });
-    mockUseAuthContext.mockReturnValue({ session: undefined });
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider isWidget={false} router={router}>
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-    });
-
-    await act(async () => {
-      await router.navigate(-1);
-    });
-    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
-
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
-    });
     mockUseAuthContext.mockReturnValue({ session: { account: 62 } });
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider isWidget={false} router={router}>
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-    });
+    renderStandalone();
 
-    await waitFor(() => expect(mockReceiveQuote).toHaveBeenCalledWith({ customer: 62 }));
-    expect(mockReceiveQuote).not.toHaveBeenCalledWith(
-      expect.objectContaining({ personalIbanProvider: expect.anything() }),
-    );
+    await act(async () => screen.getByRole('button', { name: 'use personal IBAN' }).click());
 
-    mockReceiveQuote.mockClear();
-    await act(async () => {
-      await router.navigate('/buy');
-    });
-    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
-    await act(async () => {
-      await router.navigate('/buy?personal-iban=frick');
-    });
-    await waitFor(() =>
-      expect(mockReceiveQuote).toHaveBeenCalledWith({
-        customer: 62,
-        personalIbanProvider: 'Frick',
-      }),
-    );
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick');
+    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
+    expect(storedBinding()).toEqual({ customerIdentity: 62, usePersonalIban: true });
   });
 
-  it('suppresses immediately when the observed authenticated account changes', async () => {
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
-    });
-    mockUseAuthContext.mockReturnValue({ session: { account: 71 } });
-
-    const router = createMemoryRouter(
-      [{ path: '*', element: <CustomerQuoteProbe /> }],
-      { initialEntries: ['/buy'] },
+  it('records the next customer decline and keeps selector-free details after reload', async () => {
+    localStorage.setItem(
+      PERSONAL_IBAN_BINDINGS_STORAGE_KEY,
+      JSON.stringify({ Frick: { customerIdentity: 71, usePersonalIban: true } }),
     );
-    let rerender: (ui: React.ReactElement) => void;
-    await act(async () => {
-      const result = render(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ personalIban: 'frick', personalIbanRevision: 1 }}
-          router={router}
-        >
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-      rerender = result.rerender;
-    });
-
-    await waitFor(() =>
-      expect(mockReceiveQuote).toHaveBeenCalledWith({
-        customer: 71,
-        personalIbanProvider: 'Frick',
-      }),
-    );
-    mockReceiveQuote.mockClear();
     mockUseAuthContext.mockReturnValue({ session: { account: 72 } });
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ personalIban: 'frick', personalIbanRevision: 1 }}
-          router={router}
-        >
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-    });
+    renderStandalone();
 
-    await waitFor(() => expect(mockReceiveQuote).toHaveBeenCalledWith({ customer: 72 }));
-    expect(mockReceiveQuote).not.toHaveBeenCalledWith(
-      expect.objectContaining({ personalIbanProvider: expect.anything() }),
-    );
+    await act(async () => screen.getByRole('button', { name: 'use ordinary details' }).click());
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
+    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
+    expect(storedBinding()).toEqual({ customerIdentity: 72, usePersonalIban: false });
+
+    cleanup();
+    renderStandalone();
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
+    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
   });
 
-  it('restores a Web Component selector after logout when its internal write revision changes', async () => {
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
-    });
-
-    let rerender: (ui: React.ReactElement) => void;
-    await act(async () => {
-      const result = render(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ personalIban: 'frick', personalIbanRevision: 1 }}
-          router={fakeRouter('/buy')}
-        >
-          <WidgetSelectorProbe />
-        </AppHandlingContextProvider>,
-      );
-      rerender = result.rerender;
-    });
-    expect(screen.getByTestId('widget-selector')).toHaveTextContent('frick');
-
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: false,
-      availableBlockchains: [],
-    });
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ personalIban: 'frick', personalIbanRevision: 1 }}
-          router={fakeRouter('/buy')}
-        >
-          <WidgetSelectorProbe />
-        </AppHandlingContextProvider>,
-      );
-    });
-    expect(screen.getByTestId('widget-selector')).toHaveTextContent('absent');
-
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ personalIban: 'frick', personalIbanRevision: 2 }}
-          router={fakeRouter('/buy')}
-        >
-          <WidgetSelectorProbe />
-        </AppHandlingContextProvider>,
-      );
-    });
-    expect(screen.getByTestId('widget-selector')).toHaveTextContent('frick');
-  });
-
-  it('does not leave a selector pending on unsupported post-mount React credential changes (A1/B3)', async () => {
-    const customerBSession = sessionToken(82);
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
-    });
+  it('ignores malformed binding storage so the customer can continue', () => {
+    localStorage.setItem(PERSONAL_IBAN_BINDINGS_STORAGE_KEY, '{not-json');
     mockUseAuthContext.mockReturnValue({ session: { account: 81 } });
+    renderStandalone();
 
-    const router = createMemoryRouter(
-      [{ path: '*', element: <CustomerQuoteProbe /> }],
-      { initialEntries: ['/buy'] },
-    );
-    let rerender: (ui: React.ReactElement) => void;
-    await act(async () => {
-      const result = render(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ personalIban: 'frick' }}
-          router={router}
-        >
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-      rerender = result.rerender;
-    });
-    await waitFor(() =>
-      expect(mockReceiveQuote).toHaveBeenCalledWith({
-        customer: 81,
-        personalIbanProvider: 'Frick',
-      }),
-    );
-
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: false,
-      availableBlockchains: [],
-    });
-    mockUseAuthContext.mockReturnValue({ session: undefined });
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ personalIban: 'frick' }}
-          router={router}
-        >
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-    });
-    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
-
-    // The React host changes credentials and supplies its unchanged selector in the same params.
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ session: customerBSession, personalIban: 'frick' }}
-          router={router}
-        >
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-    });
-    // Mounted integrations do not consume changed credentials. The paired selector is therefore
-    // fresh intent immediately instead of waiting forever for an authentication that cannot occur.
-    await waitFor(() => expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick'));
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick');
+    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
   });
 
-  it('does not let an old initialization intent block a later unsupported credential update', async () => {
-    const initialSession = sessionToken(91);
-    const changedSession = sessionToken(92);
-    mockUseSessionContext.mockReturnValue({
-      isInitialized: true,
-      isLoggedIn: true,
-      availableBlockchains: [],
-    });
-    mockUseAuthContext.mockReturnValue({ session: { account: 90 } });
+  it('uses the same identity comparison for a live Web Component selector', async () => {
+    mockAppHandling.mockReturnValue({ isWidget: true, widgetPersonalIban: 'frick' });
+    mockUseAuthContext.mockReturnValue({ session: { account: 91 } });
+    renderStandalone('/buy');
 
-    const router = createMemoryRouter(
-      [{ path: '*', element: <CustomerQuoteProbe /> }],
-      { initialEntries: ['/buy'] },
-    );
-    let rerender: (ui: React.ReactElement) => void;
-    await act(async () => {
-      const result = render(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ session: initialSession, personalIban: 'frick' }}
-          router={router}
-        >
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-      rerender = result.rerender;
-    });
-    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
-
-    await act(async () => {
-      rerender!(
-        <AppHandlingContextProvider
-          isWidget
-          params={{ session: changedSession, personalIban: 'frick' }}
-          router={router}
-        >
-          <RouterProvider router={router} />
-        </AppHandlingContextProvider>,
-      );
-    });
-
-    await waitFor(() => expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick'));
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick');
+    await act(async () => screen.getByRole('button', { name: 'request quote' }).click());
+    expect(storedBinding()).toEqual({ customerIdentity: 91, usePersonalIban: true });
   });
 });
