@@ -75,28 +75,44 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { useEffect } from 'react';
 import { WalletContextProvider, useWalletContext } from '../contexts/wallet.context';
-import { usePersonalIbanIdentityBinding } from '../hooks/personal-iban.hook';
+import { usePersonalIbanConfirmation } from '../hooks/personal-iban.hook';
 
 function CustomerQuoteProbe(): JSX.Element {
   const { isInitialized } = useWalletContext();
-  const binding = usePersonalIbanIdentityBinding();
+  const confirmation = usePersonalIbanConfirmation();
 
   useEffect(() => {
-    if (isInitialized && mockCurrentSession) {
-      binding.recordApplicationForCurrentCustomer();
+    if (
+      isInitialized &&
+      mockCurrentSession &&
+      !confirmation.requiresCustomerConfirmation
+    ) {
       mockReceiveQuote({
         customer: mockCurrentSession.account,
-        ...(binding.personalIban
-          ? { personalIbanProvider: binding.personalIban }
+        ...(confirmation.personalIban
+          ? { personalIbanProvider: confirmation.personalIban }
           : {}),
       });
     }
-  }, [binding.personalIban, binding.recordApplicationForCurrentCustomer, isInitialized]);
+  }, [
+    confirmation.personalIban,
+    confirmation.requiresCustomerConfirmation,
+    isInitialized,
+  ]);
 
   return (
     <>
       <div data-testid="wallet-state">{isInitialized ? 'ready' : 'authenticating'}</div>
-      <div data-testid="quote-selector">{binding.personalIban ?? 'absent'}</div>
+      <div data-testid="quote-selector">{confirmation.personalIban ?? 'absent'}</div>
+      <div data-testid="decision">
+        {confirmation.requiresCustomerConfirmation ? 'required' : 'not-required'}
+      </div>
+      <button
+        type="button"
+        onClick={confirmation.confirmForCurrentCustomer}
+      >
+        confirm
+      </button>
     </>
   );
 }
@@ -117,6 +133,7 @@ describe('widget session initialization with a personal-IBAN selector', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
+    sessionStorage.clear();
     mockCurrentSession = { account: 101, address: 'customer-a' };
     mockIsLoggedIn = true;
     mockUpdateSession.mockImplementation((token: string) => {
@@ -130,7 +147,7 @@ describe('widget session initialization with a personal-IBAN selector', () => {
     });
   });
 
-  it('waits for incoming customer B authentication, then applies and binds B selector', async () => {
+  it('waits for incoming customer B authentication, then asks B before applying the selector', async () => {
     const customerBSession = sessionToken(102);
     localStorage.setItem('dfx.authenticationToken', sessionToken(101));
     mockAppHandling.mockReturnValue({
@@ -143,6 +160,10 @@ describe('widget session initialization with a personal-IBAN selector', () => {
     renderWidget();
 
     await waitFor(() => expect(screen.getByTestId('wallet-state')).toHaveTextContent('ready'));
+    expect(screen.getByTestId('decision')).toHaveTextContent('required');
+    expect(mockReceiveQuote).not.toHaveBeenCalled();
+
+    await act(async () => screen.getByRole('button', { name: 'confirm' }).click());
     await waitFor(() =>
       expect(mockReceiveQuote).toHaveBeenCalledWith({
         customer: 102,
@@ -171,7 +192,7 @@ describe('widget session initialization with a personal-IBAN selector', () => {
     await waitFor(() => expect(screen.getByTestId('wallet-state')).toHaveTextContent('ready'));
     expect(mockUpdateSession).not.toHaveBeenCalled();
     expect(mockReceiveQuote).not.toHaveBeenCalled();
-    expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick');
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
 
     // A later valid login can use the still-requested selector; no pending state survives.
     mockCurrentSession = { account: 103, address: 'customer-c' };
@@ -184,6 +205,12 @@ describe('widget session initialization with a personal-IBAN selector', () => {
       );
     });
 
+    await waitFor(() =>
+      expect(screen.getByTestId('decision')).toHaveTextContent('required'),
+    );
+    expect(mockReceiveQuote).not.toHaveBeenCalled();
+
+    await act(async () => screen.getByRole('button', { name: 'confirm' }).click());
     await waitFor(() =>
       expect(mockReceiveQuote).toHaveBeenCalledWith({
         customer: 103,

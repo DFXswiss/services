@@ -1,130 +1,191 @@
 import { useAuthContext } from '@dfx.swiss/react';
-import { useCallback, useReducer, useRef } from 'react';
+import { useCallback, useReducer, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { normalizePersonalIban } from '../util/personal-iban';
 
-export const PERSONAL_IBAN_BINDINGS_STORAGE_KEY = 'dfx.srv.personalIbanBindings';
+export const PERSONAL_IBAN_CONFIRMATION_STORAGE_KEY_PREFIX =
+  'dfx.srv.personalIbanConfirmation.';
 
-interface PersonalIbanDecision {
+type PersonalIbanAnswer =
+  | { answer: 'confirmed' }
+  | { answer: 'declined'; occurrence: string };
+
+type TransientPersonalIbanAnswer = PersonalIbanAnswer & {
   customerIdentity: number;
-  usePersonalIban: boolean;
-}
+  occurrence: string;
+};
 
-type PersonalIbanBindings = Record<string, PersonalIbanDecision>;
+type StoredAnswerResult =
+  | { status: 'valid'; answer: PersonalIbanAnswer }
+  | { status: 'missing' | 'invalid' | 'unavailable' };
 
-export interface PersonalIbanIdentityBinding {
-  /** Selector requested by the URL or widget, before the customer decision is applied. */
+export interface PersonalIbanConfirmation {
+  /** Selector requested by the URL or widget, before confirmation is applied. */
   requestedPersonalIban?: string;
   /** Selector that may be added to the next quote request. */
   personalIban?: string;
-  /** A different authenticated customer previously used or declined this selector. */
-  requiresCustomerDecision: boolean;
+  /** True while this customer must explicitly confirm or decline this selector occurrence. */
+  requiresCustomerConfirmation: boolean;
   /** True only when quote ownership can be tied to an authenticated account. */
   hasAuthenticatedCustomer: boolean;
-  /** Persist that the current customer confirmed the requested selector. */
+  /** Browser storage was unreadable, malformed, or failed to save the latest answer. */
+  hasStorageWarning: boolean;
+  /** Confirm the personal IBAN for this customer for the remainder of this tab. */
   confirmForCurrentCustomer: () => void;
-  /** Persist that the current customer declined the requested selector. */
+  /** Decline the personal IBAN for this selector occurrence. */
   declineForCurrentCustomer: () => void;
-  /** Persist first use when the selector is actually added to a quote request. */
-  recordApplicationForCurrentCustomer: () => void;
 }
 
-function readBindings(): PersonalIbanBindings {
-  try {
-    const stored = window.localStorage.getItem(PERSONAL_IBAN_BINDINGS_STORAGE_KEY);
-    if (!stored) return {};
+function storageKey(customerIdentity: number): string {
+  return `${PERSONAL_IBAN_CONFIRMATION_STORAGE_KEY_PREFIX}${customerIdentity}`;
+}
 
-    const parsed = JSON.parse(stored);
-    return parsed && typeof parsed === 'object' ? parsed : {};
+function hasExactKeys(value: object, keys: string[]): boolean {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return (
+    actual.length === expected.length &&
+    actual.every((key, index) => key === expected[index])
+  );
+}
+
+function isPersonalIbanAnswer(value: unknown): value is PersonalIbanAnswer {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) return false;
+
+  const answer = (value as { answer?: unknown }).answer;
+  if (answer === 'confirmed') return hasExactKeys(value, ['answer']);
+  if (answer === 'declined') {
+    return (
+      hasExactKeys(value, ['answer', 'occurrence']) &&
+      typeof (value as { occurrence?: unknown }).occurrence === 'string'
+    );
+  }
+  return false;
+}
+
+function readAnswer(customerIdentity: number): StoredAnswerResult {
+  try {
+    const stored = window.sessionStorage.getItem(storageKey(customerIdentity));
+    if (stored == null) return { status: 'missing' };
+
+    const parsed: unknown = JSON.parse(stored);
+    return isPersonalIbanAnswer(parsed)
+      ? { status: 'valid', answer: parsed }
+      : { status: 'invalid' };
   } catch {
-    // Corrupt browser storage must never trap the customer or suppress an explicit request.
-    return {};
+    return { status: 'unavailable' };
   }
 }
 
-function writeBindings(bindings: PersonalIbanBindings): void {
+function writeAnswer(customerIdentity: number, answer: PersonalIbanAnswer): boolean {
   try {
-    window.localStorage.setItem(PERSONAL_IBAN_BINDINGS_STORAGE_KEY, JSON.stringify(bindings));
+    window.sessionStorage.setItem(storageKey(customerIdentity), JSON.stringify(answer));
+    return true;
   } catch {
-    // The in-memory decision still lets the customer continue when storage is unavailable.
+    return false;
   }
 }
 
-/**
- * Derives the selector directly from its durable source. Ownership is deliberately not inferred
- * here: quote consumers compare it with the authenticated identity at the point of use.
- */
+interface PersonalIbanSelection {
+  occurrence: string;
+  requestedPersonalIban?: string;
+}
+
+function usePersonalIbanSelection(): PersonalIbanSelection {
+  const { isWidget, widgetPersonalIban, widgetPersonalIbanOccurrence } =
+    useAppHandlingContext();
+  const location = useLocation();
+  const urlPersonalIban =
+    new URLSearchParams(location.search).get('personal-iban') ?? undefined;
+
+  return {
+    requestedPersonalIban: normalizePersonalIban(
+      isWidget ? widgetPersonalIban : urlPersonalIban,
+    ),
+    occurrence: isWidget
+      ? `widget:${widgetPersonalIbanOccurrence ?? 0}`
+      : `navigation:${location.key}`,
+  };
+}
+
+/** Derives the selector directly from its live URL or Web Component source. */
 export function usePersonalIban(): string | undefined {
-  const { isWidget, widgetPersonalIban } = useAppHandlingContext();
-  const { search } = useLocation();
-  const urlPersonalIban = new URLSearchParams(search).get('personal-iban') ?? undefined;
-
-  return normalizePersonalIban(isWidget ? widgetPersonalIban : urlPersonalIban);
+  return usePersonalIbanSelection().requestedPersonalIban;
 }
 
 /**
- * Binds application of a selector to the authenticated customer. The binding survives reloads,
- * and a different customer must explicitly confirm or decline before any quote is requested.
+ * Requires an explicit personal-IBAN answer once per browser tab and authenticated customer.
+ * Confirmations last for the tab. Declines last only for the current selector occurrence, so a
+ * new navigation or Web Component property write asks again.
  */
-export function usePersonalIbanIdentityBinding(): PersonalIbanIdentityBinding {
-  const requestedPersonalIban = usePersonalIban();
+export function usePersonalIbanConfirmation(): PersonalIbanConfirmation {
+  const { requestedPersonalIban, occurrence } = usePersonalIbanSelection();
   const { session } = useAuthContext();
   const customerIdentity =
     typeof session?.account === 'number' ? session.account : undefined;
-  const bindings = useRef<PersonalIbanBindings>(readBindings());
+  const [transientAnswer, setTransientAnswer] =
+    useState<TransientPersonalIbanAnswer>();
+  const [writeFailed, setWriteFailed] = useState(false);
   const [, rerender] = useReducer((value) => value + 1, 0);
 
-  const selectorKey = requestedPersonalIban;
-  const decision = selectorKey === undefined ? undefined : bindings.current[selectorKey];
-  const belongsToCurrentCustomer =
-    decision != null &&
-    customerIdentity != null &&
-    decision.customerIdentity === customerIdentity;
-  const requiresCustomerDecision =
-    selectorKey !== undefined &&
-    customerIdentity != null &&
-    decision != null &&
-    decision.customerIdentity !== customerIdentity;
-  const personalIban =
-    requiresCustomerDecision || (belongsToCurrentCustomer && !decision.usePersonalIban)
-      ? undefined
-      : requestedPersonalIban;
+  // Selector-free flows deliberately do not touch sessionStorage.
+  const stored =
+    requestedPersonalIban !== undefined && customerIdentity !== undefined
+      ? readAnswer(customerIdentity)
+      : undefined;
+  const answer =
+    transientAnswer !== undefined &&
+    transientAnswer.customerIdentity === customerIdentity &&
+    transientAnswer.occurrence === occurrence
+      ? transientAnswer
+      : stored?.status === 'valid'
+      ? stored.answer
+      : undefined;
+  const confirmed = answer?.answer === 'confirmed';
+  const declinedForOccurrence =
+    answer?.answer === 'declined' && answer.occurrence === occurrence;
+  const requiresCustomerConfirmation =
+    requestedPersonalIban !== undefined &&
+    customerIdentity !== undefined &&
+    !confirmed &&
+    !declinedForOccurrence;
+  const personalIban = confirmed ? requestedPersonalIban : undefined;
 
-  const persistDecision = useCallback(
-    (usePersonalIban: boolean, notify: boolean) => {
-      if (selectorKey === undefined || customerIdentity === undefined) return;
+  const saveAnswer = useCallback(
+    (nextAnswer: PersonalIbanAnswer) => {
+      if (customerIdentity === undefined || requestedPersonalIban === undefined) return;
 
-      bindings.current = {
-        ...bindings.current,
-        [selectorKey]: { customerIdentity, usePersonalIban },
-      };
-      writeBindings(bindings.current);
-      if (notify) rerender();
+      const saved = writeAnswer(customerIdentity, nextAnswer);
+      setWriteFailed(!saved);
+      setTransientAnswer(
+        saved
+          ? undefined
+          : { ...nextAnswer, customerIdentity, occurrence },
+      );
+      rerender();
     },
-    [customerIdentity, selectorKey],
+    [customerIdentity, occurrence, requestedPersonalIban],
   );
   const confirmForCurrentCustomer = useCallback(
-    () => persistDecision(true, true),
-    [persistDecision],
+    () => saveAnswer({ answer: 'confirmed' }),
+    [saveAnswer],
   );
   const declineForCurrentCustomer = useCallback(
-    () => persistDecision(false, true),
-    [persistDecision],
+    () => saveAnswer({ answer: 'declined', occurrence }),
+    [occurrence, saveAnswer],
   );
-  const recordApplicationForCurrentCustomer = useCallback(() => {
-    if (personalIban !== undefined && !belongsToCurrentCustomer) {
-      persistDecision(true, false);
-    }
-  }, [belongsToCurrentCustomer, persistDecision, personalIban]);
 
   return {
     requestedPersonalIban,
     personalIban,
-    requiresCustomerDecision,
+    requiresCustomerConfirmation,
     hasAuthenticatedCustomer: customerIdentity !== undefined,
+    hasStorageWarning:
+      writeFailed ||
+      stored?.status === 'invalid' ||
+      stored?.status === 'unavailable',
     confirmForCurrentCustomer,
     declineForCurrentCustomer,
-    recordApplicationForCurrentCustomer,
   };
 }

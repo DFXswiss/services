@@ -4,10 +4,18 @@ import { preserveStringAttribute } from '../util/web-component';
 
 interface TestProps {
   personalIban?: string;
+  __personalIbanOccurrence?: number;
 }
 
-function TestComponent({ personalIban }: TestProps): JSX.Element {
-  return <span>{personalIban === undefined ? 'absent' : JSON.stringify(personalIban)}</span>;
+function TestComponent({
+  personalIban,
+  __personalIbanOccurrence,
+}: TestProps): JSX.Element {
+  return (
+    <span data-occurrence={__personalIbanOccurrence}>
+      {personalIban === undefined ? 'absent' : JSON.stringify(personalIban)}
+    </span>
+  );
 }
 
 function defineTestElement(name: string): CustomElementConstructor {
@@ -112,5 +120,25 @@ describe('Web Component string selector handling', () => {
     // Fail-closed: an explicit empty value set before connection must stay "set but invalid",
     // not silently collapse to absent.
     expect(emptyElement.textContent).toBe('""');
+  });
+
+  it('signals each same-value personalIban property write without a public revision property', async () => {
+    defineTestElement('personal-iban-selector-occurrence-test');
+    const element = document.createElement(
+      'personal-iban-selector-occurrence-test',
+    ) as HTMLElement & TestProps;
+    await act(async () => document.body.append(element));
+
+    await act(async () => {
+      element.personalIban = 'frick';
+    });
+    expect(element.querySelector('span')).toHaveAttribute('data-occurrence', '1');
+
+    await act(async () => {
+      element.personalIban = 'frick';
+    });
+    expect(element.querySelector('span')).toHaveAttribute('data-occurrence', '2');
+    expect('__personalIbanOccurrence' in element).toBe(false);
+    expect(element.hasAttribute('__personal-iban-occurrence')).toBe(false);
   });
 });

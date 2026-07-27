@@ -27,7 +27,10 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Urls } from 'src/config/urls';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
-import { PersonalIbanIdentityAcknowledgement } from 'src/components/payment/personal-iban-identity-acknowledgement';
+import {
+  PersonalIbanConfirmationPrompt,
+  PersonalIbanStorageWarning,
+} from 'src/components/payment/personal-iban-confirmation';
 import { ErrorHint } from '../components/error-hint';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { QuoteErrorHint } from '../components/quote-error-hint';
@@ -38,7 +41,7 @@ import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
-import { usePersonalIbanIdentityBinding } from '../hooks/personal-iban.hook';
+import { usePersonalIbanConfirmation } from '../hooks/personal-iban.hook';
 import { getKycErrorFromMessage } from '../util/api-error';
 import {
   getPersonalIbanErrorMessage,
@@ -67,12 +70,12 @@ export default function BuyInfoScreen(): JSX.Element {
   const {
     requestedPersonalIban,
     personalIban,
-    requiresCustomerDecision,
+    requiresCustomerConfirmation,
     hasAuthenticatedCustomer,
+    hasStorageWarning,
     confirmForCurrentCustomer,
     declineForCurrentCustomer,
-    recordApplicationForCurrentCustomer,
-  } = usePersonalIbanIdentityBinding();
+  } = usePersonalIbanConfirmation();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
@@ -126,7 +129,11 @@ export default function BuyInfoScreen(): JSX.Element {
     let isRunning = true;
     const generation = ++quoteGeneration.current;
 
-    if (!isWalletInitialized || !hasAuthenticatedCustomer || requiresCustomerDecision) {
+    if (
+      !isWalletInitialized ||
+      (requestedPersonalIban !== undefined &&
+        (!hasAuthenticatedCustomer || requiresCustomerConfirmation))
+    ) {
       setPaymentInfo(undefined);
       setErrorMessage(undefined);
       setKycError(undefined);
@@ -186,9 +193,6 @@ export default function BuyInfoScreen(): JSX.Element {
       request.targetAmount = +amountOut;
     }
 
-    if (request.personalIbanProvider !== undefined) {
-      recordApplicationForCurrentCustomer();
-    }
     if (isRunning) setIsLoading(true);
     receiveFor(request)
       .then((buy) => {
@@ -235,8 +239,7 @@ export default function BuyInfoScreen(): JSX.Element {
     effectivePersonalIban,
     hasAuthenticatedCustomer,
     isWalletInitialized,
-    recordApplicationForCurrentCustomer,
-    requiresCustomerDecision,
+    requiresCustomerConfirmation,
     retryToken,
   ]);
 
@@ -322,12 +325,16 @@ export default function BuyInfoScreen(): JSX.Element {
 
   return (
     <>
+      {hasStorageWarning && !requiresCustomerConfirmation && (
+        <PersonalIbanStorageWarning />
+      )}
       {showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose={false} />
-      ) : requiresCustomerDecision ? (
-        <PersonalIbanIdentityAcknowledgement
+      ) : requiresCustomerConfirmation ? (
+        <PersonalIbanConfirmationPrompt
           onConfirm={confirmForCurrentCustomer}
           onDecline={declineForCurrentCustomer}
+          hasStorageWarning={hasStorageWarning}
         />
       ) : isUnrecognizedBlocked ? (
         <StyledVerticalStack center className="text-center" gap={4}>

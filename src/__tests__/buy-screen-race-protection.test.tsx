@@ -7,7 +7,6 @@
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
 const mockPersonalIban = jest.fn();
-const mockRecordPersonalIbanApplication = jest.fn();
 const mockSetParams = jest.fn();
 
 const mockAssets = [
@@ -181,14 +180,14 @@ jest.mock('../hooks/app-params.hook', () => ({
 }));
 jest.mock('../hooks/personal-iban.hook', () => ({
   usePersonalIban: () => mockPersonalIban(),
-  usePersonalIbanIdentityBinding: () => ({
+  usePersonalIbanConfirmation: () => ({
     requestedPersonalIban: mockPersonalIban(),
     personalIban: mockPersonalIban(),
-    requiresCustomerDecision: false,
+    requiresCustomerConfirmation: false,
     hasAuthenticatedCustomer: true,
+    hasStorageWarning: false,
     confirmForCurrentCustomer: jest.fn(),
     declineForCurrentCustomer: jest.fn(),
-    recordApplicationForCurrentCustomer: mockRecordPersonalIbanApplication,
   }),
 }));
 jest.mock('../hooks/blockchain.hook', () => ({

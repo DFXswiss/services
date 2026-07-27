@@ -5,10 +5,7 @@
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
 const mockPersonalIban = jest.fn();
-const mockRecordPersonalIbanApplication = jest.fn();
-const mockConfirmPersonalIban = jest.fn();
-const mockDeclinePersonalIban = jest.fn();
-const mockRequiresCustomerDecision = jest.fn();
+const mockHasAuthenticatedCustomer = jest.fn();
 const mockWalletInitialized = jest.fn();
 const mockCloseServices = jest.fn();
 
@@ -103,14 +100,14 @@ jest.mock('src/hooks/app-params.hook', () => ({
 }));
 jest.mock('src/hooks/personal-iban.hook', () => ({
   usePersonalIban: () => mockPersonalIban(),
-  usePersonalIbanIdentityBinding: () => ({
+  usePersonalIbanConfirmation: () => ({
     requestedPersonalIban: mockPersonalIban(),
     personalIban: mockPersonalIban(),
-    requiresCustomerDecision: mockRequiresCustomerDecision(),
-    hasAuthenticatedCustomer: true,
-    confirmForCurrentCustomer: mockConfirmPersonalIban,
-    declineForCurrentCustomer: mockDeclinePersonalIban,
-    recordApplicationForCurrentCustomer: mockRecordPersonalIbanApplication,
+    requiresCustomerConfirmation: false,
+    hasAuthenticatedCustomer: mockHasAuthenticatedCustomer(),
+    hasStorageWarning: false,
+    confirmForCurrentCustomer: jest.fn(),
+    declineForCurrentCustomer: jest.fn(),
   }),
 }));
 jest.mock('src/contexts/wallet.context', () => ({
@@ -181,7 +178,7 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPersonalIban.mockReturnValue('Frick');
-    mockRequiresCustomerDecision.mockReturnValue(false);
+    mockHasAuthenticatedCustomer.mockReturnValue(true);
     mockWalletInitialized.mockReturnValue(true);
     mockUseAppParams.mockReturnValue(baseAppParams());
     mockReceiveFor.mockResolvedValue(chfOffer());
@@ -205,26 +202,6 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
       await Promise.resolve();
     });
   }
-
-  it('asks a different customer to confirm or decline before making any quote request', async () => {
-    mockRequiresCustomerDecision.mockReturnValue(true);
-    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
-
-    render(<BuyInfoScreen />);
-
-    expect(
-      screen.getByText(
-        'A personal IBAN was requested for a different signed-in customer. Do you want to use it for your account?',
-      ),
-    ).toBeInTheDocument();
-    expect(mockReceiveFor).not.toHaveBeenCalled();
-
-    await act(async () => screen.getByRole('button', { name: 'Use requested personal IBAN' }).click());
-    expect(mockConfirmPersonalIban).toHaveBeenCalledTimes(1);
-
-    await act(async () => screen.getByRole('button', { name: CONTINUE_WITHOUT }).click());
-    expect(mockDeclinePersonalIban).toHaveBeenCalledTimes(1);
-  });
 
   it('does not quote the persisted customer while an incoming widget session is authenticating', async () => {
     mockWalletInitialized.mockReturnValue(false);
@@ -278,6 +255,19 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
     await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
     expect(screen.queryByText(MISMATCH_HINT)).not.toBeInTheDocument();
     expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'false');
+  });
+
+  it('does not delay a selector-free quote while authentication is unsettled', async () => {
+    mockPersonalIban.mockReturnValue(undefined);
+    mockHasAuthenticatedCustomer.mockReturnValue(false);
+
+    render(<BuyInfoScreen />);
+
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
+    await settle();
+    expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty(
+      'personalIbanProvider',
+    );
   });
 
   it('does not show the mismatch hint while paymentInfo is absent (loading)', async () => {
@@ -407,7 +397,6 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
 
     await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
     await settle();
-    expect(mockRecordPersonalIbanApplication).toHaveBeenCalled();
     expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'true');
     expect(screen.queryByText(CONTINUE_WITHOUT)).not.toBeInTheDocument();
   });

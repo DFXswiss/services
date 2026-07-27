@@ -599,9 +599,10 @@ export interface WidgetParams extends AppParams {
 interface AppProps {
   routerFactory: (routes: RouteObject[]) => Router;
   params?: WidgetParams;
+  personalIbanOccurrence?: number;
 }
 
-function App({ routerFactory, params }: AppProps) {
+function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
   const routerRef = useRef<Router>();
   if (!routerRef.current) {
     routerRef.current = routerFactory(Routes);
@@ -625,6 +626,7 @@ function App({ routerFactory, params }: AppProps) {
               service={params?.service}
               closeCallback={params?.onClose}
               params={params}
+              personalIbanOccurrence={personalIbanOccurrence}
               router={router}
             >
               <SettingsContextProvider>

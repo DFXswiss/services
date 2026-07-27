@@ -5,7 +5,6 @@
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
 const mockPersonalIban = jest.fn();
-const mockRecordPersonalIbanApplication = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({
   FiatPaymentMethod: { BANK: 'Bank', INSTANT: 'Instant', CARD: 'Card' },
@@ -83,14 +82,14 @@ jest.mock('src/hooks/app-params.hook', () => ({
 }));
 jest.mock('src/hooks/personal-iban.hook', () => ({
   usePersonalIban: () => mockPersonalIban(),
-  usePersonalIbanIdentityBinding: () => ({
+  usePersonalIbanConfirmation: () => ({
     requestedPersonalIban: mockPersonalIban(),
     personalIban: mockPersonalIban(),
-    requiresCustomerDecision: false,
+    requiresCustomerConfirmation: false,
     hasAuthenticatedCustomer: true,
+    hasStorageWarning: false,
     confirmForCurrentCustomer: jest.fn(),
     declineForCurrentCustomer: jest.fn(),
-    recordApplicationForCurrentCustomer: mockRecordPersonalIbanApplication,
   }),
 }));
 jest.mock('src/contexts/wallet.context', () => ({

@@ -1,4 +1,5 @@
-// Published SDK members are the contract safety net for shared transaction errors.
+// Use the actual enums re-exported by the SDK. The literals below are emitted by the API's
+// QuoteError enum (api/src/.../quote-error.enum.ts) and intentionally form a cross-contract check.
 
 jest.mock('@dfx.swiss/react', () => ({
   FiatPaymentMethod: {
@@ -8,12 +9,13 @@ jest.mock('@dfx.swiss/react', () => ({
   },
   PersonalIbanProvider: { FRICK: 'Frick' },
   TransactionError: {
-    PAYMENT_METHOD_NOT_ALLOWED: 'SdkPaymentMethodNotAllowed',
-    KYC_REQUIRED: 'SdkKycRequired',
+    PAYMENT_METHOD_NOT_ALLOWED: 'PaymentMethodNotAllowed',
+    KYC_REQUIRED: 'KycRequired',
   },
 }));
 
 import { FiatPaymentMethod, PersonalIbanProvider, TransactionError } from '@dfx.swiss/react';
+import { readFileSync } from 'fs';
 import {
   FRICK_ACCOUNT_HOLDER_NAME,
   FRICK_BANK_NAME,
@@ -78,11 +80,41 @@ describe('isPersonalIbanApplicable', () => {
 // Tokens must match QuoteError string values for the buy/purchase path
 // (resolveBankInfo / getOrCreateFrickForUser / DTO validation).
 describe('getPersonalIbanErrorMessage', () => {
+  const apiQuoteError = {
+    paymentMethodNotAllowed: 'PaymentMethodNotAllowed',
+    kycRequired: 'KycRequired',
+  } as const;
+
+  function publishedSdkToken(member: string): string | undefined {
+    const source = readFileSync(
+      require.resolve('@dfx.swiss/core/dist/definitions/transaction.js'),
+      'utf8',
+    );
+    return new RegExp(
+      `TransactionError\\["${member}"\\] = "([^"]+)"`,
+    ).exec(source)?.[1];
+  }
+
+  it('matches the real SDK members to the tokens emitted by the API', () => {
+    const sdkPaymentMethodNotAllowed = publishedSdkToken(
+      'PAYMENT_METHOD_NOT_ALLOWED',
+    );
+    const sdkKycRequired = publishedSdkToken('KYC_REQUIRED');
+
+    expect(sdkPaymentMethodNotAllowed).toBe(
+      apiQuoteError.paymentMethodNotAllowed,
+    );
+    expect(sdkKycRequired).toBe(apiQuoteError.kycRequired);
+    expect(TransactionError.PAYMENT_METHOD_NOT_ALLOWED).toBe(
+      sdkPaymentMethodNotAllowed,
+    );
+    expect(TransactionError.KYC_REQUIRED).toBe(sdkKycRequired);
+  });
+
   it('maps PaymentMethodNotAllowed to the bank-transfer requirement message', () => {
-    expect(getPersonalIbanErrorMessage(TransactionError.PAYMENT_METHOD_NOT_ALLOWED)).toBe(
+    expect(getPersonalIbanErrorMessage(apiQuoteError.paymentMethodNotAllowed)).toBe(
       'Personal IBANs require the bank transfer payment method.',
     );
-    expect(getPersonalIbanErrorMessage('PaymentMethodNotAllowed')).toBeUndefined();
   });
 
   it('maps PersonalIbanIssuanceFailed to a retry-or-support message', () => {
@@ -98,9 +130,8 @@ describe('getPersonalIbanErrorMessage', () => {
   });
 
   it('does not map KycRequired (routed through QuoteErrorHint with a separate feature message)', () => {
-    expect(getPersonalIbanErrorMessage(TransactionError.KYC_REQUIRED)).toBeUndefined();
-    expect(isKycRequiredMessage(TransactionError.KYC_REQUIRED)).toBe(true);
-    expect(isKycRequiredMessage('KycRequired')).toBe(false);
+    expect(getPersonalIbanErrorMessage(apiQuoteError.kycRequired)).toBeUndefined();
+    expect(isKycRequiredMessage(apiQuoteError.kycRequired)).toBe(true);
     expect(getPersonalIbanKycMessage()).toBe('Personal IBANs require KYC level 50.');
   });
 

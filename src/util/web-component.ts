@@ -1,6 +1,7 @@
 type AttributeChangedCallback = (name: string, oldValue: string | null, newValue: string | null) => void;
 const R2WC_RENDER = Symbol.for('r2wc.render');
 const R2WC_PROPS = Symbol.for('r2wc.props');
+const PERSONAL_IBAN_OCCURRENCE_PROP = '__personalIbanOccurrence';
 
 type R2wcElement = HTMLElement & {
   [R2WC_PROPS]?: Record<string, unknown>;
@@ -19,6 +20,11 @@ function applyStringProp(
   const props = element[R2WC_PROPS];
   if (props) {
     props[propertyName] = value ?? undefined;
+    if (propertyName === 'personalIban') {
+      const occurrence = props[PERSONAL_IBAN_OCCURRENCE_PROP];
+      props[PERSONAL_IBAN_OCCURRENCE_PROP] =
+        typeof occurrence === 'number' ? occurrence + 1 : 1;
+    }
   }
   element[R2WC_RENDER]?.();
 }

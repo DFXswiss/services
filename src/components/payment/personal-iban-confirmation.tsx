@@ -7,15 +7,30 @@ import {
 } from '@dfx.swiss/react-components';
 import { useSettingsContext } from '../../contexts/settings.context';
 
-interface PersonalIbanIdentityAcknowledgementProps {
+interface PersonalIbanConfirmationProps {
   onConfirm: () => void;
   onDecline: () => void;
+  hasStorageWarning: boolean;
 }
 
-export function PersonalIbanIdentityAcknowledgement({
+const STORAGE_WARNING =
+  'Your browser could not reliably read or save this choice. You will be asked again after a reload.';
+
+export function PersonalIbanStorageWarning(): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <StyledInfoText invertedIcon>
+      {translate('screens/payment', STORAGE_WARNING)}
+    </StyledInfoText>
+  );
+}
+
+export function PersonalIbanConfirmationPrompt({
   onConfirm,
   onDecline,
-}: PersonalIbanIdentityAcknowledgementProps): JSX.Element {
+  hasStorageWarning,
+}: PersonalIbanConfirmationProps): JSX.Element {
   const { translate } = useSettingsContext();
 
   return (
@@ -23,12 +38,13 @@ export function PersonalIbanIdentityAcknowledgement({
       <StyledInfoText invertedIcon>
         {translate(
           'screens/payment',
-          'A personal IBAN was requested for a different signed-in customer. Do you want to use it for your account?',
+          'A personal IBAN is a real, non-revocable account opened for you at a bank. Please confirm whether you want to request and use it.',
         )}
       </StyledInfoText>
+      {hasStorageWarning && <PersonalIbanStorageWarning />}
       <StyledButton
         width={StyledButtonWidth.FULL}
-        label={translate('screens/payment', 'Use requested personal IBAN')}
+        label={translate('screens/payment', 'Request and use personal IBAN')}
         onClick={onConfirm}
         color={StyledButtonColor.STURDY_WHITE}
       />
