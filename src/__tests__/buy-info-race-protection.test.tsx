@@ -100,7 +100,7 @@ jest.mock('src/hooks/layout-config.hook', () => ({
   useLayoutOptions: () => undefined,
 }));
 
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import BuyInfoScreen from 'src/screens/buy-info.screen';
 
 function baseAppParams(overrides: Record<string, unknown> = {}) {
@@ -116,6 +116,15 @@ function baseAppParams(overrides: Record<string, unknown> = {}) {
 }
 
 describe('BuyInfoScreen quote race protection', () => {
+  async function waitFor(callback: () => unknown) {
+    await act(async () => {
+      for (let i = 0; i < 10; i += 1) {
+        await Promise.resolve();
+      }
+    });
+    return callback();
+  }
+
   it('discards a stale, slower-resolving quote in favor of a newer, faster one', async () => {
     mockPersonalIban.mockReturnValue(undefined);
     mockUseAppParams.mockReturnValue(baseAppParams());
@@ -136,11 +145,15 @@ describe('BuyInfoScreen quote race protection', () => {
       };
     }
 
-    mockReceiveFor.mockImplementation((req: any) => {
-      const provider = req.personalIbanProvider;
-      const delay = provider === undefined ? 250 : 0;
-      return new Promise((resolve) => setTimeout(() => resolve(offerFor(provider)), delay));
+    let resolveSlow!: (value: ReturnType<typeof offerFor>) => void;
+    const slow = new Promise<ReturnType<typeof offerFor>>((resolve) => {
+      resolveSlow = resolve;
     });
+    mockReceiveFor.mockImplementation((req: any) =>
+      req.personalIbanProvider === undefined
+        ? slow
+        : Promise.resolve(offerFor(req.personalIbanProvider)),
+    );
 
     const { rerender } = render(<BuyInfoScreen />);
 
@@ -157,7 +170,8 @@ describe('BuyInfoScreen quote race protection', () => {
     await waitFor(() => expect(screen.getByTestId('payment-info')).toHaveTextContent('222'));
 
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 500));
+      resolveSlow(offerFor(undefined));
+      await Promise.resolve();
     });
 
     expect(screen.getByTestId('payment-info')).toHaveTextContent('222');

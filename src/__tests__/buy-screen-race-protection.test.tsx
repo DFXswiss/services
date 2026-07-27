@@ -1,7 +1,7 @@
 // Race-protection test: BuyScreen must discard a stale, slower-resolving quote
 // when a newer fetch (triggered by personalIban change) already resolved.
 // Mounts the real default-exported BuyScreen (react-hook-form runs for real;
-// quote fetch is gated by useDebounce(validatedData, 500) — use generous waitFor).
+// The debounce hook is replaced with an effect-driven, timer-free equivalent.
 // personalIban comes from usePersonalIbanConfirmation() (not useAppParams).
 
 const mockReceiveFor = jest.fn();
@@ -178,6 +178,24 @@ jest.mock('src/contexts/window.context', () => ({
 jest.mock('../hooks/app-params.hook', () => ({
   useAppParams: () => mockUseAppParams(),
 }));
+jest.mock('../hooks/debounce.hook', () => ({
+  __esModule: true,
+  default: (value: unknown) => {
+    const React = require('react');
+    const [debouncedValue, setDebouncedValue] = React.useState();
+    const previousValue = React.useRef();
+    const serializedValue = JSON.stringify(value);
+
+    React.useEffect(() => {
+      if (serializedValue !== previousValue.current) {
+        previousValue.current = serializedValue;
+        setDebouncedValue(value);
+      }
+    }, [serializedValue, value]);
+
+    return debouncedValue;
+  },
+}));
 jest.mock('../hooks/personal-iban.hook', () => ({
   usePersonalIbanConfirmation: () => ({
     requestedPersonalIban: mockPersonalIban(),
@@ -201,7 +219,7 @@ jest.mock('../hooks/navigation.hook', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
 }));
 
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import BuyScreen from 'src/screens/buy.screen';
 
 function baseAppParams(overrides: Record<string, unknown> = {}) {
@@ -226,6 +244,15 @@ describe('BuyScreen quote race protection', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
+
+  async function waitFor(callback: () => unknown) {
+    await act(async () => {
+      for (let i = 0; i < 10; i += 1) {
+        await Promise.resolve();
+      }
+    });
+    return callback();
+  }
 
   it('discards a stale, slower-resolving quote in favor of a newer, faster one', async () => {
     mockPersonalIban.mockReturnValue(undefined);
@@ -252,16 +279,20 @@ describe('BuyScreen quote race protection', () => {
       };
     }
 
-    mockReceiveFor.mockImplementation((req: any) => {
-      const provider = req.personalIbanProvider;
-      const delay = provider === undefined ? 250 : 0;
-      return new Promise((resolve) => setTimeout(() => resolve(offerFor(provider)), delay));
+    let resolveSlow!: (value: ReturnType<typeof offerFor>) => void;
+    const slow = new Promise<ReturnType<typeof offerFor>>((resolve) => {
+      resolveSlow = resolve;
     });
+    mockReceiveFor.mockImplementation((req: any) =>
+      req.personalIbanProvider === undefined
+        ? slow
+        : Promise.resolve(offerFor(req.personalIbanProvider)),
+    );
 
     const { rerender } = render(<BuyScreen />);
 
-    // Real 500ms debounce before the first (slow) flight fires.
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
+    // The timer-free debounce starts the first (slow) flight deterministically.
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
     expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBeUndefined();
 
     // personalIban is NOT itself debounced (only validatedData is) — changing it re-runs the
@@ -275,12 +306,12 @@ describe('BuyScreen quote race protection', () => {
     );
 
     // The fast flight wins first.
-    await waitFor(() => expect(screen.getByTestId('payment-info')).toHaveTextContent('222'), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toHaveTextContent('222'));
 
-    // Give the slow flight (started first, and possibly still issuing its own "exact price"
-    // follow-up call) time to fully resolve after the fast one already landed.
+    // Resolve the first flight explicitly after the fast one has landed.
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 500));
+      resolveSlow(offerFor(undefined));
+      await Promise.resolve();
     });
 
     // Stale slow data must never overwrite the newer fast data.
@@ -315,7 +346,7 @@ describe('BuyScreen quote race protection', () => {
     mockReceiveFor.mockImplementationOnce(() => pending).mockResolvedValue(offer);
 
     const { rerender } = render(<BuyScreen />);
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(1), { timeout: 3000 });
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(1));
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
 
     mockPersonalIban.mockReturnValue('frick');

@@ -1,7 +1,7 @@
 // Wiring test: BuyScreen personal-IBAN mismatch acknowledgement, Frick validation,
 // KYC routing, and live-input quote invalidation.
 // Mounts the real default-exported BuyScreen (react-hook-form runs for real;
-// quote fetch is gated by useDebounce(validatedData, 500) — use generous waitFor).
+// The debounce hook is replaced with an effect-driven, timer-free equivalent.
 // personalIban comes from usePersonalIbanConfirmation() (not useAppParams).
 
 const mockReceiveFor = jest.fn();
@@ -210,6 +210,24 @@ jest.mock('src/contexts/window.context', () => ({
 jest.mock('../hooks/app-params.hook', () => ({
   useAppParams: () => mockUseAppParams(),
 }));
+jest.mock('../hooks/debounce.hook', () => ({
+  __esModule: true,
+  default: (value: unknown) => {
+    const React = require('react');
+    const [debouncedValue, setDebouncedValue] = React.useState();
+    const previousValue = React.useRef();
+    const serializedValue = JSON.stringify(value);
+
+    React.useEffect(() => {
+      if (serializedValue !== previousValue.current) {
+        previousValue.current = serializedValue;
+        setDebouncedValue(value);
+      }
+    }, [serializedValue, value]);
+
+    return debouncedValue;
+  },
+}));
 jest.mock('../hooks/personal-iban.hook', () => ({
   usePersonalIbanConfirmation: () => ({
     requestedPersonalIban: mockRequestedPersonalIban(),
@@ -233,7 +251,7 @@ jest.mock('../hooks/navigation.hook', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
 }));
 
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { FiatPaymentMethod } from '@dfx.swiss/react';
 import BuyScreen from 'src/screens/buy.screen';
 import { isPersonalIbanApplicable } from '../util/personal-iban';
@@ -341,9 +359,15 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
   async function settle() {
     await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
+      for (let i = 0; i < 10; i += 1) {
+        await Promise.resolve();
+      }
     });
+  }
+
+  async function waitFor(callback: () => unknown) {
+    await settle();
+    return callback();
   }
 
   it('omits personalIbanProvider and requires continue acknowledgement before payment details (A2)', async () => {
@@ -352,7 +376,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(screen.getByText(MISMATCH_HINT)).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByText(MISMATCH_HINT)).toBeInTheDocument());
     await settle();
 
     const request = mockReceiveFor.mock.calls[0][0];
@@ -376,9 +400,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), {
-      timeout: 3000,
-    });
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
     expect(
       screen.queryByText(
         'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?',
@@ -398,7 +420,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
     await settle();
     expect(screen.queryByText(MISMATCH_HINT)).not.toBeInTheDocument();
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
@@ -415,9 +437,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     const rendered = render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(2), {
-      timeout: 3000,
-    });
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(2));
     await settle();
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty(
       'personalIbanProvider',
@@ -449,7 +469,6 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
             'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?',
           ),
         ).toBeInTheDocument(),
-      { timeout: 3000 },
     );
     expect(mockReceiveFor).not.toHaveBeenCalled();
 
@@ -458,9 +477,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
       rendered.rerender(<BuyScreen />);
     });
 
-    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument(), {
-      timeout: 3000,
-    });
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
     await settle();
     expect(mockDeclineForCurrentCustomer).toHaveBeenCalledTimes(1);
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty(
@@ -481,10 +498,8 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 100));
-    });
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
+    await settle();
     expect(screen.queryByText(MISMATCH_HINT)).not.toBeInTheDocument();
   });
 
@@ -498,7 +513,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
     await settle();
     expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
 
@@ -530,7 +545,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
     expect(screen.getByTestId('input-amount')).toHaveValue('300');
     expect(screen.getByTestId('input-targetAmount')).toHaveValue('');
 
@@ -564,7 +579,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(1), { timeout: 3000 });
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(1));
     expect(screen.getByTestId('input-amount')).toHaveValue('300');
 
     await act(async () => {
@@ -596,7 +611,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(2), { timeout: 3000 });
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(2));
     await act(async () => {
       fireEvent.change(screen.getByTestId('input-amount'), { target: { value: '300.0' } });
     });
@@ -634,7 +649,6 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
             'We could not issue your personal IBAN. Please try again later or contact support if the problem persists.',
           ),
         ).toBeInTheDocument(),
-      { timeout: 3000 },
     );
     await settle();
     expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('Frick');
@@ -643,7 +657,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
       screen.getByRole('button', { name: 'Retry' }).click();
     });
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(3), { timeout: 3000 });
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(3));
     expect(mockReceiveFor.mock.calls[1][0].personalIbanProvider).toBe('Frick');
     await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
     expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
@@ -657,9 +671,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(screen.getByTestId('quote-error-hint')).toBeInTheDocument(), {
-      timeout: 3000,
-    });
+    await waitFor(() => expect(screen.getByTestId('quote-error-hint')).toBeInTheDocument());
     await settle();
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
     expect(screen.getByTestId('quote-error-code')).toHaveTextContent('KycRequired');
@@ -677,7 +689,6 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     await waitFor(
       () => expect(screen.getByTestId('quote-error-hint')).toHaveTextContent('PaymentMethodNotAllowed'),
-      { timeout: 3000 },
     );
     await settle();
     expect(
@@ -692,9 +703,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(screen.getByTestId('quote-error-hint')).toBeInTheDocument(), {
-      timeout: 3000,
-    });
+    await waitFor(() => expect(screen.getByTestId('quote-error-hint')).toBeInTheDocument());
     await settle();
     expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('Frick');
     expect(screen.getByTestId('quote-error-code')).toHaveTextContent('KycRequired');
@@ -717,7 +726,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(screen.getByText(VERIFY_HINT)).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByText(VERIFY_HINT)).toBeInTheDocument());
     await settle();
     expect(mockReceiveFor.mock.calls[0][0].personalIbanProvider).toBe('Frick');
     expect(screen.queryByTestId('payment-info')).not.toBeInTheDocument();
@@ -746,7 +755,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
 
     render(<BuyScreen />);
 
-    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
     await settle();
     expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'true');
     expect(screen.queryByText(VERIFY_HINT)).not.toBeInTheDocument();
@@ -780,7 +789,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
       screen.getByRole('button', { name: CONTINUE_WITHOUT }).click();
     });
 
-    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
     await settle();
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
     await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
