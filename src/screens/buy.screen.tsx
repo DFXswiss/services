@@ -159,6 +159,15 @@ export default function BuyScreen(): JSX.Element {
   // debounced responses and confirm actions never commit against a newer form state (B4).
   const quoteGeneration = useRef(0);
   const committedQuoteGeneration = useRef(0);
+  const lastEffectivePersonalIban = useRef<string>();
+  const pendingFormSynchronization = useRef<{
+    amount?: string;
+    targetAmount?: string;
+    currencyName: string;
+    assetUniqueName: string;
+    paymentMethod?: FiatPaymentMethod;
+    personalIban?: string;
+  }>();
 
   const effectivePersonalIban = suppressPersonalIban ? undefined : personalIban;
 
@@ -335,9 +344,29 @@ export default function BuyScreen(): JSX.Element {
     }
   }, [showsNameForm, paymentInfo?.isValid]);
 
-  // Immediate invalidation when live form inputs or the selector change (B4). Debounce only
-  // launches the replacement request; display must never stay actionable against stale values.
+  const hasCompleteSpendSide = Boolean(selectedAmount && selectedCurrency && selectedPaymentMethod);
+  const hasCompleteGetSide = Boolean(selectedTargetAmount && selectedAsset);
+
+  // Immediate invalidation comes from raw live inputs and the effective selector. Debounce only
+  // launches a replacement request; clearing the last complete side must also clear request state.
   useEffect(() => {
+    const synchronizedForm = pendingFormSynchronization.current;
+    pendingFormSynchronization.current = undefined;
+    const selectorChanged = effectivePersonalIban !== lastEffectivePersonalIban.current;
+    lastEffectivePersonalIban.current = effectivePersonalIban;
+    const isExactPriceSynchronization =
+      synchronizedForm != null &&
+      selectedAmount === synchronizedForm.amount &&
+      selectedTargetAmount === synchronizedForm.targetAmount &&
+      selectedCurrency?.name === synchronizedForm.currencyName &&
+      selectedAsset?.uniqueName === synchronizedForm.assetUniqueName &&
+      selectedPaymentMethod === synchronizedForm.paymentMethod &&
+      effectivePersonalIban === synchronizedForm.personalIban;
+
+    // Exact-price synchronization writes the calculated opposite amount into the form. It is
+    // not a customer edit and must not invalidate the response it came from.
+    if (!selectorChanged && isExactPriceSynchronization) return;
+
     quoteGeneration.current += 1;
     setErrorMessage(undefined);
     setKycError(undefined);
@@ -345,8 +374,20 @@ export default function BuyScreen(): JSX.Element {
     setPaymentInfo(undefined);
     setPaymentInfoPaymentMethod(undefined);
     setContinueWithoutPersonalIban(false);
-    setIsLoading(validatedData ? validatedData.sideToUpdate : undefined);
-  }, [validatedData, personalIban]);
+    if (!hasCompleteSpendSide && !hasCompleteGetSide) {
+      setValidatedData(undefined);
+      setIsLoading(undefined);
+    } else {
+      setIsLoading(hasCompleteSpendSide ? Side.GET : Side.SPEND);
+    }
+  }, [
+    selectedAmount,
+    selectedCurrency,
+    selectedAsset,
+    selectedTargetAmount,
+    selectedPaymentMethod,
+    effectivePersonalIban,
+  ]);
 
   // Unrecognized-selector suppression is scoped to the current selector value only.
   useEffect(() => {
@@ -417,6 +458,20 @@ export default function BuyScreen(): JSX.Element {
       })
       .then((info) => {
         if (!isRunning || generation !== quoteGeneration.current || !info) return;
+        pendingFormSynchronization.current = {
+          amount:
+            debouncedValidatedData.sideToUpdate === Side.SPEND
+              ? info.amount.toString()
+              : debouncedValidatedData.amount?.toString(),
+          targetAmount:
+            debouncedValidatedData.sideToUpdate === Side.GET
+              ? info.estimatedAmount.toString()
+              : debouncedValidatedData.targetAmount?.toString(),
+          currencyName: debouncedValidatedData.currency.name,
+          assetUniqueName: debouncedValidatedData.asset.uniqueName,
+          paymentMethod: debouncedValidatedData.paymentMethod,
+          personalIban: effectivePersonalIban,
+        };
         debouncedValidatedData.sideToUpdate === Side.SPEND
           ? setVal('amount', info.amount.toString())
           : setVal('targetAmount', info.estimatedAmount.toString());

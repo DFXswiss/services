@@ -50,11 +50,17 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   bankAccount: 'string',
   externalTransactionId: 'string',
   personalIban: 'string',
+  personalIbanRevision: 'number',
   onClose: 'function',
   service: 'string',
 };
 
 const BaseDfxServices = createWebComponent(MainWidget, { shadow: 'closed', props });
-const DfxServices = preserveStringAttribute(BaseDfxServices, 'personal-iban', 'personalIban');
+const DfxServices = preserveStringAttribute(
+  BaseDfxServices,
+  'personal-iban',
+  'personalIban',
+  'personalIbanRevision',
+);
 
 customElements.define('dfx-services', DfxServices);

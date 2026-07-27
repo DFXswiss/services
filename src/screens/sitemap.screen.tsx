@@ -1,7 +1,9 @@
 import { StyledVerticalStack } from '@dfx.swiss/react-components';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { personalIbanOnlyParams } from 'src/util/personal-iban';
+import { relativeUrl } from 'src/util/utils';
 
 interface PageEntry {
   path: string;
@@ -149,6 +151,8 @@ const sections: PageSection[] = [
 export default function SitemapScreen(): JSX.Element {
   useAdminGuard();
   useLayoutOptions({ title: 'Sitemap', backButton: true, noMaxWidth: true });
+  const { search } = useLocation();
+  const personalIbanParams = personalIbanOnlyParams(search);
 
   return (
     <StyledVerticalStack gap={6} full>
@@ -160,7 +164,7 @@ export default function SitemapScreen(): JSX.Element {
               {section.pages.map((page) => (
                 <li key={page.path}>
                   <Link
-                    to={page.path}
+                    to={relativeUrl({ path: page.path, params: personalIbanParams })}
                     className="block text-sm text-dfxBlue-400 hover:text-dfxBlue-800 hover:underline"
                   >
                     {page.label} <span className="text-dfxGray-700">({page.path})</span>

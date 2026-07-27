@@ -190,7 +190,7 @@ interface AppHandlingContextInterface {
 interface AppHandlingContextProps extends PropsWithChildren {
   isWidget: boolean;
   service?: Service;
-  params?: AppParams;
+  params?: AppParams & { personalIbanRevision?: number };
   router: Router;
   closeCallback?: (data: CloseMessageData) => void;
 }
@@ -231,45 +231,49 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   // changes or reasserts the property — otherwise the next customer inherits the prior selector (B2).
   const [widgetPersonalIbanSuppressed, setWidgetPersonalIbanSuppressed] = useState(false);
   const lastWidgetPersonalIban = useRef(props.params?.personalIban);
+  const lastWidgetPersonalIbanRevision = useRef(props.params?.personalIbanRevision);
+  const hadPersistedAuthTokenAtMount = useRef(
+    window.localStorage.getItem('dfx.authenticationToken') !== null,
+  );
+  const sessionWasLoggedIn = useRef(isLoggedIn);
+  const expiredSessionWasHandled = useRef(false);
+  if (isLoggedIn) sessionWasLoggedIn.current = true;
 
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
 
   useChange((newVal, oldVal) => {
     if (!newVal && oldVal) {
-      storeQueryParams.remove();
-      storeRedirectUri.remove();
-      setParams({});
-      setRedirectUri(undefined);
-
-      // Strip personal-iban only on logged-in → logged-out. Must not run during the initial
-      // unauthenticated login redirect (A4 needs the selector to survive that path).
-      if (props.isWidget) {
-        setWidgetPersonalIbanSuppressed(true);
-      } else {
-        const currentQuery = new URLSearchParams((window as Window).location.search);
-        if (currentQuery.has('personal-iban')) {
-          currentQuery.delete('personal-iban');
-          const path = props.router.state.location.pathname;
-          props.router.navigate(relativeUrl({ path, params: currentQuery }), { replace: true });
-          const { location, history } = window;
-          history.replaceState(
-            undefined,
-            '',
-            url({ base: location.origin, path: location.pathname, params: currentQuery }),
-          );
-        }
-      }
+      clearCustomerSessionState();
     }
   }, isLoggedIn);
 
+  // The SDK starts with isLoggedIn=false before reading localStorage. Once initialized, a
+  // persisted-but-expired session is distinguishable from a genuinely tokenless first visit.
+  useEffect(() => {
+    if (
+      isSessionInitialized &&
+      !isLoggedIn &&
+      hadPersistedAuthTokenAtMount.current &&
+      !sessionWasLoggedIn.current &&
+      !expiredSessionWasHandled.current
+    ) {
+      expiredSessionWasHandled.current = true;
+      clearCustomerSessionState();
+    }
+  }, [isSessionInitialized, isLoggedIn]);
+
   // Host changed or reasserted the widget property → lift logout suppression.
   useEffect(() => {
-    if (props.params?.personalIban !== lastWidgetPersonalIban.current) {
+    if (
+      props.params?.personalIban !== lastWidgetPersonalIban.current ||
+      props.params?.personalIbanRevision !== lastWidgetPersonalIbanRevision.current
+    ) {
       lastWidgetPersonalIban.current = props.params?.personalIban;
+      lastWidgetPersonalIbanRevision.current = props.params?.personalIbanRevision;
       setWidgetPersonalIbanSuppressed(false);
     }
-  }, [props.params?.personalIban]);
+  }, [props.params?.personalIban, props.params?.personalIbanRevision]);
 
   useEffect(() => {
     isSessionInitialized && init();
@@ -282,6 +286,31 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   // parameters
   function getParameter(query: URLSearchParams, key: string): string | undefined {
     return query.get(key) ?? undefined;
+  }
+
+  function clearCustomerSessionState() {
+    storeQueryParams.remove();
+    storeRedirectUri.remove();
+    setParams({});
+    setRedirectUri(undefined);
+
+    if (props.isWidget) {
+      setWidgetPersonalIbanSuppressed(true);
+      return;
+    }
+
+    const currentQuery = new URLSearchParams((window as Window).location.search);
+    if (!currentQuery.has('personal-iban')) return;
+
+    currentQuery.delete('personal-iban');
+    const path = props.router.state.location.pathname;
+    props.router.navigate(relativeUrl({ path, params: currentQuery }), { replace: true });
+    const { location, history } = window;
+    history.replaceState(
+      undefined,
+      '',
+      url({ base: location.origin, path: location.pathname, params: currentQuery }),
+    );
   }
 
   function setParameters(params: Partial<AppParams>) {

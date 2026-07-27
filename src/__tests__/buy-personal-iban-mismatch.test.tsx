@@ -126,7 +126,19 @@ jest.mock('@dfx.swiss/react-components', () => {
     ),
     StyledHorizontalStack: ({ children }: any) => <div>{children}</div>,
     StyledInfoText: ({ children }: any) => <div>{children}</div>,
-    StyledInput: () => null,
+    StyledInput: ({ name, control }: any) => (
+      <Controller
+        name={name}
+        control={control}
+        render={({ field }: any) => (
+          <input
+            data-testid={`input-${name}`}
+            value={field.value === undefined ? '' : field.value}
+            onChange={field.onChange}
+          />
+        )}
+      />
+    ),
     StyledLink: ({ children, label }: any) => <div>{label ?? children}</div>,
     StyledLoadingSpinner: () => <div data-testid="loading-spinner" />,
     StyledSearchDropdown: () => null,
@@ -202,7 +214,7 @@ jest.mock('../hooks/navigation.hook', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
 }));
 
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { FiatPaymentMethod } from '@dfx.swiss/react';
 import BuyScreen from 'src/screens/buy.screen';
 import { isPersonalIbanApplicable } from '../util/personal-iban';
@@ -386,6 +398,40 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     expect(screen.queryByText(TRANSFER_BUTTON)).not.toBeInTheDocument();
   });
 
+  it('discards a pending quote when the customer clears the only amount', async () => {
+    mockPersonalIban.mockReturnValue(undefined);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
+
+    let resolveQuote!: (offer: ReturnType<typeof chfOffer>) => void;
+    const pendingQuote = new Promise<ReturnType<typeof chfOffer>>((resolve) => {
+      resolveQuote = resolve;
+    });
+    const pendingExactPrice = new Promise(() => {});
+    mockReceiveFor.mockImplementation(() =>
+      mockReceiveFor.mock.calls.length === 1 ? pendingQuote : pendingExactPrice,
+    );
+
+    render(<BuyScreen />);
+
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
+    expect(screen.getByTestId('input-amount')).toHaveValue('300');
+    expect(screen.getByTestId('input-targetAmount')).toHaveValue('');
+
+    await act(async () => {
+      fireEvent.change(screen.getByTestId('input-amount'), { target: { value: '' } });
+    });
+    expect(screen.getByTestId('input-amount')).toHaveValue('');
+
+    await act(async () => {
+      resolveQuote(chfOffer());
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByTestId('payment-info')).not.toBeInTheDocument();
+    expect(screen.queryByText(TRANSFER_BUTTON)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+  });
+
   it('treats EUR with non-BANK payment methods as a personal-IBAN mismatch (payment-method half)', () => {
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.INSTANT)).toBe(false);
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.CARD)).toBe(false);
@@ -527,5 +573,8 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled(), { timeout: 3000 });
     await settle();
     expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty('personalIbanProvider');
+    await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
+    expect(screen.queryByText('The requested personal IBAN provider is not recognized.')).not.toBeInTheDocument();
+    expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
   });
 });

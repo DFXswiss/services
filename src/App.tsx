@@ -594,6 +594,8 @@ export enum Service {
 export interface WidgetParams extends AppParams {
   service?: Service;
   onClose?: (data: CloseMessageData) => void;
+  /** Internal Web Component write counter used to distinguish equal-value selector reassertions. */
+  personalIbanRevision?: number;
 }
 
 interface AppProps {

@@ -4,15 +4,27 @@ import { preserveStringAttribute } from '../util/web-component';
 
 interface TestProps {
   personalIban?: string;
+  personalIbanRevision?: number;
 }
 
-function TestComponent({ personalIban }: TestProps): JSX.Element {
-  return <span>{personalIban === undefined ? 'absent' : JSON.stringify(personalIban)}</span>;
+function TestComponent({ personalIban, personalIbanRevision }: TestProps): JSX.Element {
+  return (
+    <span data-revision={personalIbanRevision}>
+      {personalIban === undefined ? 'absent' : JSON.stringify(personalIban)}
+    </span>
+  );
 }
 
 function defineTestElement(name: string): CustomElementConstructor {
-  const BaseElement = createWebComponent(TestComponent, { props: { personalIban: 'string' } });
-  const TestElement = preserveStringAttribute(BaseElement, 'personal-iban', 'personalIban');
+  const BaseElement = createWebComponent(TestComponent, {
+    props: { personalIban: 'string', personalIbanRevision: 'number' },
+  });
+  const TestElement = preserveStringAttribute(
+    BaseElement,
+    'personal-iban',
+    'personalIban',
+    'personalIbanRevision',
+  );
   customElements.define(name, TestElement);
   return TestElement;
 }
@@ -89,12 +101,31 @@ describe('Web Component string selector handling', () => {
     expect(element.personalIban).toBe('');
   });
 
+  it('increments the selector revision when the same property value is deliberately reasserted', async () => {
+    defineTestElement('personal-iban-selector-same-value-revision-test');
+
+    const element = document.createElement(
+      'personal-iban-selector-same-value-revision-test',
+    ) as HTMLElement & TestProps;
+    await act(async () => document.body.append(element));
+
+    await act(async () => {
+      element.personalIban = 'frick';
+    });
+    expect(element.querySelector('span')).toHaveAttribute('data-revision', '1');
+
+    await act(async () => {
+      element.personalIban = 'frick';
+    });
+    expect(element.querySelector('span')).toHaveAttribute('data-revision', '2');
+  });
+
   it('renders an attribute that was already set before the element was connected (initial markup case)', async () => {
     defineTestElement('personal-iban-selector-preset-nonempty-test');
     const nonEmptyElement = document.createElement(
       'personal-iban-selector-preset-nonempty-test',
     ) as HTMLElement & TestProps;
-    nonEmptyElement.setAttribute('personal-iban', 'frick');
+    await act(async () => nonEmptyElement.setAttribute('personal-iban', 'frick'));
     await act(async () => document.body.append(nonEmptyElement));
     expect(nonEmptyElement.textContent).toBe('"frick"');
 
@@ -102,7 +133,7 @@ describe('Web Component string selector handling', () => {
     const emptyElement = document.createElement(
       'personal-iban-selector-preset-empty-test',
     ) as HTMLElement & TestProps;
-    emptyElement.setAttribute('personal-iban', '');
+    await act(async () => emptyElement.setAttribute('personal-iban', ''));
     await act(async () => document.body.append(emptyElement));
     // Fail-closed: an explicit empty value set before connection must stay "set but invalid",
     // not silently collapse to absent.
