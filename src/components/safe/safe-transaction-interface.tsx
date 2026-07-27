@@ -10,7 +10,7 @@ import { WithdrawInterface } from './withdraw-interface';
 
 export const SafeTransactionInterface = () => {
   const { translate } = useSettingsContext();
-  const [mode, setMode] = useState<TransactionMode>(TransactionMode.DEPOSIT);
+  const [mode, setMode] = useState<TransactionMode | undefined>(undefined);
   const [transactionType, setTransactionType] = useState<TransactionType>(TransactionType.FIAT);
 
   return (
@@ -33,7 +33,7 @@ export const SafeTransactionInterface = () => {
           isHeader={true}
         />
       </div>
-      {[TransactionMode.DEPOSIT, TransactionMode.WITHDRAW].includes(mode) && (
+      {(mode === TransactionMode.DEPOSIT || mode === TransactionMode.WITHDRAW) && (
         <div className="flex items-center gap-2 mb-4">
           <span className="text-sm text-dfxGray-700">{translate('screens/payment', 'Type')}:</span>
           <ButtonGroup<TransactionType>
