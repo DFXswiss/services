@@ -430,7 +430,7 @@ describe('personal-iban logout cleanup (B2)', () => {
     expect(screen.getByTestId('widget-selector')).toHaveTextContent('frick');
   });
 
-  it('treats changed React credentials plus the same selector as customer B intent after logout (A1)', async () => {
+  it('does not leave a selector pending on unsupported post-mount React credential changes (A1/B3)', async () => {
     const customerBSession = sessionToken(82);
     mockUseSessionContext.mockReturnValue({
       isInitialized: true,
@@ -494,20 +494,45 @@ describe('personal-iban logout cleanup (B2)', () => {
         </AppHandlingContextProvider>,
       );
     });
-    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
+    // Mounted integrations do not consume changed credentials. The paired selector is therefore
+    // fresh intent immediately instead of waiting forever for an authentication that cannot occur.
+    await waitFor(() => expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick'));
+  });
 
-    mockReceiveQuote.mockClear();
+  it('does not let an old initialization intent block a later unsupported credential update', async () => {
+    const initialSession = sessionToken(91);
+    const changedSession = sessionToken(92);
     mockUseSessionContext.mockReturnValue({
       isInitialized: true,
       isLoggedIn: true,
       availableBlockchains: [],
     });
-    mockUseAuthContext.mockReturnValue({ session: { account: 82 } });
+    mockUseAuthContext.mockReturnValue({ session: { account: 90 } });
+
+    const router = createMemoryRouter(
+      [{ path: '*', element: <CustomerQuoteProbe /> }],
+      { initialEntries: ['/buy'] },
+    );
+    let rerender: (ui: React.ReactElement) => void;
+    await act(async () => {
+      const result = render(
+        <AppHandlingContextProvider
+          isWidget
+          params={{ session: initialSession, personalIban: 'frick' }}
+          router={router}
+        >
+          <RouterProvider router={router} />
+        </AppHandlingContextProvider>,
+      );
+      rerender = result.rerender;
+    });
+    expect(screen.getByTestId('quote-selector')).toHaveTextContent('absent');
+
     await act(async () => {
       rerender!(
         <AppHandlingContextProvider
           isWidget
-          params={{ session: customerBSession, personalIban: 'frick' }}
+          params={{ session: changedSession, personalIban: 'frick' }}
           router={router}
         >
           <RouterProvider router={router} />
@@ -515,12 +540,6 @@ describe('personal-iban logout cleanup (B2)', () => {
       );
     });
 
-    await waitFor(() =>
-      expect(mockReceiveQuote).toHaveBeenCalledWith({
-        customer: 82,
-        personalIbanProvider: 'Frick',
-      }),
-    );
-    expect(mockReceiveQuote).not.toHaveBeenCalledWith({ customer: 82 });
+    await waitFor(() => expect(screen.getByTestId('quote-selector')).toHaveTextContent('Frick'));
   });
 });

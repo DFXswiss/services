@@ -33,9 +33,6 @@ const MISSING_CURRENCY_MESSAGE =
 const OWN_NAME_SUCCESS_MESSAGE =
   'Your personal IBAN for {{currency}} transactions is now available. Future bank transfers will be made to this IBAN in your own name.';
 
-const DEDICATED_IBAN_SUCCESS_MESSAGE =
-  'Your personal IBAN for {{currency}} transactions is now available. Future bank transfers will be made to this dedicated IBAN, which is assigned only to you.';
-
 export default function PersonalIbanScreen(): JSX.Element {
   useAddressGuard('/login');
 
@@ -44,7 +41,7 @@ export default function PersonalIbanScreen(): JSX.Element {
   const { createPersonalIban } = useVirtualIban();
   const [params] = useSearchParams();
 
-  // No silent currency default — missing param is an explicit error (EUR vs CHF use different providers).
+  // No silent currency default — the legacy endpoint requires an explicit supported currency.
   const currency = params.get('currency') ?? undefined;
 
   const [status, setStatus] = useState<Status>(Status.INITIAL);
@@ -123,9 +120,7 @@ export default function PersonalIbanScreen(): JSX.Element {
           </div>
 
           <StyledInfoText iconColor={IconColor.BLUE}>
-            {currency === 'EUR'
-              ? translate('screens/personal-iban', DEDICATED_IBAN_SUCCESS_MESSAGE, { currency })
-              : translate('screens/personal-iban', OWN_NAME_SUCCESS_MESSAGE, { currency })}
+            {translate('screens/personal-iban', OWN_NAME_SUCCESS_MESSAGE, { currency })}
           </StyledInfoText>
 
           <StyledButton

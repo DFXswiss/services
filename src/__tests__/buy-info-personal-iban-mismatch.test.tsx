@@ -63,8 +63,11 @@ jest.mock('@dfx.swiss/react-components', () => ({
 }));
 
 jest.mock('src/components/payment/payment-info-buy', () => ({
-  PaymentInformationContent: ({ showBank }: any) => (
-    <div data-testid="payment-info" data-show-bank={showBank ? 'true' : 'false'} />
+  PaymentInformationContent: ({ info, showBank }: any) => (
+    <div data-testid="payment-info" data-show-bank={showBank ? 'true' : 'false'}>
+      <span>{info.iban}</span>
+      <span>{info.name}</span>
+    </div>
   ),
 }));
 jest.mock('src/components/error-hint', () => ({
@@ -282,11 +285,18 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
-  it('requires acknowledgement when a Frick request gets ordinary payment details (B1/C1)', async () => {
+  it('fetches and shows standard details after rejecting an unverifiable Frick response (B2)', async () => {
     mockPersonalIban.mockReturnValue('Frick');
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
-    mockReceiveFor.mockResolvedValue(
-      frickOffer({ isPersonalIban: false, bank: undefined, name: 'DFX AG' }),
+    const rejected = frickOffer({ name: 'Customer B', iban: 'LI-REJECTED-PERSONAL' });
+    const standard = frickOffer({
+      isPersonalIban: false,
+      bank: undefined,
+      name: 'DFX AG',
+      iban: 'CH9300762011623852957',
+    });
+    mockReceiveFor.mockImplementation((request: { personalIbanProvider?: string }) =>
+      Promise.resolve(request.personalIbanProvider ? rejected : standard),
     );
 
     render(<BuyInfoScreen />);
@@ -301,6 +311,12 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
     });
 
     await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
+    expect(mockReceiveFor).toHaveBeenCalledTimes(2);
+    expect(mockReceiveFor.mock.calls[1][0]).not.toHaveProperty('personalIbanProvider');
+    expect(screen.getByTestId('payment-info')).toHaveTextContent('CH9300762011623852957');
+    expect(screen.getByTestId('payment-info')).toHaveTextContent('DFX AG');
+    expect(screen.getByTestId('payment-info')).not.toHaveTextContent('LI-REJECTED-PERSONAL');
+    expect(screen.getByTestId('payment-info')).not.toHaveTextContent('Customer B');
     expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'false');
   });
 

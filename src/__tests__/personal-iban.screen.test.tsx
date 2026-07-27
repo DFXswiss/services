@@ -1,6 +1,5 @@
-// Currency-conditional success copy and fail-loud missing-currency on PersonalIbanScreen.
-// EUR (Bank Frick) must never claim "in your own name"; CHF (Yapeal) keeps the legacy claim;
-// missing ?currency must error without calling createPersonalIban (no silent EUR default).
+// Reachable CHF/Yapeal success copy and fail-loud missing-currency behavior.
+// Bank Frick EUR issuance belongs to the explicit quote-selector flow, not this endpoint.
 
 jest.mock('@dfx.swiss/react', () => ({}));
 
@@ -64,9 +63,6 @@ import PersonalIbanScreen from '../screens/personal-iban.screen';
 const OWN_NAME_SUCCESS =
   'Your personal IBAN for CHF transactions is now available. Future bank transfers will be made to this IBAN in your own name.';
 
-const EUR_DEDICATED_SUCCESS =
-  'Your personal IBAN for EUR transactions is now available. Future bank transfers will be made to this dedicated IBAN, which is assigned only to you.';
-
 const MISSING_CURRENCY =
   'No currency specified. Please go back and select a currency.';
 
@@ -101,19 +97,6 @@ describe('PersonalIbanScreen currency copy and missing-currency fail-loud', () =
     expect(screen.queryByText(MISSING_CURRENCY)).not.toBeInTheDocument();
     expect(screen.queryByTestId('error-hint')).not.toBeInTheDocument();
     expect(screen.queryByText(/dedicated IBAN/)).not.toBeInTheDocument();
-  });
-
-  it('EUR: does not claim "in your own name"; shows dedicated-IBAN wording instead', async () => {
-    mockCreatePersonalIban.mockResolvedValue({ ...MOCK_IBAN, currency: 'EUR', iban: 'LI21088100002324013AA' });
-    renderAt('/buy/personal-iban?currency=EUR');
-
-    await waitFor(() => {
-      expect(screen.getByText(EUR_DEDICATED_SUCCESS)).toBeInTheDocument();
-    });
-
-    expect(mockCreatePersonalIban).toHaveBeenCalledWith({ currency: 'EUR' });
-    expect(screen.queryByText(/in your own name/)).not.toBeInTheDocument();
-    expect(screen.queryByText(MISSING_CURRENCY)).not.toBeInTheDocument();
   });
 
   it('missing currency: fails loudly, does not call createPersonalIban, never claims "in your own name"', async () => {

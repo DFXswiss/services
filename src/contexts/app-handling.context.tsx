@@ -289,17 +289,23 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   }>();
   const lastWidgetPersonalIban = useRef(props.params?.personalIban);
   const lastWidgetPersonalIbanRevision = useRef(props.params?.personalIbanRevision);
+  const lastWidgetCredentials = useRef(widgetCredentials(props.params));
   const observedCustomerIdentity = useRef(isLoggedIn ? session?.account : undefined);
-  // Credentials and their supplied selector are one pending intent. Initial credentials are
-  // deliberately compared with "none", not with whichever persisted identity renders first.
-  const lastObservedWidgetCredentials = useRef<WidgetCredentials>({});
+  // Only credentials copied into params during initialization can become pending. Later widget
+  // credential prop changes are not consumed by the mounted app and therefore must never create a
+  // state that waits for those credentials to authenticate.
+  const lastInitializationWidgetCredentials = useRef<WidgetCredentials>({});
   const pendingWidgetCredentialIntent = useRef<PendingWidgetCredentialIntent>();
   const currentWidgetCredentials = widgetCredentials(props.params);
   if (
     props.isWidget &&
-    !areWidgetCredentialsEqual(currentWidgetCredentials, lastObservedWidgetCredentials.current)
+    !isInitialized &&
+    !areWidgetCredentialsEqual(
+      currentWidgetCredentials,
+      lastInitializationWidgetCredentials.current,
+    )
   ) {
-    lastObservedWidgetCredentials.current = currentWidgetCredentials;
+    lastInitializationWidgetCredentials.current = currentWidgetCredentials;
     pendingWidgetCredentialIntent.current =
       hasWidgetCredentials(currentWidgetCredentials)
         ? {
@@ -329,25 +335,29 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
   const authenticatedCustomerIdentity = isLoggedIn ? session?.account : undefined;
   const pendingWidgetIntent = pendingWidgetCredentialIntent.current;
+  const pendingWidgetIntentIsCurrent =
+    pendingWidgetIntent != null &&
+    areWidgetCredentialsEqual(currentWidgetCredentials, pendingWidgetIntent.credentials);
   const establishedCredentialIdentity =
     establishedWidgetCredentials &&
-    pendingWidgetIntent &&
+    pendingWidgetIntentIsCurrent &&
     areWidgetCredentialsEqual(
       establishedWidgetCredentials.credentials,
-      pendingWidgetIntent.credentials,
+      pendingWidgetIntent!.credentials,
     )
       ? establishedWidgetCredentials.customerIdentity
       : undefined;
   const establishedPendingIdentity =
     pendingWidgetIntent?.sessionIdentity ?? establishedCredentialIdentity;
   const widgetCredentialsBelongToAuthenticatedCustomer =
-    pendingWidgetIntent != null &&
+    pendingWidgetIntentIsCurrent &&
     establishedPendingIdentity != null &&
     establishedPendingIdentity === authenticatedCustomerIdentity;
   const widgetIntentBelongsToIncomingCustomer =
     widgetCredentialsBelongToAuthenticatedCustomer &&
     pendingWidgetIntent?.personalIban !== undefined;
   const widgetIntentIsPending =
+    pendingWidgetIntentIsCurrent &&
     pendingWidgetIntent?.personalIban !== undefined &&
     !widgetCredentialsBelongToAuthenticatedCustomer;
   // Hide the selector on the very render that exposes a different authenticated account, before
@@ -409,17 +419,37 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     [],
   );
 
-  // Host changed or reasserted the widget property → lift logout suppression.
+  // A live selector write is explicit intent. Changed post-mount credentials are initialization-
+  // only, but a selector supplied alongside them is still fresh intent for the mounted customer;
+  // never wait for unsupported reauthentication.
   useEffect(() => {
-    if (
+    const credentialsChanged = !areWidgetCredentialsEqual(
+      currentWidgetCredentials,
+      lastWidgetCredentials.current,
+    );
+    if (credentialsChanged) lastWidgetCredentials.current = currentWidgetCredentials;
+
+    const selectorChanged =
       props.params?.personalIban !== lastWidgetPersonalIban.current ||
-      props.params?.personalIbanRevision !== lastWidgetPersonalIbanRevision.current
-    ) {
+      props.params?.personalIbanRevision !== lastWidgetPersonalIbanRevision.current;
+    if (selectorChanged) {
       lastWidgetPersonalIban.current = props.params?.personalIban;
       lastWidgetPersonalIbanRevision.current = props.params?.personalIbanRevision;
+    }
+
+    if (
+      selectorChanged ||
+      (credentialsChanged && props.params?.personalIban !== undefined)
+    ) {
       setPersonalIbanSuppressed(false);
     }
-  }, [props.params?.personalIban, props.params?.personalIbanRevision]);
+  }, [
+    props.params?.address,
+    props.params?.personalIban,
+    props.params?.personalIbanRevision,
+    props.params?.session,
+    props.params?.signature,
+  ]);
 
   useEffect(() => {
     isSessionInitialized && init();

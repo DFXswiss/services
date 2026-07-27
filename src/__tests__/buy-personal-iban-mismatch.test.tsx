@@ -147,8 +147,11 @@ jest.mock('@dfx.swiss/react-components', () => {
 });
 
 jest.mock('src/components/payment/payment-info-buy', () => ({
-  PaymentInformationContent: ({ showBank }: any) => (
-    <div data-testid="payment-info" data-show-bank={showBank ? 'true' : 'false'} />
+  PaymentInformationContent: ({ info, showBank }: any) => (
+    <div data-testid="payment-info" data-show-bank={showBank ? 'true' : 'false'}>
+      <span>{info.iban}</span>
+      <span>{info.name}</span>
+    </div>
   ),
 }));
 jest.mock('../components/edit/name.edit', () => ({ NameEdit: () => null }));
@@ -292,6 +295,7 @@ function ordinaryEurOffer() {
     isPersonalIban: false,
     bank: undefined,
     name: 'DFX AG',
+    iban: 'CH9300762011623852957',
     remittanceInfo: 'DFX-BUY-ORD',
   });
 }
@@ -463,6 +467,37 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
   });
 
+  it('keeps the exact-price result visible when its synchronized form uses canonical numeric values (B1)', async () => {
+    mockPersonalIban.mockReturnValue(undefined);
+    mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
+
+    let resolveExactPrice!: (offer: ReturnType<typeof chfOffer>) => void;
+    const pendingExactPrice = new Promise<ReturnType<typeof chfOffer>>((resolve) => {
+      resolveExactPrice = resolve;
+    });
+    mockReceiveFor
+      .mockResolvedValueOnce(chfOffer())
+      .mockImplementationOnce(() => pendingExactPrice);
+
+    render(<BuyScreen />);
+
+    await waitFor(() => expect(mockReceiveFor).toHaveBeenCalledTimes(2), { timeout: 3000 });
+    await act(async () => {
+      fireEvent.change(screen.getByTestId('input-amount'), { target: { value: '300.0' } });
+    });
+    expect(screen.getByTestId('input-amount')).toHaveValue('300.0');
+
+    await act(async () => {
+      resolveExactPrice(chfOffer());
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(screen.getByTestId('input-targetAmount')).toHaveValue('0.01'));
+    expect(screen.getByTestId('payment-info')).toBeInTheDocument();
+    expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
+    expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+  });
+
   it('treats EUR with non-BANK payment methods as a personal-IBAN mismatch (payment-method half)', () => {
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.INSTANT)).toBe(false);
     expect(isPersonalIbanApplicable('EUR', FiatPaymentMethod.CARD)).toBe(false);
@@ -554,10 +589,14 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
-  it('requires acknowledgement when a Frick request gets ordinary payment details (B1/C1)', async () => {
+  it('fetches and shows standard details after rejecting an unverifiable Frick response (B2)', async () => {
     mockPersonalIban.mockReturnValue('Frick');
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'EUR' }));
-    mockReceiveFor.mockResolvedValue(ordinaryEurOffer());
+    const rejected = frickOffer({ name: 'Customer B', iban: 'LI-REJECTED-PERSONAL' });
+    const standard = ordinaryEurOffer();
+    mockReceiveFor.mockImplementation((request: { personalIbanProvider?: string }) =>
+      Promise.resolve(request.personalIbanProvider ? rejected : standard),
+    );
 
     render(<BuyScreen />);
 
@@ -572,6 +611,13 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     });
 
     await waitFor(() => expect(screen.getByTestId('payment-info')).toBeInTheDocument());
+    expect(mockReceiveFor.mock.calls.some(([request]) => request.personalIbanProvider === undefined)).toBe(
+      true,
+    );
+    expect(screen.getByTestId('payment-info')).toHaveTextContent('CH9300762011623852957');
+    expect(screen.getByTestId('payment-info')).toHaveTextContent('DFX AG');
+    expect(screen.getByTestId('payment-info')).not.toHaveTextContent('LI-REJECTED-PERSONAL');
+    expect(screen.getByTestId('payment-info')).not.toHaveTextContent('Customer B');
     expect(screen.getByTestId('payment-info')).toHaveAttribute('data-show-bank', 'false');
     expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
   });

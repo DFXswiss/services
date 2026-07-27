@@ -98,6 +98,28 @@ interface ValidatedData extends BuyPaymentInfo {
   sideToUpdate?: Side;
 }
 
+interface QuoteRequestSignatureData {
+  amount?: string | number;
+  targetAmount?: string | number;
+  currencyName?: string;
+  assetUniqueName?: string;
+  paymentMethod?: FiatPaymentMethod;
+  personalIbanProvider?: BuyPaymentInfo['personalIbanProvider'];
+}
+
+function quoteRequestSignature(data: QuoteRequestSignatureData): string {
+  return JSON.stringify({
+    amount: data.amount ? Number(data.amount) : undefined,
+    targetAmount: data.targetAmount ? Number(data.targetAmount) : undefined,
+    currency: data.currencyName,
+    asset: data.assetUniqueName,
+    paymentMethod: data.paymentMethod,
+    personalIbanProvider: data.personalIbanProvider,
+    hasCompleteSpendSide: Boolean(data.amount && data.currencyName && data.paymentMethod),
+    hasCompleteGetSide: Boolean(data.targetAmount && data.assetUniqueName),
+  });
+}
+
 export default function BuyScreen(): JSX.Element {
   useAddressGuard('/login');
 
@@ -162,14 +184,7 @@ export default function BuyScreen(): JSX.Element {
   const quoteGeneration = useRef(0);
   const committedQuoteGeneration = useRef(0);
   const lastQuoteRequestSignature = useRef<string>();
-  const pendingFormSynchronization = useRef<{
-    amount?: string;
-    targetAmount?: string;
-    currencyName: string;
-    assetUniqueName: string;
-    paymentMethod?: FiatPaymentMethod;
-    personalIbanProvider?: BuyPaymentInfo['personalIbanProvider'];
-  }>();
+  const pendingFormSynchronization = useRef<string>();
 
   const effectivePersonalIban = suppressPersonalIban ? undefined : personalIban;
 
@@ -354,34 +369,27 @@ export default function BuyScreen(): JSX.Element {
   )
     ? toPersonalIbanProviderRequest(effectivePersonalIban).personalIbanProvider
     : undefined;
-  const quoteRequestSignature = JSON.stringify({
-    amount: selectedAmount ? Number(selectedAmount) : undefined,
-    targetAmount: selectedTargetAmount ? Number(selectedTargetAmount) : undefined,
-    currency: selectedCurrency?.name,
-    asset: selectedAsset?.uniqueName,
+  const currentQuoteRequestSignature = quoteRequestSignature({
+    amount: selectedAmount,
+    targetAmount: selectedTargetAmount,
+    currencyName: selectedCurrency?.name,
+    assetUniqueName: selectedAsset?.uniqueName,
     paymentMethod: selectedPaymentMethod,
     personalIbanProvider: selectedPersonalIbanProvider,
-    hasCompleteSpendSide,
-    hasCompleteGetSide,
   });
 
   // Invalidate against the canonical API request rather than raw strings/object identities.
   // Debounce only launches a replacement request; clearing the last complete side must also clear
   // request state.
   useEffect(() => {
-    if (quoteRequestSignature === lastQuoteRequestSignature.current) return;
-    lastQuoteRequestSignature.current = quoteRequestSignature;
+    if (currentQuoteRequestSignature === lastQuoteRequestSignature.current) return;
+    lastQuoteRequestSignature.current = currentQuoteRequestSignature;
 
-    const synchronizedForm = pendingFormSynchronization.current;
+    const synchronizedRequestSignature = pendingFormSynchronization.current;
     pendingFormSynchronization.current = undefined;
     const isExactPriceSynchronization =
-      synchronizedForm != null &&
-      selectedAmount === synchronizedForm.amount &&
-      selectedTargetAmount === synchronizedForm.targetAmount &&
-      selectedCurrency?.name === synchronizedForm.currencyName &&
-      selectedAsset?.uniqueName === synchronizedForm.assetUniqueName &&
-      selectedPaymentMethod === synchronizedForm.paymentMethod &&
-      selectedPersonalIbanProvider === synchronizedForm.personalIbanProvider;
+      synchronizedRequestSignature != null &&
+      currentQuoteRequestSignature === synchronizedRequestSignature;
 
     // Exact-price synchronization writes the calculated opposite amount into the form. It is
     // not a customer edit and must not invalidate the response it came from.
@@ -400,7 +408,7 @@ export default function BuyScreen(): JSX.Element {
     } else {
       setIsLoading(hasCompleteSpendSide ? Side.GET : Side.SPEND);
     }
-  }, [quoteRequestSignature]);
+  }, [currentQuoteRequestSignature]);
 
   // Selector-scoped UI state changes with the live intent even when the request cannot carry it.
   useEffect(() => {
@@ -482,20 +490,22 @@ export default function BuyScreen(): JSX.Element {
       })
       .then((info) => {
         if (!isRunning || generation !== quoteGeneration.current || !info) return;
-        pendingFormSynchronization.current = {
-          amount:
-            debouncedValidatedData.sideToUpdate === Side.SPEND
-              ? info.amount.toString()
-              : debouncedValidatedData.amount?.toString(),
-          targetAmount:
-            debouncedValidatedData.sideToUpdate === Side.GET
-              ? info.estimatedAmount.toString()
-              : debouncedValidatedData.targetAmount?.toString(),
+        const synchronizedAmount =
+          debouncedValidatedData.sideToUpdate === Side.SPEND
+            ? info.amount.toString()
+            : debouncedValidatedData.amount?.toString();
+        const synchronizedTargetAmount =
+          debouncedValidatedData.sideToUpdate === Side.GET
+            ? info.estimatedAmount.toString()
+            : debouncedValidatedData.targetAmount?.toString();
+        pendingFormSynchronization.current = quoteRequestSignature({
+          amount: synchronizedAmount,
+          targetAmount: synchronizedTargetAmount,
           currencyName: debouncedValidatedData.currency.name,
           assetUniqueName: debouncedValidatedData.asset.uniqueName,
           paymentMethod: debouncedValidatedData.paymentMethod,
           personalIbanProvider: data.personalIbanProvider,
-        };
+        });
         debouncedValidatedData.sideToUpdate === Side.SPEND
           ? setVal('amount', info.amount.toString())
           : setVal('targetAmount', info.estimatedAmount.toString());
@@ -583,6 +593,20 @@ export default function BuyScreen(): JSX.Element {
       case TransactionError.EMAIL_REQUIRED:
         setKycError(buy.error);
         return;
+    }
+  }
+
+  function handleContinueWithoutPersonalIban() {
+    if (requestedFrick && !verifiedFrick) {
+      // Reject the unverifiable selector-backed response completely. Suppression changes the
+      // canonical request and starts a fresh selector-free quote; only that response may render.
+      setPaymentInfo(undefined);
+      setPaymentInfoPaymentMethod(undefined);
+      setContinueWithoutPersonalIban(false);
+      setSuppressPersonalIban(true);
+    } else {
+      // The offer was already selector-free (for example CHF), so acknowledgement is sufficient.
+      setContinueWithoutPersonalIban(true);
     }
   }
 
@@ -853,7 +877,7 @@ export default function BuyScreen(): JSX.Element {
                           <StyledButton
                             width={StyledButtonWidth.FULL}
                             label={translate('screens/payment', 'Continue without personal IBAN')}
-                            onClick={() => setContinueWithoutPersonalIban(true)}
+                            onClick={handleContinueWithoutPersonalIban}
                             color={StyledButtonColor.STURDY_WHITE}
                           />
                         </StyledVerticalStack>
@@ -891,14 +915,6 @@ export default function BuyScreen(): JSX.Element {
                                     )}
                                   </StyledInfoText>
                                 )}
-                              {requestedFrick && !verifiedFrick && continueWithoutPersonalIban && (
-                                <StyledInfoText iconColor={IconColor.BLUE}>
-                                  {translate(
-                                    'screens/payment',
-                                    'The personal IBAN response could not be verified for this offer. You can continue with the standard payment details, or cancel.',
-                                  )}
-                                </StyledInfoText>
-                              )}
                               {!paymentInfo.isPersonalIban &&
                                 selectedCurrency?.name !== 'EUR' &&
                                 effectivePersonalIban === undefined && (

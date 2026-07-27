@@ -248,6 +248,19 @@ export default function BuyInfoScreen(): JSX.Element {
     return buy;
   }
 
+  function handleContinueWithoutPersonalIban() {
+    if (requestedFrick && !verifiedFrick) {
+      // Discard the unverifiable selector-backed response before fetching the promised standard
+      // payment details. The selector-free response is the only one allowed back into the view.
+      setPaymentInfo(undefined);
+      setContinueWithoutPersonalIban(false);
+      setSuppressPersonalIban(true);
+    } else {
+      // Inapplicable offers were already requested without a selector.
+      setContinueWithoutPersonalIban(true);
+    }
+  }
+
   const requestedFrick =
     isPersonalIbanApplicable(currency?.name, FiatPaymentMethod.BANK) &&
     isExplicitFrickPersonalIbanRequest(effectivePersonalIban);
@@ -333,7 +346,7 @@ export default function BuyInfoScreen(): JSX.Element {
           <StyledButton
             width={StyledButtonWidth.FULL}
             label={translate('screens/payment', 'Continue without personal IBAN')}
-            onClick={() => setContinueWithoutPersonalIban(true)}
+            onClick={handleContinueWithoutPersonalIban}
             color={StyledButtonColor.STURDY_WHITE}
           />
           <StyledButton
@@ -356,15 +369,6 @@ export default function BuyInfoScreen(): JSX.Element {
                   )}
                 </StyledInfoText>
               )}
-
-            {requestedFrick && !verifiedFrick && continueWithoutPersonalIban && (
-              <StyledInfoText invertedIcon>
-                {translate(
-                  'screens/payment',
-                  'The personal IBAN response could not be verified for this offer. You can continue with the standard payment details, or cancel.',
-                )}
-              </StyledInfoText>
-            )}
 
             <div className="pt-4 leading-none">
               <StyledLink
