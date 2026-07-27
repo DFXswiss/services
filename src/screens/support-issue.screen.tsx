@@ -533,9 +533,10 @@ export default function SupportIssueScreen(): JSX.Element {
 
                     {selectedReason === SupportIssueReason.TRANSACTION_MISSING && (
                       <StyledVerticalStack gap={1} full center>
-                        {/* Focus is tracked on the surrounding div so the hint(s) only appear after the field has
-                            been blurred (left). Autocomplete is intentionally omitted here because this is not the
-                            customer's own IBAN, and the sender field above already claims the IBAN autofill. */}
+                        {/* Focus is tracked on the surrounding div so that the non-positive hints only appear after
+                            the field has been left (blurred) — the positive confirmation hint is not gated this way
+                            and can appear immediately. Autocomplete is intentionally omitted here because the sender
+                            field above already claims the IBAN autofill. */}
                         <div
                           className="w-full"
                           onFocus={() => setIsReceiverIbanFocused(true)}

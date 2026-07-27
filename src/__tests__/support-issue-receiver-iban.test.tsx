@@ -141,10 +141,10 @@ jest.mock('@dfx.swiss/react-components', () => {
     });
   }
 
-  // The real Form (node_modules/@dfx.swiss/react-components) does not attach onSubmit to the
-  // <form> element itself - it forwards onSubmit only to children that carry a name prop, same as
-  // control/rules/error. A form-level onSubmit here would let a native submit-button click fire
-  // submission even without the screen's own onClick handler, which would hide a missing handler.
+  // This mock intentionally does not attach an onSubmit handler to the <form> element itself; it only
+  // forwards onSubmit to children that carry a name prop (same as control/rules/error). That is deliberate:
+  // a form-level onSubmit would let a native submit-button click fire submission even without the screen's
+  // own onClick handler, which would hide a missing handler as a bug.
   function Form({ children, control, rules, errors, onSubmit }: any) {
     return React.createElement(
       'form',
@@ -840,7 +840,7 @@ describe('SupportIssueScreen receiver IBAN check', () => {
 
   it('does not set a receiverIban field error or disable submit for a non-IBAN free-text value', async () => {
     // Below the check threshold, so no backend call; still non-empty free text that Validations.Iban
-    // would reject if it were ever added to the receiverIban rules.
+    // would reject if it were ever added to the receiverIban rules. Submit should pass the raw value through.
     renderScreen('');
     selectTransactionMissingViaUi();
     fillTransactionMissingForm('not-a-valid-iban!!');
@@ -853,6 +853,18 @@ describe('SupportIssueScreen receiver IBAN check', () => {
     expect(within(getReceiverIbanFieldRoot()).queryByText('iban')).not.toBeInTheDocument();
     expect(getNextButton()).not.toBeDisabled();
     expect(mockCheckReceiveIban).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.click(getNextButton());
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockCreateSupportIssue).toHaveBeenCalled();
+    const request = mockCreateSupportIssue.mock.calls[0][0];
+    expect(request.transaction.receiverIban).toBe('not-a-valid-iban!!');
   });
 
   it('does not disable submit while a check is still in flight', async () => {
