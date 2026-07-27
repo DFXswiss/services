@@ -27,10 +27,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Urls } from 'src/config/urls';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
-import {
-  PersonalIbanConfirmationPrompt,
-  PersonalIbanStorageWarning,
-} from 'src/components/payment/personal-iban-confirmation';
+import { PersonalIbanConfirmationPrompt } from 'src/components/payment/personal-iban-confirmation';
 import { ErrorHint } from '../components/error-hint';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { QuoteErrorHint } from '../components/quote-error-hint';
@@ -72,7 +69,6 @@ export default function BuyInfoScreen(): JSX.Element {
     personalIban,
     requiresCustomerConfirmation,
     hasAuthenticatedCustomer,
-    hasStorageWarning,
     confirmForCurrentCustomer,
     declineForCurrentCustomer,
   } = usePersonalIbanConfirmation();
@@ -325,16 +321,12 @@ export default function BuyInfoScreen(): JSX.Element {
 
   return (
     <>
-      {hasStorageWarning && !requiresCustomerConfirmation && (
-        <PersonalIbanStorageWarning />
-      )}
       {showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose={false} />
       ) : requiresCustomerConfirmation ? (
         <PersonalIbanConfirmationPrompt
           onConfirm={confirmForCurrentCustomer}
           onDecline={declineForCurrentCustomer}
-          hasStorageWarning={hasStorageWarning}
         />
       ) : isUnrecognizedBlocked ? (
         <StyledVerticalStack center className="text-center" gap={4}>

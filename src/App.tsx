@@ -9,6 +9,7 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
 import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
+import { PersonalIbanConfirmationContextProvider } from './contexts/personal-iban-confirmation.context';
 import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
@@ -609,6 +610,18 @@ function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
   }
   const router = routerRef.current;
 
+  // MainLib and the Web Component supply an occurrence counter. Keep a
+  // transition-based internal counter as a defensive path for direct internal
+  // App mounts so an omitted counter never collapses every selector to one identity.
+  const previousPersonalIban = useRef<string>();
+  const inferredPersonalIbanOccurrence = useRef(0);
+  if (previousPersonalIban.current !== params?.personalIban) {
+    previousPersonalIban.current = params?.personalIban;
+    inferredPersonalIbanOccurrence.current += 1;
+  }
+  const effectivePersonalIbanOccurrence =
+    personalIbanOccurrence ?? inferredPersonalIbanOccurrence.current;
+
   const hasNavigatedHomeRef = useRef(false);
   if (!hasNavigatedHomeRef.current) {
     hasNavigatedHomeRef.current = true;
@@ -626,12 +639,14 @@ function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
               service={params?.service}
               closeCallback={params?.onClose}
               params={params}
-              personalIbanOccurrence={personalIbanOccurrence}
+              personalIbanOccurrence={effectivePersonalIbanOccurrence}
               router={router}
             >
               <SettingsContextProvider>
                 <WalletContextProvider router={router}>
-                  <RouterProvider router={router} />
+                  <PersonalIbanConfirmationContextProvider>
+                    <RouterProvider router={router} />
+                  </PersonalIbanConfirmationContextProvider>
                 </WalletContextProvider>
               </SettingsContextProvider>
             </AppHandlingContextProvider>

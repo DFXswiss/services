@@ -107,12 +107,12 @@ jest.mock('src/hooks/layout-config.hook', () => ({
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import BuyInfoScreen from 'src/screens/buy-info.screen';
-import { PERSONAL_IBAN_CONFIRMATION_STORAGE_KEY_PREFIX } from 'src/hooks/personal-iban.hook';
+import { PersonalIbanConfirmationContextProvider } from 'src/contexts/personal-iban-confirmation.context';
 
 const CONFIRM = 'Request and use personal IBAN';
 const DECLINE = 'Continue without personal IBAN';
 const PROMPT =
-  'A personal IBAN is a real, non-revocable account opened for you at a bank. Please confirm whether you want to request and use it.';
+  'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?';
 
 function offer(personal: boolean) {
   return {
@@ -135,7 +135,11 @@ function renderFlow(path = '/buy/info?personal-iban=frick') {
     [{ path: '*', element: <BuyInfoScreen /> }],
     { initialEntries: [path] },
   );
-  const element = <RouterProvider router={router} />;
+  const element = (
+    <PersonalIbanConfirmationContextProvider>
+      <RouterProvider router={router} />
+    </PersonalIbanConfirmationContextProvider>
+  );
   return { element, rendered: render(element) };
 }
 
@@ -202,7 +206,7 @@ describe('BuyInfoScreen personal-IBAN confirmation transitions', () => {
     );
   });
 
-  it('reload after confirmation skips the dialog and immediately sends the provider request', async () => {
+  it('a new app instance after confirmation asks again before sending a provider request', async () => {
     const { element } = renderFlow();
     await act(async () => screen.getByRole('button', { name: CONFIRM }).click());
     await waitFor(() => expect(mockReceiveFor).toHaveBeenCalled());
@@ -212,53 +216,11 @@ describe('BuyInfoScreen personal-IBAN confirmation transitions', () => {
 
     render(element);
 
-    expect(screen.queryByText(PROMPT)).not.toBeInTheDocument();
-    await waitFor(() =>
-      expect(mockReceiveFor).toHaveBeenCalledWith(
-        expect.objectContaining({ personalIbanProvider: 'Frick' }),
-      ),
-    );
-    await settle();
-  });
-
-  it('unavailable sessionStorage shows the dialog and does not send a quote', () => {
-    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
-
-    renderFlow();
-
     expect(screen.getByText(PROMPT)).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        'Your browser could not reliably read or save this choice. You will be asked again after a reload.',
-      ),
-    ).toBeInTheDocument();
     expect(mockReceiveFor).not.toHaveBeenCalled();
   });
 
-  it('a failed storage write is visible while decline still fetches standard details', async () => {
-    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
-
-    renderFlow();
-    await act(async () => screen.getByRole('button', { name: DECLINE }).click());
-
-    await waitFor(() =>
-      expect(screen.getByTestId('payment-info')).toHaveTextContent(
-        'CH-STANDARD',
-      ),
-    );
-    await settle();
-    expect(
-      screen.getByText(
-        'Your browser could not reliably read or save this choice. You will be asked again after a reload.',
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it('without a selector shows no dialog, touches no confirmation storage, and quotes while authentication is unsettled', async () => {
+  it('without a selector shows no dialog, touches no browser storage, and quotes while authentication is unsettled', async () => {
     mockUseAuthContext.mockReturnValue({ session: undefined });
     const getItem = jest.spyOn(Storage.prototype, 'getItem');
     const setItem = jest.spyOn(Storage.prototype, 'setItem');
@@ -272,16 +234,12 @@ describe('BuyInfoScreen personal-IBAN confirmation transitions', () => {
     );
     expect(
       getItem.mock.calls.some(([key]) =>
-        String(key).startsWith(
-          PERSONAL_IBAN_CONFIRMATION_STORAGE_KEY_PREFIX,
-        ),
+        key.startsWith('dfx.srv.personalIbanConfirmation.'),
       ),
     ).toBe(false);
     expect(
       setItem.mock.calls.some(([key]) =>
-        String(key).startsWith(
-          PERSONAL_IBAN_CONFIRMATION_STORAGE_KEY_PREFIX,
-        ),
+        key.startsWith('dfx.srv.personalIbanConfirmation.'),
       ),
     ).toBe(false);
     await settle();

@@ -40,10 +40,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
-import {
-  PersonalIbanConfirmationPrompt,
-  PersonalIbanStorageWarning,
-} from 'src/components/payment/personal-iban-confirmation';
+import { PersonalIbanConfirmationPrompt } from 'src/components/payment/personal-iban-confirmation';
 import { useWindowContext } from 'src/contexts/window.context';
 import { getKycErrorFromMessage } from 'src/util/api-error';
 import { blankedAddress } from 'src/util/utils';
@@ -153,7 +150,6 @@ export default function BuyScreen(): JSX.Element {
     personalIban,
     requiresCustomerConfirmation,
     hasAuthenticatedCustomer,
-    hasStorageWarning,
     confirmForCurrentCustomer,
     declineForCurrentCustomer,
   } = usePersonalIbanConfirmation();
@@ -766,9 +762,6 @@ export default function BuyScreen(): JSX.Element {
 
   return (
     <>
-      {hasStorageWarning && !requiresCustomerConfirmation && (
-        <PersonalIbanStorageWarning />
-      )}
       {showsSwitchScreen ? (
         <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
       ) : showsCompletion && paymentInfo ? (
@@ -777,7 +770,6 @@ export default function BuyScreen(): JSX.Element {
         <PersonalIbanConfirmationPrompt
           onConfirm={confirmForCurrentCustomer}
           onDecline={declineForCurrentCustomer}
-          hasStorageWarning={hasStorageWarning}
         />
       ) : showsNameForm ? (
         <NameEdit onSuccess={() => updateData(Side.GET)} />

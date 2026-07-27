@@ -20,9 +20,9 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import {
-  PERSONAL_IBAN_CONFIRMATION_STORAGE_KEY_PREFIX,
   usePersonalIbanConfirmation,
 } from '../hooks/personal-iban.hook';
+import { PersonalIbanConfirmationContextProvider } from '../contexts/personal-iban-confirmation.context';
 
 function ConfirmationQuoteProbe(): JSX.Element {
   const confirmation = usePersonalIbanConfirmation();
@@ -60,9 +60,6 @@ function ConfirmationQuoteProbe(): JSX.Element {
       <div data-testid="quote-selector">{confirmation.personalIban ?? 'absent'}</div>
       <div data-testid="decision">
         {confirmation.requiresCustomerConfirmation ? 'required' : 'not-required'}
-      </div>
-      <div data-testid="storage-warning">
-        {confirmation.hasStorageWarning ? 'warning' : 'none'}
       </div>
       <button type="button" onClick={confirmation.confirmForCurrentCustomer}>
         confirm
@@ -155,7 +152,11 @@ function createFlow(initialEntries = ['/buy?personal-iban=frick']) {
     [{ path: '*', element: <ConfirmationQuoteProbe /> }],
     { initialEntries },
   );
-  const element = <RouterProvider router={router} />;
+  const element = (
+    <PersonalIbanConfirmationContextProvider>
+      <RouterProvider router={router} />
+    </PersonalIbanConfirmationContextProvider>
+  );
   return { router, element, rendered: render(element) };
 }
 
@@ -166,15 +167,15 @@ function createAuthenticationFlow(
     [{ path: '*', element: <AuthenticationLifecycleProbe /> }],
     { initialEntries },
   );
-  const element = <RouterProvider router={router} />;
+  const element = (
+    <PersonalIbanConfirmationContextProvider>
+      <RouterProvider router={router} />
+    </PersonalIbanConfirmationContextProvider>
+  );
   return { router, element, rendered: render(element) };
 }
 
-function customerStorageKey(customer: number): string {
-  return `${PERSONAL_IBAN_CONFIRMATION_STORAGE_KEY_PREFIX}${customer}`;
-}
-
-describe('personal-IBAN tab confirmation workflows', () => {
+describe('personal-IBAN in-memory confirmation workflows', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
     jest.clearAllMocks();
@@ -186,7 +187,7 @@ describe('personal-IBAN tab confirmation workflows', () => {
     mockUseAuthContext.mockReturnValue({ session: undefined });
   });
 
-  it('expires the stored token, redirects through login with the selector, then quotes with the provider after login and confirmation', async () => {
+  it('hook/router unit only: an expired synthetic token redirects with the selector, then quotes with the provider after synthetic login and confirmation', async () => {
     localStorage.setItem(
       'dfx.authenticationToken',
       token(41, Math.floor(Date.now() / 1000) - 60),
@@ -219,7 +220,7 @@ describe('personal-IBAN tab confirmation workflows', () => {
     );
   });
 
-  it('logs out, navigates Back, reloads, then asks a different customer before sending a provider', async () => {
+  it('hook/router unit only: synthetic logout, Back, and app remount ask a different customer before sending a provider', async () => {
     localStorage.setItem(
       'dfx.authenticationToken',
       token(51, Math.floor(Date.now() / 1000) + 3600),
@@ -288,7 +289,7 @@ describe('personal-IBAN tab confirmation workflows', () => {
     expect(screen.getByTestId('decision')).toHaveTextContent('required');
   });
 
-  it('reload after declining keeps the current occurrence selector-free without asking again', async () => {
+  it('a new app instance after declining asks again', async () => {
     mockUseAuthContext.mockReturnValue({ session: { account: 72 } });
     const { element } = createFlow();
 
@@ -301,13 +302,11 @@ describe('personal-IBAN tab confirmation workflows', () => {
 
     render(element);
 
-    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
-    await waitFor(() =>
-      expect(mockReceiveFor).toHaveBeenCalledWith({ customer: 72 }),
-    );
+    expect(screen.getByTestId('decision')).toHaveTextContent('required');
+    expect(mockReceiveFor).not.toHaveBeenCalled();
   });
 
-  it('reload after confirming reads the tab answer and does not ask again', async () => {
+  it('a new app instance after confirming asks again', async () => {
     mockUseAuthContext.mockReturnValue({ session: { account: 81 } });
     const { element } = createFlow();
     await act(async () => screen.getByRole('button', { name: 'confirm' }).click());
@@ -316,82 +315,118 @@ describe('personal-IBAN tab confirmation workflows', () => {
 
     render(element);
 
+    expect(screen.getByTestId('decision')).toHaveTextContent('required');
+    expect(mockReceiveFor).not.toHaveBeenCalled();
+  });
+
+  it('confirmation survives route unmounts within the same running app instance', async () => {
+    mockUseAuthContext.mockReturnValue({ session: { account: 91 } });
+    const router = createMemoryRouter(
+      [
+        { path: '/buy', element: <ConfirmationQuoteProbe /> },
+        { path: '/account', element: <div>account</div> },
+      ],
+      { initialEntries: ['/buy?personal-iban=frick'] },
+    );
+    render(
+      <PersonalIbanConfirmationContextProvider>
+        <RouterProvider router={router} />
+      </PersonalIbanConfirmationContextProvider>,
+    );
+
+    await act(async () => screen.getByRole('button', { name: 'confirm' }).click());
+    await waitFor(() =>
+      expect(mockReceiveFor).toHaveBeenCalledWith({
+        customer: 91,
+        personalIbanProvider: 'Frick',
+      }),
+    );
+
+    await act(async () => router.navigate('/account'));
+    expect(screen.getByText('account')).toBeInTheDocument();
+    mockReceiveFor.mockClear();
+    await act(async () => router.navigate(-1));
+
     expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
     await waitFor(() =>
       expect(mockReceiveFor).toHaveBeenCalledWith({
-        customer: 81,
+        customer: 91,
         personalIbanProvider: 'Frick',
       }),
     );
   });
 
-  it('a separate tab storage starts empty and asks again', async () => {
-    mockUseAuthContext.mockReturnValue({ session: { account: 91 } });
-    const { element } = createFlow();
-    await act(async () => screen.getByRole('button', { name: 'confirm' }).click());
-    const firstTabAnswer = sessionStorage.getItem(customerStorageKey(91));
-    expect(firstTabAnswer).toBe('{"answer":"confirmed"}');
-    cleanup();
-
-    // JSDOM has one Window, so clearing its sessionStorage models the separate
-    // per-tab storage namespace while exercising the real storage read in the hook.
-    sessionStorage.clear();
-    render(element);
-
-    expect(screen.getByTestId('decision')).toHaveTextContent('required');
-  });
-
-  it('malformed or incompatible storage asks again instead of treating it as an answer', () => {
+  it('ignores a legacy serialized confirmation and asks again', () => {
     mockUseAuthContext.mockReturnValue({ session: { account: 101 } });
     sessionStorage.setItem(
-      customerStorageKey(101),
+      'dfx.srv.personalIbanConfirmation.101',
       JSON.stringify({ answer: 'confirmed', unexpected: true }),
     );
 
     createFlow();
 
     expect(screen.getByTestId('decision')).toHaveTextContent('required');
-    expect(screen.getByTestId('storage-warning')).toHaveTextContent('warning');
     expect(mockReceiveFor).not.toHaveBeenCalled();
   });
 
-  it('when sessionStorage throws, asks and warns rather than sending a quote', () => {
+  it('never touches browser storage and both confirmation actions proceed when storage APIs throw', async () => {
     mockUseAuthContext.mockReturnValue({ session: { account: 111 } });
+    const originalGetItem = Storage.prototype.getItem;
+    const originalSetItem = Storage.prototype.setItem;
     const getItem = jest
       .spyOn(Storage.prototype, 'getItem')
-      .mockImplementation(() => {
-        throw new Error('blocked');
+      .mockImplementation(function (key: string) {
+        if (key.startsWith('dfx.srv.personalIbanConfirmation.')) {
+          throw new Error('blocked');
+        }
+        return originalGetItem.call(this, key);
+      });
+    const setItem = jest
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(function (key: string, value: string) {
+        if (key.startsWith('dfx.srv.personalIbanConfirmation.')) {
+          throw new Error('blocked');
+        }
+        return originalSetItem.call(this, key, value);
       });
 
     createFlow();
-
-    expect(screen.getByTestId('decision')).toHaveTextContent('required');
-    expect(screen.getByTestId('storage-warning')).toHaveTextContent('warning');
-    expect(mockReceiveFor).not.toHaveBeenCalled();
-    getItem.mockRestore();
-  });
-
-  it('without a selector does not access storage or delay the ordinary quote path', () => {
-    mockUseAuthContext.mockReturnValue({ session: undefined });
-    const getItem = jest.spyOn(Storage.prototype, 'getItem');
-    const setItem = jest.spyOn(Storage.prototype, 'setItem');
-
-    createFlow(['/buy']);
-
-    expect(screen.getByTestId('requested')).toHaveTextContent('absent');
-    expect(screen.getByTestId('decision')).toHaveTextContent('not-required');
+    await act(async () => screen.getByRole('button', { name: 'confirm' }).click());
+    await waitFor(() =>
+      expect(mockReceiveFor).toHaveBeenCalledWith({
+        customer: 111,
+        personalIbanProvider: 'Frick',
+      }),
+    );
     expect(
       getItem.mock.calls.some(([key]) =>
-        String(key).startsWith(PERSONAL_IBAN_CONFIRMATION_STORAGE_KEY_PREFIX),
+        key.startsWith('dfx.srv.personalIbanConfirmation.'),
       ),
     ).toBe(false);
     expect(
       setItem.mock.calls.some(([key]) =>
-        String(key).startsWith(PERSONAL_IBAN_CONFIRMATION_STORAGE_KEY_PREFIX),
+        key.startsWith('dfx.srv.personalIbanConfirmation.'),
       ),
     ).toBe(false);
-    getItem.mockRestore();
-    setItem.mockRestore();
+
+    cleanup();
+    mockReceiveFor.mockClear();
+    mockUseAuthContext.mockReturnValue({ session: { account: 112 } });
+    createFlow();
+    await act(async () => screen.getByRole('button', { name: 'decline' }).click());
+    await waitFor(() =>
+      expect(mockReceiveFor).toHaveBeenCalledWith({ customer: 112 }),
+    );
+    expect(
+      getItem.mock.calls.some(([key]) =>
+        key.startsWith('dfx.srv.personalIbanConfirmation.'),
+      ),
+    ).toBe(false);
+    expect(
+      setItem.mock.calls.some(([key]) =>
+        key.startsWith('dfx.srv.personalIbanConfirmation.'),
+      ),
+    ).toBe(false);
   });
 
   it('same-value Web Component property occurrence asks again after a decline', async () => {

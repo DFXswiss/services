@@ -185,7 +185,6 @@ jest.mock('../hooks/personal-iban.hook', () => ({
     personalIban: mockPersonalIban(),
     requiresCustomerConfirmation: false,
     hasAuthenticatedCustomer: true,
-    hasStorageWarning: false,
     confirmForCurrentCustomer: jest.fn(),
     declineForCurrentCustomer: jest.fn(),
   }),

@@ -74,6 +74,7 @@ jest.mock('../hooks/wallets/metamask.hook', () => ({
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { useEffect } from 'react';
+import { PersonalIbanConfirmationContextProvider } from '../contexts/personal-iban-confirmation.context';
 import { WalletContextProvider, useWalletContext } from '../contexts/wallet.context';
 import { usePersonalIbanConfirmation } from '../hooks/personal-iban.hook';
 
@@ -123,7 +124,9 @@ function renderWidget() {
     router,
     rendered: render(
       <WalletContextProvider router={router}>
-        <RouterProvider router={router} />
+        <PersonalIbanConfirmationContextProvider>
+          <RouterProvider router={router} />
+        </PersonalIbanConfirmationContextProvider>
       </WalletContextProvider>,
     ),
   };
@@ -155,6 +158,7 @@ describe('widget session initialization with a personal-IBAN selector', () => {
       isWidget: true,
       params: { session: customerBSession },
       widgetPersonalIban: 'frick',
+      widgetPersonalIbanOccurrence: 1,
     });
 
     renderWidget();
@@ -184,6 +188,7 @@ describe('widget session initialization with a personal-IBAN selector', () => {
       isWidget: true,
       params: { session: incomingSession },
       widgetPersonalIban: 'frick',
+      widgetPersonalIbanOccurrence: 1,
     });
 
     const { router, rendered } = renderWidget();
@@ -200,7 +205,9 @@ describe('widget session initialization with a personal-IBAN selector', () => {
     await act(async () => {
       rendered.rerender(
         <WalletContextProvider router={router}>
-          <RouterProvider router={router} />
+          <PersonalIbanConfirmationContextProvider>
+            <RouterProvider router={router} />
+          </PersonalIbanConfirmationContextProvider>
         </WalletContextProvider>,
       );
     });

@@ -10,26 +10,11 @@ import { useSettingsContext } from '../../contexts/settings.context';
 interface PersonalIbanConfirmationProps {
   onConfirm: () => void;
   onDecline: () => void;
-  hasStorageWarning: boolean;
-}
-
-const STORAGE_WARNING =
-  'Your browser could not reliably read or save this choice. You will be asked again after a reload.';
-
-export function PersonalIbanStorageWarning(): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  return (
-    <StyledInfoText invertedIcon>
-      {translate('screens/payment', STORAGE_WARNING)}
-    </StyledInfoText>
-  );
 }
 
 export function PersonalIbanConfirmationPrompt({
   onConfirm,
   onDecline,
-  hasStorageWarning,
 }: PersonalIbanConfirmationProps): JSX.Element {
   const { translate } = useSettingsContext();
 
@@ -38,10 +23,9 @@ export function PersonalIbanConfirmationPrompt({
       <StyledInfoText invertedIcon>
         {translate(
           'screens/payment',
-          'A personal IBAN is a real, non-revocable account opened for you at a bank. Please confirm whether you want to request and use it.',
+          'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?',
         )}
       </StyledInfoText>
-      {hasStorageWarning && <PersonalIbanStorageWarning />}
       <StyledButton
         width={StyledButtonWidth.FULL}
         label={translate('screens/payment', 'Request and use personal IBAN')}

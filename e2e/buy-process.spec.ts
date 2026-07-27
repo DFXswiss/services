@@ -131,11 +131,16 @@ test.describe('Buy Process - UI Flow', () => {
     await page.goto(
       `/buy?session=${token}&blockchain=Ethereum&asset-in=EUR&amount-in=100&personal-iban=frick`,
     );
+    await page
+      .getByRole('button', { name: 'Request and use personal IBAN' })
+      .click();
 
     const bankLabel = page.getByText('Bank', { exact: true });
     await expect(bankLabel).toBeVisible({ timeout: 15000 });
     await expect.poll(() => receivedProvider).toBe('Frick');
-    await expect(bankLabel.locator('../../../..')).toHaveScreenshot('buy-bank-frick-payment-details.png');
+    await expect(bankLabel.locator('../../../..')).toHaveScreenshot(
+      'buy-bank-frick-payment-details.png',
+    );
   });
 });
 
