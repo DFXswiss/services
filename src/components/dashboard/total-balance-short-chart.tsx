@@ -7,9 +7,10 @@ import { TimeRange } from 'src/util/chart';
 interface Props {
   entries: FinancialLogEntry[];
   timeRange?: TimeRange;
+  dark?: boolean;
 }
 
-function makeBaseOptions(timeRange?: TimeRange): ApexOptions {
+function makeBaseOptions(timeRange?: TimeRange, dark?: boolean): ApexOptions {
   return {
     chart: {
       type: 'line',
@@ -17,9 +18,10 @@ function makeBaseOptions(timeRange?: TimeRange): ApexOptions {
       zoom: { enabled: true },
       background: '0',
     },
+    theme: { mode: dark ? 'dark' : 'light' },
     stroke: { width: 2, curve: 'smooth' },
     dataLabels: { enabled: false },
-    grid: { borderColor: '#e5e7eb' },
+    grid: { borderColor: dark ? '#0A355C' : '#e5e7eb' },
     xaxis: {
       type: 'datetime',
       labels: { datetimeUTC: false, format: 'dd MMM HH:mm' },
@@ -39,8 +41,8 @@ function makeBaseOptions(timeRange?: TimeRange): ApexOptions {
   };
 }
 
-export function ShortTermPlusChart({ entries, timeRange }: Props) {
-  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#22c55e'] }), [timeRange]);
+export function ShortTermPlusChart({ entries, timeRange, dark }: Props) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange, dark), colors: ['#22c55e'] }), [timeRange, dark]);
   const series = useMemo(() => [
     { name: 'Plus Balance', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.plusBalanceChf)]) },
   ], [entries]);
@@ -53,8 +55,8 @@ export function ShortTermPlusChart({ entries, timeRange }: Props) {
   );
 }
 
-export function ShortTermMinusChart({ entries, timeRange }: Props) {
-  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#ef4444'] }), [timeRange]);
+export function ShortTermMinusChart({ entries, timeRange, dark }: Props) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange, dark), colors: ['#ef4444'] }), [timeRange, dark]);
   const series = useMemo(() => [
     { name: 'Minus Balance', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minusBalanceChf)]) },
   ], [entries]);
@@ -67,8 +69,8 @@ export function ShortTermMinusChart({ entries, timeRange }: Props) {
   );
 }
 
-export function ShortTermTotalChart({ entries, timeRange }: Props) {
-  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#3b82f6'] }), [timeRange]);
+export function ShortTermTotalChart({ entries, timeRange, dark }: Props) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange, dark), colors: ['#3b82f6'] }), [timeRange, dark]);
   const series = useMemo(() => [
     { name: 'Total Balance', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.totalBalanceChf)]) },
   ], [entries]);

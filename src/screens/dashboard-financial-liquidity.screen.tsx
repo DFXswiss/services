@@ -3,6 +3,7 @@ import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { BalanceBarChart } from 'src/components/dashboard/latest-balance-bar-chart';
 import { SummaryCard } from 'src/components/dashboard/summary-card';
+import { useThemeContext } from 'src/contexts/theme.context';
 import { LatestBalanceResponse } from 'src/dto/dashboard.dto';
 import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
@@ -15,6 +16,7 @@ export default function DashboardFinancialLiquidityScreen(): JSX.Element {
 
   const { isLoggedIn } = useSessionContext();
   const { getLatestBalance } = useDashboard();
+  const { isDark, tokens } = useThemeContext();
 
   const [latestBalance, setLatestBalance] = useState<LatestBalanceResponse>();
   const [isLoading, setIsLoading] = useState(true);
@@ -44,13 +46,13 @@ export default function DashboardFinancialLiquidityScreen(): JSX.Element {
   }
 
   return (
-    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
+    <div className="space-y-4 p-4 w-full self-stretch" style={{ color: tokens.textPrimary }}>
       <div className="max-w-xs">
-        <SummaryCard label="Total Balance" value={formatChfOrDash(totalBalance)} />
+        <SummaryCard label="Total Balance" value={formatChfOrDash(totalBalance)} dark={isDark} />
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <BalanceBarChart title="Liquidity by Provider" data={latestBalance?.byBlockchain ?? []} />
+      <div className="bg-white dark:bg-dfxBlue-700 rounded-lg shadow p-4">
+        <BalanceBarChart title="Liquidity by Provider" data={latestBalance?.byBlockchain ?? []} dark={isDark} />
       </div>
     </div>
   );

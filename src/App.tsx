@@ -12,6 +12,7 @@ import { PaymentLinkProvider } from './contexts/payment-link.context';
 import { PersonalIbanConfirmationContextProvider } from './contexts/personal-iban-confirmation.context';
 import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
+import { ThemeContextProvider } from './contexts/theme.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
 import ComplianceUserScreen from './screens/compliance-user.screen';
@@ -628,28 +629,30 @@ function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
 
   return (
     <WindowContextProvider>
-      <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
-        <BalanceContextProvider>
-          <OrderUIContextProvider>
-            <AppHandlingContextProvider
-              isWidget={params != null}
-              service={params?.service}
-              closeCallback={params?.onClose}
-              params={params}
-              personalIbanOccurrence={personalIbanOccurrence}
-              router={router}
-            >
-              <SettingsContextProvider>
-                <WalletContextProvider router={router}>
-                  <PersonalIbanConfirmationContextProvider>
-                    <RouterProvider router={router} />
-                  </PersonalIbanConfirmationContextProvider>
-                </WalletContextProvider>
-              </SettingsContextProvider>
-            </AppHandlingContextProvider>
-          </OrderUIContextProvider>
-        </BalanceContextProvider>
-      </DfxContextProvider>
+      <ThemeContextProvider>
+        <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
+          <BalanceContextProvider>
+            <OrderUIContextProvider>
+              <AppHandlingContextProvider
+                isWidget={params != null}
+                service={params?.service}
+                closeCallback={params?.onClose}
+                params={params}
+                personalIbanOccurrence={personalIbanOccurrence}
+                router={router}
+              >
+                <SettingsContextProvider>
+                  <WalletContextProvider router={router}>
+                    <PersonalIbanConfirmationContextProvider>
+                      <RouterProvider router={router} />
+                    </PersonalIbanConfirmationContextProvider>
+                  </WalletContextProvider>
+                </SettingsContextProvider>
+              </AppHandlingContextProvider>
+            </OrderUIContextProvider>
+          </BalanceContextProvider>
+        </DfxContextProvider>
+      </ThemeContextProvider>
     </WindowContextProvider>
   );
 }
