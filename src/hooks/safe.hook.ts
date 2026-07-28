@@ -15,6 +15,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderHistory, CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
 import { CustodyAccount, CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
+import { canActOn, isOwnAccount } from 'src/util/safe-account';
 import { downloadPdfFromString } from 'src/util/utils';
 import { OrderFormData } from './order.hook';
 
@@ -27,18 +28,6 @@ const WITHDRAW_PAIRS: Record<string, string> = Object.entries(DEPOSIT_PAIRS).red
   (acc, [fiat, custody]) => ({ ...acc, [custody]: fiat }),
   {},
 );
-
-/**
- * Whether the caller owns this Safe rather than merely being granted access to someone else's.
- *
- * The account list marks foreign accounts with their owner and leaves the field off the
- * caller's own; the legacy Safe carries the caller as its owner. Acting is only possible on
- * one's own Safe today — orders address the caller's holdings and carry no account, and
- * nothing records acting on someone else's behalf.
- */
-function isOwnAccount(account: CustodyAccount): boolean {
-  return account.isLegacy || account.owner === undefined;
-}
 
 /** The loads that follow the selected account; each tracks its own generation. */
 type LoadKind = 'portfolio' | 'history' | 'orders';
@@ -135,15 +124,8 @@ export function useSafe(): UseSafeResult {
   );
 
   /**
-   * Acting needs one's own Safe with full disposal. A write grant on someone else's account
-   * does not qualify: the order endpoints carry no account, so the order would be booked
-   * against the caller's own holdings while the screen showed another account's name.
-   */
-  const canTransact =
-    isAccountsLoaded &&
-    selectedAccount !== undefined &&
-    isOwnAccount(selectedAccount) &&
-    selectedAccount.accessLevel === 'Write';
+  /** Same predicate the picker labels by, so the list cannot promise what the screen refuses. */
+  const canTransact = isAccountsLoaded && selectedAccount !== undefined && canActOn(selectedAccount);
 
   // ---- Safe Screen Initialization ----
 
