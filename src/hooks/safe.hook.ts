@@ -175,9 +175,19 @@ export function useSafe(): UseSafeResult {
    */
   const generations = useRef<Record<LoadKind, number>>({ portfolio: 0, history: 0, orders: 0 });
 
+  // A manual reload is not an effect, so nothing would cancel it on the way out. This does.
+  const isMounted = useRef(true);
+  useEffect(
+    () => () => {
+      isMounted.current = false;
+    },
+    [],
+  );
+
   /**
-   * Starts a request and returns a function that invalidates it. Effects call that on cleanup,
-   * so a request outlives neither a newer one of its kind nor the screen itself.
+   * Starts a request and returns a function that invalidates it, which effects use on cleanup
+   * so a request never outlives a newer one of its kind. Leaving the screen is caught
+   * separately, because the manual reload after an order has no cleanup to hang that on.
    *
    * The setters live inside, so adding a kind forces a decision here instead of silently
    * leaving that spinner running forever. They are state setters, whose identity React keeps
@@ -196,7 +206,7 @@ export function useSafe(): UseSafeResult {
 
     const generation = generations.current[kind] + 1;
     generations.current[kind] = generation;
-    const isLatest = (): boolean => generations.current[kind] === generation;
+    const isLatest = (): boolean => isMounted.current && generations.current[kind] === generation;
 
     request
       .then((value) => isLatest() && apply(value))
