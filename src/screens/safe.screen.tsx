@@ -166,9 +166,13 @@ export default function SafeScreen(): JSX.Element {
         <NameEdit onSuccess={() => setPaymentNameForm(false)} />
       ) : (
         <StyledVerticalStack full gap={10} className="p-4">
-          {selectedAccount && (
-            // z-20 liegt ueber dem z-10 des Portfolio-Blocks, sonst verschwindet die
-            // aufgeklappte Liste hinter dem Wertverlauf.
+          {custodyAccounts.length > 1 && selectedAccount && (
+            // The same condition the selector applies internally. Rendering the wrapper anyway
+            // would leave an empty flex child behind and push everything below it down by the
+            // stack's gap — a layout shift for every user with a single account.
+            //
+            // z-20 sits above the portfolio block's z-10; without it the open list would
+            // disappear behind the chart.
             <div className="relative z-20">
               <AccountSelector accounts={custodyAccounts} selected={selectedAccount} onSelect={selectAccount} />
             </div>

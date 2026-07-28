@@ -113,6 +113,13 @@ export function useSafe(): UseSafeResult {
   // null id, so it needs a key of its own rather than being addressed by id.
   const [selectedAccountKey, setSelectedAccountKey] = useState<string>();
 
+  // Mirrors the selected key for callbacks that outlive a render — a manual reload has no
+  // cleanup function to cancel it.
+  const selectedKeyRef = useRef<string>();
+  useEffect(() => {
+    selectedKeyRef.current = selectedAccountKey;
+  }, [selectedAccountKey]);
+
   const selectedAccount = useMemo(
     () => custodyAccounts.find((a) => accountKey(a) === selectedAccountKey),
     [custodyAccounts, selectedAccountKey],
@@ -187,26 +194,34 @@ export function useSafe(): UseSafeResult {
     };
   }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts]);
 
+  /**
+   * Shared by the effect below and by the manual reload after an order completes. The manual
+   * path has no cleanup to cancel it, so the guard is the selection itself: a result is only
+   * accepted while the account it was fetched for is still the selected one.
+   */
+  const loadOrderHistory = useCallback(
+    (account: CustodyAccount | undefined): void => {
+      const requestedKey = account !== undefined ? accountKey(account) : undefined;
+      setIsLoadingOrderHistory(true);
+      getOrderHistory(account)
+        .then((orders) => selectedKeyRef.current === requestedKey && setOrderHistory(orders))
+        .catch(
+          (error: ApiError) => selectedKeyRef.current === requestedKey && setError(error.message ?? 'Unknown error'),
+        )
+        .finally(() => selectedKeyRef.current === requestedKey && setIsLoadingOrderHistory(false));
+    },
+    // getOrderHistory closes over `call` only, which useApi keeps stable
+    [],
+  );
+
   function reloadOrderHistory(): void {
-    setIsLoadingOrderHistory(true);
-    getOrderHistory(selectedAccount)
-      .then((orders) => setOrderHistory(orders))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoadingOrderHistory(false));
+    loadOrderHistory(selectedAccount);
   }
 
   useEffect(() => {
     if (!user || !isLoggedIn || !isAccountsLoaded) return;
-    let cancelled = false;
-    setIsLoadingOrderHistory(true);
-    getOrderHistory(selectedAccount)
-      .then((orders) => !cancelled && setOrderHistory(orders))
-      .catch((error: ApiError) => !cancelled && setError(error.message ?? 'Unknown error'))
-      .finally(() => !cancelled && setIsLoadingOrderHistory(false));
-    return () => {
-      cancelled = true;
-    };
-  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts]);
+    loadOrderHistory(selectedAccount);
+  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, loadOrderHistory]);
 
   // ---- Available Deposit Pairs ----
 
