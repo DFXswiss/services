@@ -168,11 +168,12 @@ export default function BuyInfoScreen(): JSX.Element {
       setPaymentInfo(undefined);
     }
 
-    // Currency/method eligibility only — independent of whether the customer set a selector.
-    // Request building stays on eligibility alone (toPersonalIbanProviderRequest(undefined) is {}).
-    // Personal-IBAN error copy only when the customer actually requested a personal IBAN.
-    const personalIbanErrorApplies =
-      isPersonalIbanEligible && personalIbanSelector !== undefined;
+    const requestPersonalIbanProvider = isPersonalIbanEligible
+      ? toPersonalIbanProviderRequest(effectivePersonalIban).personalIbanProvider
+      : undefined;
+    // Feature-specific errors apply only to a request that actually carried the provider.
+    // The raw selector remains set after a decline, while effectivePersonalIban does not.
+    const personalIbanErrorApplies = requestPersonalIbanProvider !== undefined;
 
     if (isUnrecognizedPersonalIbanSelector(personalIbanSelector)) {
       const personalIbanErrorText = getPersonalIbanErrorMessage('PersonalIbanProviderUnsupported');
@@ -194,7 +195,9 @@ export default function BuyInfoScreen(): JSX.Element {
       asset,
       currency,
       externalTransactionId,
-      ...(isPersonalIbanEligible ? toPersonalIbanProviderRequest(effectivePersonalIban) : {}),
+      ...(requestPersonalIbanProvider !== undefined
+        ? { personalIbanProvider: requestPersonalIbanProvider }
+        : {}),
     };
     if (amountIn) {
       request.amount = +amountIn;

@@ -67,7 +67,13 @@ jest.mock('src/components/payment/buy-completion', () => ({
   BuyCompletion: () => null,
 }));
 jest.mock('src/components/quote-error-hint', () => ({
-  QuoteErrorHint: () => null,
+  QuoteErrorHint: ({ error, message }: any) => (
+    <div data-testid="quote-error-hint">
+      <div>{message ?? 'This transaction is only possible with a verified account.'}</div>
+      <span data-testid="quote-error-code">{error}</span>
+      <button type="button">Complete KYC</button>
+    </div>
+  ),
 }));
 jest.mock('src/contexts/app-handling.context', () => ({
   CloseType: { BUY: 'buy', CANCEL: 'cancel' },
@@ -204,6 +210,27 @@ describe('BuyInfoScreen personal-IBAN confirmation transitions', () => {
       'data-show-bank',
       'false',
     );
+  });
+
+  it('decline followed by KycRequired shows the generic actionable KYC dialog', async () => {
+    mockReceiveFor.mockRejectedValue({ message: 'KycRequired' });
+    renderFlow();
+
+    expect(mockReceiveFor).not.toHaveBeenCalled();
+    await act(async () => screen.getByRole('button', { name: DECLINE }).click());
+
+    await waitFor(() => expect(screen.getByTestId('quote-error-hint')).toBeInTheDocument());
+    expect(mockReceiveFor.mock.calls[0][0]).not.toHaveProperty(
+      'personalIbanProvider',
+    );
+    expect(screen.getByTestId('quote-error-code')).toHaveTextContent('KycRequired');
+    expect(
+      screen.getByText('This transaction is only possible with a verified account.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Complete KYC' })).toBeInTheDocument();
+    expect(
+      screen.queryByText('Personal IBANs require KYC level 50.'),
+    ).not.toBeInTheDocument();
   });
 
   it('a mistyped selector shows the local provider rejection without the Bank Frick prompt', async () => {
