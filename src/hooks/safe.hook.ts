@@ -175,23 +175,25 @@ export function useSafe(): UseSafeResult {
    */
   const generations = useRef<Record<LoadKind, number>>({ portfolio: 0, history: 0, orders: 0 });
 
-  // One setter per kind, so adding a kind forces a decision here instead of silently leaving
-  // its spinner running forever.
-  const setLoading: Record<LoadKind, (isLoading: boolean) => void> = {
-    portfolio: setIsLoadingPortfolio,
-    history: setIsLoadingHistory,
-    orders: setIsLoadingOrderHistory,
-  };
-
   /**
    * Starts a request and returns a function that invalidates it. Effects call that on cleanup,
    * so a request outlives neither a newer one of its kind nor the screen itself.
+   *
+   * The setters live inside, so adding a kind forces a decision here instead of silently
+   * leaving that spinner running forever. They are state setters, whose identity React keeps
+   * stable, so the callback needs no dependencies.
    */
   const runLatest = useCallback(function <T>(
     kind: LoadKind,
     request: Promise<T>,
     apply: (value: T) => void,
   ): () => void {
+    const setLoading: Record<LoadKind, (isLoading: boolean) => void> = {
+      portfolio: setIsLoadingPortfolio,
+      history: setIsLoadingHistory,
+      orders: setIsLoadingOrderHistory,
+    };
+
     const generation = generations.current[kind] + 1;
     generations.current[kind] = generation;
     const isLatest = (): boolean => generations.current[kind] === generation;
@@ -204,8 +206,6 @@ export function useSafe(): UseSafeResult {
     return () => {
       if (isLatest()) generations.current[kind] = generation + 1;
     };
-    // setLoading holds state setters, which React keeps stable
-    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
