@@ -145,5 +145,21 @@ describe('Wallet', () => {
       const result = Wallet.qualifiesForPayment(wallet, transferInfoList);
       expect(result).toBe(true);
     });
+
+    it('should return true for RealUnit-like Ethereum/ZCHF wallet against Ethereum transfer', () => {
+      const wallet = createWallet(['Ethereum'], [{ name: 'ZCHF', uniqueName: 'Ethereum:ZCHF' }]);
+      const transferInfoList = [createTransferInfo('Ethereum', ['ZCHF'])];
+
+      const result = Wallet.qualifiesForPayment(wallet, transferInfoList);
+      expect(result).toBe(true);
+    });
+
+    it('should return false for RealUnit-like Ethereum/ZCHF wallet against Lightning-only transfer', () => {
+      const wallet = createWallet(['Ethereum'], [{ name: 'ZCHF', uniqueName: 'Ethereum:ZCHF' }]);
+      const transferInfoList = [createTransferInfo('Lightning', ['BTC'])];
+
+      const result = Wallet.qualifiesForPayment(wallet, transferInfoList);
+      expect(result).toBe(false);
+    });
   });
 });

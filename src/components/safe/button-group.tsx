@@ -6,7 +6,7 @@ export enum ButtonGroupSize {
 
 interface ButtonGroupProps<T> {
   items: T[];
-  selected: T;
+  selected: T | undefined;
   onClick: (item: T) => void;
   buttonLabel: (item: T) => string;
   size?: ButtonGroupSize;
@@ -24,6 +24,9 @@ export const ButtonGroup = <T extends React.ReactNode>({
   const getButtonStyles = (item: T): string => {
     if (isHeader) {
       const baseStyles = 'px-4 py-1.5 text-md font-semibold transition-all duration-200 cursor-pointer';
+      if (selected === undefined) {
+        return `${baseStyles} text-dfxBlue-500 hover:text-dfxBlue-500/70`;
+      }
       return item === selected
         ? `${baseStyles} text-dfxBlue-500 bg-dfxBlue-800/5 hover:bg-dfxBlue-800/15 rounded-lg`
         : `${baseStyles} text-dfxBlue-500/30 hover:text-dfxBlue-500/70`;
