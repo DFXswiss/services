@@ -35,7 +35,7 @@ describe('canActOn', () => {
     expect(canActOn(account({ accessLevel: 'Write', owner: { id: 42 } }))).toBe(false);
   });
 
-  it('allows acting on the legacy Safe, which is the caller´s own by definition', () => {
+  it("allows acting on the legacy Safe, which is the caller's own by definition", () => {
     expect(canActOn(account({ id: null, isLegacy: true, accessLevel: 'Write', owner: { id: 7 } }))).toBe(true);
   });
 });

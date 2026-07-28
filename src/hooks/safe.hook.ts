@@ -123,7 +123,6 @@ export function useSafe(): UseSafeResult {
     [custodyAccounts, selectedAccountKey],
   );
 
-  /**
   /** Same predicate the picker labels by, so the list cannot promise what the screen refuses. */
   const canTransact = isAccountsLoaded && selectedAccount !== undefined && canActOn(selectedAccount);
 
