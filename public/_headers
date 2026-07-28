@@ -23,8 +23,9 @@
   Cache-Control: no-cache, must-revalidate
 
 # Crawler directives in robots.txt must always revalidate so they take effect on the next request.
+# Use max-age=0 (not no-cache): this file is edge-cached; bare no-cache is replaced by the zone TTL.
 /robots.txt
-  Cache-Control: no-cache, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate
 
 # Non-fingerprinted root assets — a day of cache is enough.
 /favicon.ico
