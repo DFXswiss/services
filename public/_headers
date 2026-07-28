@@ -9,6 +9,11 @@
 # are therefore the rules this affects: /robots.txt carries a no-cache rule below, yet
 # reaches the client as max-age=14400. Check it with a cache-busting request:
 #   curl -sI "https://app.dfx.swiss/robots.txt?cb=1"
+# The /widget/* rule shows this even more clearly, since two files under it land
+# differently: /widget/v1.0.css is cached at the edge and reaches the client as
+# max-age=14400, while /widget/v1.0 is not cached (cf-cache-status: DYNAMIC) and
+# reaches the client as max-age=3600, exactly as written below — same rule, two
+# outcomes, depending only on whether that particular response gets cached.
 # Changing that is a CDN configuration matter; it cannot be fixed in this file.
 #
 # Fingerprinted build assets (content-hashed filenames) never change -> cache hard.
