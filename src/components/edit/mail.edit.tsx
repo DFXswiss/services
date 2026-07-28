@@ -1,4 +1,4 @@
-import { ApiError, Utils, Validations, useUserContext } from '@dfx.swiss/react';
+import { ApiError, TfaLevel, Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
   IconColor,
@@ -14,6 +14,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useMergedAccount } from '../../hooks/merged-account.hook';
+import { useNavigation } from '../../hooks/navigation.hook';
+import { ErrorHint } from '../error-hint';
 
 interface MailEditProps {
   infoText?: string;
@@ -53,9 +55,12 @@ export function MailEdit({
   const { updateMail, isUserUpdating } = useUserContext();
   const { translate, translateError } = useSettingsContext();
   const { handleMergedError } = useMergedAccount();
+  const { navigate } = useNavigation();
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string>();
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string>();
 
   function showMailConfirmation({ email }: FormData): void {
     if (!email || email.length === 0) return onSubmit(email);
@@ -64,12 +69,21 @@ export function MailEdit({
   }
 
   async function saveUser(email: string): Promise<void> {
+    setError(undefined);
+    setIsSaving(true);
+
     return updateMail(email)
       .then(() => onSubmit(email))
       .catch((e: ApiError) => {
         if (handleMergedError(e)) return;
-        throw e;
-      });
+
+        // an account that already carries a mail has to pass 2FA before it can change it
+        if (e.code === 'TFA_REQUIRED')
+          return navigate('/2fa', { state: { level: TfaLevel.BASIC }, setRedirect: true });
+
+        setError(e.message);
+      })
+      .finally(() => setIsSaving(false));
   }
 
   const rules = Utils.createRules({
@@ -82,6 +96,12 @@ export function MailEdit({
         <p className="text-dfxGray-700 text-center">{translate('screens/kyc', 'Is this email address correct?')}</p>
         <p className="text-lg font-bold text-dfxBlue-800 break-all text-center">{pendingEmail}</p>
 
+        {error && (
+          <StyledVerticalStack full center>
+            <ErrorHint message={error} />
+          </StyledVerticalStack>
+        )}
+
         <StyledHorizontalStack gap={4}>
           <StyledButton
             label={translate('general/actions', 'Change')}
@@ -93,7 +113,7 @@ export function MailEdit({
           <StyledButton
             label={translate('general/actions', 'Confirm')}
             onClick={() => saveUser(pendingEmail)}
-            isLoading={isUserUpdating}
+            isLoading={isSaving || isUserUpdating}
             width={StyledButtonWidth.FULL}
             caps
           />

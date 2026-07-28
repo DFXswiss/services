@@ -76,7 +76,7 @@ export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyComplet
         </>
       ) : (
         <MailEdit
-          onSubmit={(email) => (!email || email.length === 0) && close()}
+          onSubmit={() => close()}
           infoText={translate(
             'screens/payment',
             'Enter your email address if you want to be informed about the progress of any purchase or sale',
