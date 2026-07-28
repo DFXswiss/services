@@ -1014,6 +1014,11 @@
     "Please provide us with all relevant information about the transaction you are missing.": "Vi preghiamo di fornirci tutte le informazioni rilevanti sulla transazione mancante.",
     "Sender IBAN": "IBAN del mittente",
     "Receiver IBAN": "IBAN del destinatario",
+    "We have recognized this IBAN.": "Abbiamo riconosciuto questo IBAN.",
+    "We could not recognize this IBAN with the information available to us. You can submit your request anyway.": "Non è stato possibile riconoscere questo IBAN con le informazioni a nostra disposizione. Potete comunque inviare la vostra richiesta.",
+    "This does not look like a valid IBAN.": "Questo non sembra un IBAN valido.",
+    "Please log in so that we can also check your personal IBAN.": "Vi preghiamo di accedere affinché possiamo verificare anche il vostro IBAN personale.",
+    "We could not check this IBAN at the moment. You can submit your request anyway.": "Al momento non è stato possibile verificare questo IBAN. Potete comunque inviare la vostra richiesta.",
     "Date of the transaction": "Data della transazione",
 
     "FAQ": "FAQ",

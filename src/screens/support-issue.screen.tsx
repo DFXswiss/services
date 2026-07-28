@@ -1,11 +1,11 @@
 import {
   ApiError,
-  Bank,
   CreateSupportIssue,
   FundOrigin,
   InvestmentDate,
   KycLevel,
   Limit,
+  ReceiveIbanStatus,
   SupportIssueReason,
   SupportIssueType,
   TransactionState,
@@ -29,7 +29,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -37,6 +37,7 @@ import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { LimitRequestFields } from 'src/components/support-issue/limit-request-fields';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useLayoutContext } from 'src/contexts/layout.context';
+import useDebounce from 'src/hooks/debounce.hook';
 import { ErrorHint } from '../components/error-hint';
 import { IssueReasonLabels, IssueTypeLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -89,6 +90,28 @@ const NoIban = 'No IBAN, only account number';
 const AddAccount = 'Add bank account';
 const selectTxButtonLabel = 'Select transaction';
 
+const ReceiverIbanCheckDelay = 500;
+// Shortest IBAN in use is 15 characters. Below that the input is still incomplete and must not be judged.
+const ReceiverIbanCheckMinLength = 15;
+
+// Strip everything except letters and digits so the length threshold and the value sent
+// to the check count the same characters.
+function normalizeIban(iban?: string): string {
+  return iban?.replace(/[^A-Za-z0-9]/g, '') ?? '';
+}
+
+type ReceiverIbanResult = { iban: string; status: ReceiveIbanStatus } | { iban: string; unavailable: true };
+
+const ReceiverIbanHints: { [s in ReceiveIbanStatus]: string } = {
+  [ReceiveIbanStatus.DFX_IBAN]: 'We have recognized this IBAN.',
+  [ReceiveIbanStatus.NOT_MATCHED]:
+    'We could not recognize this IBAN with the information available to us. You can submit your request anyway.',
+  [ReceiveIbanStatus.INVALID_IBAN]: 'This does not look like a valid IBAN.',
+  [ReceiveIbanStatus.LOGIN_REQUIRED]: 'Please log in so that we can also check your personal IBAN.',
+};
+
+const ReceiverIbanCheckUnavailable = 'We could not check this IBAN at the moment. You can submit your request anyway.';
+
 const formDefaultValues = {
   type: undefined,
   senderIban: undefined,
@@ -110,7 +133,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const { translate, translateError, allowedCountries } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn, logout } = useSessionContext();
-  const { getBanks } = useBank();
+  const { checkReceiveIban } = useBank();
   const { bankAccounts } = useBankAccountContext();
   const [urlParams] = useSearchParams();
   const {
@@ -124,8 +147,11 @@ export default function SupportIssueScreen(): JSX.Element {
   const [error, setError] = useState<string>();
   const [selectTransaction, setSelectTransaction] = useState(false);
   const [isKycComplete, setIsKycComplete] = useState<boolean>();
-  const [banks, setBanks] = useState<Bank[]>();
   const [selectedTxState, setSelectedTxState] = useState<TransactionState>();
+  const [receiverIbanResult, setReceiverIbanResult] = useState<ReceiverIbanResult>();
+  const [isCheckingReceiverIban, setIsCheckingReceiverIban] = useState(false);
+  const [isReceiverIbanFocused, setIsReceiverIbanFocused] = useState(false);
+  const receiverIbanCheckId = useRef(0);
 
   const {
     control,
@@ -139,6 +165,10 @@ export default function SupportIssueScreen(): JSX.Element {
   const selectedReason = useWatch({ control, name: 'reason' });
   const selectedTransaction = useWatch({ control, name: 'transaction' });
   const selectedSender = useWatch({ control, name: 'senderIban' });
+  const selectedReceiver = useWatch({ control, name: 'receiverIban' });
+  // Debouncing the normalized value keeps formatting-only edits (a space, a dash) from costing a request.
+  const normalizedReceiver = normalizeIban(selectedReceiver);
+  const debouncedReceiver = useDebounce(normalizedReceiver, ReceiverIbanCheckDelay);
 
   const issues = Object.values(SupportIssueType);
   const reasons = IssueReasons[selectedType] ?? [];
@@ -224,11 +254,49 @@ export default function SupportIssueScreen(): JSX.Element {
     setValue('transaction', undefined);
   }, [selectedReason]);
 
+  // Invalidate in-flight checks and stop the spinner when the normalized value changes. Hint staleness is
+  // handled by binding the stored result to the IBAN it was computed for (see getReceiverIbanHint).
   useEffect(() => {
-    getBanks()
-      .then(setBanks)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
-  }, []);
+    receiverIbanCheckId.current++;
+    setIsCheckingReceiverIban(false);
+  }, [normalizedReceiver]);
+
+  useEffect(() => {
+    const iban = debouncedReceiver ?? '';
+
+    // The check is purely advisory, so any request that is no longer relevant is simply skipped. Two are:
+    // an input that is still incomplete, which should not be checked; and a debounced value the customer has
+    // meanwhile changed, which must never be requested no matter how the two updates were committed.
+    if (
+      selectedReason !== SupportIssueReason.TRANSACTION_MISSING ||
+      iban.length < ReceiverIbanCheckMinLength ||
+      iban !== normalizedReceiver
+    ) {
+      receiverIbanCheckId.current++;
+      setIsCheckingReceiverIban(false);
+      return;
+    }
+
+    const checkId = ++receiverIbanCheckId.current;
+    const isCurrent = () => checkId === receiverIbanCheckId.current;
+
+    setIsCheckingReceiverIban(true);
+
+    checkReceiveIban(iban)
+      .then((check) => {
+        // A slow answer to an earlier input must not overwrite the answer to the current one.
+        if (!isCurrent()) return;
+        setReceiverIbanResult({ iban, status: check.status });
+      })
+      .catch(() => {
+        // Any failure, including rate limiting (HTTP 429), means the check is unavailable - never a form error.
+        if (!isCurrent()) return;
+        setReceiverIbanResult({ iban, unavailable: true });
+      })
+      .finally(() => {
+        if (isCurrent()) setIsCheckingReceiverIban(false);
+      });
+  }, [debouncedReceiver, normalizedReceiver, selectedReason]);
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
@@ -289,13 +357,39 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const isFundsNotReceivedRequest = selectedReason === SupportIssueReason.FUNDS_NOT_RECEIVED && isRequestOnly === true;
 
+  // Only show a hint that was computed for the value currently in the field.
+  const result = receiverIbanResult?.iban === normalizedReceiver ? receiverIbanResult : undefined;
+
+  function getReceiverIbanHint(): string | undefined {
+    if (!result) return undefined;
+    // A positive confirmation can only mean the IBAN is complete and matched, so it may appear right away.
+    if ('status' in result && result.status === ReceiveIbanStatus.DFX_IBAN) return ReceiverIbanHints[result.status];
+    // Everything else waits until the field is left: the threshold proves length, not completeness, and a verdict
+    // on a half-typed IBAN would be wrong and would make the form jump.
+    if (isReceiverIbanFocused) return undefined;
+    if ('status' in result) return ReceiverIbanHints[result.status];
+    if ('unavailable' in result) return ReceiverIbanCheckUnavailable;
+    return undefined;
+  }
+
+  const receiverIbanHint = getReceiverIbanHint();
+  const receiverIbanHintColor =
+    result && 'status' in result && result.status === ReceiveIbanStatus.DFX_IBAN
+      ? 'text-dfxGreen-100'
+      : 'text-dfxGray-800';
+
   const rules = Utils.createRules({
     type: Validations.Required,
     senderIban: [
       (selectedReason === SupportIssueReason.TRANSACTION_MISSING || isFundsNotReceivedRequest) && Validations.Required,
       !!orderParam && Validations.Iban(allowedCountries),
     ],
-    receiverIban: selectedReason === SupportIssueReason.TRANSACTION_MISSING && Validations.Required,
+    receiverIban: [
+      selectedReason === SupportIssueReason.TRANSACTION_MISSING && Validations.Required,
+      // Emptiness check only - a blank-only entry is no entry. Never a judgement on the IBAN itself.
+      selectedReason === SupportIssueReason.TRANSACTION_MISSING &&
+        Validations.Custom((iban) => (!iban || iban.trim().length > 0 ? true : 'required')),
+    ],
     date: [
       (selectedReason === SupportIssueReason.TRANSACTION_MISSING || isFundsNotReceivedRequest) && Validations.Required,
       Validations.Custom((date) => (!date || /\d{4}-\d{2}-\d{2}/g.test(date) ? true : 'pattern')),
@@ -437,16 +531,31 @@ export default function SupportIssueScreen(): JSX.Element {
                       />
                     )}
 
-                    {selectedReason === SupportIssueReason.TRANSACTION_MISSING && banks && (
-                      <StyledDropdown<string>
-                        rootRef={rootRef}
-                        label={translate('screens/support', 'Receiver IBAN')}
-                        items={banks.map((b) => b.iban)}
-                        labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
-                        name="receiverIban"
-                        placeholder={translate('general/actions', 'Select') + '...'}
-                        full
-                      />
+                    {selectedReason === SupportIssueReason.TRANSACTION_MISSING && (
+                      <StyledVerticalStack gap={1} full center>
+                        {/* Focus is tracked on the surrounding div so that the non-positive hints only appear after
+                            the field has been left (blurred) — the positive confirmation hint is not gated this way
+                            and can appear immediately. Autocomplete is intentionally omitted here because the sender
+                            field above already claims the IBAN autofill. */}
+                        <div
+                          className="w-full"
+                          onFocus={() => setIsReceiverIbanFocused(true)}
+                          onBlur={() => setIsReceiverIbanFocused(false)}
+                        >
+                          <StyledInput
+                            name="receiverIban"
+                            label={translate('screens/support', 'Receiver IBAN')}
+                            placeholder="XX XXXX XXXX XXXX XXXX X"
+                            loading={isCheckingReceiverIban}
+                            full
+                          />
+                        </div>
+                        {receiverIbanHint && (
+                          <p className={`w-full text-start text-sm pl-3 ${receiverIbanHintColor}`}>
+                            {translate('screens/support', receiverIbanHint)}
+                          </p>
+                        )}
+                      </StyledVerticalStack>
                     )}
 
                     <StyledInput
