@@ -14,7 +14,7 @@ import {
 } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderHistory, CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
-import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
+import { CustodyAccount, CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
 import { downloadPdfFromString } from 'src/util/utils';
 import { OrderFormData } from './order.hook';
 
@@ -59,6 +59,9 @@ export interface UseSafeResult {
   sendableAssets?: Asset[];
   swappableSourceAssets?: Asset[];
   swappableTargetAssets?: Asset[];
+  custodyAccounts: CustodyAccount[];
+  selectedAccount?: CustodyAccount;
+  selectAccount: (accountId: number) => void;
   setSelectedSourceAsset: (asset: string) => void;
   fetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   fetchReceiveInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
@@ -97,6 +100,9 @@ export function useSafe(): UseSafeResult {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isLoadingOrderHistory, setIsLoadingOrderHistory] = useState(true);
   const [selectedSourceAsset, setSelectedSourceAsset] = useState<string>();
+  const [custodyAccounts, setCustodyAccounts] = useState<CustodyAccount[]>([]);
+  const [isAccountsLoaded, setIsAccountsLoaded] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState<number>();
 
   // ---- Safe Screen Initialization ----
 
@@ -125,35 +131,53 @@ export function useSafe(): UseSafeResult {
   }, [isUserLoading, user, isLoggedIn, session, reloadUser, changeUserAddress, tokenStore]);
 
   useEffect(() => {
-    if (!user || !isLoggedIn) return;
+    if (!isInitialized || !user || !isLoggedIn) return;
+    getCustodyAccounts()
+      .then((accounts) => {
+        setCustodyAccounts(accounts);
+        if (accounts.length > 0) {
+          const ownAccount = accounts.find((a) => a.accessLevel === 'Write');
+          const defaultAccount = ownAccount !== undefined ? ownAccount : accounts[0];
+          setSelectedAccountId(defaultAccount.id);
+        }
+      })
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsAccountsLoaded(true));
+  }, [isInitialized, user, isLoggedIn]);
+
+  useEffect(() => {
+    if (!user || !isLoggedIn || !isAccountsLoaded) return;
+    if (custodyAccounts.length > 0 && selectedAccountId === undefined) return;
     setIsLoadingPortfolio(true);
-    getBalances()
+    getBalances(selectedAccountId)
       .then((portfolio) => setPortfolio(portfolio))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingPortfolio(false));
-  }, [user, isLoggedIn]);
+  }, [user, isLoggedIn, isAccountsLoaded, custodyAccounts, selectedAccountId]);
 
   useEffect(() => {
-    if (!user || !isLoggedIn) return;
+    if (!user || !isLoggedIn || !isAccountsLoaded) return;
+    if (custodyAccounts.length > 0 && selectedAccountId === undefined) return;
     setIsLoadingHistory(true);
-    getHistory()
+    getHistory(selectedAccountId)
       .then(({ totalValue }) => setHistory(totalValue))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingHistory(false));
-  }, [user, isLoggedIn]);
-
-  useEffect(() => {
-    if (!user || !isLoggedIn) return;
-    reloadOrderHistory();
-  }, [user, isLoggedIn]);
+  }, [user, isLoggedIn, isAccountsLoaded, custodyAccounts, selectedAccountId]);
 
   function reloadOrderHistory(): void {
+    if (custodyAccounts.length > 0 && selectedAccountId === undefined) return;
     setIsLoadingOrderHistory(true);
-    getOrderHistory()
+    getOrderHistory(selectedAccountId)
       .then((orders) => setOrderHistory(orders))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingOrderHistory(false));
   }
+
+  useEffect(() => {
+    if (!user || !isLoggedIn || !isAccountsLoaded) return;
+    reloadOrderHistory();
+  }, [user, isLoggedIn, isAccountsLoaded, custodyAccounts, selectedAccountId]);
 
   // ---- Available Deposit Pairs ----
 
@@ -216,6 +240,15 @@ export function useSafe(): UseSafeResult {
     [availableAssets, availableCurrencies],
   );
 
+  const selectedAccount = useMemo(
+    () => custodyAccounts.find((a) => a.id === selectedAccountId),
+    [custodyAccounts, selectedAccountId],
+  );
+
+  function selectAccount(accountId: number): void {
+    setSelectedAccountId(accountId);
+  }
+
   // ---- API Calls ----
 
   async function createCustodyUser(): Promise<SignIn> {
@@ -226,23 +259,27 @@ export function useSafe(): UseSafeResult {
     });
   }
 
-  async function getBalances(): Promise<CustodyBalance> {
+  async function getCustodyAccounts(): Promise<CustodyAccount[]> {
+    return call<CustodyAccount[]>({ url: 'custody/account', method: 'GET' });
+  }
+
+  async function getBalances(accountId?: number): Promise<CustodyBalance> {
     return call<CustodyBalance>({
-      url: `custody`,
+      url: accountId !== undefined ? `custody/account/${accountId}/balance` : 'custody',
       method: 'GET',
     });
   }
 
-  async function getHistory(): Promise<CustodyHistory> {
+  async function getHistory(accountId?: number): Promise<CustodyHistory> {
     return call<CustodyHistory>({
-      url: `custody/history`,
+      url: accountId !== undefined ? `custody/account/${accountId}/history` : 'custody/history',
       method: 'GET',
     });
   }
 
-  async function getOrderHistory(): Promise<CustodyOrderHistory[]> {
+  async function getOrderHistory(accountId?: number): Promise<CustodyOrderHistory[]> {
     return call<CustodyOrderHistory[]>({
-      url: `custody/order`,
+      url: accountId !== undefined ? `custody/account/${accountId}/order` : 'custody/order',
       method: 'GET',
     });
   }
@@ -366,15 +403,17 @@ export function useSafe(): UseSafeResult {
   }
 
   async function downloadPdf(params: PdfDownloadParams): Promise<void> {
-    const queryParams = new URLSearchParams({
-      currency: params.currency,
-      date: params.date,
-    });
+    if (custodyAccounts.length > 0 && selectedAccountId === undefined) {
+      throw new Error('No custody account selected');
+    }
 
-    const response = await call<{ pdfData: string }>({
-      url: `custody/pdf?${queryParams.toString()}`,
-      method: 'GET',
-    });
+    const queryParams = new URLSearchParams({ currency: params.currency, date: params.date });
+    const pdfUrl =
+      custodyAccounts.length > 0
+        ? `custody/account/${selectedAccountId}/pdf?${queryParams.toString()}`
+        : `custody/pdf?${queryParams.toString()}`;
+
+    const response = await call<{ pdfData: string }>({ url: pdfUrl, method: 'GET' });
 
     const filename = `${params.date}_DFX_Safe_Balance_Report.pdf`;
     downloadPdfFromString(response.pdfData, filename);
@@ -400,6 +439,9 @@ export function useSafe(): UseSafeResult {
       sendableAssets,
       swappableSourceAssets,
       swappableTargetAssets,
+      custodyAccounts,
+      selectedAccount,
+      selectAccount,
       setSelectedSourceAsset,
       fetchPaymentInfo,
       fetchReceiveInfo,
@@ -434,6 +476,8 @@ export function useSafe(): UseSafeResult {
       sendableAssets,
       swappableSourceAssets,
       swappableTargetAssets,
+      custodyAccounts,
+      selectedAccount,
       selectedSourceAsset,
       pairMap,
     ],

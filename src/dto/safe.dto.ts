@@ -53,3 +53,18 @@ export interface CustodyHistoryEntry {
 export interface CustodyHistory {
   totalValue: CustodyHistoryEntry[];
 }
+
+export type CustodyAccountAccessLevel = 'Read' | 'Write';
+
+export interface CustodyAccountOwner {
+  id: number;
+}
+
+export interface CustodyAccount {
+  id: number;
+  title: string;
+  description: string;
+  isLegacy: boolean;
+  accessLevel: CustodyAccountAccessLevel;
+  owner?: CustodyAccountOwner;
+}

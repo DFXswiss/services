@@ -19,6 +19,7 @@ import { NameEdit } from 'src/components/edit/name.edit';
 import { ErrorHint } from 'src/components/error-hint';
 import { Modal } from 'src/components/modal';
 import { SafeCompletion } from 'src/components/payment/safe-completion';
+import { AccountSelector } from 'src/components/safe/account-selector';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
 import { Portfolio } from 'src/components/safe/portfolio';
@@ -50,6 +51,9 @@ export default function SafeScreen(): JSX.Element {
     error,
     reloadOrderHistory,
     downloadPdf,
+    custodyAccounts,
+    selectedAccount,
+    selectAccount,
   } = useSafe();
   const { currency: userCurrency, translate } = useSettingsContext();
   const {
@@ -108,6 +112,7 @@ export default function SafeScreen(): JSX.Element {
   }, [userCurrency]);
 
   const showChart = history.length > 1;
+  const canTransact = selectedAccount === undefined || selectedAccount.accessLevel === 'Write';
 
   const getTitle = () => {
     if (completionType) {
@@ -158,6 +163,13 @@ export default function SafeScreen(): JSX.Element {
         <NameEdit onSuccess={() => setPaymentNameForm(false)} />
       ) : (
         <StyledVerticalStack full gap={10} className="p-4">
+          {selectedAccount && (
+            // z-20 liegt ueber dem z-10 des Portfolio-Blocks, sonst verschwindet die
+            // aufgeklappte Liste hinter dem Wertverlauf.
+            <div className="relative z-20">
+              <AccountSelector accounts={custodyAccounts} selected={selectedAccount} onSelect={selectAccount} />
+            </div>
+          )}
           <div className="shadow-card rounded-xl">
             <div id="chart-timeline" className="relative">
               <div className="p-2 gap-2 flex flex-col items-start">
@@ -208,8 +220,12 @@ export default function SafeScreen(): JSX.Element {
             currency={currency}
             isLoading={isLoadingPortfolio}
           />
-          <hr className="border-dfxGray-400" />
-          <SafeTransactionInterface />
+          {canTransact && (
+            <>
+              <hr className="border-dfxGray-400" />
+              <SafeTransactionInterface />
+            </>
+          )}
           <hr className="border-dfxGray-400" />
           <TransactionHistory transactions={orderHistory} isLoading={isLoadingOrderHistory} />
         </StyledVerticalStack>
