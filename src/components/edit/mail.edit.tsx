@@ -59,6 +59,7 @@ export function MailEdit({
   const [pendingEmail, setPendingEmail] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
   const [showLinkHint, setShowLinkHint] = useState(false);
+  const [showAccountHint, setShowAccountHint] = useState(false);
   const [error, setError] = useState<string>();
 
   function showMailConfirmation({ email }: FormData): void {
@@ -71,6 +72,7 @@ export function MailEdit({
   async function saveUser(email: string): Promise<void> {
     setError(undefined);
     setShowLinkHint(false);
+    setShowAccountHint(false);
     setIsSaving(true);
 
     return updateMail(email)
@@ -84,15 +86,9 @@ export function MailEdit({
           return setShowLinkHint(true);
 
         // This step can only set a first address. Changing an existing one needs 2FA plus a code
-        // sent to the new address, and this component has no field to enter that code — so say so
-        // instead of sending the user through a 2FA redirect that cannot restore this screen.
-        if (e.code === 'TFA_REQUIRED')
-          return setError(
-            translate(
-              'screens/kyc',
-              'This account already has an email address. You can change it in your account settings.',
-            ),
-          );
+        // sent to the new address, and this component has no field to enter that code. Its own
+        // screen, not ErrorHint, because retrying here can never succeed.
+        if (e.code === 'TFA_REQUIRED') return setShowAccountHint(true);
 
         setError(e.message);
       })
@@ -102,6 +98,24 @@ export function MailEdit({
   const rules = Utils.createRules({
     email: [!isOptional && Validations.Required, Validations.Mail],
   });
+
+  if (showAccountHint) {
+    return (
+      <StyledVerticalStack gap={6} full>
+        <p className="text-dfxGray-700">
+          {translate(
+            'screens/kyc',
+            'This account already has an email address. You can change it in your account settings.',
+          )}
+        </p>
+        <StyledButton
+          width={StyledButtonWidth.MIN}
+          label={translate('general/actions', 'OK')}
+          onClick={() => onSubmit()}
+        />
+      </StyledVerticalStack>
+    );
+  }
 
   if (showLinkHint) {
     return (
