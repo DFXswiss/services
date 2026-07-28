@@ -14,15 +14,28 @@ import { getCachedAuth } from './helpers/auth-cache';
  * (issue-type / reason) and the SupportIssueType / SupportIssueReason string enums
  * (TransactionIssue / TransactionMissing).
  *
- * The receiver-IBAN check endpoint is MOCKED with synthetic status responses via page.route(...), which
- * makes each of the tested check states reproducible on demand. Only PUT bank/receiveIban
- * (full URL /v1/bank/receiveIban after useApi) is intercepted; everything else
+ * Two endpoints are MOCKED with synthetic or rewritten responses via page.route(...):
+ * PUT bank/receiveIban (full URL /v1/bank/receiveIban after useApi) is intercepted with synthetic
+ * status responses so each of the tested check states is reproducible on demand; GET /v2/user is
+ * intercepted as a second, side-effect-free exception that pins kyc.level in the response body
+ * to a fixed value so the screen-level KYC guard passes (see KYC note below). Everything else
  * (auth/user/settings/…) is passed through via route.continue() to the local running stack.
  *
- * Intercepted endpoint (base `/v1/` is prepended by useApi):
- *   - PUT bank/receiveIban   body { iban }; success body { status: ReceiveIbanStatus }
+ * Intercepted endpoints:
+ *   - PUT bank/receiveIban (base `/v1/` is prepended by useApi)   body { iban }; success body { status: ReceiveIbanStatus }
+ *   - GET /v2/user   response rewritten to pin kyc.level to a fixed value so the screen's KYC guard passes
  *
  * Synthetic fixtures: fixed example IBAN string.
+ *
+ * KYC precondition: the support-issue screen is behind useKycLevelGuard(KycLevel.Link, '/contact')
+ * in src/screens/support-issue.screen.tsx. A freshly registered account is level 0 and would be
+ * redirected to contact data, so the Receiver IBAN field never appears. Instead of mutating the
+ * account server-side, installReceiveIbanRoutes also intercepts GET /v2/user as a second exception
+ * next to PUT bank/receiveIban and pins kyc.level in that HTTP response to a fixed value that lets the
+ * guard pass. No account is changed — the pinned level applies only to the response seen by these
+ * tests, not to server-side state. Because the level is pinned to a fixed value rather than merely
+ * raised, the screenshot is reproducible regardless of whatever KYC level the local account
+ * currently has.
  */
 
 // Example Swiss IBAN (21 alphanumerics once normalized); length is above ReceiverIbanCheckMinLength (15).
@@ -30,13 +43,20 @@ const EXAMPLE_RECEIVER_IBAN = 'CH93 0076 2011 6238 5295 7';
 
 const RECEIVE_IBAN_RE = /\/v1\/bank\/receiveIban(?:\?|$)/;
 
+const USER_V2_RE = /\/v2\/user(?:\?|$)/;
+
+/** Level the api reports for an account that has completed ContactData KYC. Kept at this value on
+ *  purpose — a higher level (KycLevel.Completed and above) would add an extra entry to the
+ *  "Issue type" dropdown and skew the screenshots. */
+const GUARD_KYC_LEVEL = 10;
+
 type ReceiveIbanStatus = 'DfxIban' | 'NotMatched' | 'InvalidIban' | 'LoginRequired';
 
 /** Success: JSON `{ status }`. Failure: HTTP error (any non-2xx is treated as unavailable by the screen). */
 type ReceiveIbanMock = { status: ReceiveIbanStatus } | { httpStatus: number };
 
 // ---------------------------------------------------------------------------
-// Routing: intercept ONLY PUT /v1/bank/receiveIban; pass everything else through.
+// Routing: intercept PUT /v1/bank/receiveIban and GET /v2/user; pass everything else through.
 // ---------------------------------------------------------------------------
 
 async function installReceiveIbanRoutes(
@@ -72,6 +92,27 @@ async function installReceiveIbanRoutes(
 
     // everything else (auth, user, settings, …) hits the real api
     await route.continue();
+  });
+
+  await page.route(USER_V2_RE, async (route: Route) => {
+    if (route.request().method() !== 'GET') {
+      await route.continue();
+      return;
+    }
+
+    const response = await route.fetch();
+    const user = await response.json();
+
+    if (typeof user?.kyc?.level !== 'number') {
+      throw new Error(
+        `GET /v2/user response missing expected structure { kyc: { level: number } }; got: ${JSON.stringify(user)}`,
+      );
+    }
+
+    await route.fulfill({
+      response,
+      json: { ...user, kyc: { ...user.kyc, level: GUARD_KYC_LEVEL } },
+    });
   });
 }
 
