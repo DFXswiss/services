@@ -176,13 +176,15 @@ export function useSafe(): UseSafeResult {
   const generations = useRef<Record<LoadKind, number>>({ portfolio: 0, history: 0, orders: 0 });
 
   // A manual reload is not an effect, so nothing would cancel it on the way out. This does.
+  // Set on the way in as well as cleared on the way out: an effect that is torn down and run
+  // again — as StrictMode does on mount — would otherwise leave the screen permanently deaf.
   const isMounted = useRef(true);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
       isMounted.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
 
   /**
    * Starts a request and returns a function that invalidates it, which effects use on cleanup
