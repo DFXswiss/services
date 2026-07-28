@@ -1,4 +1,4 @@
-import { ApiError, TfaLevel, Utils, Validations, useUserContext } from '@dfx.swiss/react';
+import { ApiError, Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
   IconColor,
@@ -14,7 +14,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useMergedAccount } from '../../hooks/merged-account.hook';
-import { useNavigation } from '../../hooks/navigation.hook';
 import { ErrorHint } from '../error-hint';
 
 interface MailEditProps {
@@ -55,14 +54,15 @@ export function MailEdit({
   const { updateMail, isUserUpdating } = useUserContext();
   const { translate, translateError } = useSettingsContext();
   const { handleMergedError } = useMergedAccount();
-  const { navigate } = useNavigation();
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
+  const [showLinkHint, setShowLinkHint] = useState(false);
   const [error, setError] = useState<string>();
 
   function showMailConfirmation({ email }: FormData): void {
+    setError(undefined);
     if (!email || email.length === 0) return onSubmit(email);
     setPendingEmail(email);
     setShowConfirmation(true);
@@ -70,6 +70,7 @@ export function MailEdit({
 
   async function saveUser(email: string): Promise<void> {
     setError(undefined);
+    setShowLinkHint(false);
     setIsSaving(true);
 
     return updateMail(email)
@@ -77,9 +78,21 @@ export function MailEdit({
       .catch((e: ApiError) => {
         if (handleMergedError(e)) return;
 
-        // an account that already carries a mail has to pass 2FA before it can change it
+        // the address belongs to an existing account: the merge mail is already out, so retrying
+        // only sends another one — the user has to follow the link instead
+        if (e.statusCode === 409 && e.message?.includes('exists') && e.message.includes('merge'))
+          return setShowLinkHint(true);
+
+        // This step can only set a first address. Changing an existing one needs 2FA plus a code
+        // sent to the new address, and this component has no field to enter that code — so say so
+        // instead of sending the user through a 2FA redirect that cannot restore this screen.
         if (e.code === 'TFA_REQUIRED')
-          return navigate('/2fa', { state: { level: TfaLevel.BASIC }, setRedirect: true });
+          return setError(
+            translate(
+              'screens/kyc',
+              'This account already has an email address. You can change it in your account settings.',
+            ),
+          );
 
         setError(e.message);
       })
@@ -89,6 +102,25 @@ export function MailEdit({
   const rules = Utils.createRules({
     email: [!isOptional && Validations.Required, Validations.Mail],
   });
+
+  if (showLinkHint) {
+    return (
+      <StyledVerticalStack gap={6} full>
+        <p className="text-dfxGray-700">
+          {translate('screens/kyc', 'It looks like you already have an account with DFX.')}{' '}
+          {translate(
+            'screens/kyc',
+            'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
+          )}
+        </p>
+        <StyledButton
+          width={StyledButtonWidth.MIN}
+          label={translate('general/actions', 'OK')}
+          onClick={() => onSubmit()}
+        />
+      </StyledVerticalStack>
+    );
+  }
 
   if (showConfirmation && pendingEmail) {
     return (
@@ -105,7 +137,10 @@ export function MailEdit({
         <StyledHorizontalStack gap={4}>
           <StyledButton
             label={translate('general/actions', 'Change')}
-            onClick={() => setShowConfirmation(false)}
+            onClick={() => {
+              setError(undefined);
+              setShowConfirmation(false);
+            }}
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
             caps
