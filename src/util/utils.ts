@@ -59,11 +59,25 @@ export function url({
 
 // Router navigation path (react-router): the leading slash is REQUIRED so the target is treated as
 // an absolute in-app route. Use for navigate()/setCallback, never for SDK call configs.
+// Merges any query already present on `path` with `params` into a single `?` (incoming params win
+// on key collisions) so paths like `/support/issue?issue-type=TransactionIssue` never produce `??`.
 export function relativeUrl({ path, params }: { path: string; params?: URLSearchParams }): string {
   if (isAbsoluteUrl(path)) return url({ base: path, params });
 
   const normalizedPath = '/' + path.replace(/^\/+/, ''); // start with a single slash
-  return params && params.toString() ? `${normalizedPath}?${params}` : normalizedPath;
+  const queryIndex = normalizedPath.indexOf('?');
+  const pathname = queryIndex === -1 ? normalizedPath : normalizedPath.slice(0, queryIndex);
+  const existingSearch = queryIndex === -1 ? '' : normalizedPath.slice(queryIndex + 1);
+
+  const merged = new URLSearchParams(existingSearch);
+  if (params) {
+    params.forEach((value, key) => {
+      merged.set(key, value);
+    });
+  }
+
+  const query = merged.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
 
 // SDK call path (DfxHttpClient config.url): the leading slash is FORBIDDEN because the client joins

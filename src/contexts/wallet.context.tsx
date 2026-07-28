@@ -2,6 +2,7 @@ import { Blockchain, Utils, useApiSession, useAuth, useSessionContext, useUserCo
 import { AuthWalletType } from '@dfx.swiss/react/dist/definitions/auth';
 import { Router } from '@remix-run/router';
 import browserLang from 'browser-lang';
+import { jwtDecode } from 'jwt-decode';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../hooks/store.hook';
 import { WalletType as MetaMaskWalletType, useMetaMask } from '../hooks/wallets/metamask.hook';
@@ -179,7 +180,10 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const { isInitialized: isSessionInitialized, isLoggedIn, logout } = useSessionContext();
   const { updateSession } = useApiSession();
   const api = useSessionContext();
-  const { isInitialized: isParamsInitialized, params: appParams } = useAppHandlingContext();
+  const {
+    isInitialized: isParamsInitialized,
+    params: appParams,
+  } = useAppHandlingContext();
   const { getSignMessage } = useAuth();
   const { readBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
@@ -228,17 +232,23 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         }
 
         // Set credentials BEFORE async call to prevent race conditions (React StrictMode double-render)
-        lastAppliedCredentials.current = { address: appParams.address, signature: appParams.signature };
+        const credentials = { address: appParams.address, signature: appParams.signature };
+        lastAppliedCredentials.current = credentials;
         await createSession(appParams.address, appParams.signature, appParams.pubkey);
         return true;
-      } else if (appParams.session && Utils.isJwt(appParams.session)) {
+      } else if (appParams.session) {
         // Skip if same session was already applied
         if (lastCreds.session === appParams.session) {
           return false;
         }
 
         // Set session BEFORE call to prevent race conditions
-        lastAppliedCredentials.current = { session: appParams.session };
+        const credentials = { session: appParams.session };
+        lastAppliedCredentials.current = credentials;
+        if (!Utils.isJwt(appParams.session)) {
+          throw new Error('Invalid session');
+        }
+        authenticatedCustomerIdentity(appParams.session);
         updateSession(appParams.session);
         return true;
       }
@@ -249,6 +259,12 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     }
 
     return false;
+  }
+
+  function authenticatedCustomerIdentity(token: string): number {
+    const account = jwtDecode<{ account?: number }>(token).account;
+    if (typeof account !== 'number') throw new Error('Authenticated session has no customer identity');
+    return account;
   }
 
   function setWallet(walletType?: WalletType) {

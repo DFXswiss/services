@@ -17,9 +17,15 @@ import { PaymentQrCode } from './payment-qr-code';
 
 interface PaymentInformationContentProps {
   info: Buy;
+  /**
+   * Show the Bank row only for a verified Bank Frick personal-IBAN offer.
+   * Must not be derived from generic `isPersonalIban` — legacy Yapeal virtual IBANs also set
+   * that flag, and selector-free customers must keep the pre-change presentation.
+   */
+  showBank?: boolean;
 }
 
-export function PaymentInformationContent({ info }: PaymentInformationContentProps): JSX.Element {
+export function PaymentInformationContent({ info, showBank }: PaymentInformationContentProps): JSX.Element {
   const { translate } = useSettingsContext();
 
   return (
@@ -42,7 +48,10 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
         {info.paymentRequest ? (
           <StyledTabContainer
             tabs={[
-              { title: translate('screens/payment', 'Text'), content: <PaymentInformationText info={info} /> },
+              {
+                title: translate('screens/payment', 'Text'),
+                content: <PaymentInformationText info={info} showBank={showBank} />,
+              },
               {
                 title: translate('screens/payment', 'QR Code'),
                 content: <PaymentQrCode value={info.paymentRequest} txId={info.id} />,
@@ -53,14 +62,14 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
             small
           />
         ) : (
-          <PaymentInformationText info={info} />
+          <PaymentInformationText info={info} showBank={showBank} />
         )}
       </StyledVerticalStack>
     </>
   );
 }
 
-function PaymentInformationText({ info }: PaymentInformationContentProps): JSX.Element {
+function PaymentInformationText({ info, showBank }: PaymentInformationContentProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { copy } = useClipboard();
 
@@ -88,6 +97,12 @@ function PaymentInformationText({ info }: PaymentInformationContentProps): JSX.E
           {info.bic}
           <CopyButton onCopy={() => copy(info.bic)} />
         </StyledDataTableRow>
+        {showBank && info.bank && (
+          <StyledDataTableRow label={translate('screens/payment', 'Bank')}>
+            {info.bank}
+            <CopyButton onCopy={() => copy(info.bank)} />
+          </StyledDataTableRow>
+        )}
         {info.remittanceInfo && (
           <StyledDataTableRow
             label={translate('screens/payment', 'Remittance info')}

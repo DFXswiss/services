@@ -1,7 +1,7 @@
 import { DfxContextProvider, PaymentRoutesContextProvider, SupportChatContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useRef } from 'react';
 import { LoaderFunctionArgs, Outlet, RouteObject, RouterProvider, redirect } from 'react-router-dom';
 import { LayoutWrapper } from './components/layout-wrapper';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
@@ -9,6 +9,7 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
 import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
+import { PersonalIbanConfirmationContextProvider } from './contexts/personal-iban-confirmation.context';
 import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
@@ -599,13 +600,31 @@ export interface WidgetParams extends AppParams {
 interface AppProps {
   routerFactory: (routes: RouteObject[]) => Router;
   params?: WidgetParams;
+  personalIbanOccurrence?: number;
 }
 
-function App({ routerFactory, params }: AppProps) {
-  const router = routerFactory(Routes);
+function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
+  if (
+    params?.personalIban !== undefined &&
+    personalIbanOccurrence === undefined
+  ) {
+    throw new Error(
+      'personalIbanOccurrence is required when a widget supplies personalIban',
+    );
+  }
 
-  const home = params?.service && `/${params.service}`;
-  if (home) router.navigate(home);
+  const routerRef = useRef<Router>();
+  if (!routerRef.current) {
+    routerRef.current = routerFactory(Routes);
+  }
+  const router = routerRef.current;
+
+  const hasNavigatedHomeRef = useRef(false);
+  if (!hasNavigatedHomeRef.current) {
+    hasNavigatedHomeRef.current = true;
+    const home = params?.service && `/${params.service}`;
+    if (home) router.navigate(home);
+  }
 
   return (
     <WindowContextProvider>
@@ -617,11 +636,14 @@ function App({ routerFactory, params }: AppProps) {
               service={params?.service}
               closeCallback={params?.onClose}
               params={params}
+              personalIbanOccurrence={personalIbanOccurrence}
               router={router}
             >
               <SettingsContextProvider>
                 <WalletContextProvider router={router}>
-                  <RouterProvider router={router} />
+                  <PersonalIbanConfirmationContextProvider>
+                    <RouterProvider router={router} />
+                  </PersonalIbanConfirmationContextProvider>
                 </WalletContextProvider>
               </SettingsContextProvider>
             </AppHandlingContextProvider>
