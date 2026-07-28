@@ -22,7 +22,7 @@
 /asset-manifest.json
   Cache-Control: no-cache, must-revalidate
 
-# Crawler directives in robots.txt must take effect on the next request — do not cache.
+# Crawler directives in robots.txt must always revalidate so they take effect on the next request.
 /robots.txt
   Cache-Control: no-cache, must-revalidate
 
