@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import { CloseType, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { useSettingsContext } from '../../contexts/settings.context';
+import { useNavigation } from '../../hooks/navigation.hook';
 import { MailEdit } from '../edit/mail.edit';
 
 interface BuyCompletionProps {
@@ -24,7 +25,8 @@ interface BuyCompletionProps {
 
 export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyCompletionProps): JSX.Element {
   const { translate } = useSettingsContext();
-  const { closeServices } = useAppHandlingContext();
+  const { closeServices, isEmbedded, canClose } = useAppHandlingContext();
+  const { navigate } = useNavigation();
 
   const [isClosed, setIsClosed] = useState(false);
 
@@ -42,6 +44,11 @@ export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyComplet
 
   function close() {
     closeServices({ type: CloseType.BUY, isComplete: true, buy: paymentInfo }, navigateOnClose);
+
+    // On a host that neither navigates nor has anywhere to hand off to, closeServices does nothing,
+    // and blanking the screen would strand the user: the completion suppresses the back button.
+    if (!navigateOnClose && !isEmbedded && !canClose) return navigate('/account');
+
     setIsClosed(true);
   }
 
