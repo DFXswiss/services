@@ -1,6 +1,16 @@
 # Cloudflare Pages edge headers — replicate the cache/CORS semantics the previous
 # CDN served, so the Pages deployment behaves identically.
 #
+# Note: for cached responses the CDN edge raises any max-age below four hours to four
+# hours; higher values stay as written. Uncached responses pass through unchanged, and
+# whether a given file is cached shows in the cf-cache-status response header.
+#
+# In this file, /widget/* (one hour) and /robots.txt ask for less than four hours and
+# are therefore the rules this affects: /robots.txt carries a no-cache rule below, yet
+# reaches the client as max-age=14400. Check it with a cache-busting request:
+#   curl -sI "https://app.dfx.swiss/robots.txt?cb=1"
+# Changing that is a CDN configuration matter; it cannot be fixed in this file.
+#
 # Fingerprinted build assets (content-hashed filenames) never change -> cache hard.
 /static/*
   Cache-Control: public, max-age=31536000, immutable
