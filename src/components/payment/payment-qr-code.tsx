@@ -1,10 +1,12 @@
-import { useBuy, useUserContext } from '@dfx.swiss/react';
+import { ApiError, useBuy, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, SpinnerVariant, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { RiExternalLinkFill } from 'react-icons/ri';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { getStoredPaymentDetailErrorMessage } from 'src/util/personal-iban';
 import { openPdfFromString } from 'src/util/utils';
+import { ErrorHint } from '../error-hint';
 import { QrBasic } from './qr-code';
 
 interface GiroCodeProps {
@@ -18,6 +20,7 @@ export function PaymentQrCode({ value, txId }: GiroCodeProps): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [invoiceError, setInvoiceError] = useState<ApiError>();
 
   async function onInvoiceClick(): Promise<void> {
     if (!user?.kyc.dataComplete) {
@@ -26,14 +29,17 @@ export function PaymentQrCode({ value, txId }: GiroCodeProps): JSX.Element {
     }
     try {
       setIsLoading(true);
+      setInvoiceError(undefined);
       const response = await invoiceFor(txId);
       openPdfFromString(response.pdfData);
     } catch (err) {
-      console.error(`Error displaying PDF: ${err}`);
+      setInvoiceError(err as ApiError);
     } finally {
       setIsLoading(false);
     }
   }
+
+  const storedDetailErrorText = getStoredPaymentDetailErrorMessage(invoiceError?.message);
 
   return (
     <>
@@ -56,6 +62,13 @@ export function PaymentQrCode({ value, txId }: GiroCodeProps): JSX.Element {
             <RiExternalLinkFill className="-ml-0.5 text-base" />
           </>
         </button>
+        {invoiceError && (
+          <ErrorHint
+            message={
+              storedDetailErrorText ? translate('screens/payment', storedDetailErrorText) : invoiceError.message
+            }
+          />
+        )}
       </div>
     </>
   );

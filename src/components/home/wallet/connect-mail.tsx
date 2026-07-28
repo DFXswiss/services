@@ -14,6 +14,8 @@ import { useAppParams } from 'src/hooks/app-params.hook';
 import { useAppHandlingContext } from '../../../contexts/app-handling.context';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { useNavigation } from '../../../hooks/navigation.hook';
+import { personalIbanOnlyParams } from '../../../util/personal-iban';
+import { relativeUrl } from '../../../util/utils';
 import { ConnectError, ConnectProps } from '../connect-shared';
 
 interface FormData {
@@ -35,7 +37,14 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   const mail = new URLSearchParams(search).get('user') || undefined;
 
   const win: Window = window;
-  const redirectUri = redirectPath && `${win.location.origin}${redirectPath}`;
+  // Merge redirectPath with an allowlisted callback param set (only personal-iban when present).
+  // Do not copy the entire live search — that would forward user=/arbitrary= into the magic link.
+  const redirectUri =
+    redirectPath &&
+    `${win.location.origin}${relativeUrl({
+      path: redirectPath,
+      params: personalIbanOnlyParams(win.location.search),
+    })}`;
 
   const {
     control,

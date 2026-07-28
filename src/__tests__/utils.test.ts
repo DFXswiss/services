@@ -362,5 +362,26 @@ describe('utils', () => {
       expect(relativeUrl({ path, params })).toBe('/realunit/admin/quotes?limit=50');
       expect(apiUrl({ path, params })).toBe('realunit/admin/quotes?limit=50');
     });
+
+    it('merges an existing query on path with incoming params into a single ?', () => {
+      const result = relativeUrl({
+        path: '/support/issue?issue-type=TransactionIssue',
+        params: new URLSearchParams({ foo: 'bar' }),
+      });
+      expect(result.startsWith('/support/issue?')).toBe(true);
+      expect(result.indexOf('?')).toBe(result.lastIndexOf('?'));
+      const query = new URLSearchParams(result.slice(result.indexOf('?') + 1));
+      expect(query.get('issue-type')).toBe('TransactionIssue');
+      expect(query.get('foo')).toBe('bar');
+    });
+
+    it('lets incoming params override keys that already exist on path', () => {
+      const result = relativeUrl({
+        path: '/support/issue?issue-type=TransactionIssue',
+        params: new URLSearchParams({ 'issue-type': 'LimitRequest' }),
+      });
+      const query = new URLSearchParams(result.slice(result.indexOf('?') + 1));
+      expect(query.get('issue-type')).toBe('LimitRequest');
+    });
   });
 });

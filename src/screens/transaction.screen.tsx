@@ -64,6 +64,7 @@ import { useBlockchain } from '../hooks/blockchain.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import { getStoredPaymentDetailErrorMessage } from '../util/personal-iban';
 import { blankedAddress, openPdfFromString } from '../util/utils';
 import { ZipValidation } from '../util/validation-rules';
 
@@ -663,6 +664,9 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const [editTransaction, setEditTransaction] = useState<number>();
   const [isInvoiceLoading, setIsInvoiceLoading] = useState<string>();
   const [isReceiptLoading, setIsReceiptLoading] = useState<number>();
+  // Visible error for invoice/receipt PDF loads (must not be silently swallowed).
+  // Keyed by tx.uid (invoice) or String(tx.id) (receipt) so the hint only shows on the row that failed.
+  const [documentError, setDocumentError] = useState<{ key: string; message: string }>();
 
   useEffect(() => {
     if (id) setTimeout(() => txRefs.current[id]?.scrollIntoView());
@@ -871,9 +875,19 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               label={translate('general/actions', 'Open invoice')}
                               onClick={() => {
                                 setIsInvoiceLoading(tx.uid);
+                                setDocumentError(undefined);
                                 getTransactionInvoice(tx.uid)
                                   .then((response: PdfDocument) => {
                                     openPdfFromString(response.pdfData);
+                                  })
+                                  .catch((error: ApiError) => {
+                                    const storedDetailErrorText = getStoredPaymentDetailErrorMessage(error.message);
+                                    setDocumentError({
+                                      key: tx.uid,
+                                      message: storedDetailErrorText
+                                        ? translate('screens/payment', storedDetailErrorText)
+                                        : error.message,
+                                    });
                                   })
                                   .finally(() => setIsInvoiceLoading(undefined));
                               }}
@@ -887,9 +901,19 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                 if (!tx.id) return;
 
                                 setIsReceiptLoading(tx.id);
+                                setDocumentError(undefined);
                                 getTransactionReceipt(tx.id)
                                   .then((response: PdfDocument) => {
                                     openPdfFromString(response.pdfData);
+                                  })
+                                  .catch((error: ApiError) => {
+                                    const storedDetailErrorText = getStoredPaymentDetailErrorMessage(error.message);
+                                    setDocumentError({
+                                      key: String(tx.id),
+                                      message: storedDetailErrorText
+                                        ? translate('screens/payment', storedDetailErrorText)
+                                        : error.message,
+                                    });
                                   })
                                   .finally(() => setIsReceiptLoading(undefined));
                               }}
@@ -897,6 +921,10 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               isLoading={isReceiptLoading === tx.id}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
+                            {documentError &&
+                              (documentError.key === tx.uid || documentError.key === String(tx.id)) && (
+                                <ErrorHint message={documentError.message} />
+                              )}
                             <StyledButton
                               label={translate(
                                 'general/actions',

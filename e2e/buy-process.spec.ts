@@ -99,6 +99,68 @@ test.describe('Buy Process - UI Flow', () => {
       maxDiffPixels: 10000,
     });
   });
+
+  test('should forward the personal IBAN selector and display Bank Frick details', async ({ page, request }) => {
+    const token = await getToken(request);
+    let receivedProvider: unknown;
+
+    await page.route('**/v1/buy/paymentInfos', async (route) => {
+      const requestData = route.request().postDataJSON() as Record<string, unknown>;
+      receivedProvider = requestData.personalIbanProvider;
+
+      // Keep this visual test independent of Bank Frick and avoid allocating a real vIBAN.
+      const upstreamData = { ...requestData };
+      delete upstreamData.personalIbanProvider;
+      const response = await route.fetch({ postData: JSON.stringify(upstreamData) });
+      const paymentInfo = (await response.json()) as Record<string, unknown>;
+
+      await route.fulfill({
+        response,
+        json: {
+          ...paymentInfo,
+          bank: 'Bank Frick',
+          bic: 'BFRILI22XXX',
+          iban: 'LI21088100002324013AA',
+          name: 'DFX AG',
+          remittanceInfo: undefined,
+          sepaInstant: false,
+          isPersonalIban: true,
+        },
+      });
+    });
+
+    await page.goto(
+      `/buy?session=${token}&blockchain=Ethereum&asset-in=EUR&amount-in=100&personal-iban=frick`,
+    );
+
+    const confirmation = page
+      .getByText(
+        'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?',
+      )
+      .locator(
+        'xpath=ancestor::div[.//button[normalize-space()="Request and use personal IBAN"] and .//button[normalize-space()="Continue without personal IBAN"]][1]',
+      );
+    await expect(confirmation).toHaveScreenshot(
+      'buy-bank-frick-confirmation.png',
+    );
+
+    await page
+      .getByRole('button', { name: 'Request and use personal IBAN' })
+      .click();
+
+    const bankLabel = page.getByText('Bank', { exact: true });
+    await expect(bankLabel).toBeVisible({ timeout: 15000 });
+    await expect.poll(() => receivedProvider).toBe('Frick');
+    const paymentDetails = page
+      .getByRole('heading', { name: 'Payment Information' })
+      .locator('..');
+    await expect(
+      paymentDetails.getByText('DFX AG', { exact: true }),
+    ).toBeVisible();
+    await expect(paymentDetails).toHaveScreenshot(
+      'buy-bank-frick-payment-details.png',
+    );
+  });
 });
 
 test.describe('Buy Process - Wallet 2 (BIP-44 derived)', () => {

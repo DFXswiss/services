@@ -1,6 +1,13 @@
 import { Blockchain, Buy, Sell, Swap, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
@@ -10,6 +17,10 @@ import { useBalanceContext } from './balance.context';
 
 // --- INTERFACES --- //
 // CAUTION: params need to be added to index-widget.tsx
+// Session-hygiene list: strip one-shot auth/session/PII/config values from the address bar after
+// init so they do not linger. `personal-iban` is intentionally NOT listed — it is a public,
+// non-secret customer intent selector and the durable source of truth for the current purchase
+// (visible in the address bar for the whole lifetime of the selection).
 const urlParamsToRemove = [
   'headless',
   'borderless',
@@ -107,6 +118,8 @@ export interface AppParams {
   paymentMethod?: string;
   bankAccount?: string;
   externalTransactionId?: string;
+  /** Explicit personal IBAN selector. Public URL name: `personal-iban`. */
+  personalIban?: string;
 }
 
 export enum CloseType {
@@ -164,6 +177,15 @@ interface AppHandlingContextInterface {
   hasSession: boolean;
   isEmbedded: boolean;
   isDfxHosted: boolean;
+  /** True when running as the embedded web component (not standalone browser). */
+  isWidget: boolean;
+  /**
+   * Live widget `personal-iban` / `personalIban` attribute/property value (widget only).
+   * Read by the confirmation hook; not part of params state.
+   */
+  widgetPersonalIban?: string;
+  /** Internal value-change counter; not part of the Web Component's public properties. */
+  widgetPersonalIbanOccurrence?: number;
   availableBlockchains?: Blockchain[];
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
@@ -178,6 +200,7 @@ interface AppHandlingContextProps extends PropsWithChildren {
   isWidget: boolean;
   service?: Service;
   params?: AppParams;
+  personalIbanOccurrence?: number;
   router: Router;
   closeCallback?: (data: CloseMessageData) => void;
 }
@@ -186,6 +209,21 @@ const AppHandlingContext = createContext<AppHandlingContextInterface>(undefined 
 
 export function useAppHandlingContext(): AppHandlingContextInterface {
   return useContext(AppHandlingContext);
+}
+
+// personalIban is never copied into params state: its source remains the `personal-iban` URL
+// parameter (standalone) or live widget property (embedded). See src/hooks/personal-iban.hook.ts
+// for source derivation. Customer ownership is checked when a quote applies the selector.
+export function removeNonStorageParams(params: AppParams): AppParams {
+  const copy = { ...params };
+
+  delete copy.address;
+  delete copy.signature;
+  delete copy.pubkey;
+  delete copy.session;
+  delete copy.autoStart;
+
+  return copy;
 }
 
 export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.Element {
@@ -199,16 +237,12 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const [redirectUri, setRedirectUri] = useState<string>();
   const [params, setParams] = useState<AppParams>({});
   const [redirectPath, setRedirectPath] = useState<string>();
-
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
 
   useChange((newVal, oldVal) => {
     if (!newVal && oldVal) {
-      storeQueryParams.remove();
-      storeRedirectUri.remove();
-      setParams({});
-      setRedirectUri(undefined);
+      clearCustomerSessionState();
     }
   }, isLoggedIn);
 
@@ -225,6 +259,13 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     return query.get(key) ?? undefined;
   }
 
+  function clearCustomerSessionState() {
+    storeQueryParams.remove();
+    storeRedirectUri.remove();
+    setParams({});
+    setRedirectUri(undefined);
+  }
+
   function setParameters(params: Partial<AppParams>) {
     setParams((p) => {
       const updatedParams = { ...p, ...params };
@@ -239,18 +280,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
   function paramsHasSession(params?: AppParams): boolean {
     return Boolean(params?.session || (params?.address && params.signature));
-  }
-
-  function removeNonStorageParams(params: AppParams): AppParams {
-    const copy = { ...params };
-
-    delete copy.address;
-    delete copy.signature;
-    delete copy.pubkey;
-    delete copy.session;
-    delete copy.autoStart;
-
-    return copy;
   }
 
   function loadQueryParams(): AppParams {
@@ -294,7 +323,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
           ...Object.entries(params)
-            .filter(([_, val]) => typeof val === 'string')
+            // personalIban stays live and is read by the confirmation hook.
+            .filter(([key, val]) => typeof val === 'string' && key !== 'personalIban')
             .reduce(
               (prev, [key, val]) => {
                 prev[key] = val;
@@ -457,9 +487,14 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     }
   }
 
+  const widgetPersonalIban = props.isWidget ? props.params?.personalIban : undefined;
+
   const context = useMemo(
     () => ({
       isEmbedded: props.isWidget || isUsedByIframe,
+      isWidget: props.isWidget,
+      widgetPersonalIban,
+      widgetPersonalIbanOccurrence: props.isWidget ? props.personalIbanOccurrence : undefined,
       hasSession,
       isDfxHosted: window.location.hostname?.split('.').slice(-2).join('.') === 'dfx.swiss',
       closeServices,
@@ -481,6 +516,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     }),
     [
       props.isWidget,
+      widgetPersonalIban,
+      props.personalIbanOccurrence,
       props.service,
       isUsedByIframe,
       redirectUri,
