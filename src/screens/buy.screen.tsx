@@ -483,7 +483,7 @@ export default function BuyScreen(): JSX.Element {
 
     if (hasUnsupportedPersonalIbanRequest) {
       const personalIbanErrorText = getPersonalIbanErrorMessage('PersonalIbanProviderUnsupported');
-      if (isRunning && generation === quoteGeneration.current) {
+      if (generation === quoteGeneration.current) {
         setPaymentInfo(undefined);
         setPaymentInfoPaymentMethod(undefined);
         setErrorMessage(

@@ -155,18 +155,16 @@ export default function BuyInfoScreen(): JSX.Element {
 
     if (!(asset && currency && (amountIn || amountOut))) {
       const inputIsComplete = (amountIn || amountOut) && assetIn && assetOut;
-      if (!inputIsComplete && isRunning) setErrorMessage('Missing required information');
+      if (!inputIsComplete) setErrorMessage('Missing required information');
       return () => {
         isRunning = false;
       };
     }
 
-    if (isRunning) {
-      setErrorMessage(undefined);
-      setKycError(undefined);
-      setKycMessageOverride(undefined);
-      setPaymentInfo(undefined);
-    }
+    setErrorMessage(undefined);
+    setKycError(undefined);
+    setKycMessageOverride(undefined);
+    setPaymentInfo(undefined);
 
     const requestPersonalIbanProvider = isPersonalIbanEligible
       ? toPersonalIbanProviderRequest(effectivePersonalIban).personalIbanProvider
@@ -177,7 +175,7 @@ export default function BuyInfoScreen(): JSX.Element {
 
     if (isUnrecognizedPersonalIbanSelector(personalIbanSelector)) {
       const personalIbanErrorText = getPersonalIbanErrorMessage('PersonalIbanProviderUnsupported');
-      if (isRunning && generation === quoteGeneration.current) {
+      if (generation === quoteGeneration.current) {
         setPaymentInfo(undefined);
         setErrorMessage(
           personalIbanErrorText
@@ -205,7 +203,7 @@ export default function BuyInfoScreen(): JSX.Element {
       request.targetAmount = +amountOut;
     }
 
-    if (isRunning) setIsLoading(true);
+    setIsLoading(true);
     receiveFor(request)
       .then((buy) => {
         if (!isRunning || generation !== quoteGeneration.current) return;

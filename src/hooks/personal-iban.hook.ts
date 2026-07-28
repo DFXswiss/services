@@ -36,6 +36,8 @@ function usePersonalIbanSelection(): PersonalIbanSelection {
     useAppHandlingContext();
   const location = useLocation();
   const urlPersonalIban =
+    // lgtm[js/clear-text-storage-of-sensitive-data] - The public parameter carries a provider
+    // identifier, never an IBAN; this hook reads the live URL and does not persist the value.
     new URLSearchParams(location.search).get('personal-iban') ?? undefined;
 
   return {
