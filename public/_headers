@@ -21,3 +21,11 @@
   Cache-Control: no-cache, must-revalidate
 /asset-manifest.json
   Cache-Control: no-cache, must-revalidate
+/robots.txt
+  Cache-Control: no-cache, must-revalidate
+
+# Non-fingerprinted root assets — a day of cache is enough.
+/favicon.ico
+  Cache-Control: public, max-age=86400
+/logo.png
+  Cache-Control: public, max-age=86400
