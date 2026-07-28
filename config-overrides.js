@@ -24,6 +24,10 @@ module.exports = function override(config, env) {
   ];
   config.output = {
     ...config.output,
+    // Content-hashed WASM belongs under static/, where public/_headers already caches
+    // fingerprinted assets; without this the file lands in the build root, which no rule
+    // covers.
+    webassemblyModuleFilename: 'static/wasm/[hash].module.wasm',
     ...(process.env.REACT_APP_PUBLIC_URL && process.env.CUSTOM_CHUNK_PATH
       ? {
           publicPath: new URL(process.env.CUSTOM_CHUNK_PATH, process.env.REACT_APP_PUBLIC_URL).href,
