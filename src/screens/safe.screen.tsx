@@ -113,9 +113,10 @@ export default function SafeScreen(): JSX.Element {
   }, [userCurrency]);
 
   const showChart = history.length > 1;
-  // Until the account list has arrived we do not know the level, and offering a transaction
-  // area that may vanish a moment later is worse than showing it a moment late.
-  const canTransact = isAccountsLoaded && (selectedAccount === undefined || selectedAccount.accessLevel === 'Write');
+  // Acting requires an account that actually grants it. Until the list has arrived we do not
+  // know the level, and offering an area that may vanish a moment later is worse than showing
+  // it a moment late. An empty list resolves to no account at all — refuse rather than assume.
+  const canTransact = isAccountsLoaded && selectedAccount?.accessLevel === 'Write';
 
   const getTitle = () => {
     if (completionType) {

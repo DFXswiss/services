@@ -28,9 +28,9 @@ const WITHDRAW_PAIRS: Record<string, string> = Object.entries(DEPOSIT_PAIRS).red
   {},
 );
 
-/** Stable identity for an account, including the legacy Safe, whose id is null. */
+/** Stable identity for an account, including the legacy Safe, which has no id. */
 function accountKey(account: CustodyAccount): string {
-  return account.id === null ? 'legacy' : String(account.id);
+  return account.isLegacy ? 'legacy' : String(account.id);
 }
 
 export interface SendOrderFormData {
@@ -113,13 +113,6 @@ export function useSafe(): UseSafeResult {
   // null id, so it needs a key of its own rather than being addressed by id.
   const [selectedAccountKey, setSelectedAccountKey] = useState<string>();
 
-  // Mirrors the selected key for callbacks that outlive a render — a manual reload has no
-  // cleanup function to cancel it.
-  const selectedKeyRef = useRef<string>();
-  useEffect(() => {
-    selectedKeyRef.current = selectedAccountKey;
-  }, [selectedAccountKey]);
-
   const selectedAccount = useMemo(
     () => custodyAccounts.find((a) => accountKey(a) === selectedAccountKey),
     [custodyAccounts, selectedAccountKey],
@@ -153,8 +146,10 @@ export function useSafe(): UseSafeResult {
 
   useEffect(() => {
     if (!isInitialized || !user || !isLoggedIn) return;
+    let cancelled = false;
     getCustodyAccounts()
       .then((accounts) => {
+        if (cancelled) return;
         setCustodyAccounts(accounts);
         // Prefer the account the caller owns; with read-only access only, take the first.
         const ownAccount = accounts.find((a) => a.accessLevel === 'Write');
@@ -162,66 +157,59 @@ export function useSafe(): UseSafeResult {
         setSelectedAccountKey(defaultAccount !== undefined ? accountKey(defaultAccount) : undefined);
         setIsAccountsLoaded(true);
       })
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+      .catch((error: ApiError) => !cancelled && setError(error.message ?? 'Unknown error'));
+    return () => {
+      cancelled = true;
+    };
   }, [isInitialized, user, isLoggedIn]);
 
-  // Every load below is tied to the account it was started for. Without that, switching
-  // accounts while a request is in flight can paint one account's holdings under another
-  // account's name — the late answer would win.
-  useEffect(() => {
-    if (!user || !isLoggedIn || !isAccountsLoaded) return;
-    let cancelled = false;
-    setIsLoadingPortfolio(true);
-    getBalances(selectedAccount)
-      .then((portfolio) => !cancelled && setPortfolio(portfolio))
-      .catch((error: ApiError) => !cancelled && setError(error.message ?? 'Unknown error'))
-      .finally(() => !cancelled && setIsLoadingPortfolio(false));
-    return () => {
-      cancelled = true;
-    };
-  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts]);
-
-  useEffect(() => {
-    if (!user || !isLoggedIn || !isAccountsLoaded) return;
-    let cancelled = false;
-    setIsLoadingHistory(true);
-    getHistory(selectedAccount)
-      .then(({ totalValue }) => !cancelled && setHistory(totalValue))
-      .catch((error: ApiError) => !cancelled && setError(error.message ?? 'Unknown error'))
-      .finally(() => !cancelled && setIsLoadingHistory(false));
-    return () => {
-      cancelled = true;
-    };
-  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts]);
-
   /**
-   * Shared by the effect below and by the manual reload after an order completes. The manual
-   * path has no cleanup to cancel it, so the guard is the selection itself: a result is only
-   * accepted while the account it was fetched for is still the selected one.
+   * Accepts a result only if no newer request of the same kind has been started since.
+   *
+   * Comparing against the current selection is not enough: switching away and back leaves the
+   * same selection in place, so a slow first answer would still be accepted and would overwrite
+   * the fresher one that arrived meanwhile. A counter per kind of load has no such gap.
    */
-  const loadOrderHistory = useCallback(
-    (account: CustodyAccount | undefined): void => {
-      const requestedKey = account !== undefined ? accountKey(account) : undefined;
-      setIsLoadingOrderHistory(true);
-      getOrderHistory(account)
-        .then((orders) => selectedKeyRef.current === requestedKey && setOrderHistory(orders))
-        .catch(
-          (error: ApiError) => selectedKeyRef.current === requestedKey && setError(error.message ?? 'Unknown error'),
-        )
-        .finally(() => selectedKeyRef.current === requestedKey && setIsLoadingOrderHistory(false));
-    },
-    // getOrderHistory closes over `call` only, which useApi keeps stable
-    [],
-  );
+  const generations = useRef<Record<string, number>>({});
+
+  const runLatest = useCallback(function <T>(kind: string, request: Promise<T>, apply: (value: T) => void): void {
+    const generation = (generations.current[kind] ?? 0) + 1;
+    generations.current[kind] = generation;
+    const isLatest = (): boolean => generations.current[kind] === generation;
+
+    request
+      .then((value) => isLatest() && apply(value))
+      .catch((error: ApiError) => isLatest() && setError(error.message ?? 'Unknown error'))
+      .finally(() => {
+        if (!isLatest()) return;
+        if (kind === 'portfolio') setIsLoadingPortfolio(false);
+        if (kind === 'history') setIsLoadingHistory(false);
+        if (kind === 'orders') setIsLoadingOrderHistory(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!user || !isLoggedIn || !isAccountsLoaded) return;
+    setIsLoadingPortfolio(true);
+    runLatest('portfolio', getBalances(selectedAccount), setPortfolio);
+  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, runLatest]);
+
+  useEffect(() => {
+    if (!user || !isLoggedIn || !isAccountsLoaded) return;
+    setIsLoadingHistory(true);
+    runLatest('history', getHistory(selectedAccount), ({ totalValue }) => setHistory(totalValue));
+  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, runLatest]);
 
   function reloadOrderHistory(): void {
-    loadOrderHistory(selectedAccount);
+    setIsLoadingOrderHistory(true);
+    runLatest('orders', getOrderHistory(selectedAccount), setOrderHistory);
   }
 
   useEffect(() => {
     if (!user || !isLoggedIn || !isAccountsLoaded) return;
-    loadOrderHistory(selectedAccount);
-  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, loadOrderHistory]);
+    setIsLoadingOrderHistory(true);
+    runLatest('orders', getOrderHistory(selectedAccount), setOrderHistory);
+  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, runLatest]);
 
   // ---- Available Deposit Pairs ----
 
@@ -303,12 +291,19 @@ export function useSafe(): UseSafeResult {
   }
 
   /**
-   * The legacy Safe appears in the account list with a null id — it has no account row, so it is
-   * read through the plain endpoints. Treating it as an id would request `.../account/null/...`
-   * and break the screen for everyone still on legacy, which today is nearly everyone.
+   * The legacy Safe appears in the account list flagged as such and without an id — it has no
+   * account row, so it is read through the plain endpoints. Treating it as an id would request
+   * `.../account/null/...` and break the screen for everyone still on legacy, which today is
+   * nearly everyone.
+   *
+   * No account at all means the list has not been resolved to one; the plain endpoints are the
+   * caller's own Safe, which is the closest thing to a correct answer and the pre-existing
+   * behaviour. Acting is refused separately in that state (see canTransact).
    */
   function accountPath(account: CustodyAccount | undefined, suffix: string, plain: string): string {
-    return account !== undefined && account.id !== null ? `custody/account/${account.id}/${suffix}` : plain;
+    return account !== undefined && !account.isLegacy && account.id !== null
+      ? `custody/account/${account.id}/${suffix}`
+      : plain;
   }
 
   async function getBalances(account?: CustodyAccount): Promise<CustodyBalance> {
