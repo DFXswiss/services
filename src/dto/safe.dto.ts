@@ -53,3 +53,19 @@ export interface CustodyHistoryEntry {
 export interface CustodyHistory {
   totalValue: CustodyHistoryEntry[];
 }
+
+export type CustodyAccountAccessLevel = 'Read' | 'Write';
+
+export interface CustodyAccountOwner {
+  id: number;
+}
+
+export interface CustodyAccount {
+  /** null for the legacy Safe, which has no account row and is read through the plain endpoints. */
+  id: number | null;
+  title: string;
+  description?: string;
+  isLegacy: boolean;
+  accessLevel: CustodyAccountAccessLevel;
+  owner?: CustodyAccountOwner;
+}

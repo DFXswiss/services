@@ -14,7 +14,7 @@ import {
 } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderHistory, CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
-import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
+import { CustodyAccount, CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
 import { downloadPdfFromString } from 'src/util/utils';
 import { OrderFormData } from './order.hook';
 
@@ -27,6 +27,26 @@ const WITHDRAW_PAIRS: Record<string, string> = Object.entries(DEPOSIT_PAIRS).red
   (acc, [fiat, custody]) => ({ ...acc, [custody]: fiat }),
   {},
 );
+
+/**
+ * Whether the caller owns this Safe rather than merely being granted access to someone else's.
+ *
+ * The account list marks foreign accounts with their owner and leaves the field off the
+ * caller's own; the legacy Safe carries the caller as its owner. Acting is only possible on
+ * one's own Safe today — orders address the caller's holdings and carry no account, and
+ * nothing records acting on someone else's behalf.
+ */
+function isOwnAccount(account: CustodyAccount): boolean {
+  return account.isLegacy || account.owner === undefined;
+}
+
+/** The loads that follow the selected account; each tracks its own generation. */
+type LoadKind = 'portfolio' | 'history' | 'orders';
+
+/** Stable identity for an account, including the legacy Safe, which has no id. */
+function accountKey(account: CustodyAccount): string {
+  return account.isLegacy ? 'legacy' : String(account.id);
+}
 
 export interface SendOrderFormData {
   asset: Asset;
@@ -59,6 +79,11 @@ export interface UseSafeResult {
   sendableAssets?: Asset[];
   swappableSourceAssets?: Asset[];
   swappableTargetAssets?: Asset[];
+  custodyAccounts: CustodyAccount[];
+  selectedAccount?: CustodyAccount;
+  isAccountsLoaded: boolean;
+  canTransact: boolean;
+  selectAccount: (account: CustodyAccount) => void;
   setSelectedSourceAsset: (asset: string) => void;
   fetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   fetchReceiveInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
@@ -97,6 +122,28 @@ export function useSafe(): UseSafeResult {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isLoadingOrderHistory, setIsLoadingOrderHistory] = useState(true);
   const [selectedSourceAsset, setSelectedSourceAsset] = useState<string>();
+  const [custodyAccounts, setCustodyAccounts] = useState<CustodyAccount[]>([]);
+  const [isAccountsLoaded, setIsAccountsLoaded] = useState(false);
+  // Keyed by a stable string, not by the account object: an object in an effect's dependency
+  // list is a new reference on every render and would re-fetch forever. The legacy Safe has a
+  // null id, so it needs a key of its own rather than being addressed by id.
+  const [selectedAccountKey, setSelectedAccountKey] = useState<string>();
+
+  const selectedAccount = useMemo(
+    () => custodyAccounts.find((a) => accountKey(a) === selectedAccountKey),
+    [custodyAccounts, selectedAccountKey],
+  );
+
+  /**
+   * Acting needs one's own Safe with full disposal. A write grant on someone else's account
+   * does not qualify: the order endpoints carry no account, so the order would be booked
+   * against the caller's own holdings while the screen showed another account's name.
+   */
+  const canTransact =
+    isAccountsLoaded &&
+    selectedAccount !== undefined &&
+    isOwnAccount(selectedAccount) &&
+    selectedAccount.accessLevel === 'Write';
 
   // ---- Safe Screen Initialization ----
 
@@ -125,35 +172,100 @@ export function useSafe(): UseSafeResult {
   }, [isUserLoading, user, isLoggedIn, session, reloadUser, changeUserAddress, tokenStore]);
 
   useEffect(() => {
-    if (!user || !isLoggedIn) return;
+    if (!isInitialized || !user || !isLoggedIn) return;
+    let cancelled = false;
+    getCustodyAccounts()
+      .then((accounts) => {
+        if (cancelled) return;
+        setCustodyAccounts(accounts);
+        // Prefer the caller's own Safe; with access to other people's only, take the first.
+        const ownAccount = accounts.find(isOwnAccount);
+        const defaultAccount = ownAccount ?? accounts.at(0);
+        setSelectedAccountKey(defaultAccount !== undefined ? accountKey(defaultAccount) : undefined);
+        setIsAccountsLoaded(true);
+      })
+      .catch((error: ApiError) => !cancelled && setError(error.message ?? 'Unknown error'));
+    return () => {
+      cancelled = true;
+    };
+  }, [isInitialized, user, isLoggedIn]);
+
+  /**
+   * Accepts a result only if no newer request of the same kind has been started since.
+   *
+   * Comparing against the current selection is not enough: switching away and back leaves the
+   * same selection in place, so a slow first answer would still be accepted and would overwrite
+   * the fresher one that arrived meanwhile. A counter per kind of load has no such gap.
+   */
+  const generations = useRef<Record<LoadKind, number>>({ portfolio: 0, history: 0, orders: 0 });
+
+  // A manual reload is not an effect, so nothing would cancel it on the way out. This does.
+  // Set on the way in as well as cleared on the way out: an effect that is torn down and run
+  // again — as StrictMode does on mount — would otherwise leave the screen permanently deaf.
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  /**
+   * Starts a request and returns a function that invalidates it, which effects use on cleanup
+   * so a request never outlives a newer one of its kind. Leaving the screen is caught
+   * separately, because the manual reload after an order has no cleanup to hang that on.
+   *
+   * The setters live inside, so adding a kind forces a decision here instead of silently
+   * leaving that spinner running forever. They are state setters, whose identity React keeps
+   * stable, so the callback needs no dependencies.
+   */
+  const runLatest = useCallback(function <T>(
+    kind: LoadKind,
+    request: Promise<T>,
+    apply: (value: T) => void,
+  ): () => void {
+    const setLoading: Record<LoadKind, (isLoading: boolean) => void> = {
+      portfolio: setIsLoadingPortfolio,
+      history: setIsLoadingHistory,
+      orders: setIsLoadingOrderHistory,
+    };
+
+    const generation = generations.current[kind] + 1;
+    generations.current[kind] = generation;
+    const isLatest = (): boolean => isMounted.current && generations.current[kind] === generation;
+
+    request
+      .then((value) => isLatest() && apply(value))
+      .catch((error: ApiError) => isLatest() && setError(error.message ?? 'Unknown error'))
+      .finally(() => isLatest() && setLoading[kind](false));
+
+    return () => {
+      if (isLatest()) generations.current[kind] = generation + 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user || !isLoggedIn || !isAccountsLoaded) return;
     setIsLoadingPortfolio(true);
-    getBalances()
-      .then((portfolio) => setPortfolio(portfolio))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoadingPortfolio(false));
-  }, [user, isLoggedIn]);
+    return runLatest('portfolio', getBalances(selectedAccount), setPortfolio);
+  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, runLatest]);
 
   useEffect(() => {
-    if (!user || !isLoggedIn) return;
+    if (!user || !isLoggedIn || !isAccountsLoaded) return;
     setIsLoadingHistory(true);
-    getHistory()
-      .then(({ totalValue }) => setHistory(totalValue))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoadingHistory(false));
-  }, [user, isLoggedIn]);
-
-  useEffect(() => {
-    if (!user || !isLoggedIn) return;
-    reloadOrderHistory();
-  }, [user, isLoggedIn]);
+    return runLatest('history', getHistory(selectedAccount), ({ totalValue }) => setHistory(totalValue));
+  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, runLatest]);
 
   function reloadOrderHistory(): void {
     setIsLoadingOrderHistory(true);
-    getOrderHistory()
-      .then((orders) => setOrderHistory(orders))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoadingOrderHistory(false));
+    runLatest('orders', getOrderHistory(selectedAccount), setOrderHistory);
   }
+
+  useEffect(() => {
+    if (!user || !isLoggedIn || !isAccountsLoaded) return;
+    setIsLoadingOrderHistory(true);
+    return runLatest('orders', getOrderHistory(selectedAccount), setOrderHistory);
+  }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, runLatest]);
 
   // ---- Available Deposit Pairs ----
 
@@ -216,6 +328,10 @@ export function useSafe(): UseSafeResult {
     [availableAssets, availableCurrencies],
   );
 
+  function selectAccount(account: CustodyAccount): void {
+    setSelectedAccountKey(accountKey(account));
+  }
+
   // ---- API Calls ----
 
   async function createCustodyUser(): Promise<SignIn> {
@@ -226,25 +342,36 @@ export function useSafe(): UseSafeResult {
     });
   }
 
-  async function getBalances(): Promise<CustodyBalance> {
-    return call<CustodyBalance>({
-      url: `custody`,
-      method: 'GET',
-    });
+  async function getCustodyAccounts(): Promise<CustodyAccount[]> {
+    return call<CustodyAccount[]>({ url: 'custody/account', method: 'GET' });
   }
 
-  async function getHistory(): Promise<CustodyHistory> {
-    return call<CustodyHistory>({
-      url: `custody/history`,
-      method: 'GET',
-    });
+  /**
+   * The legacy Safe appears in the account list flagged as such and without an id — it has no
+   * account row, so it is read through the plain endpoints. Treating it as an id would request
+   * `.../account/null/...` and break the screen for everyone still on legacy, which today is
+   * nearly everyone.
+   *
+   * No account at all means the list has not been resolved to one; the plain endpoints are the
+   * caller's own Safe, which is the closest thing to a correct answer and the pre-existing
+   * behaviour. Acting is refused separately in that state (see canTransact).
+   */
+  function accountPath(account: CustodyAccount | undefined, suffix: string, plain: string): string {
+    return account !== undefined && !account.isLegacy && account.id !== null
+      ? `custody/account/${account.id}/${suffix}`
+      : plain;
   }
 
-  async function getOrderHistory(): Promise<CustodyOrderHistory[]> {
-    return call<CustodyOrderHistory[]>({
-      url: `custody/order`,
-      method: 'GET',
-    });
+  async function getBalances(account?: CustodyAccount): Promise<CustodyBalance> {
+    return call<CustodyBalance>({ url: accountPath(account, 'balance', 'custody'), method: 'GET' });
+  }
+
+  async function getHistory(account?: CustodyAccount): Promise<CustodyHistory> {
+    return call<CustodyHistory>({ url: accountPath(account, 'history', 'custody/history'), method: 'GET' });
+  }
+
+  async function getOrderHistory(account?: CustodyAccount): Promise<CustodyOrderHistory[]> {
+    return call<CustodyOrderHistory[]>({ url: accountPath(account, 'order', 'custody/order'), method: 'GET' });
   }
 
   async function fetchPaymentInfo(data: OrderFormData): Promise<OrderPaymentInfo> {
@@ -366,15 +493,16 @@ export function useSafe(): UseSafeResult {
   }
 
   async function downloadPdf(params: PdfDownloadParams): Promise<void> {
-    const queryParams = new URLSearchParams({
-      currency: params.currency,
-      date: params.date,
-    });
+    // Refuse rather than guess: before the list has arrived we do not know which account the
+    // statement would be about, and quietly serving the caller's own would be a wrong answer.
+    if (!isAccountsLoaded) {
+      throw new Error('Accounts are still loading');
+    }
 
-    const response = await call<{ pdfData: string }>({
-      url: `custody/pdf?${queryParams.toString()}`,
-      method: 'GET',
-    });
+    const queryParams = new URLSearchParams({ currency: params.currency, date: params.date });
+    const pdfUrl = `${accountPath(selectedAccount, 'pdf', 'custody/pdf')}?${queryParams.toString()}`;
+
+    const response = await call<{ pdfData: string }>({ url: pdfUrl, method: 'GET' });
 
     const filename = `${params.date}_DFX_Safe_Balance_Report.pdf`;
     downloadPdfFromString(response.pdfData, filename);
@@ -400,6 +528,11 @@ export function useSafe(): UseSafeResult {
       sendableAssets,
       swappableSourceAssets,
       swappableTargetAssets,
+      custodyAccounts,
+      selectedAccount,
+      isAccountsLoaded,
+      canTransact,
+      selectAccount,
       setSelectedSourceAsset,
       fetchPaymentInfo,
       fetchReceiveInfo,
@@ -434,6 +567,9 @@ export function useSafe(): UseSafeResult {
       sendableAssets,
       swappableSourceAssets,
       swappableTargetAssets,
+      custodyAccounts,
+      selectedAccount,
+      isAccountsLoaded,
       selectedSourceAsset,
       pairMap,
     ],

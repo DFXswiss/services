@@ -1077,6 +1077,8 @@
   },
   "screens/safe": {
     "My DFX Safe": "Mon DFX Safe",
+    "Account": "Compte",
+    "View only": "Lecture seule",
     "Portfolio": "Portefeuille",
     "Portfolio value": "Valeur du portefeuille",
     "Assets": "Actifs",
