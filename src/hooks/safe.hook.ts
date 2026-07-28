@@ -28,6 +28,18 @@ const WITHDRAW_PAIRS: Record<string, string> = Object.entries(DEPOSIT_PAIRS).red
   {},
 );
 
+/**
+ * Whether the caller owns this Safe rather than merely being granted access to someone else's.
+ *
+ * The account list marks foreign accounts with their owner and leaves the field off the
+ * caller's own; the legacy Safe carries the caller as its owner. Acting is only possible on
+ * one's own Safe today — orders address the caller's holdings and carry no account, and
+ * nothing records acting on someone else's behalf.
+ */
+function isOwnAccount(account: CustodyAccount): boolean {
+  return account.isLegacy || account.owner === undefined;
+}
+
 /** The loads that follow the selected account; each tracks its own generation. */
 type LoadKind = 'portfolio' | 'history' | 'orders';
 
@@ -70,6 +82,7 @@ export interface UseSafeResult {
   custodyAccounts: CustodyAccount[];
   selectedAccount?: CustodyAccount;
   isAccountsLoaded: boolean;
+  canTransact: boolean;
   selectAccount: (account: CustodyAccount) => void;
   setSelectedSourceAsset: (asset: string) => void;
   fetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
@@ -121,6 +134,17 @@ export function useSafe(): UseSafeResult {
     [custodyAccounts, selectedAccountKey],
   );
 
+  /**
+   * Acting needs one's own Safe with full disposal. A write grant on someone else's account
+   * does not qualify: the order endpoints carry no account, so the order would be booked
+   * against the caller's own holdings while the screen showed another account's name.
+   */
+  const canTransact =
+    isAccountsLoaded &&
+    selectedAccount !== undefined &&
+    isOwnAccount(selectedAccount) &&
+    selectedAccount.accessLevel === 'Write';
+
   // ---- Safe Screen Initialization ----
 
   useEffect(() => {
@@ -154,8 +178,8 @@ export function useSafe(): UseSafeResult {
       .then((accounts) => {
         if (cancelled) return;
         setCustodyAccounts(accounts);
-        // Prefer the account the caller owns; with read-only access only, take the first.
-        const ownAccount = accounts.find((a) => a.accessLevel === 'Write');
+        // Prefer the caller's own Safe; with access to other people's only, take the first.
+        const ownAccount = accounts.find(isOwnAccount);
         const defaultAccount = ownAccount ?? accounts.at(0);
         setSelectedAccountKey(defaultAccount !== undefined ? accountKey(defaultAccount) : undefined);
         setIsAccountsLoaded(true);
@@ -507,6 +531,7 @@ export function useSafe(): UseSafeResult {
       custodyAccounts,
       selectedAccount,
       isAccountsLoaded,
+      canTransact,
       selectAccount,
       setSelectedSourceAsset,
       fetchPaymentInfo,
