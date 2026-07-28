@@ -28,6 +28,9 @@ const WITHDRAW_PAIRS: Record<string, string> = Object.entries(DEPOSIT_PAIRS).red
   {},
 );
 
+/** The loads that follow the selected account; each tracks its own generation. */
+type LoadKind = 'portfolio' | 'history' | 'orders';
+
 /** Stable identity for an account, including the legacy Safe, which has no id. */
 function accountKey(account: CustodyAccount): string {
   return account.isLegacy ? 'legacy' : String(account.id);
@@ -170,34 +173,51 @@ export function useSafe(): UseSafeResult {
    * same selection in place, so a slow first answer would still be accepted and would overwrite
    * the fresher one that arrived meanwhile. A counter per kind of load has no such gap.
    */
-  const generations = useRef<Record<string, number>>({});
+  const generations = useRef<Record<LoadKind, number>>({ portfolio: 0, history: 0, orders: 0 });
 
-  const runLatest = useCallback(function <T>(kind: string, request: Promise<T>, apply: (value: T) => void): void {
-    const generation = (generations.current[kind] ?? 0) + 1;
+  // One setter per kind, so adding a kind forces a decision here instead of silently leaving
+  // its spinner running forever.
+  const setLoading: Record<LoadKind, (isLoading: boolean) => void> = {
+    portfolio: setIsLoadingPortfolio,
+    history: setIsLoadingHistory,
+    orders: setIsLoadingOrderHistory,
+  };
+
+  /**
+   * Starts a request and returns a function that invalidates it. Effects call that on cleanup,
+   * so a request outlives neither a newer one of its kind nor the screen itself.
+   */
+  const runLatest = useCallback(function <T>(
+    kind: LoadKind,
+    request: Promise<T>,
+    apply: (value: T) => void,
+  ): () => void {
+    const generation = generations.current[kind] + 1;
     generations.current[kind] = generation;
     const isLatest = (): boolean => generations.current[kind] === generation;
 
     request
       .then((value) => isLatest() && apply(value))
       .catch((error: ApiError) => isLatest() && setError(error.message ?? 'Unknown error'))
-      .finally(() => {
-        if (!isLatest()) return;
-        if (kind === 'portfolio') setIsLoadingPortfolio(false);
-        if (kind === 'history') setIsLoadingHistory(false);
-        if (kind === 'orders') setIsLoadingOrderHistory(false);
-      });
+      .finally(() => isLatest() && setLoading[kind](false));
+
+    return () => {
+      if (isLatest()) generations.current[kind] = generation + 1;
+    };
+    // setLoading holds state setters, which React keeps stable
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     if (!user || !isLoggedIn || !isAccountsLoaded) return;
     setIsLoadingPortfolio(true);
-    runLatest('portfolio', getBalances(selectedAccount), setPortfolio);
+    return runLatest('portfolio', getBalances(selectedAccount), setPortfolio);
   }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, runLatest]);
 
   useEffect(() => {
     if (!user || !isLoggedIn || !isAccountsLoaded) return;
     setIsLoadingHistory(true);
-    runLatest('history', getHistory(selectedAccount), ({ totalValue }) => setHistory(totalValue));
+    return runLatest('history', getHistory(selectedAccount), ({ totalValue }) => setHistory(totalValue));
   }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, runLatest]);
 
   function reloadOrderHistory(): void {
@@ -208,7 +228,7 @@ export function useSafe(): UseSafeResult {
   useEffect(() => {
     if (!user || !isLoggedIn || !isAccountsLoaded) return;
     setIsLoadingOrderHistory(true);
-    runLatest('orders', getOrderHistory(selectedAccount), setOrderHistory);
+    return runLatest('orders', getOrderHistory(selectedAccount), setOrderHistory);
   }, [user, isLoggedIn, isAccountsLoaded, selectedAccountKey, custodyAccounts, runLatest]);
 
   // ---- Available Deposit Pairs ----
@@ -512,6 +532,7 @@ export function useSafe(): UseSafeResult {
       swappableTargetAssets,
       custodyAccounts,
       selectedAccount,
+      isAccountsLoaded,
       selectedSourceAsset,
       pairMap,
     ],
