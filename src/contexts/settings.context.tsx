@@ -14,7 +14,7 @@ import {
 } from '@dfx.swiss/react';
 import browserLang from 'browser-lang';
 import i18n from 'i18next';
-import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
@@ -117,6 +117,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const [store, setStore] = useState<Record<string, any>>({});
   const [processingKycData, setProcessingKycData] = useState(true);
   const [infoBanner, setInfoBanner] = useState<InfoBanner>();
+  const submittedMail = useRef<string>();
 
   const availableLanguages = useMemo(
     () => languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [],
@@ -152,9 +153,17 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, lang, language, currencies, availableLanguages]);
 
   useEffect(() => {
-    // compared case-insensitively because the API lowercases the stored address: a mixed-case mail
-    // parameter would otherwise never satisfy this guard and re-submit on every user refresh
-    if (user && mail && user.mail?.toLowerCase() !== mail.toLowerCase()) updateUserMail(mail);
+    // The stored address is normalised by the API (trimmed and lowercased) and a change may stay
+    // pending mail verification, so comparing the raw parameter against it can never close for a
+    // padded or mixed-case value — the effect would then re-submit on every change of the user
+    // object, and each of those is a 403 once the account carries an address. Normalising the same
+    // way and remembering what was already sent bounds this to one attempt per target address.
+    const paramMail = mail?.trim().toLowerCase();
+    if (!user || !paramMail) return;
+    if (user.mail?.trim().toLowerCase() === paramMail || submittedMail.current === paramMail) return;
+
+    submittedMail.current = paramMail;
+    updateUserMail(paramMail);
   }, [user, mail]);
 
   useEffect(() => {
