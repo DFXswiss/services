@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { CustodyAccount } from 'src/dto/safe.dto';
+import { canActOn } from 'src/util/safe-account';
 
 interface AccountSelectorFormData {
   account: CustodyAccount;
@@ -41,7 +42,10 @@ export function AccountSelector({ accounts, selected, onSelect }: AccountSelecto
         smallLabel
         items={accounts}
         labelFunc={(account) => account.title}
-        descriptionFunc={(account) => (account.accessLevel === 'Read' ? translate('screens/safe', 'View only') : '')}
+        // Labelled by the same predicate the screen acts on: a mandate over someone else's
+        // account cannot transact either, and an entry that looks fully usable but silently
+        // drops the transaction area on selection is worse than one that says so upfront.
+        descriptionFunc={(account) => (canActOn(account) ? '' : translate('screens/safe', 'View only'))}
       />
     </Form>
   );

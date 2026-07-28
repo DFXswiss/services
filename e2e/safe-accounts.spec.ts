@@ -8,8 +8,10 @@ import { getCachedAuth } from './helpers/auth-cache';
  * single-account and legacy cases are covered by `safe.spec.ts` and are deliberately not
  * repeated here — the switcher is not rendered at all in those.
  *
- * Requires a local dataset with two reachable accounts: one owned (write) and one shared
- * read-only. Not a CI regression gate — see CONTRIBUTING.md.
+ * Requires a local dataset with three reachable accounts: one owned (write), one shared
+ * read-only, and one shared with a write mandate. The last one matters: a mandate over
+ * someone else's Safe cannot transact either, because orders carry no account and would be
+ * booked against the caller's own. Not a CI regression gate — see CONTRIBUTING.md.
  */
 
 test.describe('DFX Safe - Account switcher', () => {
@@ -67,5 +69,20 @@ test.describe('DFX Safe - Account switcher', () => {
     await expect(page.getByText('View only').first()).toBeVisible();
 
     await expect(page).toHaveScreenshot('03-account-shared-read-only.png', screenshotOpts);
+
+    // ========================================
+    // STEP 4: a shared account held under a write mandate
+    // ========================================
+    await page.getByText('Example Partner AG').first().click();
+    await expect(page.getByText('Example Mandate AG')).toBeVisible({ timeout: 10000 });
+    await page.getByText('Example Mandate AG').click();
+    await page.waitForLoadState('networkidle');
+
+    // The mandate grants write, yet acting is still refused — and the entry says so rather
+    // than looking fully usable and dropping the section on selection.
+    await expect(page.getByRole('button', { name: 'Deposit', exact: true })).toHaveCount(0);
+    await expect(page.getByText('View only').first()).toBeVisible();
+
+    await expect(page).toHaveScreenshot('04-account-shared-write-mandate.png', screenshotOpts);
   });
 });
