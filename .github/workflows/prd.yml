@@ -10,10 +10,6 @@ permissions:
 
 env:
   NODE_VERSION: '20.x'
-  AZURE_ACCOUNT_NAME: 'stdfxsrvprd'
-  AZURE_CDN_PROFILE: 'cdnp-dfx-srv-prd'
-  AZURE_CDN_ENDPOINT: 'cdne-dfx-srv-prd'
-  AZURE_RESOURCE_GROUP: 'rg-dfx-srv-prd'
 
 jobs:
   build:
@@ -22,11 +18,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.PRD_CREDENTIALS }}
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
@@ -69,87 +60,11 @@ jobs:
 
           sed -i "s|main-widget.css|https://app.dfx.swiss/widget/$version.css|g" "./build/widget/$version"
 
-      - name: Deploy to Azure Storage (PRD)
-        uses: azure/CLI@v2
-        with:
-          inlineScript: |
-            # Upload static assets with immutable caching (hashed filenames never change)
-            az storage blob upload-batch \
-              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
-              -d '$web' \
-              -s ./build \
-              --pattern "static/*" \
-              --content-cache-control "public, max-age=31536000, immutable" \
-              --overwrite
-
-            # Upload entry points with no-cache (must revalidate on every request)
-            for file in index.html manifest.json asset-manifest.json robots.txt; do
-              if [ -f "./build/$file" ]; then
-                az storage blob upload \
-                  --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
-                  -c '$web' \
-                  -f "./build/$file" \
-                  -n "$file" \
-                  --content-cache-control "no-cache, must-revalidate" \
-                  --overwrite
-              fi
-            done
-
-            # Upload other assets (favicon, logo, wasm)
-            az storage blob upload-batch \
-              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
-              -d '$web' \
-              -s ./build \
-              --pattern "*.ico" \
-              --content-cache-control "public, max-age=86400" \
-              --overwrite
-            az storage blob upload-batch \
-              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
-              -d '$web' \
-              -s ./build \
-              --pattern "*.png" \
-              --content-cache-control "public, max-age=86400" \
-              --overwrite
-            az storage blob upload-batch \
-              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
-              -d '$web' \
-              -s ./build \
-              --pattern "*.wasm" \
-              --content-cache-control "public, max-age=31536000, immutable" \
-              --overwrite
-
-            # Upload widget files
-            az storage blob upload-batch \
-              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
-              -d '$web' \
-              -s ./build \
-              --pattern "widget/*" \
-              --content-cache-control "public, max-age=3600" \
-              --overwrite
-
-      - name: Purge CDN endpoint (PRD)
-        uses: azure/CLI@v2
-        with:
-          inlineScript: |
-            az afd endpoint purge \
-              --content-paths "/*" \
-              --profile-name ${{ env.AZURE_CDN_PROFILE }} \
-              --endpoint-name ${{ env.AZURE_CDN_ENDPOINT }} \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-              --no-wait
-
       - name: Install Wrangler
         run: npm install -g wrangler@4
 
-      # Dual-deploy transition: Azure (above) stays until the DNS cutover to Pages
-      # is verified; a follow-up PR removes the Azure step afterwards.
       - name: Deploy to Cloudflare Pages (PRD)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: wrangler pages deploy build --project-name=dfx-app-prd --branch=main
-
-      - name: Logout
-        run: |
-          az logout
-        if: always()
