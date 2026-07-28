@@ -152,7 +152,9 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, lang, language, currencies, availableLanguages]);
 
   useEffect(() => {
-    if (user && mail && user.mail !== mail) updateUserMail(mail);
+    // compared case-insensitively because the API lowercases the stored address: a mixed-case mail
+    // parameter would otherwise never satisfy this guard and re-submit on every user refresh
+    if (user && mail && user.mail?.toLowerCase() !== mail.toLowerCase()) updateUserMail(mail);
   }, [user, mail]);
 
   useEffect(() => {
