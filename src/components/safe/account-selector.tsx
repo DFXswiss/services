@@ -11,7 +11,7 @@ interface AccountSelectorFormData {
 interface AccountSelectorProps {
   accounts: CustodyAccount[];
   selected: CustodyAccount;
-  onSelect: (accountId: number) => void;
+  onSelect: (account: CustodyAccount) => void;
 }
 
 export function AccountSelector({ accounts, selected, onSelect }: AccountSelectorProps): JSX.Element | null {
@@ -28,7 +28,7 @@ export function AccountSelector({ accounts, selected, onSelect }: AccountSelecto
   }, [selected, setValue]);
 
   useEffect(() => {
-    if (selectedValue && selectedValue.id !== selected.id) onSelect(selectedValue.id);
+    if (selectedValue && selectedValue !== selected) onSelect(selectedValue);
   }, [selectedValue, selected, onSelect]);
 
   if (accounts.length <= 1) return null;

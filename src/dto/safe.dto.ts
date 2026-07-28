@@ -61,9 +61,10 @@ export interface CustodyAccountOwner {
 }
 
 export interface CustodyAccount {
-  id: number;
+  /** null for the legacy Safe, which has no account row and is read through the plain endpoints. */
+  id: number | null;
   title: string;
-  description: string;
+  description?: string;
   isLegacy: boolean;
   accessLevel: CustodyAccountAccessLevel;
   owner?: CustodyAccountOwner;

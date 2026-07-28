@@ -54,6 +54,7 @@ export default function SafeScreen(): JSX.Element {
     custodyAccounts,
     selectedAccount,
     selectAccount,
+    isAccountsLoaded,
   } = useSafe();
   const { currency: userCurrency, translate } = useSettingsContext();
   const {
@@ -112,7 +113,9 @@ export default function SafeScreen(): JSX.Element {
   }, [userCurrency]);
 
   const showChart = history.length > 1;
-  const canTransact = selectedAccount === undefined || selectedAccount.accessLevel === 'Write';
+  // Until the account list has arrived we do not know the level, and offering a transaction
+  // area that may vanish a moment later is worse than showing it a moment late.
+  const canTransact = isAccountsLoaded && (selectedAccount === undefined || selectedAccount.accessLevel === 'Write');
 
   const getTitle = () => {
     if (completionType) {
