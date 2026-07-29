@@ -50,7 +50,7 @@ function formatTransfer(tx: CustodyOrderHistory): string {
   return input ?? output ?? '-';
 }
 
-function formatTimestamp(tx: CustodyOrderHistory, locale: string): string | undefined {
+function formatTimestamp(tx: CustodyOrderHistory): string | undefined {
   // completedAt is the valuta timestamp, and it only means anything while the order actually is
   // completed: the backend sets it once and never clears it, so an order moved back out of
   // Completed would otherwise keep showing a valuta it no longer has. Every other state has its
@@ -64,11 +64,19 @@ function formatTimestamp(tx: CustodyOrderHistory, locale: string): string | unde
   const timestamp = tx.status === CustodyOrderHistoryStatus.COMPLETED ? (tx.completedAt ?? tx.created) : tx.created;
   if (!timestamp) return undefined;
 
-  return new Date(timestamp).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
+  // Fixed Swiss format (e.g. 28.01.2026, 13:31), independent of the app UI language.
+  // Explicit field options (not dateStyle: 'short') so the year stays four digits.
+  return new Date(timestamp).toLocaleString('de-CH', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export const TransactionHistory = ({ transactions, isLoading }: TransactionHistoryProps) => {
-  const { translate, locale } = useSettingsContext();
+  const { translate } = useSettingsContext();
 
   return isLoading ? (
     <div className="w-full flex flex-col items-center justify-center gap-2 p-4">
@@ -88,7 +96,7 @@ export const TransactionHistory = ({ transactions, isLoading }: TransactionHisto
                 <div className="text-base flex flex-col font-semibold text-left leading-none gap-1">
                   {translate('screens/safe', ORDER_TYPE_LABELS[tx.type])}
                   <div className="text-sm text-dfxGray-700">
-                    {[translate('screens/safe', STATUS_LABELS[tx.status]), formatTimestamp(tx, locale)]
+                    {[translate('screens/safe', STATUS_LABELS[tx.status]), formatTimestamp(tx)]
                       .filter(Boolean)
                       .join(' · ')}
                   </div>
