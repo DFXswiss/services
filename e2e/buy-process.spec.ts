@@ -100,7 +100,7 @@ test.describe('Buy Process - UI Flow', () => {
     });
   });
 
-  test('should forward the personal IBAN selector and display Bank Frick details', async ({ page, request }) => {
+  test('should apply the personal IBAN selector directly and display Bank Frick details', async ({ page, request }) => {
     const token = await getToken(request);
     let receivedProvider: unknown;
 
@@ -133,21 +133,8 @@ test.describe('Buy Process - UI Flow', () => {
       `/buy?session=${token}&blockchain=Ethereum&asset-in=EUR&amount-in=100&personal-iban=frick`,
     );
 
-    const confirmation = page
-      .getByText(
-        'Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?',
-      )
-      .locator(
-        'xpath=ancestor::div[.//button[normalize-space()="Request and use personal IBAN"] and .//button[normalize-space()="Continue without personal IBAN"]][1]',
-      );
-    await expect(confirmation).toHaveScreenshot(
-      'buy-bank-frick-confirmation.png',
-    );
-
-    await page
-      .getByRole('button', { name: 'Request and use personal IBAN' })
-      .click();
-
+    // No intermediate confirmation step: the selector is applied directly and the
+    // Frick-backed payment details render as soon as the quote resolves.
     const bankLabel = page.getByText('Bank', { exact: true });
     await expect(bankLabel).toBeVisible({ timeout: 15000 });
     await expect.poll(() => receivedProvider).toBe('Frick');

@@ -162,7 +162,8 @@ export default function BuyInfoScreen(): JSX.Element {
       ? toPersonalIbanProviderRequest(effectivePersonalIban).personalIbanProvider
       : undefined;
     // Feature-specific errors apply only to a request that actually carried the provider.
-    // The raw selector remains set after a decline, while effectivePersonalIban does not.
+    // personalIbanSelector keeps the raw requested value even when ineligible or unrecognized;
+    // effectivePersonalIban only ever reflects an explicit, applicable Frick request.
     const personalIbanErrorApplies = requestPersonalIbanProvider !== undefined;
 
     if (isUnrecognizedPersonalIbanSelector(personalIbanSelector)) {
