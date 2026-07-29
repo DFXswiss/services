@@ -1,7 +1,6 @@
 import { Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
-  AssetIconVariant,
   DfxAssetIcon,
   SpinnerSize,
   StyledDataTable,
@@ -11,6 +10,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { CustodyOrderHistory, CustodyOrderHistoryStatus, CustodyOrderType } from 'src/dto/order.dto';
+import { assetIconVariant } from 'src/util/asset-icon';
 
 interface TransactionHistoryProps {
   transactions: CustodyOrderHistory[];
@@ -18,15 +18,15 @@ interface TransactionHistoryProps {
 }
 
 const ORDER_TYPE_LABELS: Record<CustodyOrderType, string> = {
-  [CustodyOrderType.DEPOSIT]: 'Deposit (Fiat)',
-  [CustodyOrderType.WITHDRAWAL]: 'Withdrawal (Fiat)',
-  [CustodyOrderType.RECEIVE]: 'Deposit (Crypto)',
-  [CustodyOrderType.SEND]: 'Withdrawal (Crypto)',
+  [CustodyOrderType.DEPOSIT]: 'Deposit',
+  [CustodyOrderType.WITHDRAWAL]: 'Withdrawal',
+  [CustodyOrderType.RECEIVE]: 'Deposit',
+  [CustodyOrderType.SEND]: 'Withdrawal',
   [CustodyOrderType.SWAP]: 'Swap',
   [CustodyOrderType.EQUITY_MINT]: 'Mint',
   [CustodyOrderType.EQUITY_REDEEM]: 'Redeem',
-  [CustodyOrderType.SAVING_DEPOSIT]: 'Deposit (Saving)',
-  [CustodyOrderType.SAVING_WITHDRAWAL]: 'Withdrawal (Saving)',
+  [CustodyOrderType.SAVING_DEPOSIT]: 'Deposit',
+  [CustodyOrderType.SAVING_WITHDRAWAL]: 'Withdrawal',
 };
 
 const STATUS_LABELS: Record<CustodyOrderHistoryStatus, string> = {
@@ -50,8 +50,18 @@ function formatTransfer(tx: CustodyOrderHistory): string {
   return input ?? output ?? '-';
 }
 
+function formatTimestamp(tx: CustodyOrderHistory, locale: string): string | undefined {
+  // completedAt is the valuta timestamp and only exists once an order is completed; for every other
+  // state the creation date is the only timestamp an order has. Both are absent when the API still
+  // predates the fields, in which case the row simply shows no date rather than "Invalid Date".
+  const timestamp = tx.completedAt ?? tx.created;
+  if (!timestamp) return undefined;
+
+  return new Date(timestamp).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
+}
+
 export const TransactionHistory = ({ transactions, isLoading }: TransactionHistoryProps) => {
-  const { translate } = useSettingsContext();
+  const { translate, locale } = useSettingsContext();
 
   return isLoading ? (
     <div className="w-full flex flex-col items-center justify-center gap-2 p-4">
@@ -66,12 +76,14 @@ export const TransactionHistory = ({ transactions, isLoading }: TransactionHisto
             <div className="w-full flex flex-row justify-between items-center gap-2 text-dfxBlue-800 p-2">
               <div className="flex flex-row items-center gap-3">
                 {(tx.inputAsset ?? tx.outputAsset) && (
-                  <DfxAssetIcon asset={(tx.inputAsset ?? tx.outputAsset) as AssetIconVariant} />
+                  <DfxAssetIcon asset={assetIconVariant((tx.inputAsset ?? tx.outputAsset) as string)} />
                 )}
                 <div className="text-base flex flex-col font-semibold text-left leading-none gap-1">
                   {translate('screens/safe', ORDER_TYPE_LABELS[tx.type])}
                   <div className="text-sm text-dfxGray-700">
-                    {translate('screens/safe', STATUS_LABELS[tx.status])}
+                    {[translate('screens/safe', STATUS_LABELS[tx.status]), formatTimestamp(tx, locale)]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </div>
                 </div>
               </div>

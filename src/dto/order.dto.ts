@@ -35,6 +35,8 @@ export enum CustodyOrderHistoryStatus {
 export interface CustodyOrderHistory {
   type: CustodyOrderType;
   status: CustodyOrderHistoryStatus;
+  created: Date;
+  completedAt?: Date;
   inputAmount?: number;
   inputAsset?: string;
   outputAmount?: number;
