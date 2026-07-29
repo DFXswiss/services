@@ -2,7 +2,7 @@
 // when a newer fetch (triggered by personalIban change) already resolved.
 // Mounts the real default-exported BuyScreen (react-hook-form runs for real;
 // The debounce hook is replaced with an effect-driven, timer-free equivalent.
-// personalIban comes from usePersonalIbanConfirmation() (not useAppParams).
+// personalIban comes from usePersonalIbanSelection() (not useAppParams).
 
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
@@ -197,13 +197,10 @@ jest.mock('../hooks/debounce.hook', () => ({
   },
 }));
 jest.mock('../hooks/personal-iban.hook', () => ({
-  usePersonalIbanConfirmation: () => ({
+  usePersonalIbanSelection: () => ({
     requestedPersonalIban: mockPersonalIban(),
     personalIban: mockPersonalIban(),
-    requiresCustomerConfirmation: false,
     hasAuthenticatedCustomer: true,
-    confirmForCurrentCustomer: jest.fn(),
-    declineForCurrentCustomer: jest.fn(),
   }),
 }));
 jest.mock('../hooks/blockchain.hook', () => ({

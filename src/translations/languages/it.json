@@ -684,8 +684,6 @@
     "Personal IBAN created successfully: {{iban}}": "IBAN personale creato con successo: {{iban}}",
     "Your requested personal IBAN is only available for EUR bank transfers, so it was not used for this offer.": "L'IBAN personale richiesto è disponibile solo per i bonifici bancari in EUR e non è stato quindi utilizzato per questa offerta.",
     "Continue without personal IBAN": "Continua senza IBAN personale",
-    "Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?": "Bank Frick ti assegna un IBAN univoco per i bonifici. Il conto associato appartiene a DFX AG. Questa operazione è irreversibile. Vuoi richiedere e utilizzare questo IBAN?",
-    "Request and use personal IBAN": "Richiedi e usa l'IBAN personale",
     "The personal IBAN response could not be verified for this offer. You can continue with the standard payment details, or cancel.": "La risposta dell'IBAN personale non ha potuto essere verificata per questa offerta. Puoi continuare con i dettagli di pagamento standard oppure annullare.",
     "Personal IBANs require the bank transfer payment method.": "Gli IBAN personali richiedono il metodo di pagamento bonifico bancario.",
     "Personal IBANs require KYC level 50.": "Gli IBAN personali richiedono il livello KYC 50.",

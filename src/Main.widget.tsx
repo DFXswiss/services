@@ -1,11 +1,7 @@
 import { createMemoryRouter } from 'react-router-dom';
 import App, { WidgetParams } from './App';
 
-interface InternalWidgetParams extends WidgetParams {
-  __personalIbanOccurrence?: number;
-}
-
-function MainWidget(params: InternalWidgetParams) {
+function MainWidget(params: WidgetParams) {
   return (
     <>
       <link type="text/css" rel="stylesheet" href="main-widget.css" />
@@ -16,7 +12,6 @@ function MainWidget(params: InternalWidgetParams) {
       <App
         routerFactory={createMemoryRouter}
         params={params}
-        personalIbanOccurrence={params.__personalIbanOccurrence}
       />
     </>
   );

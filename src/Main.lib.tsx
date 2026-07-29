@@ -1,15 +1,7 @@
-import { useRef } from 'react';
 import { createMemoryRouter } from 'react-router-dom';
 import App, { WidgetParams } from './App';
 
 function MainLib(params: WidgetParams) {
-  const previousPersonalIban = useRef<string>();
-  const personalIbanOccurrence = useRef(0);
-  if (previousPersonalIban.current !== params.personalIban) {
-    previousPersonalIban.current = params.personalIban;
-    personalIbanOccurrence.current += 1;
-  }
-
   return (
     <>
       <link
@@ -19,7 +11,6 @@ function MainLib(params: WidgetParams) {
       <App
         routerFactory={createMemoryRouter}
         params={params}
-        personalIbanOccurrence={personalIbanOccurrence.current}
       />
     </>
   );

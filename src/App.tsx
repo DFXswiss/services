@@ -9,7 +9,6 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
 import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
-import { PersonalIbanConfirmationContextProvider } from './contexts/personal-iban-confirmation.context';
 import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
@@ -600,19 +599,9 @@ export interface WidgetParams extends AppParams {
 interface AppProps {
   routerFactory: (routes: RouteObject[]) => Router;
   params?: WidgetParams;
-  personalIbanOccurrence?: number;
 }
 
-function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
-  if (
-    params?.personalIban !== undefined &&
-    personalIbanOccurrence === undefined
-  ) {
-    throw new Error(
-      'personalIbanOccurrence is required when a widget supplies personalIban',
-    );
-  }
-
+function App({ routerFactory, params }: AppProps) {
   const routerRef = useRef<Router>();
   if (!routerRef.current) {
     routerRef.current = routerFactory(Routes);
@@ -636,14 +625,11 @@ function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
               service={params?.service}
               closeCallback={params?.onClose}
               params={params}
-              personalIbanOccurrence={personalIbanOccurrence}
               router={router}
             >
               <SettingsContextProvider>
                 <WalletContextProvider router={router}>
-                  <PersonalIbanConfirmationContextProvider>
-                    <RouterProvider router={router} />
-                  </PersonalIbanConfirmationContextProvider>
+                  <RouterProvider router={router} />
                 </WalletContextProvider>
               </SettingsContextProvider>
             </AppHandlingContextProvider>
