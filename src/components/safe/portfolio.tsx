@@ -1,7 +1,6 @@
 import {
   AlignContent,
   AssetIconSize,
-  AssetIconVariant,
   DfxAssetIcon,
   SpinnerSize,
   StyledDataTable,
@@ -11,6 +10,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { CustodyAssetBalance, FiatCurrency } from 'src/dto/safe.dto';
+import { assetIconVariant } from 'src/util/asset-icon';
 import { formatCurrency } from 'src/util/utils';
 
 interface PortfolioProps {
@@ -34,7 +34,7 @@ export const Portfolio = ({ portfolio, currency, isLoading }: PortfolioProps) =>
           <StyledDataTableRow key={custodyAsset.asset.name}>
             <div className="w-full flex flex-row justify-between items-center gap-2 text-dfxBlue-800 p-2">
               <div className="w-full flex flex-row items-center gap-3">
-                <DfxAssetIcon asset={custodyAsset.asset.name as AssetIconVariant} size={AssetIconSize.LG} />
+                <DfxAssetIcon asset={assetIconVariant(custodyAsset.asset.name)} size={AssetIconSize.LG} />
                 <div className="text-base flex flex-col font-semibold text-left leading-none gap-1 pb-1">
                   {custodyAsset.asset.name}
                   <div className="text-sm text-dfxGray-700">{custodyAsset.asset.description}</div>
