@@ -11,7 +11,7 @@ export interface PersonalIbanSelection {
   requestedPersonalIban?: string;
   /** Selector that may be added to the next quote request. */
   personalIban?: string;
-  /** True only when quote ownership can be tied to an authenticated account. */
+  /** True only when quote ownership can be tied to a currently authenticated (non-expired) account. */
   hasAuthenticatedCustomer: boolean;
 }
 
@@ -29,9 +29,14 @@ export function usePersonalIbanSelection(): PersonalIbanSelection {
   const requestedPersonalIban = normalizePersonalIban(
     isWidget ? widgetPersonalIban : urlPersonalIban,
   );
-  const { session } = useAuthContext();
+  const { session, isLoggedIn } = useAuthContext();
   const customerIdentity =
     typeof session?.account === 'number' ? session.account : undefined;
+  // session (decoded JWT) and isLoggedIn are set together synchronously via setAuthToken in
+  // @dfx.swiss/react; isLoggedIn only diverges from a still-populated session.account at token
+  // expiry (computed live against Date.now()). Consulting isLoggedIn closes that gap and cannot
+  // spuriously block a legitimate non-expired session.
+  const hasAuthenticatedCustomer = customerIdentity !== undefined && isLoggedIn;
   const personalIban = isExplicitFrickPersonalIbanRequest(requestedPersonalIban)
     ? requestedPersonalIban
     : undefined;
@@ -39,6 +44,6 @@ export function usePersonalIbanSelection(): PersonalIbanSelection {
   return {
     requestedPersonalIban,
     personalIban,
-    hasAuthenticatedCustomer: customerIdentity !== undefined,
+    hasAuthenticatedCustomer,
   };
 }

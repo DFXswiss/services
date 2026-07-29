@@ -122,7 +122,7 @@ describe('usePersonalIbanSelection (real hook, real AppHandlingContextProvider, 
 
   it('hasAuthenticatedCustomer is true for a valid decoded session', async () => {
     const token = encodeSessionToken({ account: 42, exp: Math.floor(Date.now() / 1000) + 3600 });
-    mockUseAuthContext.mockReturnValue({ session: decodeSessionToken(token) });
+    mockUseAuthContext.mockReturnValue({ session: decodeSessionToken(token), isLoggedIn: true });
 
     await renderStandalone('/buy');
 
@@ -137,8 +137,17 @@ describe('usePersonalIbanSelection (real hook, real AppHandlingContextProvider, 
     expect(screen.getByTestId('authenticated')).toHaveTextContent('no');
   });
 
+  it('hasAuthenticatedCustomer is false when the session is valid but the token is expired (isLoggedIn false)', async () => {
+    const token = encodeSessionToken({ account: 42, exp: Math.floor(Date.now() / 1000) + 3600 });
+    mockUseAuthContext.mockReturnValue({ session: decodeSessionToken(token), isLoggedIn: false });
+
+    await renderStandalone('/buy');
+
+    expect(screen.getByTestId('authenticated')).toHaveTextContent('no');
+  });
+
   it('hasAuthenticatedCustomer is false when the session has no account field', async () => {
-    mockUseAuthContext.mockReturnValue({ session: {} });
+    mockUseAuthContext.mockReturnValue({ session: {}, isLoggedIn: true });
 
     await renderStandalone('/buy');
 
@@ -146,7 +155,7 @@ describe('usePersonalIbanSelection (real hook, real AppHandlingContextProvider, 
   });
 
   it('hasAuthenticatedCustomer is false when session.account is not a number', async () => {
-    mockUseAuthContext.mockReturnValue({ session: { account: '42' } });
+    mockUseAuthContext.mockReturnValue({ session: { account: '42' }, isLoggedIn: true });
 
     await renderStandalone('/buy');
 
