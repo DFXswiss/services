@@ -32,10 +32,10 @@ export function usePersonalIbanSelection(): PersonalIbanSelection {
   const { session, isLoggedIn } = useAuthContext();
   const customerIdentity =
     typeof session?.account === 'number' ? session.account : undefined;
-  // session (decoded JWT) and isLoggedIn are set together synchronously via setAuthToken in
-  // @dfx.swiss/react; isLoggedIn only diverges from a still-populated session.account at token
-  // expiry (computed live against Date.now()). Consulting isLoggedIn closes that gap and cannot
-  // spuriously block a legitimate non-expired session.
+  // session.account comes from decoded JWT state set via setAuthToken; isLoggedIn is independently
+  // recomputed each render from the live token ref and expiry check. They can only diverge in the
+  // expiry window (session.account still populated from the old jwt state, isLoggedIn already false).
+  // Consulting isLoggedIn closes that gap and cannot spuriously block a legitimate non-expired session.
   const hasAuthenticatedCustomer = customerIdentity !== undefined && isLoggedIn;
   const personalIban = isExplicitFrickPersonalIbanRequest(requestedPersonalIban)
     ? requestedPersonalIban

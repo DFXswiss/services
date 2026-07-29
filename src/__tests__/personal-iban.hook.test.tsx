@@ -137,7 +137,7 @@ describe('usePersonalIbanSelection (real hook, real AppHandlingContextProvider, 
     expect(screen.getByTestId('authenticated')).toHaveTextContent('no');
   });
 
-  it('hasAuthenticatedCustomer is false when the session is valid but the token is expired (isLoggedIn false)', async () => {
+  it('hasAuthenticatedCustomer is false when the session is valid but the SDK reports isLoggedIn: false', async () => {
     const token = encodeSessionToken({ account: 42, exp: Math.floor(Date.now() / 1000) + 3600 });
     mockUseAuthContext.mockReturnValue({ session: decodeSessionToken(token), isLoggedIn: false });
 

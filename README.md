@@ -159,12 +159,12 @@ DFX services supports the following parameters. Note that for the React componen
 
 #### Personal IBAN authentication test boundary
 
-Automated coverage exercises the selection hook (`usePersonalIbanSelection`) with synthetic authentication/router transitions and verifies the real quote screens at the boundary available to Jest. It does **not** verify these two production authentication guarantees:
+Automated coverage exercises the selection hook (`usePersonalIbanSelection`) with static renders of the real hook under different fixed initial auth-context values and different initial routes/widget params, and verifies the real quote screens at the boundary available to Jest. It does **not** verify these two production authentication guarantees:
 
 - the real SDK's `session` is decoded from the JWT and is not cleared when the token expires (only its separate `isLoggedIn` flag tracks expiry) — a browser test with a real, expiring token is needed to confirm the widget withholds issuance across that window, and that `personal-iban` survives the real login redirect and is applied only once a fresh, authenticated session exists;
 - the real logout → browser Back → reload initialization chain fully remounts the app (and its authentication context), so no authenticated session or per-offer acknowledgement can carry into the next customer.
 
-Check both flows manually. Meaningful automated coverage is achievable only with a browser test against the real app plus controllable authentication (normally the local API/authentication stack) and inspection of the real `receiveFor` request. The current Jest setup globally mocks `@dfx.swiss/react`, so it cannot exercise the production SDK token parser/provider, application guards, wallet initialization, redirects, or a real document reload.
+Check both flows manually. Meaningful automated coverage is achievable only with a browser test against the real app plus controllable authentication (normally the local API/authentication stack) and inspection of the real `receiveFor` request. Individual test files mock `@dfx.swiss/react` locally via `jest.mock` (about 37 files; there is no setup-level global mock), so Jest still substitutes a fake SDK module and cannot exercise the production token parser/provider, application guards, wallet initialization, redirects, or a real document reload.
 
 _Hint: Asset selection parameters may be overwritten when using [wallet login](#wallet-login)_
 
