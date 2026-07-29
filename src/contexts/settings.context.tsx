@@ -153,11 +153,9 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, lang, language, currencies, availableLanguages]);
 
   useEffect(() => {
-    // The stored address is normalised by the API (trimmed and lowercased) and a change may stay
-    // pending mail verification, so comparing the raw parameter against it can never close for a
-    // padded or mixed-case value — the effect would then re-submit on every change of the user
-    // object, and each of those is a 403 once the account carries an address. Normalising the same
-    // way and remembering what was already sent bounds this to one attempt per target address.
+    // Normalised like the API (trim + lowercase), or a padded/mixed-case parameter would never close
+    // this guard and would re-submit on every change of the user object. The ref additionally bounds
+    // the cases normalising cannot close: a rejected value, and a change still pending verification.
     const paramMail = mail?.trim().toLowerCase();
     if (!user || !paramMail) return;
     if (user.mail?.trim().toLowerCase() === paramMail || submittedMail.current === paramMail) return;

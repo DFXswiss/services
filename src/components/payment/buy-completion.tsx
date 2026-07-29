@@ -45,7 +45,7 @@ export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyComplet
   function close() {
     closeServices({ type: CloseType.BUY, isComplete: true, buy: paymentInfo }, navigateOnClose);
 
-    // On a host that neither navigates nor has anywhere to hand off to, closeServices does nothing,
+    // closeServices does nothing on a host that neither navigates nor has anywhere to hand off to,
     // and blanking the screen would strand the user: the completion suppresses the back button.
     if (!navigateOnClose && !isEmbedded && !canClose) return navigate('/account');
 

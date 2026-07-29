@@ -80,14 +80,12 @@ export function MailEdit({
       .catch((e: ApiError) => {
         if (handleMergedError(e)) return;
 
-        // the address belongs to an existing account: the merge mail is already out, so retrying
-        // only sends another one — the user has to follow the link instead
+        // the merge mail is already out; retrying only sends another one
         if (e.statusCode === 409 && e.message?.includes('exists') && e.message.includes('merge'))
           return setShowLinkHint(true);
 
-        // This step can only set a first address. Changing an existing one needs 2FA plus a code
-        // sent to the new address, and this component has no field to enter that code. Its own
-        // screen, not ErrorHint, because retrying here can never succeed.
+        // This step can only set a FIRST address: changing one needs 2FA plus a code this component
+        // cannot collect. Its own screen, not ErrorHint, because retrying can never succeed.
         if (e.code === 'TFA_REQUIRED') return setShowAccountHint(true);
 
         setError(e.message);
