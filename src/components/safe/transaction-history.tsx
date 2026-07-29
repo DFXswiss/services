@@ -54,8 +54,13 @@ function formatTimestamp(tx: CustodyOrderHistory, locale: string): string | unde
   // completedAt is the valuta timestamp, and it only means anything while the order actually is
   // completed: the backend sets it once and never clears it, so an order moved back out of
   // Completed would otherwise keep showing a valuta it no longer has. Every other state has its
-  // creation date and nothing else. Both are absent when the API still predates the fields, in
-  // which case the row shows no date rather than "Invalid Date".
+  // creation date and nothing else. A completed order without a valuta is an anomaly, and the
+  // fallback in that branch does not repair it — it hides it behind a less precise date. That is
+  // the right trade here and only here: the backend raises the same anomaly where interest depends
+  // on it, whereas a row losing its date buys nobody anything. Production has no such order today
+  // (the migration adding the column backfilled every completed row), so this covers a future
+  // write path rather than a known gap. When talking to an API that predates both fields, the row
+  // shows no date at all rather than "Invalid Date".
   const timestamp = tx.status === CustodyOrderHistoryStatus.COMPLETED ? (tx.completedAt ?? tx.created) : tx.created;
   if (!timestamp) return undefined;
 
