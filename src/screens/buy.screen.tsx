@@ -40,7 +40,6 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
-import { PersonalIbanConfirmationPrompt } from 'src/components/payment/personal-iban-confirmation';
 import { useWindowContext } from 'src/contexts/window.context';
 import { getKycErrorFromMessage } from 'src/util/api-error';
 import { blankedAddress } from 'src/util/utils';
@@ -63,7 +62,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { usePersonalIbanConfirmation } from '../hooks/personal-iban.hook';
+import { usePersonalIbanSelection } from '../hooks/personal-iban.hook';
 import {
   getPersonalIbanErrorMessage,
   getPersonalIbanKycMessage,
@@ -148,11 +147,8 @@ export default function BuyScreen(): JSX.Element {
   const {
     requestedPersonalIban,
     personalIban,
-    requiresCustomerConfirmation,
     hasAuthenticatedCustomer,
-    confirmForCurrentCustomer,
-    declineForCurrentCustomer,
-  } = usePersonalIbanConfirmation();
+  } = usePersonalIbanSelection();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
@@ -448,11 +444,7 @@ export default function BuyScreen(): JSX.Element {
     isExplicitFrickPersonalIbanRequest(personalIbanSelector);
   const shouldWaitForApplicableFrickCustomer =
     hasApplicableFrickRequest &&
-    (!isWalletInitialized ||
-      !hasAuthenticatedCustomer ||
-      requiresCustomerConfirmation);
-  const showPersonalIbanConfirmation =
-    hasApplicableFrickRequest && requiresCustomerConfirmation;
+    (!isWalletInitialized || !hasAuthenticatedCustomer);
   const personalIbanErrorApplies =
     (isPersonalIbanEligible && requestPersonalIbanProvider !== undefined) ||
     hasUnsupportedPersonalIbanRequest;
@@ -769,11 +761,6 @@ export default function BuyScreen(): JSX.Element {
         <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose />
-      ) : showPersonalIbanConfirmation ? (
-        <PersonalIbanConfirmationPrompt
-          onConfirm={confirmForCurrentCustomer}
-          onDecline={declineForCurrentCustomer}
-        />
       ) : showsNameForm ? (
         <NameEdit onSuccess={() => updateData(Side.GET)} />
       ) : (

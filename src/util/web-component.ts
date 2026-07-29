@@ -1,7 +1,6 @@
 type AttributeChangedCallback = (name: string, oldValue: string | null, newValue: string | null) => void;
 const R2WC_RENDER = Symbol.for('r2wc.render');
 const R2WC_PROPS = Symbol.for('r2wc.props');
-const PERSONAL_IBAN_OCCURRENCE_PROP = '__personalIbanOccurrence';
 
 type R2wcElement = HTMLElement & {
   [R2WC_PROPS]?: Record<string, unknown>;
@@ -16,16 +15,10 @@ function applyStringProp(
   element: R2wcElement,
   propertyName: string,
   value: string | null | undefined,
-  createsOccurrence: boolean,
 ): void {
   const props = element[R2WC_PROPS];
   if (props) {
     props[propertyName] = value ?? undefined;
-    if (propertyName === 'personalIban' && createsOccurrence) {
-      const occurrence = props[PERSONAL_IBAN_OCCURRENCE_PROP];
-      props[PERSONAL_IBAN_OCCURRENCE_PROP] =
-        typeof occurrence === 'number' ? occurrence + 1 : 1;
-    }
   }
   element[R2WC_RENDER]?.();
 }
@@ -63,7 +56,6 @@ export function preserveStringAttribute(
           this as R2wcElement,
           propertyName,
           newValue,
-          oldValue !== newValue,
         );
         return;
       }
@@ -87,7 +79,7 @@ export function preserveStringAttribute(
           // removeAttribute → attributeChangedCallback(null) → applyStringProp(undefined)
           this.removeAttribute(attributeName);
         } else {
-          applyStringProp(this, propertyName, undefined, false);
+          applyStringProp(this, propertyName, undefined);
         }
         return;
       }
@@ -95,10 +87,9 @@ export function preserveStringAttribute(
       const stringValue = String(value);
       // setAttribute is a no-op for attributeChangedCallback when the value is
       // unchanged — still push into props and re-render so property-only writes
-      // with the same string stay consistent, without creating a new selector
-      // occurrence.
+      // with the same string stay consistent.
       if (this.getAttribute(attributeName) === stringValue) {
-        applyStringProp(this, propertyName, stringValue, false);
+        applyStringProp(this, propertyName, stringValue);
         return;
       }
 

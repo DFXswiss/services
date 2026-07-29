@@ -35,6 +35,10 @@ export enum CustodyOrderHistoryStatus {
 export interface CustodyOrderHistory {
   type: CustodyOrderType;
   status: CustodyOrderHistoryStatus;
+  // Optional because an API predating these fields serves neither, and the activity rows are
+  // built to render without a date rather than to fail on one.
+  created?: Date;
+  completedAt?: Date;
   inputAmount?: number;
   inputAsset?: string;
   outputAmount?: number;
