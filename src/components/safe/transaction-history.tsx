@@ -51,10 +51,12 @@ function formatTransfer(tx: CustodyOrderHistory): string {
 }
 
 function formatTimestamp(tx: CustodyOrderHistory, locale: string): string | undefined {
-  // completedAt is the valuta timestamp and only exists once an order is completed; for every other
-  // state the creation date is the only timestamp an order has. Both are absent when the API still
-  // predates the fields, in which case the row simply shows no date rather than "Invalid Date".
-  const timestamp = tx.completedAt ?? tx.created;
+  // completedAt is the valuta timestamp, and it only means anything while the order actually is
+  // completed: the backend sets it once and never clears it, so an order moved back out of
+  // Completed would otherwise keep showing a valuta it no longer has. Every other state has its
+  // creation date and nothing else. Both are absent when the API still predates the fields, in
+  // which case the row shows no date rather than "Invalid Date".
+  const timestamp = tx.status === CustodyOrderHistoryStatus.COMPLETED ? (tx.completedAt ?? tx.created) : tx.created;
   if (!timestamp) return undefined;
 
   return new Date(timestamp).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
