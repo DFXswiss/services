@@ -189,7 +189,7 @@ interface AppHandlingContextInterface {
   availableBlockchains?: Blockchain[];
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
-  closeServices: (params: CloseServicesParams, navigate: boolean) => void;
+  closeServices: (params: CloseServicesParams, navigate: boolean) => boolean;
   redirectPath?: string;
   setRedirectPath: (path?: string) => void;
   canClose: boolean;
@@ -397,12 +397,18 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   }
 
   // closing
-  function closeServices(params: CloseServicesParams, navigate: boolean) {
+  function closeServices(params: CloseServicesParams, navigate: boolean): boolean {
+    let closed = false;
+
     if (props.isWidget) {
-      props.closeCallback?.(createCloseMessageData(params));
+      if (props.closeCallback) {
+        props.closeCallback(createCloseMessageData(params));
+        closed = true;
+      }
     } else {
       if (isUsedByIframe) {
         sendMessage(createCloseMessageData(params));
+        closed = true;
       }
 
       if (redirectUri) {
@@ -413,11 +419,17 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
         if (isSafeRedirectUri(redirectUri)) {
           const uri = getRedirectUri(redirectUri, params);
           setTimeout(() => ((window as Window).location = uri), 2000);
+          closed = true;
         }
       }
     }
 
-    if (navigate) props.router.navigate('/account');
+    if (navigate) {
+      props.router.navigate('/account');
+      closed = true;
+    }
+
+    return closed;
   }
 
   function getRedirectUri(baseUri: string, params: CloseServicesParams): string {

@@ -25,7 +25,7 @@ interface BuyCompletionProps {
 
 export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyCompletionProps): JSX.Element {
   const { translate } = useSettingsContext();
-  const { closeServices, isEmbedded, canClose } = useAppHandlingContext();
+  const { closeServices } = useAppHandlingContext();
   const { navigate } = useNavigation();
 
   const [isClosed, setIsClosed] = useState(false);
@@ -43,11 +43,11 @@ export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyComplet
   }
 
   function close() {
-    closeServices({ type: CloseType.BUY, isComplete: true, buy: paymentInfo }, navigateOnClose);
+    const closed = closeServices({ type: CloseType.BUY, isComplete: true, buy: paymentInfo }, navigateOnClose);
 
-    // closeServices does nothing on a host that neither navigates nor has anywhere to hand off to,
-    // and blanking the screen would strand the user: the completion suppresses the back button.
-    if (!navigateOnClose && !isEmbedded && !canClose) return navigate('/account');
+    // Blanking the screen would strand the user — the completion suppresses the back button — so fall
+    // back to the account screen whenever no close channel actually fired.
+    if (!closed) return navigate('/account');
 
     setIsClosed(true);
   }
