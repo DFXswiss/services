@@ -155,25 +155,4 @@ describe('App widget re-render stability (router + home navigation)', () => {
     await waitFor(() => expect(getRouter()).toBeDefined());
     expect(getRouter().state.location.pathname).toBe('/');
   });
-
-  it('fails loudly when a widget selector has no bridge-owned occurrence', () => {
-    const { factory } = createCapturingRouterFactory();
-    const consoleError = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => undefined);
-
-    expect(() =>
-      render(
-        <App
-          routerFactory={factory}
-          params={{ personalIban: 'frick' }}
-        />,
-      ),
-    ).toThrow(
-      'personalIbanOccurrence is required when a widget supplies personalIban',
-    );
-    expect(factory).not.toHaveBeenCalled();
-
-    consoleError.mockRestore();
-  });
 });

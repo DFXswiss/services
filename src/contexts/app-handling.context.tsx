@@ -184,8 +184,6 @@ interface AppHandlingContextInterface {
    * Read by the confirmation hook; not part of params state.
    */
   widgetPersonalIban?: string;
-  /** Internal value-change counter; not part of the Web Component's public properties. */
-  widgetPersonalIbanOccurrence?: number;
   availableBlockchains?: Blockchain[];
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
@@ -200,7 +198,6 @@ interface AppHandlingContextProps extends PropsWithChildren {
   isWidget: boolean;
   service?: Service;
   params?: AppParams;
-  personalIbanOccurrence?: number;
   router: Router;
   closeCallback?: (data: CloseMessageData) => void;
 }
@@ -494,7 +491,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       isEmbedded: props.isWidget || isUsedByIframe,
       isWidget: props.isWidget,
       widgetPersonalIban,
-      widgetPersonalIbanOccurrence: props.isWidget ? props.personalIbanOccurrence : undefined,
       hasSession,
       isDfxHosted: window.location.hostname?.split('.').slice(-2).join('.') === 'dfx.swiss',
       closeServices,
@@ -517,7 +513,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     [
       props.isWidget,
       widgetPersonalIban,
-      props.personalIbanOccurrence,
       props.service,
       isUsedByIframe,
       redirectUri,
