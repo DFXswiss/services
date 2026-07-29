@@ -136,4 +136,20 @@ describe('usePersonalIbanSelection (real hook, real AppHandlingContextProvider, 
 
     expect(screen.getByTestId('authenticated')).toHaveTextContent('no');
   });
+
+  it('hasAuthenticatedCustomer is false when the session has no account field', async () => {
+    mockUseAuthContext.mockReturnValue({ session: {} });
+
+    await renderStandalone('/buy');
+
+    expect(screen.getByTestId('authenticated')).toHaveTextContent('no');
+  });
+
+  it('hasAuthenticatedCustomer is false when session.account is not a number', async () => {
+    mockUseAuthContext.mockReturnValue({ session: { account: '42' } });
+
+    await renderStandalone('/buy');
+
+    expect(screen.getByTestId('authenticated')).toHaveTextContent('no');
+  });
 });
