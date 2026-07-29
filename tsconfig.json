@@ -20,6 +20,5 @@
     "typeRoots": ["typings"],
     "baseUrl": ".",
   },
-  "include": ["src", "typings"],
-  "exclude": ["**/*.stories.tsx"]
+  "include": ["src", "typings"]
 }
