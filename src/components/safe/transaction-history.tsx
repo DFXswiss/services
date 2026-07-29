@@ -54,8 +54,11 @@ function formatTimestamp(tx: CustodyOrderHistory, locale: string): string | unde
   // completedAt is the valuta timestamp, and it only means anything while the order actually is
   // completed: the backend sets it once and never clears it, so an order moved back out of
   // Completed would otherwise keep showing a valuta it no longer has. Every other state has its
-  // creation date and nothing else. Both are absent when the API still predates the fields, in
-  // which case the row shows no date rather than "Invalid Date".
+  // creation date and nothing else. The fallback inside the completed branch covers exactly one
+  // case: an order completed before the valuta column existed, which carries a creation date but
+  // no valuta - the creation date is then the closest thing to the truth we hold, and closer than
+  // showing nothing. Both are absent when the API still predates the fields altogether, in which
+  // case the row shows no date rather than "Invalid Date".
   const timestamp = tx.status === CustodyOrderHistoryStatus.COMPLETED ? (tx.completedAt ?? tx.created) : tx.created;
   if (!timestamp) return undefined;
 
