@@ -1,8 +1,9 @@
 import { ApexOptions } from 'apexcharts';
-import { useMemo } from 'react';
-import Chart from 'react-apexcharts';
+import { lazy, Suspense, useMemo } from 'react';
 import { FinancialLogEntry } from 'src/dto/dashboard.dto';
 import { TimeRange } from 'src/util/chart';
+
+const Chart = lazy(() => import('react-apexcharts'));
 
 interface Props {
   entries: FinancialLogEntry[];
@@ -48,7 +49,9 @@ export function ShortTermPlusChart({ entries, timeRange }: Props) {
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">Plus Balance</h3>
-      <Chart type="line" height={250} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 250 }} />}>
+        <Chart type="line" height={250} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }
@@ -62,7 +65,9 @@ export function ShortTermMinusChart({ entries, timeRange }: Props) {
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">Minus Balance</h3>
-      <Chart type="line" height={250} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 250 }} />}>
+        <Chart type="line" height={250} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }
@@ -76,7 +81,9 @@ export function ShortTermTotalChart({ entries, timeRange }: Props) {
   return (
     <div>
       <h3 className="text-sm font-semibold mb-2">Total Balance</h3>
-      <Chart type="line" height={250} options={options} series={series} />
+      <Suspense fallback={<div style={{ height: 250 }} />}>
+        <Chart type="line" height={250} options={options} series={series} />
+      </Suspense>
     </div>
   );
 }

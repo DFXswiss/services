@@ -35,6 +35,9 @@ export default function DashboardFinancialLiquidityScreen(): JSX.Element {
     return net;
   }, [latestBalance]);
 
+  // Memoize the array so BalanceBarChart's internal useMemo cache stays stable across renders.
+  const byBlockchain = useMemo(() => latestBalance?.byBlockchain ?? [], [latestBalance]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center w-full h-96">
@@ -50,7 +53,7 @@ export default function DashboardFinancialLiquidityScreen(): JSX.Element {
       </div>
 
       <div className="bg-white rounded-lg shadow p-4">
-        <BalanceBarChart title="Liquidity by Provider" data={latestBalance?.byBlockchain ?? []} />
+        <BalanceBarChart title="Liquidity by Provider" data={byBlockchain} />
       </div>
     </div>
   );
