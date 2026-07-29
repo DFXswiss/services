@@ -1,4 +1,5 @@
 import {
+  ApiError,
   Country,
   Fiat,
   InfoBanner,
@@ -14,7 +15,7 @@ import {
 } from '@dfx.swiss/react';
 import browserLang from 'browser-lang';
 import i18n from 'i18next';
-import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
@@ -117,6 +118,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const [store, setStore] = useState<Record<string, any>>({});
   const [processingKycData, setProcessingKycData] = useState(true);
   const [infoBanner, setInfoBanner] = useState<InfoBanner>();
+  const submittedMail = useRef<string>();
 
   const availableLanguages = useMemo(
     () => languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [],
@@ -152,7 +154,21 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, lang, language, currencies, availableLanguages]);
 
   useEffect(() => {
-    if (user && mail && user.mail !== mail) updateUserMail(mail);
+    // Normalised like the API (trim + lowercase), or a padded/mixed-case parameter would never close
+    // this guard and would re-submit on every change of the user object. The ref bounds pending,
+    // successful, and permanently rejected submissions while transient failures clear it for retry.
+    const paramMail = mail?.trim().toLowerCase();
+    if (!user || !paramMail) return;
+    if (user.mail?.trim().toLowerCase() === paramMail || submittedMail.current === paramMail) return;
+
+    submittedMail.current = paramMail;
+    updateUserMail(paramMail).catch((e: ApiError) => {
+      // A rejected address stays rejected — keep the guard. Anything transient (offline, rate limit,
+      // server error) has to stay retryable, or one blip loses the parameter for the whole session.
+      const isRetryable = !e?.statusCode || e.statusCode === 429 || e.statusCode >= 500;
+      if (isRetryable) submittedMail.current = undefined;
+      console.error('Failed to apply the mail parameter:', e);
+    });
   }, [user, mail]);
 
   useEffect(() => {

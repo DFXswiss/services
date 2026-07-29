@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useMergedAccount } from '../../hooks/merged-account.hook';
+import { ErrorHint } from '../error-hint';
 
 interface MailEditProps {
   infoText?: string;
@@ -56,25 +57,82 @@ export function MailEdit({
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string>();
+  const [isSaving, setIsSaving] = useState(false);
+  const [showLinkHint, setShowLinkHint] = useState(false);
+  const [showAccountHint, setShowAccountHint] = useState(false);
+  const [error, setError] = useState<string>();
 
   function showMailConfirmation({ email }: FormData): void {
+    setError(undefined);
     if (!email || email.length === 0) return onSubmit(email);
     setPendingEmail(email);
     setShowConfirmation(true);
   }
 
   async function saveUser(email: string): Promise<void> {
+    setError(undefined);
+    setShowLinkHint(false);
+    setShowAccountHint(false);
+    setIsSaving(true);
+
     return updateMail(email)
       .then(() => onSubmit(email))
       .catch((e: ApiError) => {
         if (handleMergedError(e)) return;
-        throw e;
-      });
+
+        // the merge mail is already out; retrying only sends another one
+        if (e.statusCode === 409 && e.message?.includes('exists') && e.message.includes('merge'))
+          return setShowLinkHint(true);
+
+        // This step can only set a FIRST address: changing one needs 2FA plus a code this component
+        // cannot collect. Its own screen, not ErrorHint, because retrying can never succeed.
+        if (e.code === 'TFA_REQUIRED') return setShowAccountHint(true);
+
+        setError(e.message);
+      })
+      .finally(() => setIsSaving(false));
   }
 
   const rules = Utils.createRules({
     email: [!isOptional && Validations.Required, Validations.Mail],
   });
+
+  if (showAccountHint) {
+    return (
+      <StyledVerticalStack gap={6} full>
+        <p className="text-dfxGray-700">
+          {translate(
+            'screens/kyc',
+            'This account already has an email address. You can change it in your account settings.',
+          )}
+        </p>
+        <StyledButton
+          width={StyledButtonWidth.MIN}
+          label={translate('general/actions', 'OK')}
+          onClick={() => onSubmit()}
+        />
+      </StyledVerticalStack>
+    );
+  }
+
+  if (showLinkHint) {
+    return (
+      <StyledVerticalStack gap={6} full>
+        <p className="text-dfxGray-700">
+          {translate('screens/kyc', 'It looks like you already have an account with DFX.')}{' '}
+          {translate(
+            'screens/kyc',
+            'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
+          )}
+        </p>
+        <StyledButton
+          width={StyledButtonWidth.MIN}
+          label={translate('general/actions', 'OK')}
+          onClick={() => onSubmit()}
+        />
+      </StyledVerticalStack>
+    );
+  }
 
   if (showConfirmation && pendingEmail) {
     return (
@@ -82,10 +140,19 @@ export function MailEdit({
         <p className="text-dfxGray-700 text-center">{translate('screens/kyc', 'Is this email address correct?')}</p>
         <p className="text-lg font-bold text-dfxBlue-800 break-all text-center">{pendingEmail}</p>
 
+        {error && (
+          <StyledVerticalStack full center>
+            <ErrorHint message={error} />
+          </StyledVerticalStack>
+        )}
+
         <StyledHorizontalStack gap={4}>
           <StyledButton
             label={translate('general/actions', 'Change')}
-            onClick={() => setShowConfirmation(false)}
+            onClick={() => {
+              setError(undefined);
+              setShowConfirmation(false);
+            }}
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
             caps
@@ -93,7 +160,7 @@ export function MailEdit({
           <StyledButton
             label={translate('general/actions', 'Confirm')}
             onClick={() => saveUser(pendingEmail)}
-            isLoading={isUserUpdating}
+            isLoading={isSaving || isUserUpdating}
             width={StyledButtonWidth.FULL}
             caps
           />
