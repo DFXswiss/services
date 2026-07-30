@@ -7,7 +7,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { KycStepInfo, RecommendationUserInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { formatSwissDate, formatSwissDateTime } from 'src/util/utils';
+import { formatSwissDate, formatSwissDateTimeWithSeconds } from 'src/util/utils';
 
 function UserCard({ label, user }: { label: string; user: RecommendationUserInfo }): JSX.Element {
   return (
@@ -112,7 +112,7 @@ export default function ComplianceKycStepScreen(): JSX.Element {
               ['Type', step.type || '-'],
               ['Status', step.status],
               ['Sequence', step.sequenceNumber],
-              ['Created', formatSwissDateTime(step.created)],
+              ['Created', formatSwissDateTimeWithSeconds(step.created)],
             ].map(([key, value]) => (
               <tr key={String(key)} className="border-b border-dfxGray-300">
                 <td className="px-4 py-2 text-sm text-dfxBlue-800 font-medium w-40">{String(key)}</td>

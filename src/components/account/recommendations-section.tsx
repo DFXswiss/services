@@ -25,7 +25,7 @@ import {
   RecommendationType,
 } from 'src/dto/recommendation.dto';
 import useRecommendation from 'src/hooks/recommendation.hook';
-import { blankedAddress, partition, url } from 'src/util/utils';
+import { blankedAddress, formatSwissDate, partition, url } from 'src/util/utils';
 
 interface RecommendationFormData {
   recommendedAlias: string;
@@ -43,7 +43,7 @@ export function RecommendationsSection({
 }: RecommendationsSectionProps): JSX.Element {
   const { getRecommendations, createRecommendation, confirmRecommendation, rejectRecommendation } = useRecommendation();
   const { width } = useWindowContext();
-  const { translate, translateError, locale } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>();
   const [isCreatingRecommendation, setIsCreatingRecommendation] = useState(false);
@@ -206,7 +206,7 @@ export function RecommendationsSection({
             if (recommendation.expirationDate) {
               items.push({
                 label: translate('screens/payment', 'Expiry date'),
-                text: new Date(recommendation.expirationDate).toLocaleDateString(locale),
+                text: formatSwissDate(recommendation.expirationDate),
               });
             }
 

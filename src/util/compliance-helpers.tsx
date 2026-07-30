@@ -3,7 +3,7 @@ import { MrosStatus } from 'src/dto/mros.dto';
 import { KycStepInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/util/scorechain.util';
-import { formatSwissDate, formatSwissDateTime } from 'src/util/utils';
+import { formatSwissDate, formatSwissDateTimeWithSeconds } from 'src/util/utils';
 
 export function DetailRow({
   label,
@@ -72,7 +72,7 @@ export function TransactionDetailRows({
   return (
     <table className="text-sm text-dfxBlue-800 text-left">
       <tbody>
-        <DetailRow label="Date" value={tx.date ? formatSwissDateTime(tx.date) : undefined} />
+        <DetailRow label="Date" value={tx.date ? formatSwissDateTimeWithSeconds(tx.date) : undefined} />
         <DetailRow label="Type" value={tx.type} />
         <DetailRow label="AmlCheck" value={amlCheck} />
         <DetailRow label="AmlReason" value={amlReason} />
@@ -135,7 +135,7 @@ export function TransactionDetailRows({
             <DetailRow label="Chargeback TX" value={tx.chargeBackTxId} url={tx.chargeBackTxUrl} mono />
             <DetailRow
               label="Chargeback Date"
-              value={tx.chargebackDate ? formatSwissDateTime(tx.chargebackDate) : undefined}
+              value={tx.chargebackDate ? formatSwissDateTimeWithSeconds(tx.chargebackDate) : undefined}
             />
           </>
         )}
@@ -205,7 +205,7 @@ export function formatBirthday(birthday: string): string {
 }
 
 export function formatDateTime(value: string): string {
-  return formatSwissDateTime(value);
+  return formatSwissDateTimeWithSeconds(value);
 }
 
 // Keeps its own option set: the two-digit year is the point of the "short" variant.

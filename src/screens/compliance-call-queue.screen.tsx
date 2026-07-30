@@ -9,6 +9,7 @@ import { useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { formatSwissDate } from 'src/util/utils';
 
 function isCallQueue(value: string | undefined): value is CallQueue {
   return value != null && (Object.values(CallQueue) as string[]).includes(value);
@@ -131,9 +132,7 @@ export default function ComplianceCallQueueScreen(): JSX.Element {
                   {showStatus && (
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{item.phoneCallStatus ?? '-'}</td>
                   )}
-                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                    {new Date(item.date).toLocaleDateString('de-CH')}
-                  </td>
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatSwissDate(item.date)}</td>
                 </tr>
               ))
             ) : (

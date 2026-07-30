@@ -409,6 +409,12 @@ export function formatSwissDateTime(value: string | number | Date): string {
   return new Date(value).toLocaleString('de-CH', { ...SWISS_DATE_OPTIONS, ...SWISS_TIME_OPTIONS });
 }
 
+// Compliance reads timestamps to order events that can share a minute, so those views keep the
+// seconds a bare toLocaleString() used to emit.
+export function formatSwissDateTimeWithSeconds(value: string | number | Date): string {
+  return new Date(value).toLocaleString('de-CH', { ...SWISS_DATE_OPTIONS, ...SWISS_TIME_OPTIONS, second: '2-digit' });
+}
+
 export function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;
   if (a == null || b == null) return false;

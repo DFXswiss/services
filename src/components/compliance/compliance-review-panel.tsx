@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { extractLegalEntity, statusBadge, todayAsString } from 'src/util/compliance-helpers';
+import { formatSwissDate } from 'src/util/utils';
 import { CheckItemConfig } from './compliance-review-configs';
 
 type DecisionValue = '' | 'Akzeptiert' | 'Abgelehnt';
@@ -238,9 +239,7 @@ export function ComplianceReviewPanel({
       <div className="flex items-center gap-3">
         <span className="text-sm text-dfxGray-700 font-medium">Status:</span>
         {statusBadge(step.status)}
-        <span className="text-xs text-dfxGray-700">
-          Eingangsdatum: {new Date(step.created).toLocaleDateString('de-CH')}
-        </span>
+        <span className="text-xs text-dfxGray-700">Eingangsdatum: {formatSwissDate(step.created)}</span>
       </div>
 
       {/* Result */}

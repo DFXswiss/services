@@ -101,7 +101,7 @@ export function granularityFor(periodDays: number): StatGranularity {
 export function trendLabel(stableKey: string, granularity: StatGranularity): string {
   const [y, m, d] = stableKey.split('-').map(Number);
   return granularity === 'day'
-    ? new Date(y, m - 1, d).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })
+    ? new Date(y, m - 1, d).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit' })
     : new Date(y, m - 1, 1).toLocaleString(undefined, { month: 'short' });
 }
 

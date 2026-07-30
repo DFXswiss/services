@@ -11,6 +11,7 @@ import {
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { CustodyOrderHistory, CustodyOrderHistoryStatus, CustodyOrderType } from 'src/dto/order.dto';
 import { assetIconVariant } from 'src/util/asset-icon';
+import { formatSwissDateTime } from 'src/util/utils';
 
 interface TransactionHistoryProps {
   transactions: CustodyOrderHistory[];
@@ -64,15 +65,7 @@ function formatTimestamp(tx: CustodyOrderHistory): string | undefined {
   const timestamp = tx.status === CustodyOrderHistoryStatus.COMPLETED ? (tx.completedAt ?? tx.created) : tx.created;
   if (!timestamp) return undefined;
 
-  // Fixed Swiss format (e.g. 28.01.2026, 13:31), independent of the app UI language.
-  // Explicit field options (not dateStyle: 'short') so the year stays four digits.
-  return new Date(timestamp).toLocaleString('de-CH', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatSwissDateTime(timestamp);
 }
 
 export const TransactionHistory = ({ transactions, isLoading }: TransactionHistoryProps) => {
