@@ -1,6 +1,6 @@
 import { ApiError, useApi, useAuthContext } from '@dfx.swiss/react';
 import { StyledButton, StyledVerticalStack } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { JobProgress } from 'src/components/job/job-progress';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -23,9 +23,12 @@ export default function AccountMerge() {
   const [kycHash, setKycHash] = useState<string>();
 
   const otp = urlParams.get('otp');
+  // Capture once: deleting otp from the URL below re-renders and would rebuild the
+  // fetch closure with code=null, so every subsequent poll would send a null code.
+  const otpRef = useRef(otp);
 
   const { result, ticket, isOverdue, error, start } = useJobTracker<MergeRedirect>(() =>
-    call<MergeRedirect>({ url: `auth/mail/confirm?code=${otp}`, method: 'GET' }).catch((e: ApiError) => {
+    call<MergeRedirect>({ url: `auth/mail/confirm?code=${otpRef.current}`, method: 'GET' }).catch((e: ApiError) => {
       // Pre-translate the two known, non-retryable outcomes so the job hook (which stays
       // translation-agnostic) can just forward `message` verbatim as the terminal error.
       if (e.statusCode === 400) e.message = translate('screens/error', 'Invalid link');

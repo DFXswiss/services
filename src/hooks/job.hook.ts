@@ -44,6 +44,7 @@ export function useJobTracker<T>(fetchResult: () => Promise<T | JobTicket>): {
   const attemptCountRef = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const clockRef = useRef<ReturnType<typeof setInterval>>();
+  const deadlineTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const clearTimers = useCallback(() => {
     if (timeoutRef.current !== undefined) {
@@ -53,6 +54,10 @@ export function useJobTracker<T>(fetchResult: () => Promise<T | JobTicket>): {
     if (clockRef.current !== undefined) {
       clearInterval(clockRef.current);
       clockRef.current = undefined;
+    }
+    if (deadlineTimeoutRef.current !== undefined) {
+      clearTimeout(deadlineTimeoutRef.current);
+      deadlineTimeoutRef.current = undefined;
     }
   }, []);
 
@@ -139,8 +144,14 @@ export function useJobTracker<T>(fetchResult: () => Promise<T | JobTicket>): {
       }
     }, CLOCK_INTERVAL_MS);
 
+    deadlineTimeoutRef.current = setTimeout(() => {
+      if (!trackingRef.current || !mountedRef.current) return;
+      setError(JOB_TRACKER_TIMEOUT_ERROR);
+      stopTracking();
+    }, TRACKING_TIMEOUT_MS);
+
     void runFetch();
-  }, [clearTimers, runFetch]);
+  }, [clearTimers, runFetch, stopTracking]);
 
   useEffect(() => {
     mountedRef.current = true;
