@@ -78,14 +78,24 @@ jobs:
         id: audit
         continue-on-error: true
         run: |
-          npm audit --json > audit-output.json 2>/dev/null || true
+          npm audit --json > audit-output.json 2> audit-stderr.txt || true
+          # Retried once, and gated on the output rather than the exit code: npm audit exits non-zero
+          # whenever it finds vulnerabilities, so retrying on that would re-run it on every normal PR.
+          # This is the only network-dependent check here, and a transient failure posts a warning that
+          # a later clean run cannot clear.
+          if ! jq -se '.[0].metadata.vulnerabilities' audit-output.json >/dev/null 2>&1; then
+            npm audit --json > audit-output.json 2> audit-stderr.txt || true
+          fi
           # No `// 0` fallback: a missing key path must read as "audit did not run", not as "clean".
-          if HIGH=$(jq -e '.metadata.vulnerabilities.high' audit-output.json 2>/dev/null) &&
-             CRITICAL=$(jq -e '.metadata.vulnerabilities.critical' audit-output.json 2>/dev/null); then
+          # -s so two concatenated documents cannot produce a multi-line value.
+          if HIGH=$(jq -se '.[0].metadata.vulnerabilities.high' audit-output.json 2>/dev/null) &&
+             CRITICAL=$(jq -se '.[0].metadata.vulnerabilities.critical' audit-output.json 2>/dev/null); then
             echo "status=ok" >> $GITHUB_OUTPUT
           else
             HIGH=0; CRITICAL=0
             echo "status=failed" >> $GITHUB_OUTPUT
+            echo "::warning::npm audit produced no usable report"
+            head -c 300 audit-stderr.txt audit-output.json 2>/dev/null || true
           fi
           echo "high=$HIGH" >> $GITHUB_OUTPUT
           echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
