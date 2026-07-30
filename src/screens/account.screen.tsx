@@ -51,7 +51,7 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 import {
   blankedAddress,
   downloadPdfFromString,
-  formatSwissDateTime,
+  formatSwissDateTimeWithSeconds,
   sortAddressesByBlockchain,
   url,
 } from 'src/util/utils';
@@ -276,7 +276,7 @@ export default function AccountScreen(): JSX.Element {
   }
 
   const transactionItems = transactions?.map((t) => ({
-    label: formatSwissDateTime(t.date as Date),
+    label: formatSwissDateTimeWithSeconds(t.date as Date),
     text: `${t.inputAsset ? `${t.inputAmount ?? ''} ${t.inputAsset}` : ''} ${
       t.inputAsset && t.outputAsset ? ' → ' : ''
     } ${t.outputAsset ? `${t.outputAmount ?? ''} ${t.outputAsset}` : ''}`,

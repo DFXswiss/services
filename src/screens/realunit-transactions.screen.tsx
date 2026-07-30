@@ -6,7 +6,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress, formatSwissDateTime } from 'src/util/utils';
+import { blankedAddress, formatSwissDateTimeWithSeconds } from 'src/util/utils';
 
 export default function RealunitTransactionsScreen(): JSX.Element {
   useRealunitGuard();
@@ -72,7 +72,7 @@ export default function RealunitTransactionsScreen(): JSX.Element {
                       {tx.userAddress ? blankedAddress(tx.userAddress, { displayLength: 12 }) : '-'}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {formatSwissDateTime(tx.outputDate ?? tx.created)}
+                      {formatSwissDateTimeWithSeconds(tx.outputDate ?? tx.created)}
                     </td>
                   </tr>
                 ))}

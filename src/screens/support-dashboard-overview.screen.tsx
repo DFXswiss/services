@@ -41,7 +41,7 @@ const REFRESH_MS = 60_000;
 export default function SupportDashboardOverviewScreen(): JSX.Element {
   useSupportDashboardGuard();
 
-  const { translate } = useSettingsContext();
+  const { translate, locale } = useSettingsContext();
   const { getIssueList, getMyClerk, getIssueStatistics } = useSupportDashboard();
   const { navigate } = useNavigation();
 
@@ -111,10 +111,12 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
         .then((dto) => {
           setStatistics({
             ...dto,
-            trend: dto.trend.map((b) => ({ key: trendLabel(b.key, dto.granularity), count: b.count })),
+            trend: dto.trend.map((b) => ({ key: trendLabel(b.key, dto.granularity, locale), count: b.count })),
           });
         })
-        .catch(() => getIssueList({ take: 1000 }).then((res) => setStatistics(computeStatistics(res.data, periodDays))))
+        .catch(() =>
+          getIssueList({ take: 1000 }).then((res) => setStatistics(computeStatistics(res.data, periodDays, locale))),
+        )
         .catch((e: Error) => setStatsError(e.message ?? 'Unknown error'))
         .finally(() => setStatsLoading(false));
     },

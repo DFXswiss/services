@@ -97,17 +97,19 @@ export function granularityFor(periodDays: number): StatGranularity {
   return periodDays <= 31 ? 'day' : 'month';
 }
 
-// Turns a stable bucket key ("YYYY-MM-DD" / "YYYY-MM") into a localized display label.
-export function trendLabel(stableKey: string, granularity: StatGranularity): string {
+// Turns a stable bucket key ("YYYY-MM-DD" / "YYYY-MM") into a display label. The numeric day label
+// is notation and stays Swiss; a month name is a word and follows the interface language.
+export function trendLabel(stableKey: string, granularity: StatGranularity, locale: string): string {
   const [y, m, d] = stableKey.split('-').map(Number);
   return granularity === 'day'
     ? new Date(y, m - 1, d).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit' })
-    : new Date(y, m - 1, 1).toLocaleString(undefined, { month: 'short' });
+    : new Date(y, m - 1, 1).toLocaleString(locale, { month: 'short' });
 }
 
 export function computeStatistics(
   issues: SupportIssueListItem[],
   periodDays: number,
+  locale: string,
   now: Date = new Date(),
 ): TicketStatistics {
   const granularity = granularityFor(periodDays);
@@ -171,7 +173,7 @@ export function computeStatistics(
     avgMessages: total > 0 ? messages / total : 0,
     perDay: periodDays > 0 ? total / periodDays : 0,
     granularity,
-    trend: Array.from(buckets.entries()).map(([key, count]) => ({ key: trendLabel(key, granularity), count })),
+    trend: Array.from(buckets.entries()).map(([key, count]) => ({ key: trendLabel(key, granularity, locale), count })),
     avgResolutionHours,
     resolutionByType,
   };

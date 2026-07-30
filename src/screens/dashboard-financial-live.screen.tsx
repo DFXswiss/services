@@ -7,7 +7,7 @@ import { LatestBalanceResponse } from 'src/dto/dashboard.dto';
 import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { formatChfOrDash } from 'src/util/utils';
+import { formatChfOrDash, formatSwissDateTimeWithSeconds } from 'src/util/utils';
 
 export default function DashboardFinancialLiveScreen(): JSX.Element {
   useAdminGuard();
@@ -55,7 +55,7 @@ export default function DashboardFinancialLiveScreen(): JSX.Element {
         <SummaryCard label="Minus Balance" value={formatChfOrDash(totalMinus)} color="#ef4444" />
         <SummaryCard
           label="Timestamp"
-          value={latestBalance ? new Date(latestBalance.timestamp).toLocaleString('de-CH') : '-'}
+          value={latestBalance ? formatSwissDateTimeWithSeconds(latestBalance.timestamp) : '-'}
         />
       </div>
 

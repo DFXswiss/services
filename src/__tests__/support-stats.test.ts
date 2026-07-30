@@ -63,14 +63,14 @@ describe('support-helpers statistics', () => {
       issue({ id: 3, created: daysAgo(40), messageCount: 10 }), // outside 30d
     ];
 
-    const stats = computeStatistics(issues, 30, NOW);
+    const stats = computeStatistics(issues, 30, 'de-CH', NOW);
     expect(stats.total).toBe(2);
     expect(stats.avgMessages).toBeCloseTo(3); // (4 + 2) / 2
     expect(stats.perDay).toBeCloseTo(2 / 30);
   });
 
   it('builds one daily bucket per day for a 7-day period, oldest first', () => {
-    const stats = computeStatistics([issue({ created: hoursAgo(1) })], 7, NOW);
+    const stats = computeStatistics([issue({ created: hoursAgo(1) })], 7, 'de-CH', NOW);
     expect(stats.granularity).toBe('day');
     expect(stats.trend).toHaveLength(7);
     expect(stats.trend[stats.trend.length - 1].count).toBe(1); // today
@@ -78,13 +78,13 @@ describe('support-helpers statistics', () => {
   });
 
   it('builds twelve monthly buckets for a yearly period', () => {
-    const stats = computeStatistics([], 365, NOW);
+    const stats = computeStatistics([], 365, 'de-CH', NOW);
     expect(stats.granularity).toBe('month');
     expect(stats.trend).toHaveLength(12);
   });
 
   it('returns zeroed values for an empty input', () => {
-    const stats = computeStatistics([], 30, NOW);
+    const stats = computeStatistics([], 30, 'de-CH', NOW);
     expect(stats.total).toBe(0);
     expect(stats.avgMessages).toBe(0);
     expect(stats.perDay).toBe(0);
@@ -92,12 +92,14 @@ describe('support-helpers statistics', () => {
 });
 
 describe('support-helpers trendLabel', () => {
-  it('formats day and month keys (locale-independent assertions)', () => {
-    // day label contains both the day and month numbers, regardless of locale order/separator
-    const dayLabel = trendLabel('2026-06-18', 'day');
-    expect(dayLabel).toMatch(/18/);
-    expect(dayLabel).toMatch(/06/);
-    // month label is a non-empty localized string
-    expect(trendLabel('2026-06', 'month').length).toBeGreaterThan(0);
+  it('formats the day label in Swiss notation regardless of the interface language', () => {
+    expect(trendLabel('2026-06-18', 'day', 'en-US')).toBe('18.06.');
+    expect(trendLabel('2026-06-18', 'day', 'de-CH')).toBe('18.06.');
+  });
+
+  it('translates the month name into the interface language', () => {
+    expect(trendLabel('2026-06', 'month', 'en-US')).toBe('Jun');
+    expect(trendLabel('2026-06', 'month', 'fr-FR')).toBe('juin');
+    expect(trendLabel('2026-06', 'month', 'it-IT')).toBe('giu');
   });
 });
