@@ -93,7 +93,12 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
     })
       .then(({ payment }) => setPaymentStatus(payment.status))
       .catch(unauthorizedResponse)
-      .catch(fetchWait);
+      // The wait call answers 408 once its window closes, which lands here like any other
+      // error. Wait a moment before asking again, so an error that comes back immediately
+      // cannot turn this retry into a tight loop.
+      .catch(() => {
+        setTimeout(fetchWait, 2 * 1000);
+      });
   };
 
   const createPayment = useCallback(
