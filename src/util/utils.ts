@@ -405,6 +405,10 @@ export function formatSwissDate(value: string | number | Date): string {
   return new Date(value).toLocaleDateString('de-CH', SWISS_DATE_OPTIONS);
 }
 
+export function formatSwissTime(value: string | number | Date): string {
+  return new Date(value).toLocaleTimeString('de-CH', SWISS_TIME_OPTIONS);
+}
+
 export function formatSwissDateTime(value: string | number | Date): string {
   return new Date(value).toLocaleString('de-CH', { ...SWISS_DATE_OPTIONS, ...SWISS_TIME_OPTIONS });
 }

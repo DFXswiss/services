@@ -65,7 +65,7 @@ export const STAT_PERIODS: { days: number; labelKey: string; labelParams: Record
 export const DEFAULT_STAT_PERIOD_DAYS = 365;
 
 export interface TicketBucket {
-  key: string; // display label
+  key: string; // stable bucket key ("YYYY-MM-DD" / "YYYY-MM"); localized for display via trendLabel()
   count: number;
 }
 

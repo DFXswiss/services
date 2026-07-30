@@ -118,6 +118,9 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
       setStatsLoading(true);
       getIssueStatistics(periodDays)
         .then((dto) => {
+          // An empty or unparseable 200 body reaches us as undefined. Reading dto.trend used to
+          // throw here and drop into the fallback below; keep that, or the view spins forever.
+          if (!dto?.trend) throw new Error('Invalid statistics response');
           if (isCurrent()) setStatistics(dto);
         })
         .catch(() => {
