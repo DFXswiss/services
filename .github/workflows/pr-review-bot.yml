@@ -58,9 +58,11 @@ jobs:
         id: eslint
         continue-on-error: true
         run: |
-          npm run lint 2>&1 | tee eslint-output.txt || true
-          WARNINGS=$(grep -c "warning" eslint-output.txt || echo "0")
-          ERRORS=$(grep -c "error" eslint-output.txt || echo "0")
+          npm run --silent lint 2>&1 | tee eslint-output.txt || true
+          # Count only ESLint message lines ("  12:3  warning  ..."). A substring match would also
+          # hit npm's echoed command line and file names such as transaction-document-error.test.tsx.
+          WARNINGS=$(grep -cE '^ +[0-9]+:[0-9]+ +warning' eslint-output.txt) || WARNINGS=0
+          ERRORS=$(grep -cE '^ +[0-9]+:[0-9]+ +error' eslint-output.txt) || ERRORS=0
           echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
 
@@ -69,16 +71,32 @@ jobs:
         continue-on-error: true
         run: |
           npx tsc -p tsconfig.build.json --noEmit 2>&1 | tee tsc-output.txt || true
-          ERRORS=$(grep -c "error TS" tsc-output.txt || echo "0")
+          ERRORS=$(grep -c "error TS" tsc-output.txt) || ERRORS=0
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
 
       - name: Security Audit
         id: audit
         continue-on-error: true
         run: |
-          npm audit --json > audit-output.json 2>/dev/null || true
-          HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit-output.json)
-          CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit-output.json)
+          npm audit --json > audit-output.json 2> audit-stderr.txt || true
+          # Retried once, and gated on the output rather than the exit code: npm audit exits non-zero
+          # whenever it finds vulnerabilities, so retrying on that would re-run it on every normal PR.
+          # This is the only network-dependent check here, and a transient failure posts a warning that
+          # a later clean run cannot clear.
+          if ! jq -se '.[0].metadata.vulnerabilities' audit-output.json >/dev/null 2>&1; then
+            npm audit --json > audit-output.json 2> audit-stderr.txt || true
+          fi
+          # No `// 0` fallback: a missing key path must read as "audit did not run", not as "clean".
+          # -s so two concatenated documents cannot produce a multi-line value.
+          if HIGH=$(jq -se '.[0].metadata.vulnerabilities.high' audit-output.json 2>/dev/null) &&
+             CRITICAL=$(jq -se '.[0].metadata.vulnerabilities.critical' audit-output.json 2>/dev/null); then
+            echo "status=ok" >> $GITHUB_OUTPUT
+          else
+            HIGH=0; CRITICAL=0
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "::warning::npm audit produced no usable report"
+            head -c 300 audit-stderr.txt audit-output.json 2>/dev/null || true
+          fi
           echo "high=$HIGH" >> $GITHUB_OUTPUT
           echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
 
@@ -149,7 +167,9 @@ jobs:
             }
 
             // Security audit (only report critical vulnerabilities)
-            if (auditCritical > 0) {
+            if ('${{ steps.audit.outputs.status }}' !== 'ok') {
+              comments.push('## ⚠️ Security: `npm audit` produced no usable output — vulnerability status unknown');
+            } else if (auditCritical > 0) {
               comments.push(`## ❌ Security: ${auditCritical} critical vulnerabilities`);
             }
 

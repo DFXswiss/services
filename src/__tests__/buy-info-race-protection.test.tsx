@@ -57,12 +57,9 @@ jest.mock('@dfx.swiss/react-components', () => ({
   StyledVerticalStack: ({ children }: any) => <div>{children}</div>,
 }));
 
-jest.mock('src/components/payment/payment-info-buy', () => {
-  const React = require('react');
-  return {
-    PaymentInformationContent: ({ info }: any) => <div data-testid="payment-info">{info.amount}</div>,
-  };
-});
+jest.mock('src/components/payment/payment-info-buy', () => ({
+  PaymentInformationContent: ({ info }: any) => <div data-testid="payment-info">{info.amount}</div>,
+}));
 jest.mock('src/components/error-hint', () => ({ ErrorHint: () => null }));
 jest.mock('src/components/payment/buy-completion', () => ({ BuyCompletion: () => null }));
 jest.mock('src/components/quote-error-hint', () => ({ QuoteErrorHint: () => null }));
