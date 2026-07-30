@@ -23,6 +23,7 @@ function useFinancialTypes(entries: FinancialLogEntry[]) {
   return useMemo(() => {
     const types = new Set<string>();
     for (const entry of entries) {
+      if (!entry.balancesByType) continue;
       for (const type of Object.keys(entry.balancesByType)) {
         types.add(type);
       }
@@ -70,7 +71,7 @@ export function BalanceByTypePlusChart({ entries, timeRange }: Props) {
 
   const series = useMemo(() => financialTypes.map((type) => ({
     name: type,
-    data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.balancesByType[type]?.plusBalanceChf ?? 0)]),
+    data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.balancesByType?.[type]?.plusBalanceChf ?? 0)]),
   })), [entries, financialTypes]);
 
   return (
@@ -87,7 +88,7 @@ export function BalanceByTypeMinusChart({ entries, timeRange }: Props) {
 
   const series = useMemo(() => financialTypes.map((type) => ({
     name: type,
-    data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.balancesByType[type]?.minusBalanceChf ?? 0)]),
+    data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.balancesByType?.[type]?.minusBalanceChf ?? 0)]),
   })), [entries, financialTypes]);
 
   return (
@@ -105,7 +106,7 @@ export function BalanceByTypeTotalChart({ entries, timeRange }: Props) {
   const series = useMemo(() => financialTypes.map((type) => ({
     name: type,
     data: entries.map((e) => {
-      const b = e.balancesByType[type];
+      const b = e.balancesByType?.[type];
       const net = b ? b.plusBalanceChf - b.minusBalanceChf : 0;
       return [new Date(e.timestamp).getTime(), Math.round(net)];
     }),

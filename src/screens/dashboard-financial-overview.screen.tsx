@@ -48,7 +48,8 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
       getLatestBalance()
         .then(setLatestBalance)
         .catch(() => undefined);
-      getFinancialLog(from, dailySample)
+      // This screen never reads balancesByType (~82% of the payload). History still needs the full data — do not unify this parameter away.
+      getFinancialLog(from, dailySample, false)
         .then((logData) => setLogEntries(logData.entries))
         .catch(() => undefined)
         .finally(() => {
