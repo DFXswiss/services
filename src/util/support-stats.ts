@@ -109,7 +109,6 @@ export function trendLabel(stableKey: string, granularity: StatGranularity, loca
 export function computeStatistics(
   issues: SupportIssueListItem[],
   periodDays: number,
-  locale: string,
   now: Date = new Date(),
 ): TicketStatistics {
   const granularity = granularityFor(periodDays);
@@ -173,7 +172,8 @@ export function computeStatistics(
     avgMessages: total > 0 ? messages / total : 0,
     perDay: periodDays > 0 ? total / periodDays : 0,
     granularity,
-    trend: Array.from(buckets.entries()).map(([key, count]) => ({ key: trendLabel(key, granularity, locale), count })),
+    // Stable bucket keys; the screen localizes them at render time.
+    trend: Array.from(buckets.entries()).map(([key, count]) => ({ key, count })),
     avgResolutionHours,
     resolutionByType,
   };

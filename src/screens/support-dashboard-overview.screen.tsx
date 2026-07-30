@@ -102,10 +102,13 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
 
   // Statistics are loaded for the selected period. Primary source is the server aggregate;
   // if that endpoint is unavailable we fall back to computing from the most recent tickets.
+  // Statistics are stored with their stable bucket keys and localized at render time. Loading them
+  // per language instead would make a language switch a refetch: the chart would blank behind a
+  // spinner, and a failing refetch would replace statistics that were already correct.
   const loadStats = useCallback(
     (periodDays: number): void => {
-      // Period and language both retrigger this, so two loads can be in flight at once. Only the
-      // newest may write, otherwise a slow earlier response lands last and restores what it read.
+      // The period selector can retrigger this while a load is in flight, so only the newest
+      // request may write - otherwise a slow earlier response lands last and wins.
       const requestId = ++statsRequestId.current;
       const isCurrent = (): boolean => requestId === statsRequestId.current;
 
@@ -115,18 +118,14 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
       setStatsLoading(true);
       getIssueStatistics(periodDays)
         .then((dto) => {
+          if (isCurrent()) setStatistics(dto);
+        })
+        .catch(() => {
           if (!isCurrent()) return;
-          setStatistics({
-            ...dto,
-            trend: dto.trend.map((b) => ({ key: trendLabel(b.key, dto.granularity, locale), count: b.count })),
+          return getIssueList({ take: 1000 }).then((res) => {
+            if (isCurrent()) setStatistics(computeStatistics(res.data, periodDays));
           });
         })
-        .catch(() =>
-          getIssueList({ take: 1000 }).then((res) => {
-            if (!isCurrent()) return;
-            setStatistics(computeStatistics(res.data, periodDays, locale));
-          }),
-        )
         .catch((e: Error) => {
           if (isCurrent()) setStatsError(e.message ?? 'Unknown error');
         })
@@ -134,7 +133,19 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
           if (isCurrent()) setStatsLoading(false);
         });
     },
-    [getIssueStatistics, getIssueList, locale],
+    [getIssueStatistics, getIssueList],
+  );
+
+  const localizedStatistics = useMemo(
+    () =>
+      statistics && {
+        ...statistics,
+        trend: statistics.trend.map((b) => ({
+          key: trendLabel(b.key, statistics.granularity, locale),
+          count: b.count,
+        })),
+      },
+    [statistics, locale],
   );
 
   useEffect(() => {
@@ -206,7 +217,7 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
 
       {tab === 'statistics' && (
         <StatisticsView
-          statistics={statistics}
+          statistics={localizedStatistics}
           loading={statsLoading}
           error={statsError}
           period={statsPeriod}

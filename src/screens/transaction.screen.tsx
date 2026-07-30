@@ -1014,7 +1014,10 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
         from: step.from,
         to: step.to,
         price: step.price,
-        timestamp: formatSwissDateTimeWithSeconds(step.timestamp),
+        // Typed Date, but a raw ISO string at runtime: the API layer parses JSON without a
+        // reviver, so this hits String.prototype.toLocaleString() and renders the string
+        // unchanged, in UTC and independent of any locale. Not part of the defect this fixes.
+        timestamp: step.timestamp.toLocaleString(),
       }),
     )
     .join('\n');

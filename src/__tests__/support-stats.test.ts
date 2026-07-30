@@ -63,14 +63,14 @@ describe('support-helpers statistics', () => {
       issue({ id: 3, created: daysAgo(40), messageCount: 10 }), // outside 30d
     ];
 
-    const stats = computeStatistics(issues, 30, 'de-CH', NOW);
+    const stats = computeStatistics(issues, 30, NOW);
     expect(stats.total).toBe(2);
     expect(stats.avgMessages).toBeCloseTo(3); // (4 + 2) / 2
     expect(stats.perDay).toBeCloseTo(2 / 30);
   });
 
   it('builds one daily bucket per day for a 7-day period, oldest first', () => {
-    const stats = computeStatistics([issue({ created: hoursAgo(1) })], 7, 'de-CH', NOW);
+    const stats = computeStatistics([issue({ created: hoursAgo(1) })], 7, NOW);
     expect(stats.granularity).toBe('day');
     expect(stats.trend).toHaveLength(7);
     expect(stats.trend[stats.trend.length - 1].count).toBe(1); // today
@@ -78,13 +78,13 @@ describe('support-helpers statistics', () => {
   });
 
   it('builds twelve monthly buckets for a yearly period', () => {
-    const stats = computeStatistics([], 365, 'de-CH', NOW);
+    const stats = computeStatistics([], 365, NOW);
     expect(stats.granularity).toBe('month');
     expect(stats.trend).toHaveLength(12);
   });
 
   it('returns zeroed values for an empty input', () => {
-    const stats = computeStatistics([], 30, 'de-CH', NOW);
+    const stats = computeStatistics([], 30, NOW);
     expect(stats.total).toBe(0);
     expect(stats.avgMessages).toBe(0);
     expect(stats.perDay).toBe(0);
