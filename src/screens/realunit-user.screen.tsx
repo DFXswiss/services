@@ -16,7 +16,7 @@ import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { blankedAddress, formatCurrency } from 'src/util/utils';
+import { blankedAddress, formatCurrency, formatSwissDateTime } from 'src/util/utils';
 
 export default function RealunitUserScreen(): JSX.Element {
   useRealunitGuard();
@@ -112,7 +112,7 @@ export default function RealunitUserScreen(): JSX.Element {
                       {translate('screens/realunit', 'Last Updated')}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {new Date(accountSummary.lastUpdated).toLocaleString()}
+                      {formatSwissDateTime(accountSummary.lastUpdated)}
                     </td>
                   </tr>
                 </tbody>
@@ -187,7 +187,7 @@ export default function RealunitUserScreen(): JSX.Element {
                             className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300"
                           >
                             <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                              {new Date(event.timestamp).toLocaleString()}
+                              {formatSwissDateTime(event.timestamp)}
                             </td>
                             <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{event.eventType}</td>
                             <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">

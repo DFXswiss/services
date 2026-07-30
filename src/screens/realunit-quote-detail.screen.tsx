@@ -8,7 +8,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, formatSwissDateTime } from 'src/util/utils';
 
 export default function RealunitQuoteDetailScreen(): JSX.Element {
   useRealunitGuard();
@@ -116,7 +116,7 @@ export default function RealunitQuoteDetailScreen(): JSX.Element {
               {translate('screens/realunit', 'Created')}
             </td>
             <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-              {new Date(quote.created).toLocaleString()}
+              {formatSwissDateTime(quote.created)}
             </td>
           </tr>
         </tbody>

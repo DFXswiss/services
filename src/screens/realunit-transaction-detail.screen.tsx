@@ -7,7 +7,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, formatSwissDateTime } from 'src/util/utils';
 
 export default function RealunitTransactionDetailScreen(): JSX.Element {
   useRealunitGuard();
@@ -108,7 +108,7 @@ export default function RealunitTransactionDetailScreen(): JSX.Element {
               {translate('screens/realunit', 'Date')}
             </td>
             <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-              {new Date(transaction.outputDate ?? transaction.created).toLocaleString()}
+              {formatSwissDateTime(transaction.outputDate ?? transaction.created)}
             </td>
           </tr>
         </tbody>

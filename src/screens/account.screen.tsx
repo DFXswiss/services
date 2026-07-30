@@ -48,7 +48,13 @@ import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress, downloadPdfFromString, sortAddressesByBlockchain, url } from 'src/util/utils';
+import {
+  blankedAddress,
+  downloadPdfFromString,
+  formatSwissDateTime,
+  sortAddressesByBlockchain,
+  url,
+} from 'src/util/utils';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
@@ -270,7 +276,7 @@ export default function AccountScreen(): JSX.Element {
   }
 
   const transactionItems = transactions?.map((t) => ({
-    label: new Date(t.date as Date).toLocaleString(),
+    label: formatSwissDateTime(t.date as Date),
     text: `${t.inputAsset ? `${t.inputAmount ?? ''} ${t.inputAsset}` : ''} ${
       t.inputAsset && t.outputAsset ? ' → ' : ''
     } ${t.outputAsset ? `${t.outputAmount ?? ''} ${t.outputAsset}` : ''}`,

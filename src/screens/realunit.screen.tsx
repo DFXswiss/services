@@ -16,7 +16,7 @@ import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, formatSwissDateTime } from 'src/util/utils';
 export default function RealunitScreen(): JSX.Element {
   useRealunitGuard();
 
@@ -157,7 +157,7 @@ export default function RealunitScreen(): JSX.Element {
                         {translate('screens/realunit', 'Timestamp')}
                       </td>
                       <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
-                        {new Date(tokenInfo.totalSupply.timestamp).toLocaleString()}
+                        {formatSwissDateTime(tokenInfo.totalSupply.timestamp)}
                       </td>
                     </tr>
                   </tbody>
@@ -252,7 +252,7 @@ export default function RealunitScreen(): JSX.Element {
                       {quote.userAddress ? blankedAddress(quote.userAddress, { displayLength: 12 }) : '-'}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {new Date(quote.created).toLocaleString()}
+                      {formatSwissDateTime(quote.created)}
                     </td>
                   </tr>
                 ))}
@@ -317,7 +317,7 @@ export default function RealunitScreen(): JSX.Element {
                       {tx.userAddress ? blankedAddress(tx.userAddress, { displayLength: 12 }) : '-'}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {new Date(tx.outputDate ?? tx.created).toLocaleString()}
+                      {formatSwissDateTime(tx.outputDate ?? tx.created)}
                     </td>
                   </tr>
                 ))}
