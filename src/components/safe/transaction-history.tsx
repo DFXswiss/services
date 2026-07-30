@@ -50,20 +50,33 @@ function formatTransfer(tx: CustodyOrderHistory): string {
   return input ?? output ?? '-';
 }
 
-function formatTimestamp(tx: CustodyOrderHistory, locale: string): string | undefined {
+function formatTimestamp(tx: CustodyOrderHistory): string | undefined {
   // completedAt is the valuta timestamp, and it only means anything while the order actually is
   // completed: the backend sets it once and never clears it, so an order moved back out of
   // Completed would otherwise keep showing a valuta it no longer has. Every other state has its
-  // creation date and nothing else. Both are absent when the API still predates the fields, in
-  // which case the row shows no date rather than "Invalid Date".
+  // creation date and nothing else. A completed order without a valuta is an anomaly, and the
+  // fallback in that branch does not repair it — it hides it behind a less precise date. That is
+  // the right trade here and only here: the backend raises the same anomaly where interest depends
+  // on it, whereas a row losing its date buys nobody anything. Production has no such order today
+  // (the migration adding the column backfilled every completed row), so this covers a future
+  // write path rather than a known gap. When talking to an API that predates both fields, the row
+  // shows no date at all rather than "Invalid Date".
   const timestamp = tx.status === CustodyOrderHistoryStatus.COMPLETED ? (tx.completedAt ?? tx.created) : tx.created;
   if (!timestamp) return undefined;
 
-  return new Date(timestamp).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
+  // Fixed Swiss format (e.g. 28.01.2026, 13:31), independent of the app UI language.
+  // Explicit field options (not dateStyle: 'short') so the year stays four digits.
+  return new Date(timestamp).toLocaleString('de-CH', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export const TransactionHistory = ({ transactions, isLoading }: TransactionHistoryProps) => {
-  const { translate, locale } = useSettingsContext();
+  const { translate } = useSettingsContext();
 
   return isLoading ? (
     <div className="w-full flex flex-col items-center justify-center gap-2 p-4">
@@ -83,7 +96,7 @@ export const TransactionHistory = ({ transactions, isLoading }: TransactionHisto
                 <div className="text-base flex flex-col font-semibold text-left leading-none gap-1">
                   {translate('screens/safe', ORDER_TYPE_LABELS[tx.type])}
                   <div className="text-sm text-dfxGray-700">
-                    {[translate('screens/safe', STATUS_LABELS[tx.status]), formatTimestamp(tx, locale)]
+                    {[translate('screens/safe', STATUS_LABELS[tx.status]), formatTimestamp(tx)]
                       .filter(Boolean)
                       .join(' · ')}
                   </div>

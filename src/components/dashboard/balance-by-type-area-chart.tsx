@@ -1,11 +1,11 @@
 import { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
-import { FinancialLogEntry } from 'src/dto/dashboard.dto';
+import { FinancialLogEntryWithBalancesByType } from 'src/dto/dashboard.dto';
 import { TimeRange } from 'src/util/chart';
 
 interface Props {
-  entries: FinancialLogEntry[];
+  entries: FinancialLogEntryWithBalancesByType[];
   timeRange?: TimeRange;
 }
 
@@ -19,7 +19,7 @@ const TYPE_COLORS: Record<string, string> = {
 
 const DEFAULT_COLOR = '#6b7280';
 
-function useFinancialTypes(entries: FinancialLogEntry[]) {
+function useFinancialTypes(entries: FinancialLogEntryWithBalancesByType[]) {
   return useMemo(() => {
     const types = new Set<string>();
     for (const entry of entries) {

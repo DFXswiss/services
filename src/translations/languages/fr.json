@@ -80,6 +80,7 @@
   },
   "screens/kyc": {
     "Is this email address correct?": "Cette adresse e-mail est-elle correcte ?",
+    "This account already has an email address. You can change it in your account settings.": "Ce compte possède déjà une adresse e-mail. Vous pouvez la modifier dans les paramètres de votre compte.",
     "DFX KYC": "DFX KYC",
     "KYC level": "KYC level",
     "Trading limit": "Limite de transactions",

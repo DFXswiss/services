@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import { CloseType, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { useSettingsContext } from '../../contexts/settings.context';
+import { useNavigation } from '../../hooks/navigation.hook';
 import { MailEdit } from '../edit/mail.edit';
 
 interface BuyCompletionProps {
@@ -25,6 +26,7 @@ interface BuyCompletionProps {
 export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyCompletionProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
+  const { navigate } = useNavigation();
 
   const [isClosed, setIsClosed] = useState(false);
 
@@ -41,7 +43,12 @@ export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyComplet
   }
 
   function close() {
-    closeServices({ type: CloseType.BUY, isComplete: true, buy: paymentInfo }, navigateOnClose);
+    const closed = closeServices({ type: CloseType.BUY, isComplete: true, buy: paymentInfo }, navigateOnClose);
+
+    // Blanking the screen would strand the user — the completion suppresses the back button — so fall
+    // back to the account screen whenever no close channel actually fired.
+    if (!closed) return navigate('/account');
+
     setIsClosed(true);
   }
 
@@ -76,7 +83,7 @@ export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyComplet
         </>
       ) : (
         <MailEdit
-          onSubmit={(email) => (!email || email.length === 0) && close()}
+          onSubmit={() => close()}
           infoText={translate(
             'screens/payment',
             'Enter your email address if you want to be informed about the progress of any purchase or sale',

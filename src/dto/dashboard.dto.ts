@@ -4,8 +4,12 @@ export interface FinancialLogEntry {
   plusBalanceChf: number;
   minusBalanceChf: number;
   btcPriceChf: number;
-  balancesByType: Record<string, { plusBalanceChf: number; minusBalanceChf: number }>;
+  balancesByType?: Record<string, { plusBalanceChf: number; minusBalanceChf: number }>;
 }
+
+export type FinancialLogEntryWithBalancesByType = FinancialLogEntry & {
+  balancesByType: NonNullable<FinancialLogEntry['balancesByType']>;
+};
 
 export interface FinancialLogResponse {
   entries: FinancialLogEntry[];

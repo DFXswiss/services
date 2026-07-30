@@ -110,9 +110,12 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
 
     if (canSendTransaction() && !activeWallet) {
       // TODO (later): Refactor CloseServicesParams
-      return orderType === OrderType.SELL
-        ? closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo as Sell }, false)
-        : closeServices({ type: CloseType.SWAP, isComplete: false, swap: paymentInfo as Swap }, false);
+      if (orderType === OrderType.SELL) {
+        closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo as Sell }, false);
+      } else {
+        closeServices({ type: CloseType.SWAP, isComplete: false, swap: paymentInfo as Swap }, false);
+      }
+      return;
     }
 
     try {
