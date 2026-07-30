@@ -44,11 +44,16 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
   const lightning = urlParams.get('lightning') ?? undefined;
   const key = urlParams.get('key') ?? '';
 
-  const waitRetryTimer = useRef<ReturnType<typeof setTimeout>>();
+  // a set, not a single id: creating a payment starts a wait of its own, so more than one
+  // retry can be pending at a time and a single slot would lose the older one
+  const waitRetryTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
 
   useEffect(() => {
+    const timers = waitRetryTimers.current;
+
     return () => {
-      if (waitRetryTimer.current) clearTimeout(waitRetryTimer.current);
+      timers.forEach(clearTimeout);
+      timers.clear();
     };
   }, []);
 
@@ -108,7 +113,12 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       .catch((e: ApiError) => {
         if (e.statusCode === 401) return;
 
-        waitRetryTimer.current = setTimeout(fetchWait, 2 * 1000);
+        const timer = setTimeout(() => {
+          waitRetryTimers.current.delete(timer);
+          void fetchWait();
+        }, 2 * 1000);
+
+        waitRetryTimers.current.add(timer);
       });
   };
 
