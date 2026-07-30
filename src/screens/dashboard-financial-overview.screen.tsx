@@ -5,7 +5,7 @@ import { AgeBadge } from 'src/components/dashboard/age-badge';
 import { BalanceBarChart } from 'src/components/dashboard/latest-balance-bar-chart';
 import { SummaryCard } from 'src/components/dashboard/summary-card';
 import { TotalBalanceLongChart } from 'src/components/dashboard/total-balance-long-chart';
-import { FinancialLogEntry, LatestBalanceResponse } from 'src/dto/dashboard.dto';
+import { FinancialLogChartEntry, LatestBalanceResponse } from 'src/dto/dashboard.dto';
 import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
@@ -29,11 +29,11 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
   useLayoutOptions({ title: 'Financial Overview', noMaxWidth: true });
 
   const { isLoggedIn } = useSessionContext();
-  const { getLatestBalance, getFinancialLog } = useDashboard();
+  const { getLatestBalance, getFinancialLogChart } = useDashboard();
 
   const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.THREE_DAYS);
   const [latestBalance, setLatestBalance] = useState<LatestBalanceResponse>();
-  const [logEntries, setLogEntries] = useState<FinancialLogEntry[]>([]);
+  const [logEntries, setLogEntries] = useState<FinancialLogChartEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function DashboardFinancialOverviewScreen(): JSX.Element {
         .catch(() => undefined);
       // This screen never reads balancesByType (~82% of the payload).
       // History still needs the full data — do not unify this parameter away.
-      getFinancialLog(from, dailySample, false)
+      getFinancialLogChart(from, dailySample)
         .then((logData) => setLogEntries(logData.entries))
         .catch(() => undefined)
         .finally(() => {

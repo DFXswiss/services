@@ -66,45 +66,42 @@ jest.mock('@dfx.swiss/react', () => ({
   useBankAccountContext: () => ({ bankAccounts: [] }),
 }));
 
-jest.mock('@dfx.swiss/react-components', () => {
-  const React = require('react');
-  return {
-    StyledButton: ({ label, onClick, hidden, isLoading, type }: any) =>
-      hidden ? null : (
-        <button type={type ?? 'button'} onClick={onClick} disabled={isLoading}>
-          {label}
-        </button>
-      ),
-    StyledCollapsible: ({ titleContent, children }: any) => (
-      <div>
-        {titleContent}
-        {children}
-      </div>
+jest.mock('@dfx.swiss/react-components', () => ({
+  StyledButton: ({ label, onClick, hidden, isLoading, type }: any) =>
+    hidden ? null : (
+      <button type={type ?? 'button'} onClick={onClick} disabled={isLoading}>
+        {label}
+      </button>
     ),
-    StyledDataTable: ({ children }: any) => <div>{children}</div>,
-    StyledDataTableRow: ({ children }: any) => <div>{children}</div>,
-    StyledDataTableExpandableRow: ({ children }: any) => <div>{children}</div>,
-    StyledVerticalStack: ({ children }: any) => <div>{children}</div>,
-    StyledHorizontalStack: ({ children }: any) => <div>{children}</div>,
-    StyledIconButton: () => null,
-    DfxAssetIcon: () => null,
-    DfxIcon: () => null,
-    CopyButton: () => null,
-    SpinnerSize: { SM: 'sm', LG: 'lg' },
-    StyledLoadingSpinner: () => null,
-    IconVariant: { RELOAD: 'reload', HELP: 'help' },
-    IconSize: { LG: 'lg' },
-    AlignContent: { RIGHT: 'right' },
-    AssetIconVariant: {},
-    StyledButtonColor: { STURDY_WHITE: 'sturdy-white', BLUE: 'blue' },
-    StyledButtonWidth: { FULL: 'full', MIN: 'min' },
-    Form: ({ children }: any) => <div>{children}</div>,
-    StyledDropdown: () => null,
-    StyledInput: () => null,
-    StyledLink: ({ label, children }: any) => <div>{label ?? children}</div>,
-    StyledSearchDropdown: () => null,
-  };
-});
+  StyledCollapsible: ({ titleContent, children }: any) => (
+    <div>
+      {titleContent}
+      {children}
+    </div>
+  ),
+  StyledDataTable: ({ children }: any) => <div>{children}</div>,
+  StyledDataTableRow: ({ children }: any) => <div>{children}</div>,
+  StyledDataTableExpandableRow: ({ children }: any) => <div>{children}</div>,
+  StyledVerticalStack: ({ children }: any) => <div>{children}</div>,
+  StyledHorizontalStack: ({ children }: any) => <div>{children}</div>,
+  StyledIconButton: () => null,
+  DfxAssetIcon: () => null,
+  DfxIcon: () => null,
+  CopyButton: () => null,
+  SpinnerSize: { SM: 'sm', LG: 'lg' },
+  StyledLoadingSpinner: () => null,
+  IconVariant: { RELOAD: 'reload', HELP: 'help' },
+  IconSize: { LG: 'lg' },
+  AlignContent: { RIGHT: 'right' },
+  AssetIconVariant: {},
+  StyledButtonColor: { STURDY_WHITE: 'sturdy-white', BLUE: 'blue' },
+  StyledButtonWidth: { FULL: 'full', MIN: 'min' },
+  Form: ({ children }: any) => <div>{children}</div>,
+  StyledDropdown: () => null,
+  StyledInput: () => null,
+  StyledLink: ({ label, children }: any) => <div>{label ?? children}</div>,
+  StyledSearchDropdown: () => null,
+}));
 
 jest.mock('../components/error-hint', () => ({
   ErrorHint: ({ message }: any) => <div data-testid="error-hint">{message}</div>,

@@ -1,9 +1,14 @@
-export interface FinancialLogEntry {
+/** Chart mode: GET /dashboard/financial/log?byType=false — only these three fields are present. */
+export interface FinancialLogChartEntry {
   timestamp: string;
   totalBalanceChf: number;
+  btcPriceChf: number;
+}
+
+/** Full mode: GET /dashboard/financial/log with byType omitted or true — extends the chart fields. */
+export interface FinancialLogEntry extends FinancialLogChartEntry {
   plusBalanceChf: number;
   minusBalanceChf: number;
-  btcPriceChf: number;
   balancesByType?: Record<string, { plusBalanceChf: number; minusBalanceChf: number }>;
 }
 
@@ -13,6 +18,10 @@ export type FinancialLogEntryWithBalancesByType = FinancialLogEntry & {
 
 export interface FinancialLogResponse {
   entries: FinancialLogEntry[];
+}
+
+export interface FinancialLogChartResponse {
+  entries: FinancialLogChartEntry[];
 }
 
 export interface FinancialChangesEntry {

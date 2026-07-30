@@ -14,7 +14,8 @@ module.exports = {
       node: true,
       jest: true,
     },
-    ignorePatterns: ['.eslintrc.js'],
+    // Story files are excluded from tsconfig.json, so the type-aware parser cannot resolve them.
+    ignorePatterns: ['.eslintrc.js', '**/*.stories.tsx'],
     rules: {
       '@typescript-eslint/interface-name-prefix': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',

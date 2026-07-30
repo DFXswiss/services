@@ -290,7 +290,7 @@ describe('BuyInfoScreen personal IBAN mismatch hint', () => {
   });
 
   it('does not show the mismatch hint while paymentInfo is absent (loading)', async () => {
-    mockReceiveFor.mockReturnValue(new Promise(() => {}));
+    mockReceiveFor.mockReturnValue(new Promise(() => undefined));
 
     render(<BuyInfoScreen />);
 

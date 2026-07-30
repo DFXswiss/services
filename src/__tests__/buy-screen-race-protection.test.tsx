@@ -75,7 +75,11 @@ jest.mock('@dfx.swiss/react', () => ({
 }));
 
 jest.mock('@dfx.swiss/react-components', () => {
+  // babel-plugin-jest-hoist moves this factory above the module's imports, so React and
+  // react-hook-form are not yet in scope here and must be required directly instead.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Controller } = require('react-hook-form');
 
   // Mirror the real Form: inject `control` into descendants that declare `name`.
@@ -134,12 +138,9 @@ jest.mock('@dfx.swiss/react-components', () => {
   };
 });
 
-jest.mock('src/components/payment/payment-info-buy', () => {
-  const React = require('react');
-  return {
-    PaymentInformationContent: ({ info }: any) => <div data-testid="payment-info">{info.amount}</div>,
-  };
-});
+jest.mock('src/components/payment/payment-info-buy', () => ({
+  PaymentInformationContent: ({ info }: any) => <div data-testid="payment-info">{info.amount}</div>,
+}));
 jest.mock('../components/edit/name.edit', () => ({ NameEdit: () => null }));
 jest.mock('../components/error-hint', () => ({ ErrorHint: ({ message }: any) => <div>{message}</div> }));
 jest.mock('../components/exchange-rate', () => ({ ExchangeRate: () => null }));
@@ -181,6 +182,8 @@ jest.mock('../hooks/app-params.hook', () => ({
 jest.mock('../hooks/debounce.hook', () => ({
   __esModule: true,
   default: (value: unknown) => {
+    // Hoisted factory again: React has to be required here rather than imported.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const React = require('react');
     const [debouncedValue, setDebouncedValue] = React.useState();
     const previousValue = React.useRef();

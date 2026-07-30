@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import {
   FinancialChangesEntry,
   FinancialChangesResponse,
+  FinancialLogChartResponse,
   FinancialLogResponse,
   LatestBalanceResponse,
   RefRewardRecipient,
@@ -11,19 +12,29 @@ import {
 export function useDashboard() {
   const { call } = useApi();
 
-  async function getFinancialLog(
-    from?: string,
-    dailySample?: boolean,
-    byType?: boolean,
-  ): Promise<FinancialLogResponse> {
+  function financialLogParams(from?: string, dailySample?: boolean): URLSearchParams {
     const params = new URLSearchParams();
     if (from) params.set('from', from);
     if (dailySample !== undefined) params.set('dailySample', String(dailySample));
-    if (byType !== undefined) params.set('byType', String(byType));
-    const query = params.toString();
+    return params;
+  }
+
+  async function getFinancialLog(from?: string, dailySample?: boolean): Promise<FinancialLogResponse> {
+    const query = financialLogParams(from, dailySample).toString();
 
     return call<FinancialLogResponse>({
       url: `dashboard/financial/log${query ? `?${query}` : ''}`,
+      method: 'GET',
+    });
+  }
+
+  async function getFinancialLogChart(from?: string, dailySample?: boolean): Promise<FinancialLogChartResponse> {
+    const params = financialLogParams(from, dailySample);
+    params.set('byType', 'false');
+    const query = params.toString();
+
+    return call<FinancialLogChartResponse>({
+      url: `dashboard/financial/log?${query}`,
       method: 'GET',
     });
   }
@@ -63,7 +74,14 @@ export function useDashboard() {
   }
 
   return useMemo(
-    () => ({ getFinancialLog, getFinancialChanges, getLatestBalance, getLatestChanges, getRefRecipients }),
+    () => ({
+      getFinancialLog,
+      getFinancialLogChart,
+      getFinancialChanges,
+      getLatestBalance,
+      getLatestChanges,
+      getRefRecipients,
+    }),
     [call],
   );
 }

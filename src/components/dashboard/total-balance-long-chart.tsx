@@ -1,11 +1,11 @@
 import { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
-import { FinancialLogEntry } from 'src/dto/dashboard.dto';
+import { FinancialLogChartEntry } from 'src/dto/dashboard.dto';
 import { TimeRange } from 'src/util/chart';
 
 interface TotalBalanceLongChartProps {
-  entries: FinancialLogEntry[];
+  entries: FinancialLogChartEntry[];
   timeRange?: TimeRange;
   dark?: boolean;
 }
