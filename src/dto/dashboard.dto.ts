@@ -7,6 +7,10 @@ export interface FinancialLogEntry {
   balancesByType?: Record<string, { plusBalanceChf: number; minusBalanceChf: number }>;
 }
 
+export type FinancialLogEntryWithBalancesByType = FinancialLogEntry & {
+  balancesByType: NonNullable<FinancialLogEntry['balancesByType']>;
+};
+
 export interface FinancialLogResponse {
   entries: FinancialLogEntry[];
 }
