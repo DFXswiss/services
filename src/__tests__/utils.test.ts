@@ -313,7 +313,7 @@ describe('utils', () => {
   });
 
   describe('formatSwissDateTimeWithSeconds', () => {
-    it('should keep seconds for the compliance views', () => {
+    it('should keep the seconds a bare toLocaleString() used to emit', () => {
       expect(formatSwissDateTimeWithSeconds(swissSample)).toBe('12.06.2026, 14:30:45');
     });
   });

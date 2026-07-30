@@ -409,8 +409,8 @@ export function formatSwissDateTime(value: string | number | Date): string {
   return new Date(value).toLocaleString('de-CH', { ...SWISS_DATE_OPTIONS, ...SWISS_TIME_OPTIONS });
 }
 
-// Compliance reads timestamps to order events that can share a minute, so those views keep the
-// seconds a bare toLocaleString() used to emit.
+// Sites that emitted seconds through a bare toLocaleString() keep them: the timestamp is what
+// orders events that share a minute, so pinning the notation must not drop a field.
 export function formatSwissDateTimeWithSeconds(value: string | number | Date): string {
   return new Date(value).toLocaleString('de-CH', { ...SWISS_DATE_OPTIONS, ...SWISS_TIME_OPTIONS, second: '2-digit' });
 }

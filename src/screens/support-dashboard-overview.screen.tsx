@@ -120,7 +120,7 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
         .catch((e: Error) => setStatsError(e.message ?? 'Unknown error'))
         .finally(() => setStatsLoading(false));
     },
-    [getIssueStatistics, getIssueList],
+    [getIssueStatistics, getIssueList, locale],
   );
 
   useEffect(() => {
