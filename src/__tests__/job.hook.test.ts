@@ -8,7 +8,7 @@ jest.mock('@dfx.swiss/react', () => ({
 }));
 
 jest.mock('@dfx.swiss/react-components', () => {
-  const { createElement } = require('react');
+  const { createElement } = jest.requireActual('react');
   return {
     StyledButton: () => null,
     StyledVerticalStack: ({ children }: any) => createElement('div', null, children),
@@ -16,7 +16,7 @@ jest.mock('@dfx.swiss/react-components', () => {
 });
 
 jest.mock('react-router-dom', () => {
-  const { useState } = require('react');
+  const { useState } = jest.requireActual('react');
   return {
     useSearchParams: () => {
       const [params, setParams] = useState(() => new URLSearchParams('otp=otp-secret-42'));
