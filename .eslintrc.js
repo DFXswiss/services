@@ -29,5 +29,15 @@ module.exports = {
         },
       ],
     },
+    overrides: [
+      {
+        // jest.mock() factories are hoisted above the imports, so whatever they need has to be
+        // pulled in with require() inside the factory.
+        files: ['src/__tests__/**/*.{ts,tsx}'],
+        rules: {
+          '@typescript-eslint/no-var-requires': 'off',
+        },
+      },
+    ],
   };
   

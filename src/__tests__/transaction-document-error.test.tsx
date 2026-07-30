@@ -67,7 +67,6 @@ jest.mock('@dfx.swiss/react', () => ({
 }));
 
 jest.mock('@dfx.swiss/react-components', () => {
-  const React = require('react');
   return {
     StyledButton: ({ label, onClick, hidden, isLoading, type }: any) =>
       hidden ? null : (

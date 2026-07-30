@@ -429,7 +429,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
   it('does not flash the mismatch hint while a quote is still loading (no paymentInfo)', async () => {
     mockUseAppParams.mockReturnValue(baseAppParams({ assetIn: 'CHF' }));
     // Never resolve: paymentInfo stays undefined for the whole test.
-    mockReceiveFor.mockReturnValue(new Promise(() => {}));
+    mockReceiveFor.mockReturnValue(new Promise(() => undefined));
 
     render(<BuyScreen />);
 
@@ -453,7 +453,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     expect(screen.getByText(TRANSFER_BUTTON)).toBeInTheDocument();
 
     // Subsequent quote fetch must not resolve — keeps any new offer from landing.
-    mockReceiveFor.mockReturnValue(new Promise(() => {}));
+    mockReceiveFor.mockReturnValue(new Promise(() => undefined));
 
     await act(async () => {
       screen.getByTestId('select-currency-EUR').click();
@@ -473,7 +473,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     const pendingQuote = new Promise<ReturnType<typeof chfOffer>>((resolve) => {
       resolveQuote = resolve;
     });
-    const pendingExactPrice = new Promise(() => {});
+    const pendingExactPrice = new Promise(() => undefined);
     mockReceiveFor.mockImplementation(() =>
       mockReceiveFor.mock.calls.length === 1 ? pendingQuote : pendingExactPrice,
     );
@@ -510,7 +510,7 @@ describe('BuyScreen personal IBAN mismatch and error handling', () => {
     });
     mockReceiveFor
       .mockImplementationOnce(() => pendingQuote)
-      .mockImplementation(() => new Promise(() => {}));
+      .mockImplementation(() => new Promise(() => undefined));
 
     render(<BuyScreen />);
 
