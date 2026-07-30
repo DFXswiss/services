@@ -11,10 +11,15 @@ import {
 export function useDashboard() {
   const { call } = useApi();
 
-  async function getFinancialLog(from?: string, dailySample?: boolean): Promise<FinancialLogResponse> {
+  async function getFinancialLog(
+    from?: string,
+    dailySample?: boolean,
+    byType?: boolean,
+  ): Promise<FinancialLogResponse> {
     const params = new URLSearchParams();
     if (from) params.set('from', from);
     if (dailySample !== undefined) params.set('dailySample', String(dailySample));
+    if (byType !== undefined) params.set('byType', String(byType));
     const query = params.toString();
 
     return call<FinancialLogResponse>({
