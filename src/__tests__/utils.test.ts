@@ -316,6 +316,15 @@ describe('utils', () => {
     it('should render midnight as 00:xx', () => {
       expect(formatSwissTime(new Date(2026, 5, 12, 0, 30))).toBe('00:30');
     });
+
+    // The assertions above only diverge from the browser default on some locales, so pin the
+    // locale itself: that is the property this helper exists to guarantee.
+    it('should pin the locale instead of following the browser', () => {
+      const spy = jest.spyOn(Date.prototype, 'toLocaleTimeString');
+      formatSwissTime(swissSample);
+      expect(spy).toHaveBeenCalledWith('de-CH', expect.anything());
+      spy.mockRestore();
+    });
   });
 
   describe('formatSwissDateTime', () => {

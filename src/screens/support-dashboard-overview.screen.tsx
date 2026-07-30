@@ -118,9 +118,11 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
       setStatsLoading(true);
       getIssueStatistics(periodDays)
         .then((dto) => {
-          // An empty or unparseable 200 body reaches us as undefined. Reading dto.trend used to
-          // throw here and drop into the fallback below; keep that, or the view spins forever.
-          if (!dto?.trend) throw new Error('Invalid statistics response');
+          // An empty, unparseable or misshaped 200 body reaches us as undefined or without a
+          // usable trend. Reading dto.trend used to throw here and drop into the fallback below;
+          // keep that, or the view spins forever. Check the shape, not just truthiness: a
+          // non-array trend would pass and then throw in the render-time memo instead.
+          if (!Array.isArray(dto?.trend)) throw new Error('Invalid statistics response');
           if (isCurrent()) setStatistics(dto);
         })
         .catch(() => {
