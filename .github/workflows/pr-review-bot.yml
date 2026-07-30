@@ -79,10 +79,16 @@ jobs:
         continue-on-error: true
         run: |
           npm audit --json > audit-output.json 2>/dev/null || true
-          HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit-output.json) || HIGH=0
-          CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit-output.json) || CRITICAL=0
-          echo "high=${HIGH:-0}" >> $GITHUB_OUTPUT
-          echo "critical=${CRITICAL:-0}" >> $GITHUB_OUTPUT
+          # No `// 0` fallback: a missing key path must read as "audit did not run", not as "clean".
+          if HIGH=$(jq -e '.metadata.vulnerabilities.high' audit-output.json 2>/dev/null) &&
+             CRITICAL=$(jq -e '.metadata.vulnerabilities.critical' audit-output.json 2>/dev/null); then
+            echo "status=ok" >> $GITHUB_OUTPUT
+          else
+            HIGH=0; CRITICAL=0
+            echo "status=failed" >> $GITHUB_OUTPUT
+          fi
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
 
       - name: Check for new TODOs/FIXMEs
         id: todos
@@ -151,7 +157,9 @@ jobs:
             }
 
             // Security audit (only report critical vulnerabilities)
-            if (auditCritical > 0) {
+            if ('${{ steps.audit.outputs.status }}' !== 'ok') {
+              comments.push('## ⚠️ Security: `npm audit` produced no usable output — vulnerability status unknown');
+            } else if (auditCritical > 0) {
               comments.push(`## ❌ Security: ${auditCritical} critical vulnerabilities`);
             }
 
