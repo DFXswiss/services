@@ -65,7 +65,7 @@ import { useUserGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { getStoredPaymentDetailErrorMessage } from '../util/personal-iban';
-import { blankedAddress, openPdfFromString } from '../util/utils';
+import { blankedAddress, formatSwissDateTimeWithSeconds, openPdfFromString } from '../util/utils';
 import { ZipValidation } from '../util/validation-rules';
 
 export enum ExportType {
@@ -1014,7 +1014,7 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
         from: step.from,
         to: step.to,
         price: step.price,
-        timestamp: step.timestamp.toLocaleString(),
+        timestamp: formatSwissDateTimeWithSeconds(step.timestamp),
       }),
     )
     .join('\n');
@@ -1080,7 +1080,7 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
         </StyledDataTableRow>
       )}
       <StyledDataTableRow label={translate('screens/payment', 'Date')}>
-        <p>{new Date(tx.date).toLocaleString()}</p>
+        <p>{formatSwissDateTimeWithSeconds(tx.date)}</p>
       </StyledDataTableRow>
       <StyledDataTableRow label={translate('screens/payment', 'Type')}>
         <p>{translate('screens/payment', tx.type)}</p>
@@ -1216,7 +1216,7 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
       )}
       {tx.chargebackDate && (
         <StyledDataTableRow label={translate('screens/payment', 'Chargeback date')}>
-          <p>{new Date(tx.chargebackDate).toLocaleString()}</p>
+          <p>{formatSwissDateTimeWithSeconds(tx.chargebackDate)}</p>
         </StyledDataTableRow>
       )}
     </StyledDataTable>

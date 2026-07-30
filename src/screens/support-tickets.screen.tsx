@@ -17,12 +17,12 @@ import { useUserGuard } from 'src/hooks/guard.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
+import { formatSwissDate } from '../util/utils';
 
 export default function SupportTicketsScreen(): JSX.Element {
   useUserGuard('/login');
 
   const { tickets, loadTickets } = useSupportChatContext();
-  const { locale } = useSettingsContext();
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
 
@@ -109,7 +109,7 @@ export default function SupportTicketsScreen(): JSX.Element {
                       )}
                     </th>
                     <td className="px-6 py-4 leading-tight whitespace-normal">
-                      {new Date(ticket.created).toLocaleDateString(locale)}
+                      {formatSwissDate(ticket.created)}
                       <>
                         <br />
                         <span className="text-dfxGray-600 text-sm">{translate('screens/payment', ticket.state)}</span>

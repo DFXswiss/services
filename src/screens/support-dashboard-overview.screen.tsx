@@ -59,6 +59,7 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
   const [statistics, setStatistics] = useState<TicketStatistics>();
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string>();
+  const statsRequestId = useRef(0);
 
   const baselineLoaded = useRef(false);
 
@@ -103,22 +104,35 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
   // if that endpoint is unavailable we fall back to computing from the most recent tickets.
   const loadStats = useCallback(
     (periodDays: number): void => {
+      // Period and language both retrigger this, so two loads can be in flight at once. Only the
+      // newest may write, otherwise a slow earlier response lands last and restores what it read.
+      const requestId = ++statsRequestId.current;
+      const isCurrent = (): boolean => requestId === statsRequestId.current;
+
       // clear any prior error up front so a stale error can't mask freshly loaded stats
       // (the fallback success path below sets `statistics` without touching `statsError`)
       setStatsError(undefined);
       setStatsLoading(true);
       getIssueStatistics(periodDays)
         .then((dto) => {
+          if (!isCurrent()) return;
           setStatistics({
             ...dto,
             trend: dto.trend.map((b) => ({ key: trendLabel(b.key, dto.granularity, locale), count: b.count })),
           });
         })
         .catch(() =>
-          getIssueList({ take: 1000 }).then((res) => setStatistics(computeStatistics(res.data, periodDays, locale))),
+          getIssueList({ take: 1000 }).then((res) => {
+            if (!isCurrent()) return;
+            setStatistics(computeStatistics(res.data, periodDays, locale));
+          }),
         )
-        .catch((e: Error) => setStatsError(e.message ?? 'Unknown error'))
-        .finally(() => setStatsLoading(false));
+        .catch((e: Error) => {
+          if (isCurrent()) setStatsError(e.message ?? 'Unknown error');
+        })
+        .finally(() => {
+          if (isCurrent()) setStatsLoading(false);
+        });
     },
     [getIssueStatistics, getIssueList, locale],
   );
