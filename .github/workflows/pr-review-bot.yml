@@ -58,9 +58,11 @@ jobs:
         id: eslint
         continue-on-error: true
         run: |
-          npm run lint 2>&1 | tee eslint-output.txt || true
-          WARNINGS=$(grep -c "warning" eslint-output.txt || echo "0")
-          ERRORS=$(grep -c "error" eslint-output.txt || echo "0")
+          npm run --silent lint 2>&1 | tee eslint-output.txt || true
+          # Count only ESLint message lines ("  12:3  warning  ..."). A substring match would also
+          # hit npm's echoed command line and file names such as transaction-document-error.test.tsx.
+          WARNINGS=$(grep -cE '^ +[0-9]+:[0-9]+ +warning' eslint-output.txt) || WARNINGS=0
+          ERRORS=$(grep -cE '^ +[0-9]+:[0-9]+ +error' eslint-output.txt) || ERRORS=0
           echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
 
