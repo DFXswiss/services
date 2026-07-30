@@ -14,7 +14,8 @@ module.exports = {
       node: true,
       jest: true,
     },
-    ignorePatterns: ['.eslintrc.js'],
+    // Story files are excluded from tsconfig.json, so the type-aware parser cannot resolve them.
+    ignorePatterns: ['.eslintrc.js', '**/*.stories.tsx'],
     rules: {
       '@typescript-eslint/interface-name-prefix': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -29,15 +30,5 @@ module.exports = {
         },
       ],
     },
-    overrides: [
-      {
-        // jest.mock() factories are hoisted above the imports, so whatever they need has to be
-        // pulled in with require() inside the factory.
-        files: ['src/__tests__/**/*.{ts,tsx}'],
-        rules: {
-          '@typescript-eslint/no-var-requires': 'off',
-        },
-      },
-    ],
   };
   
