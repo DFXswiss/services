@@ -31,22 +31,23 @@ export function toErrorFacts(error: unknown): ErrorFacts {
   return { message: String(error) };
 }
 
-// A chunk request that fails is reported by the bundler as a ChunkLoadError — including when a
-// stale chunk URL is answered with the app shell, because the HTML never registers the chunk.
+// A chunk request that fails is reported by the bundler as a ChunkLoadError. That covers the stale
+// chunk answered with the app shell too: the script loads, never registers the chunk, and the
+// bundler's own loader turns the load event into `Loading chunk N failed. (missing: <url>)` with
+// the name ChunkLoadError.
 //
 // Deliberately NOT matched: the bare syntax-error wordings a browser produces while parsing that
 // HTML as a script. `Unexpected token '<'` is also what JSON.parse says when a response is HTML
 // instead of JSON — an everyday failure whenever a gateway, WAF or login redirect answers an API
 // call. Treating that as a chunk failure would reload the page and discard whatever the customer
-// had typed. The bundler wordings below identify the real case on their own.
+// had typed, which is worse than the failure it recovers from. The wordings below identify the
+// real case on their own.
 export function isChunkLoadError(error: unknown): boolean {
   const { message, type } = toErrorFacts(error);
 
   return (
     type === 'ChunkLoadError' ||
-    /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(message) ||
-    // Script-loading only: a response cannot reach JSON.parse and be refused for its MIME type.
-    /is not a valid JavaScript MIME type/i.test(message)
+    /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(message)
   );
 }
 

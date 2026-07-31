@@ -48,11 +48,15 @@ describe('isChunkLoadError', () => {
     expect(isChunkLoadError(new Error(message))).toBe(true);
   });
 
-  it('recognises a script refused for its MIME type', () => {
-    const message =
-      "Refused to execute script because its MIME type ('text/html') is not a valid JavaScript MIME type.";
+  // What a stale chunk answered with the app shell actually produces: the script loads, never
+  // registers the chunk, and the bundler's loader reports it as missing.
+  it('recognises a chunk that loaded but never registered', () => {
+    const error = Object.assign(
+      new Error('Loading chunk 738 failed.\n(missing: https://app.example.com/static/js/738.js)'),
+      { name: 'ChunkLoadError' },
+    );
 
-    expect(isChunkLoadError(new Error(message))).toBe(true);
+    expect(isChunkLoadError(error)).toBe(true);
   });
 
   it('recognises the error by its name alone', () => {
