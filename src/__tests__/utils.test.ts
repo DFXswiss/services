@@ -321,9 +321,12 @@ describe('utils', () => {
     // locale itself: that is the property this helper exists to guarantee.
     it('should pin the locale instead of following the browser', () => {
       const spy = jest.spyOn(Date.prototype, 'toLocaleTimeString');
-      formatSwissTime(swissSample);
-      expect(spy).toHaveBeenCalledWith('de-CH', expect.anything());
-      spy.mockRestore();
+      try {
+        formatSwissTime(swissSample);
+        expect(spy).toHaveBeenCalledWith('de-CH', expect.anything());
+      } finally {
+        spy.mockRestore();
+      }
     });
   });
 
