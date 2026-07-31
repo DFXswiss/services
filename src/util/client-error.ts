@@ -3,8 +3,9 @@ import { Api } from 'src/config/api';
 import { REACT_APP_BUILD_ID } from 'src/version';
 import { url } from './utils';
 
-// Kept in sync with the field limits of the ingest endpoint, so a long message is trimmed here
-// instead of being rejected there — a dropped report is a blind spot.
+// Must match the field limits of the ingest endpoint, so a long message is trimmed here instead of
+// being rejected there — a dropped report is a blind spot. Nothing enforces this across the two
+// repositories, so a change to those limits has to be mirrored here by hand.
 const LIMITS = { message: 500, type: 100, stack: 4000, route: 500, version: 50 };
 
 const CHUNK_RELOAD_KEY = 'dfx.chunkReloadAt';
@@ -100,6 +101,25 @@ export function reportClientError(error: unknown, route: string): void {
 }
 
 // Empty is a value the caller may legitimately hold, so only an absent one is dropped.
+// Catches a chunk failure that reaches neither Suspense nor the router's error boundary — during
+// startup, or from code React does not render, such as an import() in a click handler. Chunk
+// failures inside the router are handled by the error screen, which is where React hands them;
+// these listeners never see those.
+//
+// Every entry point has to call this: the widget build swaps index-widget.tsx in for index.tsx, so
+// wiring it up in one of them leaves the other without any handling at all.
+export function installChunkErrorHandling(): void {
+  const handle = (error: unknown): void => {
+    if (!isChunkLoadError(error)) return;
+
+    reportClientError(error, window.location.pathname);
+    reloadOnceForChunkError();
+  };
+
+  window.addEventListener('error', (event) => handle(event?.error ?? event?.message));
+  window.addEventListener('unhandledrejection', (event) => handle(event?.reason));
+}
+
 function truncate(value: string | undefined, max: number): string | undefined {
   if (value == null) return undefined;
   return value.length > max ? value.slice(0, max) : value;

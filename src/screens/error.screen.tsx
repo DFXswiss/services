@@ -1,6 +1,6 @@
 import { IconVariant, StyledButton, StyledButtonColor, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useEffect, useRef } from 'react';
-import { useRouteError, useSearchParams } from 'react-router-dom';
+import { useLocation, useRouteError, useSearchParams } from 'react-router-dom';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { isChunkLoadError, reloadOnceForChunkError, reportClientError } from 'src/util/client-error';
@@ -11,6 +11,9 @@ export default function ErrorScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const [params] = useSearchParams();
   const routeError = useRouteError();
+  // Not window.location: the widget and library builds run on a memory router, where the browser
+  // URL is the host page's and never reflects the screen the customer was actually on.
+  const { pathname } = useLocation();
   const hasReported = useRef(false);
 
   const error = params.get('msg');
@@ -27,13 +30,13 @@ export default function ErrorScreen(): JSX.Element {
     const reportedError = error ? Object.assign(new Error(error), { name: 'HandledError' }) : routeError;
     if (reportedError == null) return;
 
-    reportClientError(reportedError, window.location.pathname);
+    reportClientError(reportedError, pathname);
 
     // A chunk left stale by a deploy recovers on its own once the app reloads. React hands the
     // failed import to this boundary, so this is where it can be caught — a window listener never
     // sees it.
     if (!error && isChunkLoadError(routeError)) reloadOnceForChunkError();
-  }, [routeError, error]);
+  }, [routeError, error, pathname]);
 
   useLayoutOptions({});
 

@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom/client';
 import Main from './Main';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
-import { isChunkLoadError, reloadOnceForChunkError, reportClientError } from './util/client-error';
+import { installChunkErrorHandling } from './util/client-error';
 
 // Clear session data when URL contains new login credentials
 // This must happen BEFORE React initializes to prevent the @dfx.swiss/react
@@ -16,19 +16,7 @@ if ((urlParams.has('address') && urlParams.has('signature')) || urlParams.has('s
   sessionStorage.clear();
 }
 
-// A chunk that fails to load outside the router — during startup, or from code React does not
-// render — reaches neither Suspense nor the router's error boundary, so it is caught here.
-// Chunk failures inside the router are handled by the error screen, which is where React hands
-// them; these listeners never see those.
-function handleChunkError(error: unknown): void {
-  if (!isChunkLoadError(error)) return;
-
-  reportClientError(error, window.location.pathname);
-  reloadOnceForChunkError();
-}
-
-window.addEventListener('error', (event) => handleChunkError(event?.error ?? event?.message));
-window.addEventListener('unhandledrejection', (event) => handleChunkError(event?.reason));
+installChunkErrorHandling();
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(<Main />);

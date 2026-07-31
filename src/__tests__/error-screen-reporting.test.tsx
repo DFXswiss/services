@@ -52,8 +52,21 @@ function renderAt(path: string, thrown?: unknown): void {
 describe('ErrorScreen reporting', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // jsdom keeps the memory router's path out of window.location, which the screen reads.
-    Object.defineProperty(window, 'location', { value: { ...window.location, pathname: '/buy' }, writable: true });
+    // Deliberately different from every route used below. These tests run on a memory router —
+    // the same setup the widget and library builds use — so the browser URL is the host page's and
+    // must not be what gets reported.
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, pathname: '/host-page' },
+      writable: true,
+    });
+  });
+
+  it('reports the route the customer was on, not the browser URL', async () => {
+    renderAt('/buy', new Error('boom'));
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][1]).toBe('/buy');
+    expect(mockReportClientError.mock.calls[0][1]).not.toBe('/host-page');
   });
 
   it('shows the error screen when a route render throws', async () => {
@@ -104,8 +117,6 @@ describe('ErrorScreen reporting', () => {
   // Screens navigate to /error?msg=... deliberately; that path has no route, so the router
   // reports a bare 404 that says nothing about the actual failure.
   it('reports the explicit message instead of the 404 behind it', async () => {
-    Object.defineProperty(window, 'location', { value: { ...window.location, pathname: '/error' }, writable: true });
-
     renderAt('/error?msg=Account%20merge%20failed');
 
     await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));

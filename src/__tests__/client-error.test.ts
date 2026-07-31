@@ -49,14 +49,12 @@ describe('isChunkLoadError', () => {
   });
 
   // What a stale chunk answered with the app shell actually produces: the script loads, never
-  // registers the chunk, and the bundler's loader reports it as missing.
-  it('recognises a chunk that loaded but never registered', () => {
-    const error = Object.assign(
-      new Error('Loading chunk 738 failed.\n(missing: https://app.example.com/static/js/738.js)'),
-      { name: 'ChunkLoadError' },
-    );
+  // registers the chunk, and the bundler's loader reports it as missing. Asserted on the message
+  // alone, without the name, so it pins the regex rather than passing on the name check.
+  it('recognises a chunk that loaded but never registered, by its message alone', () => {
+    const message = 'Loading chunk 738 failed.\n(missing: https://app.example.com/static/js/738.js)';
 
-    expect(isChunkLoadError(error)).toBe(true);
+    expect(isChunkLoadError(new Error(message))).toBe(true);
   });
 
   it('recognises the error by its name alone', () => {
