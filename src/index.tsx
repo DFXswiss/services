@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom/client';
 import Main from './Main';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
+import { isChunkLoadError, reloadOnceForChunkError, reportClientError } from './util/client-error';
 
 // Clear session data when URL contains new login credentials
 // This must happen BEFORE React initializes to prevent the @dfx.swiss/react
@@ -15,38 +16,19 @@ if ((urlParams.has('address') && urlParams.has('signature')) || urlParams.has('s
   sessionStorage.clear();
 }
 
-// A new deploy replaces the content-hashed chunks. A tab left open across a deploy can
-// request a chunk that no longer exists; Cloudflare Pages then serves index.html (200)
-// for it, which surfaces as a ChunkLoadError. Reload once to pick up the new chunks,
-// guarded against a reload loop.
-function isChunkLoadError(message?: string): boolean {
-  return !!message && /Loading chunk [\w-]+ failed|ChunkLoadError|Loading CSS chunk [\w-]+ failed/i.test(message);
+// A chunk that fails to load outside the router — during startup, or from code React does not
+// render — reaches neither Suspense nor the router's error boundary, so it is caught here.
+// Chunk failures inside the router are handled by the error screen, which is where React hands
+// them; these listeners never see those.
+function handleChunkError(error: unknown): void {
+  if (!isChunkLoadError(error)) return;
+
+  reportClientError(error, window.location.pathname);
+  reloadOnceForChunkError();
 }
-// A new deploy replaces the content-hashed chunks. A tab left open across a deploy can
-// request a chunk that no longer exists; the static host serves index.html (200) for it,
-// which surfaces as a ChunkLoadError. Reload once to pick up the new chunks. The guard
-// lives in localStorage (it survives the sessionStorage.clear() above that runs on
-// session/login URLs) and is time-boxed, so a persistent failure reloads at most once per
-// window instead of looping. Storage access is wrapped because embedded/iframe contexts
-// can block it.
-function reloadOnceForChunkError(): void {
-  try {
-    const KEY = 'dfx.chunkReloadAt';
-    const last = Number(localStorage.getItem(KEY) ?? 0);
-    if (Date.now() - last < 30000) return;
-    localStorage.setItem(KEY, String(Date.now()));
-  } catch {
-    return; // storage blocked (e.g. embedded iframe) — skip to avoid an unguarded reload loop
-  }
-  window.location.reload();
-}
-window.addEventListener('error', (event) => {
-  if (isChunkLoadError(event?.message)) reloadOnceForChunkError();
-});
-window.addEventListener('unhandledrejection', (event) => {
-  const message = (event?.reason as Error | undefined)?.message;
-  if (isChunkLoadError(message)) reloadOnceForChunkError();
-});
+
+window.addEventListener('error', (event) => handleChunkError(event?.error ?? event?.message));
+window.addEventListener('unhandledrejection', (event) => handleChunkError(event?.reason));
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(<Main />);
