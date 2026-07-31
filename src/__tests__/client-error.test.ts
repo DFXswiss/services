@@ -48,13 +48,10 @@ describe('isChunkLoadError', () => {
     expect(isChunkLoadError(new Error(message))).toBe(true);
   });
 
-  // What a stale chunk URL answered with the app shell actually produces: the HTML is parsed as
-  // a script, and each engine words the failure differently.
-  it.each([
-    "Unexpected token '<'",
-    "expected expression, got '<'",
-    "Refused to execute script because its MIME type ('text/html') is not a valid JavaScript MIME type.",
-  ])('recognises the HTML-parsed-as-script wording "%s"', (message) => {
+  it('recognises a script refused for its MIME type', () => {
+    const message =
+      "Refused to execute script because its MIME type ('text/html') is not a valid JavaScript MIME type.";
+
     expect(isChunkLoadError(new Error(message))).toBe(true);
   });
 
@@ -66,6 +63,28 @@ describe('isChunkLoadError', () => {
     expect(isChunkLoadError(new Error('Cannot read properties of undefined'))).toBe(false);
     expect(isChunkLoadError(routeErrorResponse(404, 'Not Found'))).toBe(false);
   });
+
+  // A reload discards whatever the customer had typed, so the cost of a false positive is high.
+  // This is the wording a JSON.parse gets when a gateway, WAF or login redirect answers an API
+  // call with HTML — an everyday failure that must not reload the page.
+  it('does not classify a JSON response that arrived as HTML as a chunk failure', () => {
+    let parseError: unknown;
+    try {
+      JSON.parse('<html><head>502 Bad Gateway</head></html>');
+    } catch (e) {
+      parseError = e;
+    }
+
+    expect(parseError).toBeInstanceOf(SyntaxError);
+    expect(isChunkLoadError(parseError)).toBe(false);
+  });
+
+  it.each(["Unexpected token '<'", "expected expression, got '<'", 'Unexpected token < in JSON at position 0'])(
+    'does not classify the bare syntax wording "%s" as a chunk failure',
+    (message) => {
+      expect(isChunkLoadError(new Error(message))).toBe(false);
+    },
+  );
 });
 
 describe('reportClientError', () => {
@@ -111,6 +130,37 @@ describe('reportClientError', () => {
     }) as jest.Mock;
 
     expect(() => reportClientError(new Error('boom'), '/buy')).not.toThrow();
+  });
+
+  // toErrorFacts falls back to String(error), which a hostile toString can turn into a throw.
+  it('swallows a thrown value whose string conversion throws', () => {
+    const hostile = {
+      toString: () => {
+        throw new Error('nope');
+      },
+    };
+
+    expect(() => reportClientError(hostile, '/buy')).not.toThrow();
+  });
+
+  it('identifies the app to the API', () => {
+    reportClientError(new Error('boom'), '/buy');
+
+    expect((global.fetch as jest.Mock).mock.calls[0][1].headers).toMatchObject({ 'x-client': 'dfx-services' });
+  });
+
+  // The endpoint requires a non-empty message; without a substitute the whole report is rejected
+  // and the failure stays invisible, which is the very gap this reporting closes.
+  it('substitutes a message when the error carries none', () => {
+    reportClientError(new Error(''), '/buy');
+
+    expect(sentBody().message).toBe('Unknown error');
+  });
+
+  it('keeps an empty stack out of the payload rather than sending an empty string', () => {
+    reportClientError(Object.assign(new Error('boom'), { stack: undefined }), '/buy');
+
+    expect(sentBody()).not.toHaveProperty('stack');
   });
 });
 

@@ -10,6 +10,10 @@ const LIMITS = { message: 500, type: 100, stack: 4000, route: 500, version: 50 }
 const CHUNK_RELOAD_KEY = 'dfx.chunkReloadAt';
 const CHUNK_RELOAD_WINDOW = 30000;
 
+// Identifies this app to the API, which logs it alongside the error. Without it every report
+// from here is filed as an unknown client.
+const CLIENT_NAME = 'dfx-services';
+
 export interface ErrorFacts {
   message: string;
   type?: string;
@@ -27,16 +31,22 @@ export function toErrorFacts(error: unknown): ErrorFacts {
   return { message: String(error) };
 }
 
-// A chunk request that fails is reported by the bundler as a ChunkLoadError. When a stale chunk
-// URL is answered with the app shell instead, the HTML is parsed as a script and the browser
-// reports a syntax error or a MIME type rejection — the same root cause, three wordings.
+// A chunk request that fails is reported by the bundler as a ChunkLoadError — including when a
+// stale chunk URL is answered with the app shell, because the HTML never registers the chunk.
+//
+// Deliberately NOT matched: the bare syntax-error wordings a browser produces while parsing that
+// HTML as a script. `Unexpected token '<'` is also what JSON.parse says when a response is HTML
+// instead of JSON — an everyday failure whenever a gateway, WAF or login redirect answers an API
+// call. Treating that as a chunk failure would reload the page and discard whatever the customer
+// had typed. The bundler wordings below identify the real case on their own.
 export function isChunkLoadError(error: unknown): boolean {
   const { message, type } = toErrorFacts(error);
 
   return (
     type === 'ChunkLoadError' ||
     /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(message) ||
-    /Unexpected token '<'|is not a valid JavaScript MIME type|expected expression, got '<'/i.test(message)
+    // Script-loading only: a response cannot reach JSON.parse and be refused for its MIME type.
+    /is not a valid JavaScript MIME type/i.test(message)
   );
 }
 
@@ -62,29 +72,34 @@ export function reloadOnceForChunkError(): void {
 export function reportClientError(error: unknown, route: string): void {
   if (!Api.url) return;
 
-  const { message, type, stack } = toErrorFacts(error);
-
-  const body = {
-    message: truncate(message, LIMITS.message),
-    type: truncate(type, LIMITS.type),
-    stack: truncate(stack, LIMITS.stack),
-    route: truncate(route, LIMITS.route),
-    version: truncate(REACT_APP_BUILD_ID, LIMITS.version),
-  };
-
   try {
+    const { message, type, stack } = toErrorFacts(error);
+
+    const body = {
+      // The endpoint rejects an empty message, and a rejected report is exactly the blind spot
+      // this reporting exists to close. `||` on purpose: an empty message needs replacing too.
+      message: truncate(message, LIMITS.message) || 'Unknown error',
+      type: truncate(type, LIMITS.type),
+      stack: truncate(stack, LIMITS.stack),
+      route: truncate(route, LIMITS.route),
+      version: truncate(REACT_APP_BUILD_ID, LIMITS.version),
+    };
+
     void fetch(url({ base: Api.url, path: `/${Api.version}/log/clientError` }), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-client': CLIENT_NAME },
       body: JSON.stringify(body),
       keepalive: true,
     }).catch(() => undefined);
   } catch {
-    // ignore — reporting must never throw into the render that is already failing
+    // ignore — reporting must never throw into the render that is already failing. toErrorFacts
+    // falls back to String(error), which a thrown value with a hostile toString can turn into a
+    // throw of its own, so it belongs inside this block.
   }
 }
 
+// Empty is a value the caller may legitimately hold, so only an absent one is dropped.
 function truncate(value: string | undefined, max: number): string | undefined {
-  if (!value) return undefined;
+  if (value == null) return undefined;
   return value.length > max ? value.slice(0, max) : value;
 }
