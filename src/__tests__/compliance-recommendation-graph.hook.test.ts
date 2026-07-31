@@ -94,3 +94,40 @@ describe('useCompliance().getRecommendationGraphNeighbors', () => {
     });
   });
 });
+
+describe('useCompliance().decidePersonalDfxApproval', () => {
+  beforeEach(() => {
+    mockCall.mockReset().mockResolvedValue({ pdfData: 'cGRm', fileName: 'onboarding.pdf' });
+  });
+
+  it('sends the entire personal decision through the atomic API endpoint', async () => {
+    const { result } = renderHook(() => useCompliance());
+    const data = { stepId: 11, finalDecision: 'Akzeptiert', processedBy: 'Compliance Test' };
+
+    const response = await result.current.decidePersonalDfxApproval(42, data);
+
+    expect(mockCall).toHaveBeenCalledWith({
+      url: 'support/42/dfx-approval',
+      method: 'POST',
+      data,
+    });
+    expect(response).toEqual({ pdfData: 'cGRm', fileName: 'onboarding.pdf' });
+  });
+});
+
+describe('useCompliance().getDfxApprovalStatus', () => {
+  beforeEach(() => {
+    mockCall.mockReset().mockResolvedValue({ ready: false, blockers: [{ code: 'MissingDocument' }] });
+  });
+
+  it('loads the server-side gate result for the DfxApproval step', async () => {
+    const { result } = renderHook(() => useCompliance());
+
+    await result.current.getDfxApprovalStatus(11);
+
+    expect(mockCall).toHaveBeenCalledWith({
+      url: 'kyc/admin/dfx-approval/11/status',
+      method: 'GET',
+    });
+  });
+});

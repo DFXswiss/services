@@ -16,7 +16,14 @@ import { AmlCheckPendingPanel, AmlCheckUpdate } from 'src/components/compliance/
 import { IdentPanel } from 'src/components/compliance/ident-panel';
 import { ErrorHint } from 'src/components/error-hint';
 import { useCallQueueClerks } from 'src/hooks/call-queue-clerks.hook';
-import { ComplianceUserData, KycFile, KycStepInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
+import {
+  ComplianceUserData,
+  DfxApprovalStatus,
+  KycFile,
+  KycStepInfo,
+  TransactionInfo,
+  useCompliance,
+} from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSplitPane } from 'src/hooks/split-pane.hook';
@@ -42,6 +49,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
   useLayoutOptions({ title: 'KYC Management', backButton: true, noMaxWidth: true, textStart: true, onBack });
   const {
     getUserData,
+    getDfxApprovalStatus,
     updateKycStep,
     updateUserData,
     updateBankData,
@@ -50,6 +58,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
     resetBuyCryptoAml,
     resetBuyFiatAml,
     generateOnboardingPdf,
+    decidePersonalDfxApproval,
     createKycLog,
   } = useCompliance();
   const { getFile } = useKyc();
@@ -58,6 +67,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ComplianceUserData>();
+  const [dfxApprovalStatus, setDfxApprovalStatus] = useState<DfxApprovalStatus>();
   const [activeTab, setActiveTab] = useState<ReviewCheckTab | undefined>(initialTabParam ?? undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
@@ -73,10 +83,18 @@ export default function ComplianceReviewScreen(): JSX.Element {
     setIsLoading(true);
     setError(undefined);
     getUserData(+userDataId)
-      .then(setData)
+      .then(async (loadedData) => {
+        setData(loadedData);
+        const dfxApprovalStep = findLatestStep(loadedData.kycSteps, 'DfxApproval');
+        if (loadedData.userData.accountType === 'Personal' && dfxApprovalStep?.status === 'ManualReview') {
+          setDfxApprovalStatus(await getDfxApprovalStatus(dfxApprovalStep.id));
+        } else {
+          setDfxApprovalStatus(undefined);
+        }
+      })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unknown error'))
       .finally(() => setIsLoading(false));
-  }, [userDataId, getUserData]);
+  }, [userDataId, getUserData, getDfxApprovalStatus]);
 
   useEffect(() => {
     loadData();
@@ -118,6 +136,19 @@ export default function ComplianceReviewScreen(): JSX.Element {
     setIsSaving(true);
     setError(undefined);
     try {
+      if (data?.userData.accountType === 'Personal' && params.pdfData && userDataId) {
+        const { pdfData, fileName } = await decidePersonalDfxApproval(+userDataId, {
+          stepId: params.stepId,
+          finalDecision: params.pdfData.finalDecision,
+          processedBy: params.pdfData.processedBy,
+        });
+        const bytes = Uint8Array.from(atob(pdfData), (character) => character.charCodeAt(0));
+        const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+        setPreview({ url, contentType: 'application/pdf', name: fileName });
+        loadData();
+        return;
+      }
+
       // 1. Save KycStep
       await updateKycStep(params.stepId, {
         status: params.status,
@@ -144,22 +175,18 @@ export default function ComplianceReviewScreen(): JSX.Element {
 
       // 4. Generate PDF if data provided
       if (params.pdfData && userDataId) {
-        try {
-          const { pdfData, fileName } = await generateOnboardingPdf(+userDataId, params.pdfData);
+        const { pdfData, fileName } = await generateOnboardingPdf(+userDataId, params.pdfData);
 
-          // Show PDF in preview
-          const byteCharacters = atob(pdfData);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'application/pdf' });
-          const url = URL.createObjectURL(blob);
-          setPreview({ url, contentType: 'application/pdf', name: fileName });
-        } catch (e) {
-          console.error('Failed to generate PDF:', e);
+        // Show PDF in preview
+        const byteCharacters = atob(pdfData);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setPreview({ url, contentType: 'application/pdf', name: fileName });
       }
 
       // 5. Reload data (now includes the new PDF)
@@ -448,6 +475,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
               onOpenFile={openFile}
               onSave={handleFreigabeSave}
               isSaving={isSaving}
+              approvalStatus={dfxApprovalStatus}
             />
           ) : effectiveTab === 'stammdaten' ? (
             <StammdatenPanel

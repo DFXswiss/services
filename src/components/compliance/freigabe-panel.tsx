@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useCallQueueClerks } from 'src/hooks/call-queue-clerks.hook';
-import { KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
+import { DfxApprovalStatus, KycFile, KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import {
   buildAddress,
   display,
@@ -41,6 +41,7 @@ interface OnboardingComplianceReviewFreigabePanelProps {
   onOpenFile: (file: KycFile) => void;
   onSave: (params: ComplianceReviewFreigabeSaveParams) => Promise<void>;
   isSaving: boolean;
+  approvalStatus?: DfxApprovalStatus;
 }
 
 interface SavedComment {
@@ -116,6 +117,40 @@ function renderStepResult(result: string | undefined): JSX.Element | null {
 
 function findFileExcludeSubType(files: KycFile[], type: string, excludeSubType: string): KycFile | undefined {
   return files.find((f) => f.type === type && f.subType !== excludeSubType);
+}
+
+const approvalBlockerLabels: Record<string, string> = {
+  WrongAccountType: 'Kontotyp ist nicht Personal',
+  WrongStepStatus: 'DfxApproval wartet nicht auf Prüfung',
+  WrongKycLevel: 'KYC-Level ist nicht 40',
+  MissingVerifiedName: 'Verifizierter Name fehlt',
+  MissingKycHash: 'KYC-Hash fehlt',
+  MissingFirstName: 'Vorname fehlt',
+  MissingBirthday: 'Geburtsdatum fehlt',
+  MissingMail: 'E-Mail-Adresse fehlt',
+  ComplexOrganization: 'Komplexe Struktur ist nicht ausgeschlossen',
+  RiskDataPending: 'Risikodaten sind noch nicht vollständig',
+  HighRisk: 'High-Risk-Fall erfordert manuelle Prüfung',
+  Pep: 'PEP-Fall erfordert manuelle Prüfung',
+  InvalidUserStatus: 'User-Status erlaubt keine automatische Freigabe',
+  InvalidKycStatus: 'KYC-Status erlaubt keine automatische Freigabe',
+  MissingCountry: 'Land fehlt',
+  CountryDisabled: 'Land ist für DFX nicht aktiviert',
+  CountryRequiresManualReview: 'Land erfordert eine manuelle Prüfung',
+  CountryExcluded: 'Land ist von der automatischen Freigabe ausgeschlossen',
+  MissingNationality: 'Nationalität fehlt',
+  NationalityDisabled: 'Nationalität ist nicht freigabefähig',
+  MissingResidencePermit: 'Aufenthaltsbewilligung fehlt',
+  MissingIdentDocumentType: 'Typ des Identifikationsdokuments fehlt',
+  IdentDocumentTypeDisabled: 'Identifikationsdokument ist für das Land nicht zugelassen',
+  MissingIdentDocumentId: 'Nummer des Identifikationsdokuments fehlt',
+  OpenNameCheck: 'NameCheck ist noch offen',
+  MissingDocument: 'Dokument fehlt',
+};
+
+function formatApprovalBlocker(blocker: DfxApprovalStatus['blockers'][number]): string {
+  const label = approvalBlockerLabels[blocker.code] ?? blocker.code;
+  return blocker.documentSubType ? `${label}: ${blocker.documentSubType}` : label;
 }
 
 // --- Sub-components ---
@@ -278,6 +313,7 @@ export function ComplianceReviewFreigabePanel({
   onOpenFile,
   onSave,
   isSaving,
+  approvalStatus,
 }: OnboardingComplianceReviewFreigabePanelProps): JSX.Element {
   // Derived from predecessor step status (read-only, like in GS)
   const ownerDirectoryStep = findStep(kycSteps, 'OwnerDirectory');
@@ -463,6 +499,7 @@ export function ComplianceReviewFreigabePanel({
   const deckblatt = findFile(kycFiles, 'UserNotes', 'GwGFileCover');
   const identDoc = findFile(kycFiles, 'Identification', undefined, true);
   const identForm = findFile(kycFiles, 'UserNotes', 'IdentificationForm');
+  const customerProfile = findFile(kycFiles, 'UserNotes', 'CustomerProfile');
   const riskProfile = findFile(kycFiles, 'UserNotes', 'RiskProfile');
   const formAK = kycFiles.find((f) => f.subType === 'FormA' || f.subType === 'FormK');
   const nameCheckDfx = findFile(kycFiles, 'UserNotes', 'DfxNameCheck');
@@ -486,6 +523,27 @@ export function ComplianceReviewFreigabePanel({
           <span className="text-sm text-dfxGray-700 font-medium">Status:</span>
           {statusBadge(step.status)}
         </div>
+
+        {!isOrganization && step.status === 'ManualReview' && approvalStatus && (
+          <div
+            className={`rounded px-3 py-2 text-sm ${approvalStatus.ready ? 'bg-dfxGreen-100/20 text-dfxGreen-100' : 'bg-dfxYellow-500/20 text-dfxBlue-800'}`}
+          >
+            {approvalStatus.ready ? (
+              'API-Prüfung: bereit zur automatischen Freigabe'
+            ) : (
+              <>
+                <div className="font-medium">API-Prüfung: wartet auf Voraussetzungen</div>
+                <ul className="list-disc ml-5 mt-1">
+                  {approvalStatus.blockers.map((blocker, index) => (
+                    <li key={`${blocker.code}-${blocker.documentSubType ?? index}`}>
+                      {formatApprovalBlocker(blocker)}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Section 1: User Data */}
         <SectionTitle title="User Daten:" />
@@ -554,6 +612,7 @@ export function ComplianceReviewFreigabePanel({
             <DocLink label="Deckblatt" file={deckblatt} onOpenFile={onOpenFile} />
             <DocLink label="Identifikationsdokument" file={identDoc} onOpenFile={onOpenFile} />
             <DocLink label="Identifizierungsformular" file={identForm} onOpenFile={onOpenFile} />
+            <DocLink label="Kundenprofil" file={customerProfile} onOpenFile={onOpenFile} />
             <DocLink label="Risikoprofil" file={riskProfile} onOpenFile={onOpenFile} />
             <DocLink label="Formular A oder K" file={formAK} onOpenFile={onOpenFile} />
             <DocLink label="Name Check DFX" file={nameCheckDfx} onOpenFile={onOpenFile} />
