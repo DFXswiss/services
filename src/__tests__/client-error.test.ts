@@ -206,4 +206,28 @@ describe('reloadOnceForChunkError', () => {
 
     expect(reload).not.toHaveBeenCalled();
   });
+
+  // The widget and library builds run on a third party's page, where window is theirs. Reloading
+  // it over a deploy of ours would throw away state that has nothing to do with us. The module
+  // is loaded in isolation because marking it is a one-way switch.
+  it('does not reload the host page once marked as embedded', () => {
+    jest.isolateModules(() => {
+      const clientError = jest.requireActual('../util/client-error');
+
+      clientError.markEmbedded();
+      clientError.reloadOnceForChunkError();
+
+      expect(reload).not.toHaveBeenCalled();
+    });
+  });
+
+  it('still reloads when not embedded', () => {
+    jest.isolateModules(() => {
+      const clientError = jest.requireActual('../util/client-error');
+
+      clientError.reloadOnceForChunkError();
+
+      expect(reload).toHaveBeenCalledTimes(1);
+    });
+  });
 });

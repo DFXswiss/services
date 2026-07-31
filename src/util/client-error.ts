@@ -52,12 +52,24 @@ export function isChunkLoadError(error: unknown): boolean {
   );
 }
 
+// The widget and library builds run inside someone else's page, where `window` belongs to the
+// host. Reloading it would discard state that has nothing to do with us — their forms, their cart,
+// their scroll position — over a deploy of ours. Those builds mark themselves, and recovery there
+// falls back to reporting the failure without reloading.
+let isEmbedded = false;
+
+export function markEmbedded(): void {
+  isEmbedded = true;
+}
+
 // A new deploy replaces the content-hashed chunks, so a tab left open across one can request a
 // chunk that no longer exists. Reload once to pick up the new chunks. The guard lives in
 // localStorage (it survives the sessionStorage.clear() on session/login URLs) and is time-boxed,
 // so a persistent failure reloads at most once per window instead of looping. Storage access is
 // wrapped because embedded/iframe contexts can block it.
 export function reloadOnceForChunkError(): void {
+  if (isEmbedded) return;
+
   try {
     const last = Number(localStorage.getItem(CHUNK_RELOAD_KEY) ?? 0);
     if (Date.now() - last < CHUNK_RELOAD_WINDOW) return;
@@ -106,8 +118,9 @@ export function reportClientError(error: unknown, route: string): void {
 // failures inside the router are handled by the error screen, which is where React hands them;
 // these listeners never see those.
 //
-// Every entry point has to call this: the widget build swaps index-widget.tsx in for index.tsx, so
-// wiring it up in one of them leaves the other without any handling at all.
+// Every entry point has to call this, and there are three: index.tsx for the app, index-widget.tsx
+// for the widget (its build swaps that file in for index.tsx), and Main.lib.tsx for the library,
+// which is imported into a consumer's app and has no entry point of its own.
 export function installChunkErrorHandling(): void {
   const handle = (error: unknown): void => {
     if (!isChunkLoadError(error)) return;

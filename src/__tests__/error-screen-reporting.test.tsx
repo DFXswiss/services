@@ -84,11 +84,14 @@ describe('ErrorScreen reporting', () => {
     expect(mockReportClientError.mock.calls[0][1]).toBe('/buy');
   });
 
+  // The no-match case is the one where the router's own location is least obviously defined, so
+  // the reported route is asserted here too.
   it('reports a route that matched nothing', async () => {
     renderAt('/nonexistent');
 
     await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
     expect(mockReportClientError.mock.calls[0][0]).toMatchObject({ status: 404 });
+    expect(mockReportClientError.mock.calls[0][1]).toBe('/nonexistent');
   });
 
   it('reports only once per failure', async () => {
