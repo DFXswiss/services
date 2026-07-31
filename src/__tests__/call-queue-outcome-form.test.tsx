@@ -1,7 +1,8 @@
 // Component tests for the call-queue outcome form: the AmlCheck action must be offered for
 // transaction-based queue items on ALL outcomes (queues like ManualCheckIpCountryPhone are excluded
-// from the AML recheck cron, so a completed call has to release the transaction explicitly) and must
-// default to Pass when the call was completed. Heavy transitive deps are mocked so the form can
+// from the AML recheck cron, so a completed call has to act on the transaction explicitly) and must
+// default to Reset when the call was completed (clears amlCheck/amlReason so the cron re-runs the
+// full AML check instead of force-passing). Heavy transitive deps are mocked so the form can
 // render under @testing-library/react without the full app shell.
 
 jest.mock('@dfx.swiss/react-components', () => ({
@@ -70,7 +71,7 @@ describe('CallQueueOutcomeForm AmlCheck action', () => {
     mockSaveCallOutcome.mockResolvedValue({ success: true, completedSteps: ['transaction', 'userData', 'log'] });
   });
 
-  it('offers the AmlCheck action for transaction items and defaults to Pass on Completed', async () => {
+  it('offers the AmlCheck action for transaction items and defaults to Reset on Completed', async () => {
     renderForm(TX_CONTEXT);
     expect(screen.getAllByRole('combobox')).toHaveLength(3);
 
@@ -80,11 +81,11 @@ describe('CallQueueOutcomeForm AmlCheck action', () => {
     expect(mockSaveCallOutcome).toHaveBeenCalledWith(TX_CONTEXT, CallOutcome.COMPLETED, {
       signature: 'JR',
       comment: 'called',
-      amlAction: 'Pass',
+      amlAction: 'Reset',
     });
   });
 
-  it('keeps the Pass default overridable', async () => {
+  it('keeps the Reset default overridable', async () => {
     renderForm(TX_CONTEXT);
 
     fillAndSubmit(CallOutcome.COMPLETED, '');
@@ -97,7 +98,7 @@ describe('CallQueueOutcomeForm AmlCheck action', () => {
     renderForm(TX_CONTEXT);
     const selects = screen.getAllByRole('combobox');
     fireEvent.change(selects[1], { target: { value: CallOutcome.COMPLETED } });
-    expect((screen.getAllByRole('combobox')[2] as HTMLSelectElement).value).toBe('Pass');
+    expect((screen.getAllByRole('combobox')[2] as HTMLSelectElement).value).toBe('Reset');
 
     fillAndSubmit(CallOutcome.UNAVAILABLE);
 

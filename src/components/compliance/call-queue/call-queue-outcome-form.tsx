@@ -38,10 +38,12 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
   const canSubmit = !!signature && !!outcome && !!comment.trim() && !isSaving;
 
   // Some queue reasons (e.g. ManualCheckIpCountryPhone) are excluded from the AML recheck cron, so a
-  // completed call must release the transaction explicitly. Default to Pass on Completed, overridable.
+  // completed call must act on the transaction explicitly. Default to Reset (not Pass): it clears
+  // amlCheck + amlReason so the cron re-runs the FULL AML check, which only passes the tx if no
+  // other errors remain. Overridable.
   function handleOutcomeChange(value: CallOutcome | '') {
     setOutcome(value);
-    if (hasTx) setAmlAction(value === CallOutcome.COMPLETED ? 'Pass' : '');
+    if (hasTx) setAmlAction(value === CallOutcome.COMPLETED ? 'Reset' : '');
   }
 
   async function handleSubmit() {
