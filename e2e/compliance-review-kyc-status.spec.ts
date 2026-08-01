@@ -35,6 +35,10 @@ const complianceFixture = {
       amlCheck: 'Pass',
       amlReason: 'NA',
       isCompleted: false,
+      buyCryptoIsComplete: false,
+      buyCryptoStatus: 'MissingLiquidity',
+      buyCryptoHasBatch: false,
+      buyCryptoHasChargeback: false,
       created: '2026-07-31T08:30:00.000Z',
     },
   ],
@@ -179,6 +183,7 @@ test.describe('Compliance review KYC and AML actions', () => {
     await expect(page.getByText('KYC Management')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Auf Check setzen' })).toBeVisible();
     await expect(page.getByText('BuyCrypto 130504')).toBeVisible();
+    await expect(page.getByText('Transaction 326324 · AML Pass · NA · Status MissingLiquidity')).toBeVisible();
     await expect(page.getByRole('button', { name: 'AML-Check zurücksetzen' })).toBeDisabled();
     await expect(page.getByText('Zuerst KYC-Status auf Check setzen und den Reload abwarten.')).toBeVisible();
 

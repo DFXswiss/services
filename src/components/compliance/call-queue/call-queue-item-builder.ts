@@ -6,7 +6,12 @@ export function buildCallOutcomeContext(params: {
   userDataId: number;
   txId?: number;
   sourceType?: CallQueueSourceType;
+  amlCheck?: string;
+  amlReason?: string;
+  buyCryptoResetEligible?: boolean;
 }): CallOutcomeContext {
-  const { queue, userDataId, txId, sourceType } = params;
-  return txId != null && sourceType ? { queue, userDataId, txId, sourceType } : { queue, userDataId };
+  const { queue, userDataId, txId, sourceType, amlCheck, amlReason, buyCryptoResetEligible } = params;
+  return txId != null && sourceType
+    ? { queue, userDataId, txId, sourceType, amlCheck, amlReason, buyCryptoResetEligible }
+    : { queue, userDataId };
 }

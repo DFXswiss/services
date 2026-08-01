@@ -1,7 +1,8 @@
-import { AmlReason, CallQueue, CheckStatus, KycStatus } from '@dfx.swiss/react';
+import { AmlReason, CallQueue, CheckStatus } from '@dfx.swiss/react';
 import { useState } from 'react';
-import { ComplianceUserData, TransactionInfo } from 'src/hooks/compliance.hook';
+import type { ComplianceUserData, TransactionInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { canResetBuyCryptoAmlForReview, hasBuyCryptoReviewResetEligibleState } from 'src/util/buy-crypto-reset.util';
 import { statusBadge } from 'src/util/compliance-helpers';
 import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/util/scorechain.util';
 import { formatSwissDate } from 'src/util/utils';
@@ -40,6 +41,7 @@ function TransactionEntry({
   onReset,
   isSaving,
   userDataId,
+  canResetBuyCrypto,
 }: {
   tx: TransactionInfo;
   clerks: string[];
@@ -47,6 +49,7 @@ function TransactionEntry({
   onReset: (clerk: string) => Promise<void>;
   isSaving: boolean;
   userDataId?: number;
+  canResetBuyCrypto: boolean;
 }): JSX.Element {
   const { navigate } = useNavigation();
   const [amlCheck, setAmlCheck] = useState(tx.amlCheck ?? '');
@@ -164,13 +167,20 @@ function TransactionEntry({
               onChange={(e) => setAmlCheck(e.target.value)}
             >
               <option value="">—</option>
-              {AML_CHECK_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
+              {AML_CHECK_OPTIONS.filter((opt) => opt !== 'Reset' || tx.buyCryptoId == null || canResetBuyCrypto).map(
+                (opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ),
+              )}
             </select>
           </div>
+          {tx.buyCryptoId != null && !canResetBuyCrypto && (
+            <p className="px-3 py-2 text-xs text-dfxGray-700 border-b border-dfxGray-300">
+              Reset ist erst verfügbar, wenn KYC auf Check steht und BuyCrypto weiterhin zurückgesetzt werden darf.
+            </p>
+          )}
           <div className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300">
             <span className="text-sm text-dfxBlue-800">AmlReason</span>
             <select
@@ -268,6 +278,7 @@ function ResettableTransactionEntry({
           <p className="text-xs text-dfxGray-700">
             Transaction {tx.id} · AML {tx.amlCheck}
             {tx.amlReason ? ` · ${tx.amlReason}` : ''}
+            {tx.buyCryptoStatus ? ` · Status ${tx.buyCryptoStatus}` : ''}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -308,9 +319,8 @@ export function AmlCheckPendingPanel({
   const resettableTxs = data.transactions.filter(
     (tx) =>
       tx.type != null &&
-      tx.buyCryptoId != null &&
       tx.amlCheck != null &&
-      !tx.isCompleted &&
+      hasBuyCryptoReviewResetEligibleState(tx) &&
       !handledTransactionIds.has(tx.id),
   );
   const ud = data.userData;
@@ -443,7 +453,7 @@ export function AmlCheckPendingPanel({
               key={tx.id}
               tx={tx}
               isSaving={isSaving}
-              canReset={ud.kycStatus === KycStatus.CHECK}
+              canReset={canResetBuyCryptoAmlForReview(tx, ud.kycStatus)}
               onReset={() => onReviewReset(tx)}
             />
           ))}
@@ -458,6 +468,7 @@ export function AmlCheckPendingPanel({
             onReset={(clerk) => onReset(tx, clerk)}
             isSaving={isSaving}
             userDataId={ud.id}
+            canResetBuyCrypto={canResetBuyCryptoAmlForReview(tx, ud.kycStatus)}
           />
         </div>
       ))}
