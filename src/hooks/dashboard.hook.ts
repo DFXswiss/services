@@ -1,4 +1,3 @@
-import { useApi } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import {
   FinancialChangesEntry,
@@ -8,9 +7,10 @@ import {
   LatestBalanceResponse,
   RefRewardRecipient,
 } from 'src/dto/dashboard.dto';
+import { useGuardedApi } from './guarded-api.hook';
 
 export function useDashboard() {
-  const { call } = useApi();
+  const { call } = useGuardedApi();
 
   function financialLogParams(from?: string, dailySample?: boolean): URLSearchParams {
     const params = new URLSearchParams();
