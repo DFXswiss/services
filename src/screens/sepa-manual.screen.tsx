@@ -1,4 +1,4 @@
-import { ApiError, Country, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, Country, Utils, Validations } from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -21,6 +21,7 @@ import { buildCamt053Xml } from 'src/util/camt053-builder';
 import { todayAsString } from 'src/util/compliance-helpers';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAdminGuard } from '../hooks/guard.hook';
+import { useGuardedApi } from '../hooks/guarded-api.hook';
 
 enum CreditDebitIndicator {
   CRDT = 'CRDT',
@@ -50,7 +51,7 @@ const CURRENCIES = ['EUR', 'CHF', 'USD'];
 
 export default function SepaManualScreen(): JSX.Element {
   const { translate, translateError, allowedCountries } = useSettingsContext();
-  const { call } = useApi();
+  const { call } = useGuardedApi();
   const { rootRef } = useLayoutContext();
 
   const [isUploading, setIsUploading] = useState(false);

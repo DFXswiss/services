@@ -1,4 +1,4 @@
-import { Blockchain, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { Blockchain, Utils, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -24,6 +24,7 @@ import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { blankedAddress, readFileAsText } from 'src/util/utils';
+import { useGuardedApi } from '../hooks/guarded-api.hook';
 
 const availableBlockchains = [
   Blockchain.ETHEREUM,
@@ -48,7 +49,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
   const { toChainObject, toChainId } = useWeb3();
   const { width } = useWindowContext();
   const { rootRef } = useLayoutContext();
-  const { call } = useApi();
+  const { call } = useGuardedApi();
 
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);

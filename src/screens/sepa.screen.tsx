@@ -1,4 +1,4 @@
-import { ApiError, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, Utils, Validations } from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -17,6 +17,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAdminGuard } from '../hooks/guard.hook';
+import { useGuardedApi } from '../hooks/guarded-api.hook';
 
 interface FormDataFile {
   file: File;
@@ -24,7 +25,7 @@ interface FormDataFile {
 
 export default function SepaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { call } = useApi();
+  const { call } = useGuardedApi();
   const navigate = useNavigate();
 
   const [isUploading, setIsUploading] = useState(false);
