@@ -60,10 +60,11 @@ export function toErrorFacts(error: unknown): ErrorFacts {
 // had typed, which is worse than the failure it recovers from. The wordings below identify the
 // real case on their own.
 export function isChunkLoadError(error: unknown): boolean {
-  // The name first: reading it cannot run code of the value's own choosing, while deriving the
-  // message calls String() on it. This is the first thing the global handler does with a thrown
-  // value, so a throw here would cost the recovery that follows — the failure would be classified
-  // as nothing at all and the customer would be left on the broken page.
+  // The name first, read in isolation: it is the cheaper signal, and a getter or proxy trap behind
+  // it is contained rather than left to escape. Deriving the message is the riskier step, since it
+  // calls String() on the value. Classification is the first thing the global handler does with a
+  // thrown value, so a throw here would cost the recovery that follows — the failure would be
+  // classified as nothing at all and the customer left on the broken page.
   if (nameOf(error) === 'ChunkLoadError') return true;
 
   try {
