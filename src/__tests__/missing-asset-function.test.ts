@@ -5,8 +5,32 @@ import { onRequest } from '../../functions/[[path]].js';
 // HTML is the fallback standing in for a file that no longer exists, and must not reach the client
 // as a successful asset. An HTML failure response is a different thing and keeps its status.
 
+const ASSET_URL = 'https://app.dfx.swiss/static/js/main.abc123.js';
+
 function contextFor(response: Response): any {
-  return { request: new Request('https://app.dfx.swiss/static/js/main.abc123.js'), env: { ASSETS: { fetch: async () => response } } };
+  return { request: new Request(ASSET_URL), env: { ASSETS: { fetch: async () => response } } };
+}
+
+// A conditional request needs two answers: the 304, then whatever the unconditional retry finds.
+// The recorder also captures the second request, so the test can assert the conditions were dropped
+// rather than merely assume it.
+function conditionalContext(retry: Response): { context: any; retried: () => Request | undefined } {
+  const responses = [new Response(null, { status: 304 }), retry];
+  let secondRequest: Request | undefined;
+
+  const context = {
+    request: new Request(ASSET_URL, { headers: { 'if-none-match': '"shell-etag"', 'if-modified-since': 'Wed, 30 Jul 2026 00:00:00 GMT' } }),
+    env: {
+      ASSETS: {
+        fetch: async (request: Request) => {
+          if (responses.length === 1) secondRequest = request;
+          return responses.shift() as Response;
+        },
+      },
+    },
+  };
+
+  return { context, retried: () => secondRequest };
 }
 
 describe('missing asset function', () => {
@@ -58,6 +82,31 @@ describe('missing asset function', () => {
     const result = await onRequest(contextFor(partial));
 
     expect(result.status).toBe(404);
+  });
+
+  it('does not let a conditional request revalidate a cached app shell', async () => {
+    // The client stored the app shell under an asset URL before this function existed. Revalidating
+    // must not confirm it as valid, or the poisoned entry lives on.
+    const { context, retried } = conditionalContext(
+      new Response('<!doctype html><html></html>', { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }),
+    );
+
+    const result = await onRequest(context);
+
+    expect(result.status).toBe(404);
+    expect(retried()?.headers.get('if-none-match')).toBeNull();
+    expect(retried()?.headers.get('if-modified-since')).toBeNull();
+  });
+
+  it('still confirms a cached copy of an asset that really exists', async () => {
+    const { context } = conditionalContext(
+      new Response('console.log(1);', { status: 200, headers: { 'content-type': 'application/javascript' } }),
+    );
+
+    const result = await onRequest(context);
+
+    expect(result.status).toBe(304);
+    await expect(result.text()).resolves.toBe('');
   });
 
   it('leaves an HTML error page as the error it is', async () => {
