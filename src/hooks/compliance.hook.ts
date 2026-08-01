@@ -1378,8 +1378,8 @@ export function useCompliance() {
     expected: { expectedAmlCheck: CheckStatus; expectedAmlReason: AmlReason | null },
   ): Promise<void> {
     return call<void>({
-      url: `buyCrypto/${id}/amlCheck/review-reset`,
-      method: 'POST',
+      url: `buyCrypto/${id}/amlCheck/reviewReset`,
+      method: 'PUT',
       data: expected,
     });
   }

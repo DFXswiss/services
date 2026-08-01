@@ -127,7 +127,7 @@ async function installSyntheticApi(
       return;
     }
 
-    if (request.method() === 'POST' && path === '/v1/buyCrypto/130504/amlCheck/review-reset') {
+    if (request.method() === 'PUT' && path === '/v1/buyCrypto/130504/amlCheck/reviewReset') {
       const body = request.postDataJSON() as unknown;
       mutations.push({ method: request.method(), path, body });
       currentFixture.transactions = [];
@@ -210,8 +210,8 @@ test.describe('Compliance review KYC and AML actions', () => {
         body: { expectedKycStatus: 'Completed' },
       },
       {
-        method: 'POST',
-        path: '/v1/buyCrypto/130504/amlCheck/review-reset',
+        method: 'PUT',
+        path: '/v1/buyCrypto/130504/amlCheck/reviewReset',
         body: { expectedAmlCheck: 'Pass', expectedAmlReason: 'NA' },
       },
     ]);
