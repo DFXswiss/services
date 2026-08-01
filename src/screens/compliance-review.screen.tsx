@@ -1,4 +1,4 @@
-import { useKyc } from '@dfx.swiss/react';
+import { KycStatus, useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -53,7 +53,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
     createKycLog,
   } = useCompliance();
   const { getFile } = useKyc();
-  const { clerks } = useCallQueueClerks();
+  const { clerks, isLoading: clerksLoading, error: clerksError } = useCallQueueClerks();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -261,6 +261,39 @@ export default function ComplianceReviewScreen(): JSX.Element {
     }
   }
 
+  async function handleSetKycStatusCheck(clerk: string): Promise<void> {
+    if (!userDataId || data?.userData.kycStatus === KycStatus.CHECK) return;
+
+    setIsSaving(true);
+    setError(undefined);
+    let statusUpdated = false;
+    try {
+      await updateUserData(+userDataId, { kycStatus: KycStatus.CHECK });
+      statusUpdated = true;
+      setData((current) =>
+        current ? { ...current, userData: { ...current.userData, kycStatus: KycStatus.CHECK } } : current,
+      );
+      await createKycLog(
+        +userDataId,
+        buildKycLogMessage({
+          description: 'KycStatus',
+          clerk,
+          results: [{ table: 'userData', column: 'kycStatus', value: KycStatus.CHECK }],
+        }),
+      );
+      loadData();
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+      setError(
+        statusUpdated
+          ? `KYC status was changed to Check, but the audit log could not be created: ${message}. Do not repeat the status change; verify the audit trail.`
+          : `KYC status could not be changed to Check: ${message}`,
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   async function handleAmlUpdate(tx: TransactionInfo, update: AmlCheckUpdate, clerk: string): Promise<void> {
     setIsSaving(true);
     setError(undefined);
@@ -410,7 +443,15 @@ export default function ComplianceReviewScreen(): JSX.Element {
       <div ref={containerRef} className="flex">
         {/* Left: Header + Tabs */}
         <div style={{ width: `${splitPercent}%` }} className="flex flex-col gap-4 min-w-0 pr-2">
-          <ComplianceReviewHeader userData={data.userData} kycSteps={data.kycSteps} />
+          <ComplianceReviewHeader
+            userData={data.userData}
+            kycSteps={data.kycSteps}
+            clerks={clerks}
+            clerksLoading={clerksLoading}
+            clerksError={clerksError}
+            isSaving={isSaving}
+            onSetKycStatusCheck={handleSetKycStatusCheck}
+          />
 
           {/* Tab Bar */}
           <div className="flex flex-wrap gap-1">
