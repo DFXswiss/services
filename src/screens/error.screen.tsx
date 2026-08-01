@@ -40,7 +40,7 @@ export default function ErrorScreen(): JSX.Element {
     // A chunk left stale by a deploy recovers on its own once the app reloads. React hands the
     // failed import to this boundary, so this is where it can be caught — a window listener never
     // sees it.
-    if (!error && isChunkLoadError(routeError)) reloadOnceForChunkError();
+    if (!error && isChunkLoadError(routeError)) reloadOnceForChunkError(routeError);
   }, [routeError, error, pathname]);
 
   useLayoutOptions({});
