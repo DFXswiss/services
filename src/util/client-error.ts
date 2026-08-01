@@ -11,8 +11,15 @@ const LIMITS = { message: 500, type: 100, stack: 4000, route: 500, version: 50 }
 const CHUNK_RELOAD_KEY = 'dfx.chunkReloadAt';
 const CHUNK_RELOAD_WINDOW = 30000;
 
-// The bundler names the failing asset in its message, as `(error: <url>)` or `(missing: <url>)`.
-const CHUNK_URL_REGEX = /\((?:error|missing):\s*(https?:\/\/[^\s)]+)\)/i;
+// The bundler names the failing asset in its message: `(error: <url>)` or `(missing: <url>)` for a
+// chunk, and a trailing address for a dynamic import. Both forms allow a relative address, since
+// what appears here is whatever the build was configured to request.
+const CHUNK_URL_PATTERNS = [/\((?:error|missing):\s*([^\s)]+)\)/i, /imported module:\s*([^\s]+)/i];
+
+// How long the repair may take before the reload goes ahead regardless. A request that never
+// settles must not cost the customer their recovery — before this existed, the reload was
+// immediate, and it has to stay at least as reliable as that.
+const REPAIR_BUDGET = 2000;
 
 // Reporting the same failure again tells us nothing and costs the customer a request. The router
 // can remount a route repeatedly, and every remount builds a fresh component instance -- so a
@@ -107,26 +114,53 @@ export function reloadOnceForChunkError(error?: unknown): void {
     return;
   }
 
+  // The reload must happen even if the repair hangs, so it is bounded by a timer as well as by the
+  // request settling — whichever comes first, and only once.
+  let reloaded = false;
+  const reloadOnce = (): void => {
+    if (reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  };
+
+  window.setTimeout(reloadOnce, REPAIR_BUDGET);
+
   void fetch(chunkUrl, { cache: 'reload', credentials: 'omit' })
     .catch(() => undefined)
-    .then(() => window.location.reload());
+    .then(reloadOnce);
 }
 
-// The URL of the asset a bundler chunk failure names, if the message carries one.
+// The address of the asset a bundler failure names, resolved and confined to our own origin.
 export function chunkUrlOf(error: unknown): string | undefined {
   if (error == null) return undefined;
 
-  const { message } = toErrorFacts(error);
-  const match = CHUNK_URL_REGEX.exec(message);
-  if (!match) return undefined;
+  // webpack puts the address on the error itself, which beats reading it back out of prose.
+  const request = (error as { request?: unknown }).request;
+  const raw = typeof request === 'string' && request ? request : addressInMessage(error);
+  if (!raw) return undefined;
 
-  // Only our own origin: the message is derived from an error object, and a report from an
-  // embedded or third-party bundler could otherwise point this at someone else's host.
   try {
-    return new URL(match[1]).origin === window.location.origin ? match[1] : undefined;
+    // Resolved against the current document, so a relative address — which is what a build with a
+    // relative public path emits — is handled like an absolute one.
+    const resolved = new URL(raw, window.location.href);
+
+    // Own origin only: this address comes out of an error object, and an embedded or third-party
+    // bundler could otherwise point the repair at someone else's host.
+    return resolved.origin === window.location.origin ? resolved.href : undefined;
   } catch {
     return undefined;
   }
+}
+
+function addressInMessage(error: unknown): string | undefined {
+  const { message } = toErrorFacts(error);
+
+  for (const pattern of CHUNK_URL_PATTERNS) {
+    const match = pattern.exec(message);
+    if (match) return match[1];
+  }
+
+  return undefined;
 }
 
 // Clears what this module remembers between reports. Only a test needs this: in a document the
@@ -207,7 +241,7 @@ export function installChunkErrorHandling(): void {
     if (!isChunkLoadError(error)) return;
 
     reportClientError(error, window.location.pathname);
-    reloadOnceForChunkError();
+    reloadOnceForChunkError(error);
   };
 
   window.addEventListener('error', (event) => handle(event?.error ?? event?.message));

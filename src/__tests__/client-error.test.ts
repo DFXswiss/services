@@ -275,6 +275,89 @@ describe('reloadOnceForChunkError', () => {
     expect(reload).toHaveBeenCalledTimes(1);
   });
 
+  // Before the repair existed the reload was immediate. A request that never settles must not cost
+  // the customer their recovery, so the reload is bounded by a timer as well.
+  it('reloads even if the repair request never settles', () => {
+    jest.useFakeTimers();
+    global.fetch = jest.fn().mockReturnValue(new Promise(() => undefined)) as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 1 failed.\n(error: http://localhost/static/js/1.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    expect(reload).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(2000);
+    expect(reload).toHaveBeenCalledTimes(1);
+
+    jest.useRealTimers();
+  });
+
+  it('reloads only once when the repair settles after the timer already fired', async () => {
+    jest.useFakeTimers();
+    let settle: (value: unknown) => void = () => undefined;
+    global.fetch = jest.fn().mockReturnValue(new Promise((resolve) => (settle = resolve))) as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 1 failed.\n(error: http://localhost/static/js/1.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    jest.advanceTimersByTime(2000);
+    settle(new Response(''));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(reload).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  // webpack puts the address on the error itself; reading it there beats parsing prose.
+  it('prefers the address webpack puts on the error over the message', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(new Response(''));
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 5 failed.\n(error: http://localhost/static/js/from-message.js)'), {
+        name: 'ChunkLoadError',
+        request: 'http://localhost/static/js/from-request.js',
+      }),
+    );
+
+    expect(fetchMock.mock.calls[0][0]).toBe('http://localhost/static/js/from-request.js');
+    await Promise.resolve();
+  });
+
+  // What a build with a relative public path emits.
+  it('resolves a relative chunk address against the current document', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(new Response(''));
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 3 failed.\n(error: /static/js/3.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    expect(fetchMock.mock.calls[0][0]).toBe('http://localhost/static/js/3.abc.chunk.js');
+    await Promise.resolve();
+  });
+
+  // isChunkLoadError accepts this wording too, so the repair has to understand it as well.
+  it('reads the address out of a failed dynamic import', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(new Response(''));
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(
+      new Error('Failed to fetch dynamically imported module: http://localhost/static/js/lazy.js'),
+    );
+
+    expect(fetchMock.mock.calls[0][0]).toBe('http://localhost/static/js/lazy.js');
+    await Promise.resolve();
+  });
+
   // The message is derived from an error object, which an embedded or third-party bundler could
   // supply. Repairing an address on someone else's host is not ours to do.
   it('ignores a chunk address on another origin and just reloads', () => {
