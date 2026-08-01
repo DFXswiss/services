@@ -1,9 +1,9 @@
 import { onRequest } from '../../functions/[[path]].js';
 
 // The deployed Pages Function is not part of the app bundle, so nothing else in the test suite
-// reaches it. These cases pin the one decision it makes: an asset path answered with HTML is the
-// SPA fallback standing in for a file that no longer exists, and must not reach the client as a
-// successful asset.
+// reaches it. These cases pin the one decision it makes: an asset path answered SUCCESSFULLY with
+// HTML is the fallback standing in for a file that no longer exists, and must not reach the client
+// as a successful asset. An HTML failure response is a different thing and keeps its status.
 
 function contextFor(response: Response): any {
   return { request: new Request('https://app.dfx.swiss/static/js/main.abc123.js'), env: { ASSETS: { fetch: async () => response } } };
@@ -47,10 +47,22 @@ describe('missing asset function', () => {
     expect(result.status).toBe(503);
   });
 
+  it('catches the fallback on a successful status other than 200', async () => {
+    // The check is on success, not on 200 alone, so a partial response carrying the fallback
+    // cannot slip past as a valid asset.
+    const partial = new Response('<!doctype html><html></html>', {
+      status: 206,
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    });
+
+    const result = await onRequest(contextFor(partial));
+
+    expect(result.status).toBe(404);
+  });
+
   it('leaves an HTML error page as the error it is', async () => {
-    // A gateway or origin failure rendered as HTML is not a missing asset. Reporting it as 404
-    // would turn a temporary outage into a permanent-looking one and send the client to reload
-    // rather than retry.
+    // An HTML failure page is not a missing asset. Reporting it as 404 would state permanent
+    // absence on the strength of what may be a passing fault.
     const outage = new Response('<!doctype html><html>gateway error</html>', {
       status: 503,
       headers: { 'content-type': 'text/html; charset=utf-8' },

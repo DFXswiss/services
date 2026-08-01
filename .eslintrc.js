@@ -20,8 +20,8 @@ module.exports = {
       {
         // Cloudflare Pages Functions are deployed but never bundled into the app, so they sit
         // outside tsconfig.json and the type-aware parser cannot resolve them. Linting them
-        // without type information still catches the failure that matters here: a syntax error in
-        // a file that reaches production without any other check ever reading it.
+        // without type information still gives this path a static syntax check, which the build
+        // does not provide for files it never compiles.
         files: ['functions/**/*.js'],
         parserOptions: { project: null },
         env: { browser: true, node: false, jest: false },

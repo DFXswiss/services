@@ -13,6 +13,6 @@
 #
 # A 404 cannot be expressed in this file: _redirects supports redirects (301, 302, 303, 307, 308)
 # and rewrites with 200, and a rule written with 404 is rejected as invalid. Narrowing the rule
-# below does not work either -- an explicit /static/* rule takes precedence over real files and
-# would shadow the assets themselves, which the catch-all does not do.
+# below is not an option either: Cloudflare documents that redirects apply whether or not an asset
+# matches the request, so an explicit /static/* rule would shadow the assets themselves.
 /*    /index.html    200
