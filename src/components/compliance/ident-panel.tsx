@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ComplianceUserData, IpLogInfo, KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
 import { display, formatBirthday, refName, statusBadge, todayAsString } from 'src/util/compliance-helpers';
+import { formatSwissDate } from 'src/util/utils';
 import { renderResultTable } from './compliance-review-panel';
 
 interface IdentPanelProps {
@@ -132,9 +133,7 @@ export function IdentPanel({ data, clerks, onOpenFile, onSave, isSaving }: Ident
       <div className="flex items-center gap-3">
         <span className="text-sm text-dfxGray-700 font-medium">Status:</span>
         {statusBadge(step.status)}
-        <span className="text-xs text-dfxGray-700">
-          Eingangsdatum: {new Date(step.created).toLocaleDateString('de-CH')}
-        </span>
+        <span className="text-xs text-dfxGray-700">Eingangsdatum: {formatSwissDate(step.created)}</span>
       </div>
 
       {/* Documents */}

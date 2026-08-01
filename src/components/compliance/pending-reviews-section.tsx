@@ -3,6 +3,7 @@ import { Fragment, useState } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useCompliance } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { formatSwissDate } from 'src/util/utils';
 import { CollapsibleSection } from './collapsible-section';
 import { reviewTabs } from './compliance-review-configs';
 
@@ -178,9 +179,7 @@ function ReviewItemsTable({
             <td className="px-3 py-2 text-left text-xs text-dfxBlue-800">{item.accountType ?? '-'}</td>
             <td className="px-3 py-2 text-left text-xs text-dfxBlue-800">{item.userName ?? '-'}</td>
             <td className="px-3 py-2 text-left text-xs text-dfxBlue-800">{item.kycLevel ?? '-'}</td>
-            <td className="px-3 py-2 text-left text-xs text-dfxBlue-800">
-              {new Date(item.date).toLocaleDateString('de-CH')}
-            </td>
+            <td className="px-3 py-2 text-left text-xs text-dfxBlue-800">{formatSwissDate(item.date)}</td>
           </tr>
         ))}
       </tbody>

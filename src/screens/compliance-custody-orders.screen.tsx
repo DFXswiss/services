@@ -7,6 +7,7 @@ import { CustodyOrderStatus, CustodyOrderType } from 'src/dto/order.dto';
 import { useCompliance } from 'src/hooks/compliance.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { formatSwissDateTime } from 'src/util/utils';
 
 function formatTransfer(entry: CustodyOrderListEntry): string {
   const input = entry.inputAmount != null && entry.inputAsset ? `${entry.inputAmount} ${entry.inputAsset}` : undefined;
@@ -83,13 +84,7 @@ export default function ComplianceCustodyOrdersScreen(): JSX.Element {
   }
 
   function formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('de-CH', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatSwissDateTime(date);
   }
 
   return (

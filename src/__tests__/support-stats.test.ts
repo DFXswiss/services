@@ -92,12 +92,14 @@ describe('support-helpers statistics', () => {
 });
 
 describe('support-helpers trendLabel', () => {
-  it('formats day and month keys (locale-independent assertions)', () => {
-    // day label contains both the day and month numbers, regardless of locale order/separator
-    const dayLabel = trendLabel('2026-06-18', 'day');
-    expect(dayLabel).toMatch(/18/);
-    expect(dayLabel).toMatch(/06/);
-    // month label is a non-empty localized string
-    expect(trendLabel('2026-06', 'month').length).toBeGreaterThan(0);
+  it('formats the day label in Swiss notation regardless of the interface language', () => {
+    expect(trendLabel('2026-06-18', 'day', 'en-US')).toBe('18.06.');
+    expect(trendLabel('2026-06-18', 'day', 'de-CH')).toBe('18.06.');
+  });
+
+  it('translates the month name into the interface language', () => {
+    expect(trendLabel('2026-06', 'month', 'en-US')).toBe('Jun');
+    expect(trendLabel('2026-06', 'month', 'fr-FR')).toBe('juin');
+    expect(trendLabel('2026-06', 'month', 'it-IT')).toBe('giu');
   });
 });

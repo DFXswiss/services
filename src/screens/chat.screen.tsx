@@ -31,7 +31,7 @@ import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useSessionStore } from 'src/hooks/session-store.hook';
-import { blankedAddress, formatBytes } from 'src/util/utils';
+import { blankedAddress, formatBytes, formatSwissTime } from 'src/util/utils';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { TxInfo } from './transaction.screen';
 
@@ -482,7 +482,7 @@ function ChatBubble({
             ))}
           </div>
           <div className="flex flex-row items-center justify-center text-xs italic text-end text-gray-500">
-            {new Date(created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+            {formatSwissTime(created)}
             {failedToSend ? (
               <MdErrorOutline className="inline-block text-base ml-1 mb-0.5" />
             ) : status === SupportMessageStatus.SENT ? (

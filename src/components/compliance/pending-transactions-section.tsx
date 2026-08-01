@@ -1,6 +1,7 @@
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PendingTransactionInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { formatSwissDate } from 'src/util/utils';
 import { CollapsibleSection } from './collapsible-section';
 
 interface Props {
@@ -58,9 +59,7 @@ export function PendingTransactionsSection({ entries }: Props): JSX.Element | nu
               <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">
                 {tx.inputAmount != null ? `${tx.inputAmount} ${tx.inputAsset ?? ''}`.trim() : '-'}
               </td>
-              <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                {new Date(tx.date).toLocaleDateString('de-CH')}
-              </td>
+              <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatSwissDate(tx.date)}</td>
             </tr>
           ))}
         </tbody>
