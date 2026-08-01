@@ -1,4 +1,4 @@
-import { KycStatus, useKyc } from '@dfx.swiss/react';
+import { AmlReason, CheckStatus, KycStatus, useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -49,6 +49,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
     updateBuyCrypto,
     updateBuyFiat,
     resetBuyCryptoAml,
+    resetBuyCryptoReviewAml,
     resetBuyFiatAml,
     generateOnboardingPdf,
     createKycLog,
@@ -64,7 +65,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
   const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async (): Promise<void> => {
     if (!userDataId) {
       setError('No ID provided');
       setIsLoading(false);
@@ -73,10 +74,13 @@ export default function ComplianceReviewScreen(): JSX.Element {
 
     setIsLoading(true);
     setError(undefined);
-    getUserData(+userDataId)
-      .then(setData)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unknown error'))
-      .finally(() => setIsLoading(false));
+    try {
+      setData(await getUserData(+userDataId));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Unknown error');
+    } finally {
+      setIsLoading(false);
+    }
   }, [userDataId, getUserData]);
 
   useEffect(() => {
@@ -164,7 +168,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
       }
 
       // 5. Reload data (now includes the new PDF)
-      loadData();
+      await loadData();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error saving');
     } finally {
@@ -200,7 +204,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
         await createKycLog(+userDataId, buildKycLogMessage({ description, clerk, results }));
       }
 
-      loadData();
+      await loadData();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error saving');
     } finally {
@@ -227,7 +231,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
           }),
         );
       }
-      loadData();
+      await loadData();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error approving');
     } finally {
@@ -254,7 +258,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
           }),
         );
       }
-      loadData();
+      await loadData();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error rejecting');
     } finally {
@@ -270,7 +274,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
     setError(undefined);
     try {
       await setKycStatusCheck(+userDataId, currentKycStatus as KycStatus);
-      loadData();
+      await loadData();
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
       setError(`KYC status could not be changed to Check: ${message}`);
@@ -301,7 +305,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
           results.push({ table, column: 'priceDefinitionAllowedDate', value: update.priceDefinitionAllowedDate });
         await createKycLog(+userDataId, buildKycLogMessage({ description: 'AmlCheck', clerk, results }));
       }
-      loadData();
+      await loadData();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error saving');
     } finally {
@@ -327,9 +331,34 @@ export default function ComplianceReviewScreen(): JSX.Element {
           }),
         );
       }
-      loadData();
+      await loadData();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error resetting');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleAmlReviewReset(tx: TransactionInfo): Promise<void> {
+    if (tx.buyCryptoId == null || !tx.amlCheck) return;
+
+    setIsSaving(true);
+    setError(undefined);
+    try {
+      await resetBuyCryptoReviewAml(tx.buyCryptoId, {
+        expectedAmlCheck: tx.amlCheck as CheckStatus,
+        expectedAmlReason: (tx.amlReason as AmlReason | undefined) ?? null,
+      });
+      await loadData();
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Error resetting';
+      try {
+        if (userDataId) setData(await getUserData(+userDataId));
+        setError(message);
+      } catch (reloadError: unknown) {
+        const reloadMessage = reloadError instanceof Error ? reloadError.message : 'Unknown error';
+        setError(`${message}. Reload failed: ${reloadMessage}`);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -504,6 +533,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
               isSaving={isSaving}
               onUpdate={handleAmlUpdate}
               onReset={handleAmlReset}
+              onReviewReset={handleAmlReviewReset}
             />
           ) : (
             <ComplianceReviewPanel

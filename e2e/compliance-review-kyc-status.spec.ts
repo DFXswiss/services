@@ -85,15 +85,19 @@ async function fulfillJson(route: Route, body: unknown): Promise<void> {
   await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
 }
 
-async function installSyntheticApi(page: Page): Promise<string[]> {
+async function installSyntheticApi(
+  page: Page,
+): Promise<{ unexpectedRequests: string[]; mutations: { method: string; path: string; body: unknown }[] }> {
   const unexpectedRequests: string[] = [];
+  const mutations: { method: string; path: string; body: unknown }[] = [];
+  const currentFixture = structuredClone(complianceFixture);
 
   await page.route('**/v1/**', async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
 
     if (request.method() === 'GET' && path === `/v1/support/${USER_DATA_ID}`) {
-      await fulfillJson(route, complianceFixture);
+      await fulfillJson(route, currentFixture);
       return;
     }
 
@@ -111,6 +115,22 @@ async function installSyntheticApi(page: Page): Promise<string[]> {
     }
 
     if (request.method() === 'GET' && path === '/v1/setting/infoBanner') {
+      await fulfillJson(route, null);
+      return;
+    }
+
+    if (request.method() === 'PUT' && path === `/v1/userData/${USER_DATA_ID}/kycStatus/check`) {
+      const body = request.postDataJSON() as unknown;
+      mutations.push({ method: request.method(), path, body });
+      currentFixture.userData.kycStatus = 'Check';
+      await fulfillJson(route, null);
+      return;
+    }
+
+    if (request.method() === 'POST' && path === '/v1/buyCrypto/130504/amlCheck/review-reset') {
+      const body = request.postDataJSON() as unknown;
+      mutations.push({ method: request.method(), path, body });
+      currentFixture.transactions = [];
       await fulfillJson(route, null);
       return;
     }
@@ -146,13 +166,13 @@ async function installSyntheticApi(page: Page): Promise<string[]> {
     });
   });
 
-  return unexpectedRequests;
+  return { unexpectedRequests, mutations };
 }
 
 test.describe('Compliance review KYC and AML actions', () => {
   test('shows the KYC Check transition and BuyCrypto AML reset', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 1200 });
-    const unexpectedRequests = await installSyntheticApi(page);
+    const { unexpectedRequests, mutations } = await installSyntheticApi(page);
 
     await page.goto(`/compliance/user/${USER_DATA_ID}/kyc?session=${jwt()}&tab=amlPending`);
 
@@ -160,14 +180,41 @@ test.describe('Compliance review KYC and AML actions', () => {
     await expect(page.getByRole('button', { name: 'Auf Check setzen' })).toBeVisible();
     await expect(page.getByText('BuyCrypto 130504')).toBeVisible();
     await expect(page.getByRole('button', { name: 'AML-Check zurücksetzen' })).toBeDisabled();
+    await expect(page.getByText('Zuerst KYC-Status auf Check setzen und den Reload abwarten.')).toBeVisible();
 
-    await page.getByLabel('Editor für AML-Reset von BuyCrypto 130504').selectOption('Test Operator');
+    page.once('dialog', async (dialog) => {
+      expect(dialog.message()).toContain('von Completed auf Check');
+      await dialog.accept();
+    });
+    await page.getByRole('button', { name: 'Auf Check setzen' }).click();
+    await expect(page.getByRole('button', { name: 'Auf Check setzen' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'AML-Check zurücksetzen' })).toBeEnabled();
-    expect(unexpectedRequests).toEqual([]);
 
     await expect(page).toHaveScreenshot('compliance-review-kyc-status-and-aml-reset.png', {
       fullPage: true,
       maxDiffPixels: 5000,
     });
+
+    page.once('dialog', async (dialog) => {
+      expect(dialog.message()).toContain('AML-Check für BuyCrypto 130504 wirklich zurücksetzen?');
+      await dialog.accept();
+    });
+    await page.getByRole('button', { name: 'AML-Check zurücksetzen' }).click();
+    await expect(page.getByText('BuyCrypto 130504')).toHaveCount(0);
+    await expect(page.getByText('Keine pendenten AML-Prüfungen vorhanden.')).toBeVisible();
+
+    expect(mutations).toEqual([
+      {
+        method: 'PUT',
+        path: `/v1/userData/${USER_DATA_ID}/kycStatus/check`,
+        body: { expectedKycStatus: 'Completed' },
+      },
+      {
+        method: 'POST',
+        path: '/v1/buyCrypto/130504/amlCheck/review-reset',
+        body: { expectedAmlCheck: 'Pass', expectedAmlReason: 'NA' },
+      },
+    ]);
+    expect(unexpectedRequests).toEqual([]);
   });
 });

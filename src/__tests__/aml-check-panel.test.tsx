@@ -9,6 +9,9 @@ jest.mock('@dfx.swiss/react', () => ({
     FAIL: 'Fail',
     PENDING: 'Pending',
   },
+  KycStatus: {
+    CHECK: 'Check',
+  },
 }));
 
 jest.mock('src/hooks/navigation.hook', () => ({
@@ -34,7 +37,7 @@ const buyCrypto: TransactionInfo = {
 };
 
 const data = {
-  userData: { id: 322190, kycStatus: 'Completed', kycLevel: 50 },
+  userData: { id: 322190, kycStatus: 'Check', kycLevel: 50 },
   kycSteps: [],
   transactions: [buyCrypto],
   bankTxs: [],
@@ -63,7 +66,7 @@ describe('AmlCheckPendingPanel AML reset', () => {
   afterEach(() => jest.restoreAllMocks());
 
   it('resets a non-completed BuyCrypto with an existing AML result after confirmation', async () => {
-    const onReset = jest.fn().mockResolvedValue(undefined);
+    const onReviewReset = jest.fn().mockResolvedValue(undefined);
     jest.spyOn(window, 'confirm').mockReturnValue(true);
 
     render(
@@ -72,26 +75,24 @@ describe('AmlCheckPendingPanel AML reset', () => {
         clerks={['Alice']}
         isSaving={false}
         onUpdate={jest.fn()}
-        onReset={onReset}
+        onReset={jest.fn()}
+        onReviewReset={onReviewReset}
       />,
     );
 
     expect(screen.getByText('BuyCrypto 130504')).toBeInTheDocument();
     expect(screen.getByText(/Transaction 326324 · AML Pass/)).toBeInTheDocument();
-    fireEvent.change(screen.getByRole('combobox', { name: 'Editor für AML-Reset von BuyCrypto 130504' }), {
-      target: { value: 'Alice' },
-    });
     fireEvent.click(screen.getByRole('button', { name: 'AML-Check zurücksetzen' }));
 
     expect(window.confirm).toHaveBeenCalledWith(
       'AML-Check für BuyCrypto 130504 wirklich zurücksetzen?\n\nDer Status Pass wird entfernt und die Transaktion erneut durch den AML-Check verarbeitet.',
     );
-    await waitFor(() => expect(onReset).toHaveBeenCalledWith(buyCrypto, 'Alice'));
+    await waitFor(() => expect(onReviewReset).toHaveBeenCalledWith(buyCrypto));
     await waitFor(() => expect(screen.getByRole('button', { name: 'AML-Check zurücksetzen' })).toBeEnabled());
   });
 
   it('does not reset when confirmation is rejected', () => {
-    const onReset = jest.fn().mockResolvedValue(undefined);
+    const onReviewReset = jest.fn().mockResolvedValue(undefined);
     jest.spyOn(window, 'confirm').mockReturnValue(false);
 
     render(
@@ -100,15 +101,29 @@ describe('AmlCheckPendingPanel AML reset', () => {
         clerks={['Alice']}
         isSaving={false}
         onUpdate={jest.fn()}
-        onReset={onReset}
+        onReset={jest.fn()}
+        onReviewReset={onReviewReset}
       />,
     );
 
-    fireEvent.change(screen.getByRole('combobox', { name: 'Editor für AML-Reset von BuyCrypto 130504' }), {
-      target: { value: 'Alice' },
-    });
     fireEvent.click(screen.getByRole('button', { name: 'AML-Check zurücksetzen' }));
 
-    expect(onReset).not.toHaveBeenCalled();
+    expect(onReviewReset).not.toHaveBeenCalled();
+  });
+
+  it('keeps review reset disabled until KYC is Check', () => {
+    render(
+      <AmlCheckPendingPanel
+        data={{ ...data, userData: { ...data.userData, kycStatus: 'Completed' } } as ComplianceUserData}
+        clerks={['Alice']}
+        isSaving={false}
+        onUpdate={jest.fn()}
+        onReset={jest.fn()}
+        onReviewReset={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Zuerst KYC-Status auf Check setzen und den Reload abwarten.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'AML-Check zurücksetzen' })).toBeDisabled();
   });
 });

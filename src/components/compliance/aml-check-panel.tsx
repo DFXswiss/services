@@ -1,4 +1,4 @@
-import { AmlReason, CallQueue, CheckStatus } from '@dfx.swiss/react';
+import { AmlReason, CallQueue, CheckStatus, KycStatus } from '@dfx.swiss/react';
 import { useState } from 'react';
 import { ComplianceUserData, TransactionInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -23,6 +23,7 @@ interface AmlCheckPendingPanelProps {
   isSaving: boolean;
   onUpdate: (tx: TransactionInfo, update: AmlCheckUpdate, clerk: string) => Promise<void>;
   onReset: (tx: TransactionInfo, clerk: string) => Promise<void>;
+  onReviewReset: (tx: TransactionInfo) => Promise<void>;
 }
 
 const AML_CHECK_OPTIONS = [CheckStatus.PASS, CheckStatus.FAIL, CheckStatus.PENDING, 'Reset'] as const;
@@ -230,21 +231,20 @@ function TransactionEntry({
 
 function ResettableTransactionEntry({
   tx,
-  clerks,
   isSaving,
+  canReset,
   onReset,
 }: {
   tx: TransactionInfo;
-  clerks: string[];
   isSaving: boolean;
-  onReset: (clerk: string) => Promise<void>;
+  canReset: boolean;
+  onReset: () => Promise<void>;
 }): JSX.Element {
-  const [clerk, setClerk] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const sourceLabel = `BuyCrypto ${tx.buyCryptoId}`;
 
   async function handleReset(): Promise<void> {
-    if (!clerk || isSaving || isProcessing) return;
+    if (!canReset || isSaving || isProcessing) return;
     if (
       !window.confirm(
         `AML-Check für ${sourceLabel} wirklich zurücksetzen?\n\nDer Status ${tx.amlCheck} wird entfernt und die Transaktion erneut durch den AML-Check verarbeitet.`,
@@ -254,7 +254,7 @@ function ResettableTransactionEntry({
 
     setIsProcessing(true);
     try {
-      await onReset(clerk);
+      await onReset();
     } finally {
       setIsProcessing(false);
     }
@@ -271,30 +271,19 @@ function ResettableTransactionEntry({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            aria-label={`Editor für AML-Reset von ${sourceLabel}`}
-            className="px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
-            value={clerk}
-            onChange={(e) => setClerk(e.target.value)}
-            disabled={isSaving || isProcessing || clerks.length === 0}
-          >
-            <option value="">Editor wählen</option>
-            {clerks.map((entry) => (
-              <option key={entry} value={entry}>
-                {entry}
-              </option>
-            ))}
-          </select>
           <button
             type="button"
             className="px-3 py-1.5 text-sm text-white bg-dfxRed-100 hover:bg-dfxRed-150 rounded transition-colors disabled:opacity-50"
-            disabled={isSaving || isProcessing || !clerk}
+            disabled={!canReset || isSaving || isProcessing}
             onClick={handleReset}
           >
             {isProcessing ? 'Wird zurückgesetzt...' : 'AML-Check zurücksetzen'}
           </button>
         </div>
       </div>
+      {!canReset && (
+        <p className="text-sm text-dfxRed-100">Zuerst KYC-Status auf Check setzen und den Reload abwarten.</p>
+      )}
     </div>
   );
 }
@@ -305,6 +294,7 @@ export function AmlCheckPendingPanel({
   isSaving,
   onUpdate,
   onReset,
+  onReviewReset,
 }: AmlCheckPendingPanelProps): JSX.Element {
   const { navigate } = useNavigation();
 
@@ -452,9 +442,9 @@ export function AmlCheckPendingPanel({
             <ResettableTransactionEntry
               key={tx.id}
               tx={tx}
-              clerks={clerks}
               isSaving={isSaving}
-              onReset={(clerk) => onReset(tx, clerk)}
+              canReset={ud.kycStatus === KycStatus.CHECK}
+              onReset={() => onReviewReset(tx)}
             />
           ))}
         </div>

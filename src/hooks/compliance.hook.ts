@@ -1373,6 +1373,17 @@ export function useCompliance() {
     });
   }
 
+  async function resetBuyCryptoReviewAml(
+    id: number,
+    expected: { expectedAmlCheck: CheckStatus; expectedAmlReason: AmlReason | null },
+  ): Promise<void> {
+    return call<void>({
+      url: `buyCrypto/${id}/amlCheck/review-reset`,
+      method: 'POST',
+      data: expected,
+    });
+  }
+
   async function resetBuyFiatAml(id: number): Promise<void> {
     return call<void>({
       url: `buyFiat/${id}/amlCheck`,
@@ -1505,6 +1516,7 @@ export function useCompliance() {
       updateBuyCrypto,
       updateBuyFiat,
       resetBuyCryptoAml,
+      resetBuyCryptoReviewAml,
       resetBuyFiatAml,
       listSupportNotes,
       listSupportNoteUsers,
