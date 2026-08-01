@@ -2,7 +2,13 @@
 jest.mock('@dfx.swiss/react', () => ({}));
 jest.mock('src/dto/safe.dto', () => ({}));
 
-import { isChunkLoadError, reloadOnceForChunkError, reportClientError, toErrorFacts } from '../util/client-error';
+import {
+  forgetReportedErrors,
+  isChunkLoadError,
+  reloadOnceForChunkError,
+  reportClientError,
+  toErrorFacts,
+} from '../util/client-error';
 
 jest.mock('src/config/api', () => ({ Api: { url: 'https://api.example.com', version: 'v1' } }));
 jest.mock('src/version', () => ({ REACT_APP_BUILD_ID: '42-99' }));
@@ -91,6 +97,7 @@ describe('isChunkLoadError', () => {
 
 describe('reportClientError', () => {
   beforeEach(() => {
+    forgetReportedErrors();
     global.fetch = jest.fn().mockResolvedValue({ ok: true }) as jest.Mock;
   });
 
@@ -229,6 +236,104 @@ describe('reloadOnceForChunkError', () => {
 
       expect(reload).toHaveBeenCalledTimes(1);
     });
+  });
+
+  // A reload alone re-reads index.html but not the stored answer for the chunk, and the chunk URL
+  // is stable across builds. Without replacing that stored copy the customer gets the same bad
+  // answer back on every attempt, for as long as it is considered fresh.
+  it('replaces the stored copy of the failing chunk before reloading', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(new Response('', { status: 404 }));
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 2688 failed.\n(error: http://localhost/static/js/2688.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost/static/js/2688.abc.chunk.js', {
+      cache: 'reload',
+      credentials: 'omit',
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('reloads even when replacing the stored copy fails', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('offline')) as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 7 failed.\n(error: http://localhost/static/js/7.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  // The message is derived from an error object, which an embedded or third-party bundler could
+  // supply. Repairing an address on someone else's host is not ours to do.
+  it('ignores a chunk address on another origin and just reloads', () => {
+    const fetchMock = jest.fn();
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(new Error('Loading chunk 9 failed.\n(error: https://evil.example/x.chunk.js)'));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+});
+
+// The router can remount the same route repeatedly, and each remount is a fresh component. A guard
+// that lives in the component therefore cannot hold -- measured in a real browser, one page
+// produced 19-30 reports per second this way, while the customer saw a single broken screen.
+describe('repeat reports', () => {
+  beforeEach(() => {
+    forgetReportedErrors();
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-08-01T10:00:00Z'));
+  });
+
+  afterEach(() => jest.useRealTimers());
+
+  it('reports the same failure only once within the window', () => {
+    const error = Object.assign(new Error('Loading chunk 2688 failed.'), { name: 'ChunkLoadError' });
+
+    reportClientError(error, '/buy');
+    reportClientError(error, '/buy');
+    reportClientError(error, '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('still reports the same failure on a different route', () => {
+    const error = Object.assign(new Error('Loading chunk 2688 failed.'), { name: 'ChunkLoadError' });
+
+    reportClientError(error, '/buy');
+    reportClientError(error, '/sell');
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports a different failure on the same route', () => {
+    reportClientError(new Error('one'), '/buy');
+    reportClientError(new Error('two'), '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports again once the window has passed', () => {
+    const error = new Error('same');
+
+    reportClientError(error, '/buy');
+    jest.setSystemTime(new Date('2026-08-01T10:01:01Z'));
+    reportClientError(error, '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 });
 

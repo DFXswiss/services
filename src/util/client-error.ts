@@ -11,6 +11,15 @@ const LIMITS = { message: 500, type: 100, stack: 4000, route: 500, version: 50 }
 const CHUNK_RELOAD_KEY = 'dfx.chunkReloadAt';
 const CHUNK_RELOAD_WINDOW = 30000;
 
+// The bundler names the failing asset in its message, as `(error: <url>)` or `(missing: <url>)`.
+const CHUNK_URL_REGEX = /\((?:error|missing):\s*(https?:\/\/[^\s)]+)\)/i;
+
+// Reporting the same failure again tells us nothing and costs the customer a request. The router
+// can remount a route repeatedly, and every remount builds a fresh component instance -- so a
+// guard that lives in the component cannot hold. This one outlives the mount.
+const RECENT_REPORTS = new Map<string, number>();
+const REPORT_DEDUP_WINDOW = 60000;
+
 // Identifies this app to the API, which logs it alongside the error. Without it every report
 // from here is filed as an unknown client.
 const CLIENT_NAME = 'dfx-services';
@@ -71,7 +80,7 @@ export function isEmbedded(): boolean {
 // localStorage (it survives the sessionStorage.clear() on session/login URLs) and is time-boxed,
 // so a persistent failure reloads at most once per window instead of looping. Storage access is
 // wrapped because embedded/iframe contexts can block it.
-export function reloadOnceForChunkError(): void {
+export function reloadOnceForChunkError(error?: unknown): void {
   if (embedded) return;
 
   try {
@@ -82,7 +91,65 @@ export function reloadOnceForChunkError(): void {
     return; // storage blocked (e.g. embedded iframe) — skip to avoid an unguarded reload loop
   }
 
-  window.location.reload();
+  const chunkUrl = chunkUrlOf(error);
+
+  // A plain reload fetches index.html anew but leaves the stored answer for the chunk itself
+  // untouched, and a chunk URL stays the same as long as its content does. A customer holding a
+  // bad answer under that URL therefore gets it back on every attempt, for as long as the stored
+  // copy is considered fresh -- which for these assets is a year.
+  //
+  // Requesting it with `cache: 'reload'` replaces the stored copy: the browser must go to the
+  // network, and the request carries no-cache, so intermediate caches revalidate too. Reload only
+  // after that has settled, whichever way it went -- the reload is the recovery, and it must not
+  // be skipped because the repair failed.
+  if (!chunkUrl) {
+    window.location.reload();
+    return;
+  }
+
+  void fetch(chunkUrl, { cache: 'reload', credentials: 'omit' })
+    .catch(() => undefined)
+    .then(() => window.location.reload());
+}
+
+// The URL of the asset a bundler chunk failure names, if the message carries one.
+export function chunkUrlOf(error: unknown): string | undefined {
+  if (error == null) return undefined;
+
+  const { message } = toErrorFacts(error);
+  const match = CHUNK_URL_REGEX.exec(message);
+  if (!match) return undefined;
+
+  // Only our own origin: the message is derived from an error object, and a report from an
+  // embedded or third-party bundler could otherwise point this at someone else's host.
+  try {
+    return new URL(match[1]).origin === window.location.origin ? match[1] : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Clears what this module remembers between reports. Only a test needs this: in a document the
+// state is meant to live for as long as the document does, which is the whole point of it.
+export function forgetReportedErrors(): void {
+  RECENT_REPORTS.clear();
+}
+
+// True when this exact failure was already reported from this document within the window. Keeps
+// the map bounded by dropping expired entries on the way through, so a long session cannot grow it
+// without limit.
+function isRepeatReport(signature: string): boolean {
+  const now = Date.now();
+
+  RECENT_REPORTS.forEach((at, key) => {
+    if (now - at >= REPORT_DEDUP_WINDOW) RECENT_REPORTS.delete(key);
+  });
+
+  const last = RECENT_REPORTS.get(signature);
+  if (last != null && now - last < REPORT_DEDUP_WINDOW) return true;
+
+  RECENT_REPORTS.set(signature, now);
+  return false;
 }
 
 // Reports an error the user actually saw. Fire-and-forget: a failing report must never surface as
@@ -92,6 +159,12 @@ export function reportClientError(error: unknown, route: string): void {
 
   try {
     const { message, type, stack } = toErrorFacts(error);
+
+    // Deduplicated here rather than at the call site, so every caller is covered by the same rule.
+    // Without it a remount loop reports the same failure tens of times per second: the customer
+    // sees one broken page while the API sees a flood, and the rate limit then hides the very
+    // reports this exists to collect.
+    if (isRepeatReport(`${type ?? ''}|${message}|${route}`)) return;
 
     const body = {
       // The endpoint rejects an empty message, and a rejected report is exactly the blind spot
