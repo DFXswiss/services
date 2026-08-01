@@ -358,6 +358,37 @@ describe('reloadOnceForChunkError', () => {
     await Promise.resolve();
   });
 
+  // The reload guard is written before the address is looked up, so a throw while looking it up
+  // would leave the customer with neither a repair nor a reload until the guard expires.
+  it('still reloads when reading the address throws', () => {
+    const hostile = Object.assign(new Error('Loading chunk 1 failed.'), { name: 'ChunkLoadError' });
+    Object.defineProperty(hostile, 'request', {
+      get() {
+        throw new Error('nope');
+      },
+    });
+
+    reloadOnceForChunkError(hostile);
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('still reloads when the error resists string conversion', () => {
+    const hostile = {
+      name: 'ChunkLoadError',
+      get message(): string {
+        throw new Error('nope');
+      },
+      toString: () => {
+        throw new Error('nope');
+      },
+    };
+
+    reloadOnceForChunkError(hostile);
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
   // The message is derived from an error object, which an embedded or third-party bundler could
   // supply. Repairing an address on someone else's host is not ours to do.
   it('ignores a chunk address on another origin and just reloads', () => {

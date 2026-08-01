@@ -134,12 +134,17 @@ export function reloadOnceForChunkError(error?: unknown): void {
 export function chunkUrlOf(error: unknown): string | undefined {
   if (error == null) return undefined;
 
-  // webpack puts the address on the error itself, which beats reading it back out of prose.
-  const request = (error as { request?: unknown }).request;
-  const raw = typeof request === 'string' && request ? request : addressInMessage(error);
-  if (!raw) return undefined;
-
+  // Every step here reads from a value we were handed: the property can be a getter that throws,
+  // and deriving the message runs String() on it, which a hostile toString can turn into a throw.
+  // Failing to find an address is fine -- the caller reloads without repairing -- but throwing is
+  // not: the reload guard has already been written by then, so the customer would be left with
+  // neither a repair nor a reload until it expires.
   try {
+    // webpack puts the address on the error itself, which beats reading it back out of prose.
+    const request = (error as { request?: unknown }).request;
+    const raw = typeof request === 'string' && request ? request : addressInMessage(error);
+    if (!raw) return undefined;
+
     // Resolved against the current document, so a relative address — which is what a build with a
     // relative public path emits — is handled like an absolute one.
     const resolved = new URL(raw, window.location.href);
