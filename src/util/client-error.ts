@@ -122,14 +122,11 @@ export function reportClientError(error: unknown, route: string): void {
 // failures inside the router are handled by the error screen, which is where React hands them;
 // these listeners never see those.
 //
-// Every entry point has to call this, and there are three: index.tsx for the app, index-widget.tsx
-// for the widget (its build swaps that file in for index.tsx), and Main.lib.tsx for the library,
-// which is imported into a consumer's app and has no entry point of its own.
-//
-// Embedded, it does nothing on purpose. These listeners are page-wide, not ours — the widget is a
-// web component in the host's window, not an iframe — so on a host that ships its own bundler they
-// would catch that bundler's chunk failures and file them as ours. Recovery is off there anyway,
-// and the failures worth seeing arrive through the router's error boundary regardless.
+// Called from index.tsx, the standalone app's entry point. The embedded builds deliberately do not
+// call it: these listeners are page-wide, and there the page is the host's — the widget is a web
+// component in their window, not an iframe — so on a host that ships its own bundler they would
+// catch that bundler's chunk failures and file them as ours. The guard below keeps that true even
+// if a future entry point calls this without checking.
 export function installChunkErrorHandling(): void {
   if (embedded) return;
 

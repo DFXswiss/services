@@ -2,13 +2,11 @@ import createWebComponent from '@r2wc/react-to-web-component';
 import { WidgetParams } from './App';
 import MainWidget from './Main.widget';
 import './index.css';
-import { installChunkErrorHandling } from './util/client-error';
 import { preserveStringAttribute } from './util/web-component';
 
-// The widget build swaps this file in for index.tsx, so the handling wired up there never reaches
-// this bundle. Embedded on third-party pages, it is also where a chunk left stale by a deploy has
-// the longest to sit in a cache.
-installChunkErrorHandling();
+// No chunk error handling is installed here on purpose. Main.widget marks this build as embedded,
+// which turns the page-wide listeners off: they would belong to the host's window, not ours.
+// Failures still reach the error screen and are reported there.
 
 const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'function' | 'json' } = {
   headless: 'string',
