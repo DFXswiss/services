@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useLocation, useRouteError, useSearchParams } from 'react-router-dom';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { isChunkLoadError, reloadOnceForChunkError, reportClientError } from 'src/util/client-error';
+import { isChunkLoadError, isEmbedded, reloadOnceForChunkError, reportClientError } from 'src/util/client-error';
 import { useSettingsContext } from '../contexts/settings.context';
 
 export default function ErrorScreen(): JSX.Element {
@@ -17,6 +17,11 @@ export default function ErrorScreen(): JSX.Element {
   const hasReported = useRef(false);
 
   const error = params.get('msg');
+
+  // Embedded, the app must not reload the host's page, so a stale chunk is not recovered for the
+  // customer. Telling them to reload is then the only way out: the support screen is lazy-loaded
+  // like every other, so it would fail on the very same chunk and leave them going in circles.
+  const needsManualReload = !error && isEmbedded() && isChunkLoadError(routeError);
 
   // This screen is the router's errorElement, so it is the only place where the error that broke
   // the render is still available. Report it before it is discarded — otherwise the failure exists
@@ -47,19 +52,26 @@ export default function ErrorScreen(): JSX.Element {
           <h2 className="text-dfxBlue-800">{translate('screens/error', 'Oh, sorry, something went wrong')}</h2>
           <p className="text-dfxGray-700">
             {error ??
-              translate(
-                'screens/error',
-                'Please return to the previous page. If this problem persists, please contact our support.',
-              )}
+              (needsManualReload
+                ? translate(
+                    'screens/error',
+                    'Please reload this page. If this problem persists, please contact our support.',
+                  )
+                : translate(
+                    'screens/error',
+                    'Please return to the previous page. If this problem persists, please contact our support.',
+                  ))}
           </p>
         </div>
 
-        <StyledButton
-          icon={IconVariant.HELP}
-          label={translate('navigation/links', 'Support')}
-          color={StyledButtonColor.GRAY_OUTLINE}
-          onClick={() => navigate('/support')}
-        />
+        {!needsManualReload && (
+          <StyledButton
+            icon={IconVariant.HELP}
+            label={translate('navigation/links', 'Support')}
+            color={StyledButtonColor.GRAY_OUTLINE}
+            onClick={() => navigate('/support')}
+          />
+        )}
       </StyledVerticalStack>
     </>
   );

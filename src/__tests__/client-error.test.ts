@@ -231,3 +231,101 @@ describe('reloadOnceForChunkError', () => {
     });
   });
 });
+
+// The wiring every entry point relies on, and the part a unit test of the pieces does not cover:
+// which property of which event carries the error.
+describe('installChunkErrorHandling', () => {
+  let reload: jest.Mock;
+  let installed: Array<[string, EventListener]>;
+
+  // window outlives each test, so the listeners have to be taken back off it — otherwise every
+  // later test fires through the handlers of the earlier ones as well.
+  function install(embed = false): void {
+    const add = window.addEventListener.bind(window);
+    jest.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
+      installed.push([type, listener as EventListener]);
+      add(type, listener, options);
+    });
+
+    jest.isolateModules(() => {
+      const clientError = jest.requireActual('../util/client-error');
+      if (embed) clientError.markEmbedded();
+      clientError.installChunkErrorHandling();
+    });
+  }
+
+  function fire(type: 'error' | 'unhandledrejection', props: Record<string, unknown>): void {
+    window.dispatchEvent(Object.assign(new Event(type), props));
+  }
+
+  // The test environment registers listeners of its own, so only the two channels matter here.
+  function ourListeners(): string[] {
+    return installed.map(([type]) => type).filter((type) => ['error', 'unhandledrejection'].includes(type));
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    installed = [];
+    global.fetch = jest.fn().mockResolvedValue({ ok: true }) as jest.Mock;
+    reload = jest.fn();
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, pathname: '/buy', reload },
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    installed.forEach(([type, listener]) => window.removeEventListener(type, listener));
+    jest.restoreAllMocks();
+  });
+
+  it('recovers a chunk failure reported as an error event', () => {
+    install();
+
+    fire('error', { error: Object.assign(new Error('Loading chunk 42 failed'), { name: 'ChunkLoadError' }) });
+
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  // Some engines deliver only the message, with no error object attached.
+  it('recovers a chunk failure carried as a bare message', () => {
+    install();
+
+    fire('error', { message: 'Loading chunk 42 failed' });
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('recovers a chunk failure from a rejected promise', () => {
+    install();
+
+    fire('unhandledrejection', { reason: new Error('Loading chunk 42 failed') });
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores an error that is not a chunk failure', () => {
+    install();
+
+    fire('error', { error: new Error('Cannot read properties of undefined') });
+
+    expect(reload).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  // These listeners are page-wide, and embedded the page is the host's. A host running its own
+  // bundler would have its chunk failures filed as ours. Asserted on the registration rather than
+  // by firing an event, because an error event with nothing listening fails the test run itself.
+  it('installs no listeners when embedded', () => {
+    install(true);
+
+    expect(ourListeners()).toHaveLength(0);
+  });
+
+  it('installs listeners for both channels when not embedded', () => {
+    install();
+
+    expect(ourListeners().sort()).toEqual(['error', 'unhandledrejection']);
+  });
+});

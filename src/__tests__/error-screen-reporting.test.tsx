@@ -23,12 +23,15 @@ jest.mock('src/hooks/layout-config.hook', () => ({ useLayoutOptions: jest.fn() }
 const mockReportClientError = jest.fn();
 const mockReloadOnceForChunkError = jest.fn();
 
+let mockEmbedded = false;
+
 // Only the side effects are mocked — the classification stays real, so the test covers the
 // wiring rather than restating it.
 jest.mock('src/util/client-error', () => ({
   ...jest.requireActual('src/util/client-error'),
   reportClientError: (...args: unknown[]) => mockReportClientError(...args),
   reloadOnceForChunkError: () => mockReloadOnceForChunkError(),
+  isEmbedded: () => mockEmbedded,
 }));
 
 function renderAt(path: string, thrown?: unknown): void {
@@ -52,6 +55,7 @@ function renderAt(path: string, thrown?: unknown): void {
 describe('ErrorScreen reporting', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockEmbedded = false;
     // Deliberately different from every route used below. These tests run on a memory router —
     // the same setup the widget and library builds use — so the browser URL is the host page's and
     // must not be what gets reported.
@@ -115,6 +119,29 @@ describe('ErrorScreen reporting', () => {
 
     await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
     expect(mockReloadOnceForChunkError).not.toHaveBeenCalled();
+  });
+
+  // Embedded, the host's page is never reloaded, so nothing recovers the customer. The support
+  // screen is lazy-loaded like every other, so it would fail on the same chunk — offering it would
+  // send them in circles. Telling them to reload is the only way out.
+  describe('when embedded in a host page', () => {
+    beforeEach(() => {
+      mockEmbedded = true;
+    });
+
+    it('asks the customer to reload instead of offering support', async () => {
+      renderAt('/buy', Object.assign(new Error('Loading chunk 42 failed'), { name: 'ChunkLoadError' }));
+
+      expect(await screen.findByText(/Please reload this page/)).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Support' })).not.toBeInTheDocument();
+    });
+
+    it('still offers support for a failure a reload would not fix', async () => {
+      renderAt('/buy', new Error('Cannot read properties of undefined'));
+
+      expect(await screen.findByText(/Please return to the previous page/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Support' })).toBeInTheDocument();
+    });
   });
 
   // Screens navigate to /error?msg=... deliberately; that path has no route, so the router

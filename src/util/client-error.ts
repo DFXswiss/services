@@ -56,10 +56,14 @@ export function isChunkLoadError(error: unknown): boolean {
 // host. Reloading it would discard state that has nothing to do with us — their forms, their cart,
 // their scroll position — over a deploy of ours. Those builds mark themselves, and recovery there
 // falls back to reporting the failure without reloading.
-let isEmbedded = false;
+let embedded = false;
 
 export function markEmbedded(): void {
-  isEmbedded = true;
+  embedded = true;
+}
+
+export function isEmbedded(): boolean {
+  return embedded;
 }
 
 // A new deploy replaces the content-hashed chunks, so a tab left open across one can request a
@@ -68,7 +72,7 @@ export function markEmbedded(): void {
 // so a persistent failure reloads at most once per window instead of looping. Storage access is
 // wrapped because embedded/iframe contexts can block it.
 export function reloadOnceForChunkError(): void {
-  if (isEmbedded) return;
+  if (embedded) return;
 
   try {
     const last = Number(localStorage.getItem(CHUNK_RELOAD_KEY) ?? 0);
@@ -121,7 +125,14 @@ export function reportClientError(error: unknown, route: string): void {
 // Every entry point has to call this, and there are three: index.tsx for the app, index-widget.tsx
 // for the widget (its build swaps that file in for index.tsx), and Main.lib.tsx for the library,
 // which is imported into a consumer's app and has no entry point of its own.
+//
+// Embedded, it does nothing on purpose. These listeners are page-wide, not ours — the widget is a
+// web component in the host's window, not an iframe — so on a host that ships its own bundler they
+// would catch that bundler's chunk failures and file them as ours. Recovery is off there anyway,
+// and the failures worth seeing arrive through the router's error boundary regardless.
 export function installChunkErrorHandling(): void {
+  if (embedded) return;
+
   const handle = (error: unknown): void => {
     if (!isChunkLoadError(error)) return;
 
