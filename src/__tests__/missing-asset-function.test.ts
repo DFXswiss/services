@@ -46,4 +46,18 @@ describe('missing asset function', () => {
 
     expect(result.status).toBe(503);
   });
+
+  it('leaves an HTML error page as the error it is', async () => {
+    // A gateway or origin failure rendered as HTML is not a missing asset. Reporting it as 404
+    // would turn a temporary outage into a permanent-looking one and send the client to reload
+    // rather than retry.
+    const outage = new Response('<!doctype html><html>gateway error</html>', {
+      status: 503,
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    });
+
+    const result = await onRequest(contextFor(outage));
+
+    expect(result.status).toBe(503);
+  });
 });

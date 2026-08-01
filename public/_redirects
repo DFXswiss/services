@@ -1,16 +1,10 @@
 # SPA deep-link fallback: unknown paths serve the app shell (client-side routing).
 #
-# The rule below is kept as an explicit statement of that intent, but it is not what produces the
-# fallback: `wrangler pages dev` reports it as an infinite loop and ignores it, and the same
-# directory served with no _redirects file at all still answers an unknown path with index.html.
-# It was left in place because nothing showed that removing it is safe, not because it was shown
-# to do anything.
-#
-# That built-in fallback is also why an absent build asset was answered with index.html and status
-# 200: a path with no file behind it gets the app shell, whatever it looks like. The /static/* rule
-# in _headers then stamped that HTML with the cache lifetime meant for fingerprinted assets, so a
-# client asking for a chunk that a later deploy had replaced received an app shell parsed as
-# JavaScript -- cached under the chunk's own URL.
+# A path with no file behind it is answered with index.html and status 200. That is what makes deep
+# links work, and it is also why an absent build asset was answered with the app shell. The
+# /static/* rule in _headers then stamped that HTML with the cache lifetime meant for fingerprinted
+# assets, so a client asking for a chunk that a later deploy had replaced received an app shell
+# parsed as JavaScript -- cached under the chunk's own URL.
 #
 # functions/[[path]].js now intercepts that case for the asset paths listed in _routes.json and
 # answers 404 with no-store, which is a failure a client can recover from. Verify with a request
