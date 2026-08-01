@@ -17,6 +17,12 @@ export function useGuardedApi(): { call: <T>(config: CallConfig) => Promise<T> }
         if (error.code === 'TFA_REQUIRED') {
           navigate('/2fa', { state: { level: TfaLevel.STRICT, sessionMode: true }, setRedirect: true });
         }
+        // The role is fine but the account behind it is not identified. Surfacing the raw error would
+        // leave staff with a bare 403 and no idea that their own KYC is what unblocks it, so route to a
+        // screen that says so and starts the process.
+        if (error.code === 'STAFF_KYC_REQUIRED') {
+          navigate('/staff-kyc-required', { setRedirect: true });
+        }
         throw error;
       }),
     [call, navigate],

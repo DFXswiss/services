@@ -22,6 +22,7 @@ const SellScreen = lazy(() => import('./screens/sell.screen'));
 const SwapScreen = lazy(() => import('./screens/swap.screen'));
 const AccountScreen = lazy(() => import('./screens/account.screen'));
 const SettingsScreen = lazy(() => import('./screens/settings.screen'));
+const StaffKycRequiredScreen = lazy(() => import('./screens/staff-kyc-required.screen'));
 const BuyFailureScreen = lazy(() => import('./screens/buy-failure.screen'));
 const BuyInfoScreen = lazy(() => import('./screens/buy-info.screen'));
 const BuySuccessScreen = lazy(() => import('./screens/buy-success.screen'));
@@ -264,6 +265,11 @@ export const Routes = [
       {
         path: '2fa',
         element: withSuspense(<TfaScreen />),
+        isKycScreen: true,
+      },
+      {
+        path: 'staff-kyc-required',
+        element: withSuspense(<StaffKycRequiredScreen />),
         isKycScreen: true,
       },
       {
