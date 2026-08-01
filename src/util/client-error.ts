@@ -60,12 +60,28 @@ export function toErrorFacts(error: unknown): ErrorFacts {
 // had typed, which is worse than the failure it recovers from. The wordings below identify the
 // real case on their own.
 export function isChunkLoadError(error: unknown): boolean {
-  const { message, type } = toErrorFacts(error);
+  // The name first: reading it cannot run code of the value's own choosing, while deriving the
+  // message calls String() on it. This is the first thing the global handler does with a thrown
+  // value, so a throw here would cost the recovery that follows — the failure would be classified
+  // as nothing at all and the customer would be left on the broken page.
+  if (nameOf(error) === 'ChunkLoadError') return true;
 
-  return (
-    type === 'ChunkLoadError' ||
-    /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(message)
-  );
+  try {
+    return /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(
+      toErrorFacts(error).message,
+    );
+  } catch {
+    return false;
+  }
+}
+
+function nameOf(error: unknown): string | undefined {
+  try {
+    const name = (error as { name?: unknown })?.name;
+    return typeof name === 'string' ? name : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 // The widget and library builds run inside someone else's page, where `window` belongs to the

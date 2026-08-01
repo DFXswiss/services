@@ -507,6 +507,27 @@ describe('installChunkErrorHandling', () => {
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
+  // Asserted through the event, not by calling the recovery directly: classification runs first in
+  // this path, and a value whose string conversion throws used to stop the handler there — leaving
+  // the customer on the broken page while a direct unit test of the recovery still passed.
+  it('recovers a chunk failure whose value resists string conversion', () => {
+    install();
+
+    const hostile = {
+      name: 'ChunkLoadError',
+      get message(): string {
+        throw new Error('nope');
+      },
+      toString: () => {
+        throw new Error('nope');
+      },
+    };
+
+    fire('error', { error: hostile });
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
   // Some engines deliver only the message, with no error object attached.
   it('recovers a chunk failure carried as a bare message', () => {
     install();
