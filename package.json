@@ -83,7 +83,7 @@
     "widget": "./scripts/build-widget.sh",
     "widget:dev": "./scripts/build-widget.sh dev",
     "widget:loc": "./scripts/build-widget.sh loc",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.{ts,tsx}\" --no-fix --max-warnings 0",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.{ts,tsx}\" \"functions/**/*.js\" --no-fix --max-warnings 0",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.{ts,tsx}\" --fix",
     "test": "react-app-rewired test --watchAll=false --passWithNoTests",
     "test:e2e": "./scripts/e2e-test.sh",

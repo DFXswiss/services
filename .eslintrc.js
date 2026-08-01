@@ -16,6 +16,17 @@ module.exports = {
     },
     // Story files are excluded from tsconfig.json, so the type-aware parser cannot resolve them.
     ignorePatterns: ['.eslintrc.js', '**/*.stories.tsx'],
+    overrides: [
+      {
+        // Cloudflare Pages Functions are deployed but never bundled into the app, so they sit
+        // outside tsconfig.json and the type-aware parser cannot resolve them. Linting them
+        // without type information still gives this path a static syntax check, which the build
+        // does not provide for files it never compiles.
+        files: ['functions/**/*.js'],
+        parserOptions: { project: null },
+        env: { browser: true, node: false, jest: false },
+      },
+    ],
     rules: {
       '@typescript-eslint/interface-name-prefix': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
