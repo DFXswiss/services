@@ -11,6 +11,22 @@ const LIMITS = { message: 500, type: 100, stack: 4000, route: 500, version: 50 }
 const CHUNK_RELOAD_KEY = 'dfx.chunkReloadAt';
 const CHUNK_RELOAD_WINDOW = 30000;
 
+// The bundler names the failing asset in its message: `(error: <url>)` or `(missing: <url>)` for a
+// chunk, and a trailing address for a dynamic import. Both forms allow a relative address, since
+// what appears here is whatever the build was configured to request.
+const CHUNK_URL_PATTERNS = [/\((?:error|missing):\s*([^\s)]+)\)/i, /imported module:\s*([^\s]+)/i];
+
+// How long the repair may take before the reload goes ahead regardless. A request that never
+// settles must not cost the customer their recovery — before this existed, the reload was
+// immediate, and it has to stay at least as reliable as that.
+const REPAIR_BUDGET = 2000;
+
+// Reporting the same failure again tells us nothing and costs the customer a request. The router
+// can remount a route repeatedly, and every remount builds a fresh component instance -- so a
+// guard that lives in the component cannot hold. This one outlives the mount.
+const RECENT_REPORTS = new Map<string, number>();
+const REPORT_DEDUP_WINDOW = 60000;
+
 // Identifies this app to the API, which logs it alongside the error. Without it every report
 // from here is filed as an unknown client.
 const CLIENT_NAME = 'dfx-services';
@@ -44,12 +60,29 @@ export function toErrorFacts(error: unknown): ErrorFacts {
 // had typed, which is worse than the failure it recovers from. The wordings below identify the
 // real case on their own.
 export function isChunkLoadError(error: unknown): boolean {
-  const { message, type } = toErrorFacts(error);
+  // The name first, read in isolation: it is the cheaper signal, and a getter or proxy trap behind
+  // it is contained rather than left to escape. Deriving the message is the riskier step, since it
+  // calls String() on the value. Classification is the first thing the global handler does with a
+  // thrown value, so a throw here would cost the recovery that follows — the failure would be
+  // classified as nothing at all and the customer left on the broken page.
+  if (nameOf(error) === 'ChunkLoadError') return true;
 
-  return (
-    type === 'ChunkLoadError' ||
-    /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(message)
-  );
+  try {
+    return /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(
+      toErrorFacts(error).message,
+    );
+  } catch {
+    return false;
+  }
+}
+
+function nameOf(error: unknown): string | undefined {
+  try {
+    const name = (error as { name?: unknown })?.name;
+    return typeof name === 'string' ? name : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 // The widget and library builds run inside someone else's page, where `window` belongs to the
@@ -71,7 +104,7 @@ export function isEmbedded(): boolean {
 // localStorage (it survives the sessionStorage.clear() on session/login URLs) and is time-boxed,
 // so a persistent failure reloads at most once per window instead of looping. Storage access is
 // wrapped because embedded/iframe contexts can block it.
-export function reloadOnceForChunkError(): void {
+export function reloadOnceForChunkError(error?: unknown): void {
   if (embedded) return;
 
   try {
@@ -82,7 +115,97 @@ export function reloadOnceForChunkError(): void {
     return; // storage blocked (e.g. embedded iframe) — skip to avoid an unguarded reload loop
   }
 
-  window.location.reload();
+  const chunkUrl = chunkUrlOf(error);
+
+  // A plain reload fetches index.html anew but leaves the stored answer for the chunk itself
+  // untouched, and a chunk URL stays the same as long as its content does. A customer holding a
+  // bad answer under that URL therefore gets it back on every attempt, for as long as the stored
+  // copy is considered fresh -- which for these assets is a year.
+  //
+  // Requesting it with `cache: 'reload'` replaces the stored copy: the browser must go to the
+  // network, and the request carries no-cache, so intermediate caches revalidate too. Reload only
+  // after that has settled, whichever way it went -- the reload is the recovery, and it must not
+  // be skipped because the repair failed.
+  if (!chunkUrl) {
+    window.location.reload();
+    return;
+  }
+
+  // The reload must happen even if the repair hangs, so it is bounded by a timer as well as by the
+  // request settling — whichever comes first, and only once.
+  let reloaded = false;
+  const reloadOnce = (): void => {
+    if (reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  };
+
+  window.setTimeout(reloadOnce, REPAIR_BUDGET);
+
+  void fetch(chunkUrl, { cache: 'reload', credentials: 'omit' })
+    .catch(() => undefined)
+    .then(reloadOnce);
+}
+
+// The address of the asset a bundler failure names, resolved and confined to our own origin.
+export function chunkUrlOf(error: unknown): string | undefined {
+  if (error == null) return undefined;
+
+  // Every step here reads from a value we were handed: the property can be a getter that throws,
+  // and deriving the message runs String() on it, which a hostile toString can turn into a throw.
+  // Failing to find an address is fine -- the caller reloads without repairing -- but throwing is
+  // not: the reload guard has already been written by then, so the customer would be left with
+  // neither a repair nor a reload until it expires.
+  try {
+    // webpack puts the address on the error itself, which beats reading it back out of prose.
+    const request = (error as { request?: unknown }).request;
+    const raw = typeof request === 'string' && request ? request : addressInMessage(error);
+    if (!raw) return undefined;
+
+    // Resolved against the current document, so a relative address — which is what a build with a
+    // relative public path emits — is handled like an absolute one.
+    const resolved = new URL(raw, window.location.href);
+
+    // Own origin only: this address comes out of an error object, and an embedded or third-party
+    // bundler could otherwise point the repair at someone else's host.
+    return resolved.origin === window.location.origin ? resolved.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function addressInMessage(error: unknown): string | undefined {
+  const { message } = toErrorFacts(error);
+
+  for (const pattern of CHUNK_URL_PATTERNS) {
+    const match = pattern.exec(message);
+    if (match) return match[1];
+  }
+
+  return undefined;
+}
+
+// Clears what this module remembers between reports. Only a test needs this: in a document the
+// state is meant to live for as long as the document does, which is the whole point of it.
+export function forgetReportedErrors(): void {
+  RECENT_REPORTS.clear();
+}
+
+// True when this exact failure was already reported from this document within the window. Keeps
+// the map bounded by dropping expired entries on the way through, so a long session cannot grow it
+// without limit.
+function isRepeatReport(signature: string): boolean {
+  const now = Date.now();
+
+  RECENT_REPORTS.forEach((at, key) => {
+    if (now - at >= REPORT_DEDUP_WINDOW) RECENT_REPORTS.delete(key);
+  });
+
+  const last = RECENT_REPORTS.get(signature);
+  if (last != null && now - last < REPORT_DEDUP_WINDOW) return true;
+
+  RECENT_REPORTS.set(signature, now);
+  return false;
 }
 
 // Reports an error the user actually saw. Fire-and-forget: a failing report must never surface as
@@ -92,6 +215,12 @@ export function reportClientError(error: unknown, route: string): void {
 
   try {
     const { message, type, stack } = toErrorFacts(error);
+
+    // Deduplicated here rather than at the call site, so every caller is covered by the same rule.
+    // Without it a remount loop reports the same failure tens of times per second: the customer
+    // sees one broken page while the API sees a flood, and the rate limit then hides the very
+    // reports this exists to collect.
+    if (isRepeatReport(`${type ?? ''}|${message}|${route}`)) return;
 
     const body = {
       // The endpoint rejects an empty message, and a rejected report is exactly the blind spot
@@ -134,7 +263,7 @@ export function installChunkErrorHandling(): void {
     if (!isChunkLoadError(error)) return;
 
     reportClientError(error, window.location.pathname);
-    reloadOnceForChunkError();
+    reloadOnceForChunkError(error);
   };
 
   window.addEventListener('error', (event) => handle(event?.error ?? event?.message));

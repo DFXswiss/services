@@ -2,7 +2,13 @@
 jest.mock('@dfx.swiss/react', () => ({}));
 jest.mock('src/dto/safe.dto', () => ({}));
 
-import { isChunkLoadError, reloadOnceForChunkError, reportClientError, toErrorFacts } from '../util/client-error';
+import {
+  forgetReportedErrors,
+  isChunkLoadError,
+  reloadOnceForChunkError,
+  reportClientError,
+  toErrorFacts,
+} from '../util/client-error';
 
 jest.mock('src/config/api', () => ({ Api: { url: 'https://api.example.com', version: 'v1' } }));
 jest.mock('src/version', () => ({ REACT_APP_BUILD_ID: '42-99' }));
@@ -91,6 +97,7 @@ describe('isChunkLoadError', () => {
 
 describe('reportClientError', () => {
   beforeEach(() => {
+    forgetReportedErrors();
     global.fetch = jest.fn().mockResolvedValue({ ok: true }) as jest.Mock;
   });
 
@@ -230,6 +237,218 @@ describe('reloadOnceForChunkError', () => {
       expect(reload).toHaveBeenCalledTimes(1);
     });
   });
+
+  // A reload alone re-reads index.html but not the stored answer for the chunk, and the chunk URL
+  // is stable across builds. Without replacing that stored copy the customer gets the same bad
+  // answer back on every attempt, for as long as it is considered fresh.
+  it('replaces the stored copy of the failing chunk before reloading', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(new Response('', { status: 404 }));
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 2688 failed.\n(error: http://localhost/static/js/2688.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost/static/js/2688.abc.chunk.js', {
+      cache: 'reload',
+      credentials: 'omit',
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('reloads even when replacing the stored copy fails', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('offline')) as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 7 failed.\n(error: http://localhost/static/js/7.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  // Before the repair existed the reload was immediate. A request that never settles must not cost
+  // the customer their recovery, so the reload is bounded by a timer as well.
+  it('reloads even if the repair request never settles', () => {
+    jest.useFakeTimers();
+    global.fetch = jest.fn().mockReturnValue(new Promise(() => undefined)) as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 1 failed.\n(error: http://localhost/static/js/1.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    expect(reload).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(2000);
+    expect(reload).toHaveBeenCalledTimes(1);
+
+    jest.useRealTimers();
+  });
+
+  it('reloads only once when the repair settles after the timer already fired', async () => {
+    jest.useFakeTimers();
+    let settle: (value: unknown) => void = () => undefined;
+    global.fetch = jest.fn().mockReturnValue(new Promise((resolve) => (settle = resolve))) as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 1 failed.\n(error: http://localhost/static/js/1.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    jest.advanceTimersByTime(2000);
+    settle(new Response(''));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(reload).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  // webpack puts the address on the error itself; reading it there beats parsing prose.
+  it('prefers the address webpack puts on the error over the message', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(new Response(''));
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 5 failed.\n(error: http://localhost/static/js/from-message.js)'), {
+        name: 'ChunkLoadError',
+        request: 'http://localhost/static/js/from-request.js',
+      }),
+    );
+
+    expect(fetchMock.mock.calls[0][0]).toBe('http://localhost/static/js/from-request.js');
+    await Promise.resolve();
+  });
+
+  // What a build with a relative public path emits.
+  it('resolves a relative chunk address against the current document', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(new Response(''));
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(
+      Object.assign(new Error('Loading chunk 3 failed.\n(error: /static/js/3.abc.chunk.js)'), {
+        name: 'ChunkLoadError',
+      }),
+    );
+
+    expect(fetchMock.mock.calls[0][0]).toBe('http://localhost/static/js/3.abc.chunk.js');
+    await Promise.resolve();
+  });
+
+  // isChunkLoadError accepts this wording too, so the repair has to understand it as well.
+  it('reads the address out of a failed dynamic import', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(new Response(''));
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(
+      new Error('Failed to fetch dynamically imported module: http://localhost/static/js/lazy.js'),
+    );
+
+    expect(fetchMock.mock.calls[0][0]).toBe('http://localhost/static/js/lazy.js');
+    await Promise.resolve();
+  });
+
+  // The reload guard is written before the address is looked up, so a throw while looking it up
+  // would leave the customer with neither a repair nor a reload until the guard expires.
+  it('still reloads when reading the address throws', () => {
+    const hostile = Object.assign(new Error('Loading chunk 1 failed.'), { name: 'ChunkLoadError' });
+    Object.defineProperty(hostile, 'request', {
+      get() {
+        throw new Error('nope');
+      },
+    });
+
+    reloadOnceForChunkError(hostile);
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('still reloads when the error resists string conversion', () => {
+    const hostile = {
+      name: 'ChunkLoadError',
+      get message(): string {
+        throw new Error('nope');
+      },
+      toString: () => {
+        throw new Error('nope');
+      },
+    };
+
+    reloadOnceForChunkError(hostile);
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  // The message is derived from an error object, which an embedded or third-party bundler could
+  // supply. Repairing an address on someone else's host is not ours to do.
+  it('ignores a chunk address on another origin and just reloads', () => {
+    const fetchMock = jest.fn();
+    global.fetch = fetchMock as any;
+
+    reloadOnceForChunkError(new Error('Loading chunk 9 failed.\n(error: https://evil.example/x.chunk.js)'));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+});
+
+// The router can remount the same route repeatedly, and each remount is a fresh component. A guard
+// that lives in the component therefore cannot hold -- measured in a real browser, one page
+// produced 19-30 reports per second this way, while the customer saw a single broken screen.
+describe('repeat reports', () => {
+  beforeEach(() => {
+    forgetReportedErrors();
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-08-01T10:00:00Z'));
+  });
+
+  afterEach(() => jest.useRealTimers());
+
+  it('reports the same failure only once within the window', () => {
+    const error = Object.assign(new Error('Loading chunk 2688 failed.'), { name: 'ChunkLoadError' });
+
+    reportClientError(error, '/buy');
+    reportClientError(error, '/buy');
+    reportClientError(error, '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('still reports the same failure on a different route', () => {
+    const error = Object.assign(new Error('Loading chunk 2688 failed.'), { name: 'ChunkLoadError' });
+
+    reportClientError(error, '/buy');
+    reportClientError(error, '/sell');
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports a different failure on the same route', () => {
+    reportClientError(new Error('one'), '/buy');
+    reportClientError(new Error('two'), '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports again once the window has passed', () => {
+    const error = new Error('same');
+
+    reportClientError(error, '/buy');
+    jest.setSystemTime(new Date('2026-08-01T10:01:01Z'));
+    reportClientError(error, '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
 });
 
 // The wiring every entry point relies on, and the part a unit test of the pieces does not cover:
@@ -286,6 +505,27 @@ describe('installChunkErrorHandling', () => {
 
     expect(reload).toHaveBeenCalledTimes(1);
     expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  // Asserted through the event, not by calling the recovery directly: classification runs first in
+  // this path, and a value whose string conversion throws used to stop the handler there — leaving
+  // the customer on the broken page while a direct unit test of the recovery still passed.
+  it('recovers a chunk failure whose value resists string conversion', () => {
+    install();
+
+    const hostile = {
+      name: 'ChunkLoadError',
+      get message(): string {
+        throw new Error('nope');
+      },
+      toString: () => {
+        throw new Error('nope');
+      },
+    };
+
+    fire('error', { error: hostile });
+
+    expect(reload).toHaveBeenCalledTimes(1);
   });
 
   // Some engines deliver only the message, with no error object attached.
