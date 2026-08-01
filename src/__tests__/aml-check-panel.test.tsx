@@ -36,6 +36,7 @@ const buyCrypto: TransactionInfo = {
   buyCryptoStatus: 'MissingLiquidity',
   buyCryptoHasBatch: false,
   buyCryptoHasChargeback: false,
+  buyCryptoReviewResetBlocked: false,
   isCompleted: false,
   created: '2026-08-01T00:00:00.000Z',
 };
@@ -136,6 +137,7 @@ describe('AmlCheckPendingPanel AML reset', () => {
     ['stopped', { buyCryptoStatus: 'Stopped' }],
     ['assigned to a batch', { buyCryptoHasBatch: true }],
     ['assigned to a chargeback', { buyCryptoHasChargeback: true }],
+    ['blocked by a payout or return', { buyCryptoReviewResetBlocked: true }],
   ])('does not offer review reset when BuyCrypto is %s', (_case, txOverride) => {
     render(
       <AmlCheckPendingPanel

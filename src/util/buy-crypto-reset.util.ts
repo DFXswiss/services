@@ -9,7 +9,8 @@ export function hasBuyCryptoReviewResetEligibleState(tx: TransactionInfo): boole
     tx.buyCryptoStatus != null &&
     tx.buyCryptoStatus !== 'Stopped' &&
     tx.buyCryptoHasBatch === false &&
-    tx.buyCryptoHasChargeback === false
+    tx.buyCryptoHasChargeback === false &&
+    tx.buyCryptoReviewResetBlocked === false
   );
 }
 

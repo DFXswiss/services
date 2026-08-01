@@ -522,6 +522,7 @@ export interface TransactionInfo {
   buyCryptoStatus?: string;
   buyCryptoHasBatch?: boolean;
   buyCryptoHasChargeback?: boolean;
+  buyCryptoReviewResetBlocked?: boolean;
   buyFiatId?: number;
   bankDataId?: number;
   type?: string;
