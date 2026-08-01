@@ -1,5 +1,10 @@
 import { createMemoryRouter } from 'react-router-dom';
 import App, { WidgetParams } from './App';
+import { markEmbedded } from './util/client-error';
+
+// Runs on a third party's page: a chunk failure here is reported, never recovered by reloading
+// their page.
+markEmbedded();
 
 function MainWidget(params: WidgetParams) {
   return (
