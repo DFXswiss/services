@@ -38,7 +38,14 @@ async function resolveConditional(context) {
 
   const response = await context.env.ASSETS.fetch(unconditional);
 
-  return isFallback(response) ? notFound() : new Response(null, { status: 304, headers: response.headers });
+  if (isFallback(response)) return notFound();
+
+  // Only a successful lookup says the client's copy is still good. Anything else -- a failure, a
+  // redirect -- is passed on as itself: answering 304 there would confirm a cached entry on the
+  // strength of a request that never established what the path holds.
+  if (!response.ok) return response;
+
+  return new Response(null, { status: 304, headers: response.headers });
 }
 
 function isFallback(response) {

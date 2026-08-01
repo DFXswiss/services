@@ -109,6 +109,16 @@ describe('missing asset function', () => {
     await expect(result.text()).resolves.toBe('');
   });
 
+  it('does not confirm a cached copy when the retry itself fails', async () => {
+    // A failure on the second lookup establishes nothing about the path. Answering 304 there would
+    // renew whatever the client holds -- including the app shell this exists to get rid of.
+    const { context } = conditionalContext(new Response('upstream down', { status: 503, headers: { 'content-type': 'text/plain' } }));
+
+    const result = await onRequest(context);
+
+    expect(result.status).toBe(503);
+  });
+
   it('leaves an HTML error page as the error it is', async () => {
     // An HTML failure page is not a missing asset. Reporting it as 404 would state permanent
     // absence on the strength of what may be a passing fault.
