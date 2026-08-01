@@ -1,11 +1,12 @@
 /**
  * Answers a request for a build asset that does not exist with a 404 instead of the app shell.
  *
- * Without this, an absent asset falls through the SPA rule in public/_redirects and is served as
- * index.html with status 200, which public/_headers then stamps with the cache lifetime meant for
- * fingerprinted assets. A client asking for a chunk that a later deploy replaced therefore does
- * not get a failure it can recover from -- it gets an HTML page parsed as JavaScript, cached
- * under the chunk's own URL.
+ * Without this, an absent asset is answered with the app shell and status 200: Pages serves
+ * index.html for any path with no file behind it, which public/_headers then stamps with the cache
+ * lifetime meant for fingerprinted assets. A client asking for a chunk that a later deploy replaced
+ * therefore does not get a failure it can recover from -- it gets an HTML page parsed as
+ * JavaScript, cached under the chunk's own URL. See public/_redirects for where that fallback
+ * comes from, and where it does not.
  *
  * Nothing served under the paths this runs on is ever HTML, so the content type of the response is
  * what separates a real asset from that fallback. Both are status 200; only the type differs.
