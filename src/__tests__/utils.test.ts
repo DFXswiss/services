@@ -32,6 +32,10 @@ import {
   formatChf,
   formatChfOrDash,
   formatCurrency,
+  formatSwissDate,
+  formatSwissDateTime,
+  formatSwissDateTimeWithSeconds,
+  formatSwissTime,
   FormatType,
   deepEqual,
   equalsIgnoreCase,
@@ -287,6 +291,54 @@ describe('utils', () => {
       const result = formatChfOrDash(48515);
       expect(result.endsWith(' CHF')).toBe(true);
       expect(result).toContain('48');
+    });
+  });
+
+  // Built from local components so the expectations hold in any timezone the suite runs in.
+  const swissSample = new Date(2026, 5, 12, 14, 30, 45);
+
+  describe('formatSwissDate', () => {
+    it('should render Swiss notation with a four-digit year', () => {
+      expect(formatSwissDate(swissSample)).toBe('12.06.2026');
+    });
+
+    it('should zero-pad day and month', () => {
+      expect(formatSwissDate(new Date(2026, 0, 5))).toBe('05.01.2026');
+    });
+  });
+
+  describe('formatSwissTime', () => {
+    it('should render 24-hour time', () => {
+      expect(formatSwissTime(swissSample)).toBe('14:30');
+    });
+
+    // hour12: false selects h24 on some locales and renders midnight as 24:xx
+    it('should render midnight as 00:xx', () => {
+      expect(formatSwissTime(new Date(2026, 5, 12, 0, 30))).toBe('00:30');
+    });
+
+    // The assertions above only diverge from the browser default on some locales, so pin the
+    // locale itself: that is the property this helper exists to guarantee.
+    it('should pin the locale instead of following the browser', () => {
+      const spy = jest.spyOn(Date.prototype, 'toLocaleTimeString');
+      try {
+        formatSwissTime(swissSample);
+        expect(spy).toHaveBeenCalledWith('de-CH', expect.anything());
+      } finally {
+        spy.mockRestore();
+      }
+    });
+  });
+
+  describe('formatSwissDateTime', () => {
+    it('should append 24-hour time without seconds', () => {
+      expect(formatSwissDateTime(swissSample)).toBe('12.06.2026, 14:30');
+    });
+  });
+
+  describe('formatSwissDateTimeWithSeconds', () => {
+    it('should keep the seconds a bare toLocaleString() used to emit', () => {
+      expect(formatSwissDateTimeWithSeconds(swissSample)).toBe('12.06.2026, 14:30:45');
     });
   });
 

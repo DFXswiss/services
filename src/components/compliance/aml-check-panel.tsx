@@ -4,6 +4,7 @@ import { ComplianceUserData, TransactionInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { statusBadge } from 'src/util/compliance-helpers';
 import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/util/scorechain.util';
+import { formatSwissDate } from 'src/util/utils';
 
 function callQueueForReason(reason: string | undefined): CallQueue | undefined {
   return reason && (Object.values(CallQueue) as string[]).includes(reason) ? (reason as CallQueue) : undefined;
@@ -80,9 +81,7 @@ function TransactionEntry({
       <div className="flex items-center gap-3">
         <span className="text-sm text-dfxGray-700 font-medium">Status:</span>
         {statusBadge(tx.amlCheck ?? '-')}
-        <span className="text-xs text-dfxGray-700">
-          Eingangsdatum: {new Date(tx.created).toLocaleDateString('de-CH')}
-        </span>
+        <span className="text-xs text-dfxGray-700">Eingangsdatum: {formatSwissDate(tx.created)}</span>
       </div>
 
       {/* Checks / Info */}

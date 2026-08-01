@@ -481,7 +481,8 @@
 
     "Invalid link": "Ungültiger Link",
     "Merge is already completed": "Zusammenführung ist bereits abgeschlossen",
-    "Please return to the previous page. If this problem persists, please contact our support.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, wende Dich bitte an unseren Support."
+    "Please return to the previous page. If this problem persists, please contact our support.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, wende Dich bitte an unseren Support.",
+    "Please reload this page. If this problem persists, please contact our support.": "Bitte lade diese Seite neu. Wenn dieses Problem weiterhin besteht, wende Dich bitte an unseren Support."
   },
   "screens/home": {
     "DFX services": "DFX Services",

@@ -3,6 +3,7 @@ import { MrosStatus } from 'src/dto/mros.dto';
 import { KycStepInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/util/scorechain.util';
+import { formatSwissDate, formatSwissDateTimeWithSeconds } from 'src/util/utils';
 
 export function DetailRow({
   label,
@@ -71,7 +72,7 @@ export function TransactionDetailRows({
   return (
     <table className="text-sm text-dfxBlue-800 text-left">
       <tbody>
-        <DetailRow label="Date" value={tx.date ? new Date(tx.date).toLocaleString() : undefined} />
+        <DetailRow label="Date" value={tx.date ? formatSwissDateTimeWithSeconds(tx.date) : undefined} />
         <DetailRow label="Type" value={tx.type} />
         <DetailRow label="AmlCheck" value={amlCheck} />
         <DetailRow label="AmlReason" value={amlReason} />
@@ -134,7 +135,7 @@ export function TransactionDetailRows({
             <DetailRow label="Chargeback TX" value={tx.chargeBackTxId} url={tx.chargeBackTxUrl} mono />
             <DetailRow
               label="Chargeback Date"
-              value={tx.chargebackDate ? new Date(tx.chargebackDate).toLocaleString() : undefined}
+              value={tx.chargebackDate ? formatSwissDateTimeWithSeconds(tx.chargebackDate) : undefined}
             />
           </>
         )}
@@ -191,7 +192,7 @@ export const BankTxUnassignedTypes = ['GSheet', 'Unknown', 'Pending'];
 export const DEFAULT_REF = '000-000';
 
 export function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString();
+  return formatSwissDate(value);
 }
 
 export function formatBirthday(birthday: string): string {
@@ -204,11 +205,12 @@ export function formatBirthday(birthday: string): string {
 }
 
 export function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString();
+  return formatSwissDateTimeWithSeconds(value);
 }
 
+// Keeps its own option set: the two-digit year is the point of the "short" variant.
 export function formatDateTimeShort(value: string): string {
-  return new Date(value).toLocaleString([], {
+  return new Date(value).toLocaleString('de-CH', {
     day: '2-digit',
     month: '2-digit',
     year: '2-digit',

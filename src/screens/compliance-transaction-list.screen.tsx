@@ -16,6 +16,7 @@ import { TransactionListEntry, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { formatSwissDate } from 'src/util/utils';
 
 export default function ComplianceTransactionListScreen(): JSX.Element {
   useComplianceGuard();
@@ -44,12 +45,7 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
   );
 
   function formatDate(dateString?: string): string {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('de-CH', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    return dateString ? formatSwissDate(dateString) : '-';
   }
 
   function formatChf(value?: number): string {

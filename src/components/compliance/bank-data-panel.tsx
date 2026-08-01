@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BankDataAlternative, BankDataInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { statusBadge } from 'src/util/compliance-helpers';
+import { formatSwissDate } from 'src/util/utils';
 
 interface BankDataReviewPanelProps {
   bankDatas: BankDataInfo[];
@@ -119,9 +120,7 @@ function BankDataEntry({
       <div className="flex items-center gap-3">
         <span className="text-sm text-dfxGray-700 font-medium">Status:</span>
         {statusBadge(entry.status ?? '-')}
-        <span className="text-xs text-dfxGray-700">
-          Eingangsdatum: {new Date(entry.created).toLocaleDateString('de-CH')}
-        </span>
+        <span className="text-xs text-dfxGray-700">Eingangsdatum: {formatSwissDate(entry.created)}</span>
       </div>
 
       {/* Checks */}
