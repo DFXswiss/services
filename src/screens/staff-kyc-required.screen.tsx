@@ -13,11 +13,12 @@ import { useNavigation } from '../hooks/navigation.hook';
 // Shown when a staff endpoint answers 403 { code: 'STAFF_KYC_REQUIRED' }: the role is fine, but the
 // account behind it has not completed an identification. Without this the caller only sees a bare
 // "Forbidden resource" and has no way to tell that their own KYC is what unblocks it. `useGuardedApi`
-// routes here from every staff hook, so this covers all staff screens rather than one dashboard.
+// routes here, and every staff call goes through that hook, so this covers all staff screens rather
+// than a single dashboard.
 export default function StaffKycRequiredScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { start } = useKycHelper();
-  const { goBack } = useNavigation();
+  const { navigate } = useNavigation();
 
   useLayoutOptions({ title: translate('screens/kyc', 'Identification required') });
 
@@ -43,7 +44,9 @@ export default function StaffKycRequiredScreen(): JSX.Element {
           width={StyledButtonWidth.FULL}
           color={StyledButtonColor.GRAY_OUTLINE}
           label={translate('general/actions', 'Back')}
-          onClick={goBack}
+          // Not goBack(): the screen the caller came from is still blocked and would answer 403 again,
+          // sending them straight back here. The account page is reachable without staff clearance.
+          onClick={() => navigate('/account')}
         />
       </StyledVerticalStack>
     </StyledVerticalStack>
