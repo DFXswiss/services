@@ -228,6 +228,77 @@ function TransactionEntry({
   );
 }
 
+function ResettableTransactionEntry({
+  tx,
+  clerks,
+  isSaving,
+  onReset,
+}: {
+  tx: TransactionInfo;
+  clerks: string[];
+  isSaving: boolean;
+  onReset: (clerk: string) => Promise<void>;
+}): JSX.Element {
+  const [clerk, setClerk] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const sourceLabel = `BuyCrypto ${tx.buyCryptoId}`;
+
+  async function handleReset(): Promise<void> {
+    if (!clerk || isSaving || isProcessing) return;
+    if (
+      !window.confirm(
+        `AML-Check für ${sourceLabel} wirklich zurücksetzen?\n\nDer Status ${tx.amlCheck} wird entfernt und die Transaktion erneut durch den AML-Check verarbeitet.`,
+      )
+    )
+      return;
+
+    setIsProcessing(true);
+    try {
+      await onReset(clerk);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-4 text-left flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-dfxBlue-800 font-semibold">{sourceLabel}</h3>
+          <p className="text-xs text-dfxGray-700">
+            Transaction {tx.id} · AML {tx.amlCheck}
+            {tx.amlReason ? ` · ${tx.amlReason}` : ''}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            aria-label={`Editor für AML-Reset von ${sourceLabel}`}
+            className="px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+            value={clerk}
+            onChange={(e) => setClerk(e.target.value)}
+            disabled={isSaving || isProcessing || clerks.length === 0}
+          >
+            <option value="">Editor wählen</option>
+            {clerks.map((entry) => (
+              <option key={entry} value={entry}>
+                {entry}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="px-3 py-1.5 text-sm text-white bg-dfxRed-100 hover:bg-dfxRed-150 rounded transition-colors disabled:opacity-50"
+            disabled={isSaving || isProcessing || !clerk}
+            onClick={handleReset}
+          >
+            {isProcessing ? 'Wird zurückgesetzt...' : 'AML-Check zurücksetzen'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AmlCheckPendingPanel({
   data,
   clerks,
@@ -242,6 +313,15 @@ export function AmlCheckPendingPanel({
   );
   const callQueueTxs = data.transactions.filter(
     (tx) => tx.type != null && tx.amlCheck === CheckStatus.PENDING && callQueueForReason(tx.amlReason),
+  );
+  const handledTransactionIds = new Set([...pendingTxs, ...callQueueTxs].map((tx) => tx.id));
+  const resettableTxs = data.transactions.filter(
+    (tx) =>
+      tx.type != null &&
+      tx.buyCryptoId != null &&
+      tx.amlCheck != null &&
+      !tx.isCompleted &&
+      !handledTransactionIds.has(tx.id),
   );
   const ud = data.userData;
 
@@ -349,7 +429,7 @@ export function AmlCheckPendingPanel({
       </div>
     ) : null;
 
-  if (pendingTxs.length === 0) {
+  if (pendingTxs.length === 0 && resettableTxs.length === 0) {
     return (
       <div className="flex flex-col gap-4">
         {userInfo}
@@ -365,6 +445,20 @@ export function AmlCheckPendingPanel({
     <div className="flex flex-col gap-6">
       {userInfo}
       {callQueueInfo}
+      {resettableTxs.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <h3 className="text-dfxGray-700 font-semibold text-sm">Bestehenden AML-Check zurücksetzen</h3>
+          {resettableTxs.map((tx) => (
+            <ResettableTransactionEntry
+              key={tx.id}
+              tx={tx}
+              clerks={clerks}
+              isSaving={isSaving}
+              onReset={(clerk) => onReset(tx, clerk)}
+            />
+          ))}
+        </div>
+      )}
       {pendingTxs.map((tx) => (
         <div key={tx.id} className="border-b border-dfxGray-300 pb-6 last:border-0">
           <TransactionEntry

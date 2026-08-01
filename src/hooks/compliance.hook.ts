@@ -731,6 +731,14 @@ export function useCompliance() {
     });
   }
 
+  async function setKycStatusCheck(userDataId: number, expectedKycStatus: KycStatus): Promise<void> {
+    return call<void>({
+      url: `userData/${userDataId}/kycStatus/check`,
+      method: 'PUT',
+      data: { expectedKycStatus },
+    });
+  }
+
   async function downloadUserFiles(userDataIds: number[]): Promise<void> {
     const { data, headers } = await call<{ data: Blob; headers: Record<string, string> }>({
       url: 'userData/download',
@@ -1457,6 +1465,7 @@ export function useCompliance() {
     () => ({
       search,
       getUserData,
+      setKycStatusCheck,
       getPendingTransactions,
       getPendingReviews,
       getPendingReviewItems,

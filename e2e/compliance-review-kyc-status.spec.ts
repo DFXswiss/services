@@ -1,0 +1,173 @@
+import { expect, Page, Route, test } from '@playwright/test';
+
+const USER_DATA_ID = 322190;
+
+const complianceFixture = {
+  userData: {
+    id: USER_DATA_ID,
+    created: '2026-07-31T08:00:00.000Z',
+    status: 'Active',
+    riskStatus: 'Normal',
+    kycStatus: 'Completed',
+    kycLevel: 50,
+    accountType: 'Personal',
+    firstname: 'Test',
+    surname: 'Customer',
+    verifiedName: 'Test Customer',
+    mail: 'test.customer@example.com',
+    language: { name: 'German', symbol: 'DE' },
+    nationality: { name: 'Switzerland', symbol: 'CH' },
+  },
+  kycFiles: [],
+  kycSteps: [],
+  kycLogs: [],
+  transactions: [
+    {
+      id: 326324,
+      uid: 'synthetic-buy-crypto-130504',
+      buyCryptoId: 130504,
+      type: 'Buy',
+      sourceType: 'BuyCrypto',
+      inputAmount: 300000,
+      inputAsset: 'EUR',
+      outputAsset: 'BTC',
+      amountInChf: 280000,
+      amlCheck: 'Pass',
+      amlReason: 'NA',
+      isCompleted: false,
+      created: '2026-07-31T08:30:00.000Z',
+    },
+  ],
+  bankTxs: [],
+  cryptoInputs: [],
+  ipLogs: [],
+  supportIssues: [],
+  users: [
+    {
+      id: 1,
+      address: '0x0000000000000000000000000000000000000001',
+      role: 'User',
+      status: 'Active',
+      walletName: 'Synthetic wallet',
+      created: '2026-07-31T08:00:00.000Z',
+    },
+  ],
+  bankDatas: [],
+  buyRoutes: [],
+  sellRoutes: [],
+  swapRoutes: [],
+  virtualIbans: [],
+  refRewards: [],
+  notifications: [],
+  notes: [],
+  permissions: {
+    viewKycFiles: true,
+    viewKycLogs: true,
+    viewIpLogs: true,
+    viewSupportIssues: true,
+    canRequestLimit: true,
+    canPerformTransactionActions: true,
+    viewRecommendation: true,
+  },
+};
+
+function jwt(): string {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
+    account: 1,
+    user: 1,
+    role: 'Admin',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  })}.synthetic`;
+}
+
+async function fulfillJson(route: Route, body: unknown): Promise<void> {
+  await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+}
+
+async function installSyntheticApi(page: Page): Promise<string[]> {
+  const unexpectedRequests: string[] = [];
+
+  await page.route('**/v1/**', async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+
+    if (request.method() === 'GET' && path === `/v1/support/${USER_DATA_ID}`) {
+      await fulfillJson(route, complianceFixture);
+      return;
+    }
+
+    if (request.method() === 'GET' && path === '/v1/support/call-queues/clerks') {
+      await fulfillJson(route, ['Test Operator']);
+      return;
+    }
+
+    if (
+      request.method() === 'GET' &&
+      ['/v1/language', '/v1/fiat', '/v1/asset', '/v1/bankAccount', '/v1/country'].includes(path)
+    ) {
+      await fulfillJson(route, []);
+      return;
+    }
+
+    if (request.method() === 'GET' && path === '/v1/setting/infoBanner') {
+      await fulfillJson(route, null);
+      return;
+    }
+
+    unexpectedRequests.push(`${request.method()} ${path}`);
+    await route.fulfill({
+      status: 501,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'Unexpected test request' }),
+    });
+  });
+
+  await page.route('**/v2/**', async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+
+    if (request.method() === 'GET' && path === '/v2/user') {
+      await fulfillJson(route, {
+        id: 1,
+        activeAddress: { address: '0x0000000000000000000000000000000000000001' },
+        addresses: [],
+        kyc: { level: 50, status: 'Completed' },
+        language: { id: 1, name: 'German', symbol: 'DE' },
+      });
+      return;
+    }
+
+    unexpectedRequests.push(`${request.method()} ${path}`);
+    await route.fulfill({
+      status: 501,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'Unexpected test request' }),
+    });
+  });
+
+  return unexpectedRequests;
+}
+
+test.describe('Compliance review KYC and AML actions', () => {
+  test('shows the KYC Check transition and BuyCrypto AML reset', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1200 });
+    const unexpectedRequests = await installSyntheticApi(page);
+
+    await page.goto(`/compliance/user/${USER_DATA_ID}/kyc?session=${jwt()}&tab=amlPending`);
+
+    await expect(page.getByText('KYC Management')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Auf Check setzen' })).toBeVisible();
+    await expect(page.getByText('BuyCrypto 130504')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'AML-Check zurücksetzen' })).toBeDisabled();
+
+    await page.getByLabel('Editor für AML-Reset von BuyCrypto 130504').selectOption('Test Operator');
+    await expect(page.getByRole('button', { name: 'AML-Check zurücksetzen' })).toBeEnabled();
+    expect(unexpectedRequests).toEqual([]);
+
+    await expect(page).toHaveScreenshot('compliance-review-kyc-status-and-aml-reset.png', {
+      fullPage: true,
+      maxDiffPixels: 5000,
+    });
+  });
+});

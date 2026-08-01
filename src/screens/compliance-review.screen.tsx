@@ -42,6 +42,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
   useLayoutOptions({ title: 'KYC Management', backButton: true, noMaxWidth: true, textStart: true, onBack });
   const {
     getUserData,
+    setKycStatusCheck,
     updateKycStep,
     updateUserData,
     updateBankData,
@@ -53,7 +54,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
     createKycLog,
   } = useCompliance();
   const { getFile } = useKyc();
-  const { clerks, isLoading: clerksLoading, error: clerksError } = useCallQueueClerks();
+  const { clerks } = useCallQueueClerks();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -261,34 +262,24 @@ export default function ComplianceReviewScreen(): JSX.Element {
     }
   }
 
-  async function handleSetKycStatusCheck(clerk: string): Promise<void> {
-    if (!userDataId || data?.userData.kycStatus === KycStatus.CHECK) return;
+  async function handleSetKycStatusCheck(): Promise<void> {
+    const currentKycStatus = data?.userData.kycStatus;
+    if (!userDataId || !currentKycStatus || currentKycStatus === KycStatus.CHECK) return;
 
     setIsSaving(true);
     setError(undefined);
-    let statusUpdated = false;
     try {
-      await updateUserData(+userDataId, { kycStatus: KycStatus.CHECK });
-      statusUpdated = true;
-      setData((current) =>
-        current ? { ...current, userData: { ...current.userData, kycStatus: KycStatus.CHECK } } : current,
-      );
-      await createKycLog(
-        +userDataId,
-        buildKycLogMessage({
-          description: 'KycStatus',
-          clerk,
-          results: [{ table: 'userData', column: 'kycStatus', value: KycStatus.CHECK }],
-        }),
-      );
+      await setKycStatusCheck(+userDataId, currentKycStatus as KycStatus);
       loadData();
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
-      setError(
-        statusUpdated
-          ? `KYC status was changed to Check, but the audit log could not be created: ${message}. Do not repeat the status change; verify the audit trail.`
-          : `KYC status could not be changed to Check: ${message}`,
-      );
+      setError(`KYC status could not be changed to Check: ${message}`);
+      try {
+        setData(await getUserData(+userDataId));
+      } catch (reloadError: unknown) {
+        const reloadMessage = reloadError instanceof Error ? reloadError.message : 'Unknown error';
+        setError(`KYC status could not be changed to Check: ${message}. Reload failed: ${reloadMessage}`);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -446,9 +437,6 @@ export default function ComplianceReviewScreen(): JSX.Element {
           <ComplianceReviewHeader
             userData={data.userData}
             kycSteps={data.kycSteps}
-            clerks={clerks}
-            clerksLoading={clerksLoading}
-            clerksError={clerksError}
             isSaving={isSaving}
             onSetKycStatusCheck={handleSetKycStatusCheck}
           />
