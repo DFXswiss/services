@@ -16,9 +16,29 @@
 # outcomes, depending only on whether that particular response gets cached.
 # Changing that is a CDN configuration matter; it cannot be fixed in this file.
 #
-# Fingerprinted build assets (content-hashed filenames) never change -> cache hard.
+# Fingerprinted build assets (content-hashed filenames) never change -> cache hard. The
+# max-age therefore stays at a year, but immutable is deliberately NOT set: immutable stops
+# a normal user-triggered reload from sending a conditional revalidation while max-age is
+# still valid — the case it is designed for — whereas a hard reload (empty cache and hard
+# reload / Ctrl+Shift+R) bypasses the cache entirely, independent of immutable. This rule
+# matches on the /static/* path, not on what actually got served under it, and
+# functions/[[path]].js + public/_routes.json are the only content check in the
+# chain — an incident there (a routing gap, a bad deploy, a fallback that slips through)
+# can still land an app-shell response under an asset URL. With immutable, that single
+# wrong response would be pinned for the full year — for ordinary navigation and a normal
+# reload, not a hard reload — in every browser that already fetched it, for exactly the
+# client it broke. Without it, a user-triggered reload can still send
+# a conditional revalidation request — independent of whether max-age has expired — and
+# correct itself; ordinary navigation (no reload) keeps the stored copy for up to a year
+# without revalidating. max-age=31536000 continues to apply to shared/edge caches either
+# way: dropping immutable only affects the client, and a wrong response already at the
+# edge is cleared only by purging, not by this choice. Since the filename hash only
+# changes when the content actually changes, a revalidation is answered 304 (unchanged)
+# in the normal case, so this costs a conditional round trip, but not a re-transfer of
+# the content, for the common path — it only helps the
+# broken one. Verify with: curl -sI https://app.dfx.swiss/static/js/main.<hash>.js
 /static/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=31536000
   Access-Control-Allow-Origin: *
 
 # The embeddable widget is loaded cross-origin from third-party sites -> needs CORS.
@@ -41,7 +61,15 @@
 /robots.txt
   Cache-Control: no-cache, must-revalidate
 
-# Non-fingerprinted root assets — a day of cache is enough.
+# Deploy marker written per CI run and polled by the PRD verify step. Must never be cached:
+# each poll has to reflect the deploy that is currently live, not a previous run's id.
+/deploy-id.txt
+  Cache-Control: no-store
+
+# Non-fingerprinted root assets — a day of cache is enough. Both paths are also listed in
+# public/_routes.json include so functions/[[path]].js content-checks them: a missing
+# favicon.ico/logo.png is answered 404 instead of landing as SPA-fallback HTML under the
+# image URL for 24h — same failure mode as /static/*, only with a shorter cache lifetime.
 /favicon.ico
   Cache-Control: public, max-age=86400
 /logo.png

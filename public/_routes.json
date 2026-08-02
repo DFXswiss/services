@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/static/*", "/widget/*"],
+  "include": ["/static/*", "/widget/*", "/favicon.ico", "/logo.png"],
   "exclude": []
 }
