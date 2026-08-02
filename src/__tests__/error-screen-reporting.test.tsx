@@ -35,7 +35,7 @@ jest.mock('src/util/client-error', () => ({
   isEmbedded: () => mockEmbedded,
 }));
 
-function renderAt(path: string, thrown?: unknown): void {
+function renderAt(path: string, thrown?: unknown): { rerender: () => void } {
   const Boom = (): JSX.Element => {
     if (thrown) throw thrown;
     return <div>ok</div>;
@@ -50,7 +50,10 @@ function renderAt(path: string, thrown?: unknown): void {
     },
   ];
 
-  render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />);
+  const router = createMemoryRouter(routes, { initialEntries: [path] });
+  const view = render(<RouterProvider router={router} />);
+
+  return { rerender: () => view.rerender(<RouterProvider router={router} />) };
 }
 
 describe('ErrorScreen reporting', () => {
@@ -121,6 +124,21 @@ describe('ErrorScreen reporting', () => {
     renderAt('/buy', new Error('boom'));
 
     await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(mockReportClientError).toHaveBeenCalledTimes(1);
+  });
+
+  // The report goes out as soon as the failure is known. A session that finishes loading after that
+  // does not reach it — deliberately, since waiting for one would risk losing the report on a page
+  // that is already breaking. Pinned so the trade-off is a decision and not an accident.
+  it('does not report a second time once the account arrives', async () => {
+    const { rerender } = renderAt('/buy', new Error('boom'));
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][2]).toBeUndefined();
+
+    mockUser = { accountId: 123456 };
+    rerender();
+
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(mockReportClientError).toHaveBeenCalledTimes(1);
   });

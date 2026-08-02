@@ -90,7 +90,7 @@ describe('toErrorFacts', () => {
     expect(isChunkLoadError(thrown)).toBe(true);
   });
 
-  // A plain object carrying a message is a shape libraries throw, and its string form says nothing.
+  // A thrown plain object can still carry a useful message, while its string form says nothing.
   it('reads the message off a thrown value that is not an Error', () => {
     expect(toErrorFacts({ message: 'boom' }).message).toBe('boom');
   });

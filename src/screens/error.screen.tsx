@@ -45,9 +45,9 @@ export default function ErrorScreen(): JSX.Element {
     // failed import to this boundary, so this is where it can be caught — a window listener never
     // sees it.
     if (!error && isChunkLoadError(routeError)) reloadOnceForChunkError(routeError);
-    // The account is listed for completeness only. The report goes out once, as soon as the
-    // failure is known — a session that finishes loading afterwards changes nothing, and waiting
-    // for it would risk losing the report altogether.
+    // The account is listed for completeness only. The report goes out once, as soon as the failure
+    // is known, so a session that finishes loading after that no longer reaches it — waiting for
+    // one would risk losing the report on a page that is already breaking.
   }, [routeError, error, pathname, user?.accountId]);
 
   useLayoutOptions({});

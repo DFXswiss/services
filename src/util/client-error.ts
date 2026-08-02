@@ -47,12 +47,9 @@ export function toErrorFacts(error: unknown): ErrorFacts {
   try {
     return factsOf(error);
   } catch {
-    // The same two sources factsOf reads a message from, in the same order — only guarded, since
-    // whatever broke the reading above may break them too.
-    return {
-      message: textOf(() => (error as { message?: unknown })?.message) || textOf(() => String(error)) || '',
-      type: nameOf(error),
-    };
+    // Same fields, same order, same fallbacks as below — only reached when reading the value threw,
+    // so each one is attempted on its own and none of them is required to succeed.
+    return { message: messageOf(error), type: nameOf(error), stack: stackOf(error) };
   }
 }
 
@@ -66,18 +63,25 @@ function factsOf(error: unknown): ErrorFacts {
   // free to carry anything under them — a name that is an object serialises nowhere, and the report
   // would be lost to the very failure it describes.
   if (error instanceof Error) {
-    return {
-      message: textOf(() => error.message) ?? '',
-      type: nameOf(error),
-      stack: textOf(() => error.stack),
-    };
+    // No string form as a fallback here: for an Error it is the name and the message joined, so it
+    // repeats what the other two fields already carry. An empty message stays empty and is
+    // substituted where the report is composed.
+    return { message: textOf(() => error.message) ?? '', type: nameOf(error), stack: stackOf(error) };
   }
 
-  // Not every thrown value is an Error, and one that is not can still carry a message — which
-  // String() would reduce to [object Object]. So the field is tried first, and the string form is
-  // what is left when there is none. `||` on purpose: an empty message is no more use than a
-  // missing one, and the string form may still name the failure.
-  return { message: textOf(() => (error as { message?: unknown })?.message) || String(error) };
+  return { message: messageOf(error) };
+}
+
+// The field first, the string form after it: a thrown plain object can carry a useful message,
+// while String() would reduce it to [object Object]. `||` on purpose — an empty message is no more
+// use than a missing one, and the string form may still name the failure, which is what the chunk
+// classification matches on.
+function messageOf(error: unknown): string {
+  return textOf(() => (error as { message?: unknown })?.message) || textOf(() => String(error)) || '';
+}
+
+function stackOf(error: unknown): string | undefined {
+  return textOf(() => (error as { stack?: unknown })?.stack);
 }
 
 // Both the reading and the value are untrusted: the property can be a getter that throws, and what
@@ -262,9 +266,7 @@ export function reportClientError(error: unknown, route: string, accountId?: num
   try {
     const { message, type, stack } = toErrorFacts(error);
 
-    // Only sent when it has the shape of an account id — a positive safe integer, which is what
-    // the ingest endpoint takes. Anything else would only add noise to the record. Absent whenever
-    // nobody is signed in.
+    // Only sent when it has the shape of an account id: a positive safe integer.
     const account = accountId != null && Number.isSafeInteger(accountId) && accountId > 0 ? accountId : undefined;
 
     // Deduplicated here rather than at the call site, so every caller is covered by the same rule.
