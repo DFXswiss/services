@@ -461,6 +461,27 @@ describe('repeat reports', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
+  // The same failure under two accounts is two customers. Dropping the second would hide exactly
+  // the one this reporting exists to find - and this guard is shared by every instance the page
+  // has mounted, which is where two accounts can meet.
+  it('still reports the same failure for a different account', () => {
+    const error = new Error('same');
+
+    reportClientError(error, '/buy', 123456);
+    reportClientError(error, '/buy', 654321);
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports the same failure for the same account only once', () => {
+    const error = new Error('same');
+
+    reportClientError(error, '/buy', 123456);
+    reportClientError(error, '/buy', 123456);
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
   it('reports again once the window has passed', () => {
     const error = new Error('same');
 

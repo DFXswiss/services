@@ -76,8 +76,7 @@ describe('ErrorScreen reporting', () => {
   });
 
   // Without this the record says what broke and where, never who it happened to — and a customer
-  // reporting "it keeps failing" cannot be matched against it. Read from this screen's own context
-  // on purpose: an embedded host page can carry several instances, each signed in as someone else.
+  // reporting "it keeps failing" cannot be matched against it.
   it('reports the account of the customer who hit the failure', async () => {
     mockUser = { accountId: 123456 };
 

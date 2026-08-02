@@ -221,11 +221,19 @@ export function reportClientError(error: unknown, route: string, accountId?: num
   try {
     const { message, type, stack } = toErrorFacts(error);
 
+    // Left out unless it is an integer: the endpoint validates the field and rejects the whole
+    // report otherwise, and a rejected report is the blind spot this reporting exists to close.
+    // Absent whenever nobody is signed in, which is a large part of what this catches.
+    const account = Number.isInteger(accountId) ? accountId : undefined;
+
     // Deduplicated here rather than at the call site, so every caller is covered by the same rule.
     // Without it a remount loop reports the same failure tens of times per second: the customer
     // sees one broken page while the API sees a flood, and the rate limit then hides the very
     // reports this exists to collect.
-    if (isRepeatReport(`${type ?? ''}|${message}|${route}`)) return;
+    //
+    // The account belongs in the signature: the same failure under two accounts is two customers,
+    // and dropping the second would hide exactly the one this reporting exists to find.
+    if (isRepeatReport(`${type ?? ''}|${message}|${route}|${account ?? ''}`)) return;
 
     const body = {
       // The endpoint rejects an empty message, and a rejected report is exactly the blind spot
@@ -235,10 +243,7 @@ export function reportClientError(error: unknown, route: string, accountId?: num
       stack: truncate(stack, LIMITS.stack),
       route: truncate(route, LIMITS.route),
       version: truncate(REACT_APP_BUILD_ID, LIMITS.version),
-      // Omitted entirely when nobody is signed in, which is a large part of what this catches.
-      // The endpoint validates the field as an integer and rejects the whole report otherwise, so
-      // anything that is not one is left out rather than sent at the cost of the report.
-      accountId: Number.isInteger(accountId) ? accountId : undefined,
+      accountId: account,
     };
 
     void fetch(url({ base: Api.url, path: `/${Api.version}/log/clientError` }), {

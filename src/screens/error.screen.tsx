@@ -15,9 +15,8 @@ export default function ErrorScreen(): JSX.Element {
   // Not window.location: the widget and library builds run on a memory router, where the browser
   // URL is the host page's and never reflects the screen the customer was actually on.
   const { pathname } = useLocation();
-  // Read here rather than in the reporting itself: this screen belongs to the tree that failed, so
-  // the account it sees is the one that hit the failure — even in a host page carrying several
-  // embedded instances, each signed in as a different customer.
+  // Read here rather than kept in the reporting module: this screen belongs to the tree that
+  // failed, so the account it sees is the one whose screen broke.
   const { user } = useUserContext();
   const hasReported = useRef(false);
 
