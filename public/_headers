@@ -63,10 +63,11 @@
 # 304 carries no body), so a missing manifest.json/asset-manifest.json/version.json served as
 # the SPA fallback could be confirmed valid by a later conditional request instead of being
 # refetched — the same failure mode as /static/*, reached through revalidation instead of a
-# long max-age. version.json is rewritten by scripts/generate-version.js before every main-app build
-# (the commit hash as of that build, and a build time that is always fresh), so it is at least as
-# exposed to this as the other two. All three paths are listed in public/_routes.json include so functions/[[path]].js
-# content-checks them and answers 404 instead.
+# long max-age. version.json is rewritten by scripts/generate-version.js before every main-app
+# build (the checked-out commit hash when git metadata is available, 'unknown' otherwise, plus a
+# build time that is always fresh), so it is at least as exposed to this as the other two. All
+# three paths are listed in public/_routes.json include so functions/[[path]].js content-checks
+# them and answers 404 instead.
 /manifest.json
   Cache-Control: no-cache, must-revalidate
 /asset-manifest.json
