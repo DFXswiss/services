@@ -39,7 +39,8 @@ export function PaymentInfoContent({ info }: PaymentInfoContentProps): JSX.Eleme
               )}
         </StyledInfoText>
 
-        {info.paymentRequest ? (
+        {/* The invoice tab needs a transaction request to fetch; an order priced without one has none. */}
+        {info.paymentRequest && info.id !== undefined ? (
           <StyledTabContainer
             tabs={[
               { title: translate('screens/payment', 'Text'), content: <PaymentInformationText info={info} /> },
