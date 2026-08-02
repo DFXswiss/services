@@ -180,7 +180,7 @@ describe('reportClientError', () => {
   });
 
   // Losing the whole report over a field that only helps to find it would defeat the point of
-  // sending it, so anything but an integer is dropped here.
+  // sending it, so anything that is not a positive safe integer is dropped here.
   it.each([
     ['null', null],
     ['zero', 0],
