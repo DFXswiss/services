@@ -47,8 +47,9 @@ export function toErrorFacts(error: unknown): ErrorFacts {
   try {
     return factsOf(error);
   } catch {
-    // Same fields, same order, same fallbacks as below — only reached when reading the value threw,
-    // so each one is attempted on its own and none of them is required to succeed.
+    // Reached only when reading the value threw, so each field is attempted on its own and none is
+    // required to succeed. What survives may be the string form, which the Error branch below
+    // deliberately does not fall back to — here there is no telling what the value was.
     return { message: messageOf(error), type: nameOf(error), stack: stackOf(error) };
   }
 }
@@ -63,9 +64,9 @@ function factsOf(error: unknown): ErrorFacts {
   // free to carry anything under them — a name that is an object serialises nowhere, and the report
   // would be lost to the very failure it describes.
   if (error instanceof Error) {
-    // No string form as a fallback here: for an Error it is the name and the message joined, so it
-    // repeats what the other two fields already carry. An empty message stays empty and is
-    // substituted where the report is composed.
+    // No string form as a fallback here: for an Error it is normally the name and the message
+    // joined, so it repeats what the other two fields already carry. An empty message stays empty
+    // and is substituted where the report is composed.
     return { message: textOf(() => error.message) ?? '', type: nameOf(error), stack: stackOf(error) };
   }
 
