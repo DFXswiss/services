@@ -221,10 +221,9 @@ export function reportClientError(error: unknown, route: string, accountId?: num
   try {
     const { message, type, stack } = toErrorFacts(error);
 
-    // Left out unless it has the shape of an account id, for the same reason the limits above are
-    // kept in step with the ingest endpoint: a report it will not accept is a report nobody sees,
-    // and nothing enforces that agreement across the two repositories. Absent whenever nobody is
-    // signed in.
+    // Only sent when it has the shape of an account id — a positive safe integer. Anything else
+    // identifies nobody and would only add noise to the record. Absent whenever nobody is signed
+    // in.
     const account = accountId != null && Number.isSafeInteger(accountId) && accountId > 0 ? accountId : undefined;
 
     // Deduplicated here rather than at the call site, so every caller is covered by the same rule.

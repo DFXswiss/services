@@ -20,7 +20,16 @@ function routeErrorResponse(status: number, statusText: string): unknown {
   return { status, statusText, data: '', internal: true };
 }
 
-function sentBody(): Record<string, string | undefined> {
+interface ReportedBody {
+  message: string;
+  type?: string;
+  stack?: string;
+  route?: string;
+  version?: string;
+  accountId?: number;
+}
+
+function sentBody(): ReportedBody {
   return JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
 }
 
@@ -179,8 +188,8 @@ describe('reportClientError', () => {
     expect(sentBody()).not.toHaveProperty('accountId');
   });
 
-  // Losing the whole report over a field that only helps to find it would defeat the point of
-  // sending it, so anything that is not a positive safe integer is dropped here.
+  // Anything that is not a positive safe integer identifies nobody, so it is dropped here rather
+  // than recorded as if it did.
   it.each([
     ['null', null],
     ['zero', 0],
