@@ -31,17 +31,6 @@ const REPORT_DEDUP_WINDOW = 60000;
 // from here is filed as an unknown client.
 const CLIENT_NAME = 'dfx-services';
 
-// The account of the signed-in customer, so a report can be tied to whoever calls support about
-// it. Kept in the module rather than read from user context: reporting is a plain function and has
-// to work where React context does not reach it — the window listeners below, and a failure during
-// startup, which is exactly the case this reporting exists to catch. Absent until a session is
-// loaded, and absent again once it is gone.
-let reportedAccountId: number | undefined;
-
-export function setReportedAccount(accountId?: number): void {
-  reportedAccountId = accountId;
-}
-
 export interface ErrorFacts {
   message: string;
   type?: string;
@@ -221,7 +210,12 @@ function isRepeatReport(signature: string): boolean {
 
 // Reports an error the user actually saw. Fire-and-forget: a failing report must never surface as
 // a second error. `keepalive` lets the request outlive the reload that may follow it.
-export function reportClientError(error: unknown, route: string): void {
+//
+// The account is passed in rather than read here, and stays optional: this function also runs from
+// the window listeners below and from failures during startup, where there is no session to read —
+// which is exactly the case this reporting exists to catch. The caller that has one hands it over;
+// the callers that do not report without it.
+export function reportClientError(error: unknown, route: string, accountId?: number): void {
   if (!Api.url) return;
 
   try {
@@ -244,7 +238,7 @@ export function reportClientError(error: unknown, route: string): void {
       // Omitted entirely when nobody is signed in, which is a large part of what this catches.
       // The endpoint validates the field as an integer and rejects the whole report otherwise, so
       // anything that is not one is left out rather than sent at the cost of the report.
-      accountId: Number.isInteger(reportedAccountId) ? reportedAccountId : undefined,
+      accountId: Number.isInteger(accountId) ? accountId : undefined,
     };
 
     void fetch(url({ base: Api.url, path: `/${Api.version}/log/clientError` }), {

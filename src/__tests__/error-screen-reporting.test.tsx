@@ -1,5 +1,6 @@
 // Mock @dfx.swiss/react to avoid ES module issues
-jest.mock('@dfx.swiss/react', () => ({}));
+let mockUser: { accountId: number } | undefined;
+jest.mock('@dfx.swiss/react', () => ({ useUserContext: () => ({ user: mockUser }) }));
 jest.mock('src/dto/safe.dto', () => ({}));
 
 import { render, screen, waitFor } from '@testing-library/react';
@@ -56,6 +57,7 @@ describe('ErrorScreen reporting', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockEmbedded = false;
+    mockUser = undefined;
     // Deliberately different from every route used below. These tests run on a memory router —
     // the same setup the widget and library builds use — so the browser URL is the host page's and
     // must not be what gets reported.
@@ -71,6 +73,25 @@ describe('ErrorScreen reporting', () => {
     await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
     expect(mockReportClientError.mock.calls[0][1]).toBe('/buy');
     expect(mockReportClientError.mock.calls[0][1]).not.toBe('/host-page');
+  });
+
+  // Without this the record says what broke and where, never who it happened to — and a customer
+  // reporting "it keeps failing" cannot be matched against it. Read from this screen's own context
+  // on purpose: an embedded host page can carry several instances, each signed in as someone else.
+  it('reports the account of the customer who hit the failure', async () => {
+    mockUser = { accountId: 123456 };
+
+    renderAt('/buy', new Error('boom'));
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][2]).toBe(123456);
+  });
+
+  it('reports without an account when nobody is signed in', async () => {
+    renderAt('/buy', new Error('boom'));
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][2]).toBeUndefined();
   });
 
   it('shows the error screen when a route render throws', async () => {
