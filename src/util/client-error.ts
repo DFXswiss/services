@@ -70,15 +70,15 @@ function factsOf(error: unknown): ErrorFacts {
 }
 
 // Both the reading and the value are untrusted: the property can be a getter that throws, and what
-// it returns can be anything. A primitive still says something and is written out; anything else is
-// dropped, which is a smaller loss than the report it would otherwise take with it — a value that
-// serialises nowhere makes composing the payload throw.
+// it returns can be anything. A number, bigint or boolean still says something and is written out;
+// everything else is dropped, which is a smaller loss than the report it would otherwise take with
+// it — a value that serialises nowhere makes composing the payload throw.
 function textOf(read: () => unknown): string | undefined {
   try {
     const value = read();
     if (typeof value === 'string') return value;
 
-    // Converting these cannot throw, unlike String() on an object or a symbol.
+    // Converting these cannot throw, unlike String() on an object with a hostile toString.
     return typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean'
       ? String(value)
       : undefined;
@@ -291,9 +291,9 @@ export function reportClientError(error: unknown, route: string, accountId?: num
       keepalive: true,
     }).catch(() => undefined);
   } catch {
-    // ignore — reporting must never throw into the render that is already failing. toErrorFacts
-    // falls back to String(error), which a thrown value with a hostile toString can turn into a
-    // throw of its own, so it belongs inside this block.
+    // ignore — reporting must never throw into the render that is already failing. Reading the
+    // thrown value is guarded on its own, so what remains here is the rest: composing the payload
+    // and handing it to fetch.
   }
 }
 

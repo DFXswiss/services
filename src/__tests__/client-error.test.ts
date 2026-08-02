@@ -56,8 +56,9 @@ describe('toErrorFacts', () => {
     expect(toErrorFacts(error as unknown as Error)).toEqual({ message: '42', type: '10', stack: undefined });
   });
 
-  // Classification reads the value before any field is: react-router's own check touches `status`
-  // and `statusText`, so a getter that throws there would otherwise take the report with it.
+  // Classification reads the value before any field is read for the report: react-router's own
+  // check touches `status` first, so a getter that throws there would otherwise take the report
+  // with it.
   it('describes a value it cannot read at all', () => {
     const hostile = {
       get status(): number {
