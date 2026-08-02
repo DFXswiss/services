@@ -278,8 +278,8 @@ describe('reportClientError', () => {
     expect(sentBody()).not.toHaveProperty('accountId');
   });
 
-  // Anything that is not a positive safe integer identifies nobody, so it is dropped here rather
-  // than recorded as if it did.
+  // Anything that is not a positive safe integer is not an account id, so it is dropped here
+  // rather than sent as one.
   it.each([
     ['null', null],
     ['zero', 0],

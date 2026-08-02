@@ -73,10 +73,10 @@ function factsOf(error: unknown): ErrorFacts {
     };
   }
 
-  // Not every thrown value is an Error. A plain object carrying a message is a shape libraries
-  // throw, and String() would reduce it to [object Object] — so the field is tried first, and the
-  // string form is what is left when there is none. `||` on purpose: an empty message is no more
-  // use than a missing one, and the string form may still name the failure.
+  // Not every thrown value is an Error, and one that is not can still carry a message — which
+  // String() would reduce to [object Object]. So the field is tried first, and the string form is
+  // what is left when there is none. `||` on purpose: an empty message is no more use than a
+  // missing one, and the string form may still name the failure.
   return { message: textOf(() => (error as { message?: unknown })?.message) || String(error) };
 }
 
@@ -262,9 +262,9 @@ export function reportClientError(error: unknown, route: string, accountId?: num
   try {
     const { message, type, stack } = toErrorFacts(error);
 
-    // Only sent when it has the shape of an account id — a positive safe integer. Anything else
-    // identifies nobody and would only add noise to the record. Absent whenever nobody is signed
-    // in.
+    // Only sent when it has the shape of an account id — a positive safe integer, which is what
+    // the ingest endpoint takes. Anything else would only add noise to the record. Absent whenever
+    // nobody is signed in.
     const account = accountId != null && Number.isSafeInteger(accountId) && accountId > 0 ? accountId : undefined;
 
     // Deduplicated here rather than at the call site, so every caller is covered by the same rule.
