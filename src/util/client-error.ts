@@ -39,13 +39,15 @@ export interface ErrorFacts {
 
 // Nothing read from a thrown value may cost the report. Classifying it already touches properties
 // that can be getters, and the fallback below runs a toString this code did not write — so the
-// whole reading is guarded, not just the fields. A report that says only that something failed
-// still beats the silence of losing it.
+// whole reading is guarded, not just the fields.
+//
+// What survives the failure is still read: the message is what the chunk classification matches
+// on, so giving up on it would cost the customer their recovery as well as the record.
 export function toErrorFacts(error: unknown): ErrorFacts {
   try {
     return factsOf(error);
   } catch {
-    return { message: '' };
+    return { message: textOf(() => (error as { message?: unknown })?.message) ?? '', type: nameOf(error) };
   }
 }
 
@@ -56,8 +58,8 @@ function factsOf(error: unknown): ErrorFacts {
   }
 
   // Read as text or not at all. These fields come off a value someone else threw, and an Error is
-  // free to carry anything under them — a bigint name serialises nowhere, and the report would be
-  // lost to the very failure it describes.
+  // free to carry anything under them — a name that is an object serialises nowhere, and the report
+  // would be lost to the very failure it describes.
   if (error instanceof Error) {
     return {
       message: textOf(() => error.message) ?? '',

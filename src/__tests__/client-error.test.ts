@@ -51,7 +51,7 @@ describe('toErrorFacts', () => {
   // deduplication signature — assumes text. A value that serialises nowhere would cost the report,
   // while one that converts without throwing still says something. Reading is a separate concern,
   // covered by the two tests below.
-  it('writes out a field that is not text but converts, and drops one that does not', () => {
+  it('writes out a field that is not text but converts, and drops one it does not convert', () => {
     const error = Object.assign(new Error(), { name: 10n, message: 42, stack: {} });
 
     expect(toErrorFacts(error as unknown as Error)).toEqual({ message: '42', type: '10', stack: undefined });
@@ -68,6 +68,20 @@ describe('toErrorFacts', () => {
     };
 
     expect(toErrorFacts(hostile)).toEqual({ message: '' });
+  });
+
+  // And what is still readable survives that failure — the message is what identifies a chunk
+  // failure, so losing it would cost the customer the reload that recovers them.
+  it('keeps the message of a value it cannot classify', () => {
+    const error = new Error('Loading chunk 42 failed');
+    Object.defineProperty(error, 'status', {
+      get: () => {
+        throw new Error('nope');
+      },
+    });
+
+    expect(toErrorFacts(error).message).toBe('Loading chunk 42 failed');
+    expect(isChunkLoadError(error)).toBe(true);
   });
 
   // A plain object carrying a message is a shape libraries throw, and its string form says nothing.
