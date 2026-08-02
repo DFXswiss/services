@@ -49,7 +49,8 @@ describe('toErrorFacts', () => {
 
   // An Error is free to carry anything under these, and everything downstream — the payload, the
   // deduplication signature — assumes text. A value that serialises nowhere would cost the report,
-  // while one that converts without throwing still says something.
+  // while one that converts without throwing still says something. Reading is a separate concern,
+  // covered by the two tests below.
   it('writes out a field that is not text but converts, and drops one that does not', () => {
     const error = Object.assign(new Error(), { name: 10n, message: 42, stack: {} });
 
@@ -67,6 +68,11 @@ describe('toErrorFacts', () => {
     };
 
     expect(toErrorFacts(hostile)).toEqual({ message: '' });
+  });
+
+  // A plain object carrying a message is a shape libraries throw, and its string form says nothing.
+  it('reads the message off a thrown value that is not an Error', () => {
+    expect(toErrorFacts({ message: 'boom' }).message).toBe('boom');
   });
 
   it('falls back to the string form of anything else', () => {

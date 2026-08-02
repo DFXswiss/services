@@ -66,7 +66,10 @@ function factsOf(error: unknown): ErrorFacts {
     };
   }
 
-  return { message: String(error) };
+  // Not every thrown value is an Error. A plain object carrying a message is a shape libraries
+  // throw, and String() would reduce it to [object Object] — so the field is tried first, and the
+  // string form is what is left when there is none.
+  return { message: textOf(() => (error as { message?: unknown })?.message) ?? String(error) };
 }
 
 // Both the reading and the value are untrusted: the property can be a getter that throws, and what
@@ -99,20 +102,16 @@ function textOf(read: () => unknown): string | undefined {
 // had typed, which is worse than the failure it recovers from. The wordings below identify the
 // real case on their own.
 export function isChunkLoadError(error: unknown): boolean {
-  // The name first, read in isolation: it is the cheaper signal, and a getter or proxy trap behind
-  // it is contained rather than left to escape. Deriving the message is the riskier step, since it
-  // calls String() on the value. Classification is the first thing the global handler does with a
-  // thrown value, so a throw here would cost the recovery that follows — the failure would be
-  // classified as nothing at all and the customer left on the broken page.
+  // The name first: it is the cheaper signal. Deriving the message is the riskier step, since it
+  // reads more of a value this code did not create — but both are guarded at the source now, so
+  // neither can throw here. That matters because classification is the first thing the global
+  // handler does with a thrown value: a throw would cost the recovery that follows, leaving the
+  // failure classified as nothing at all and the customer on the broken page.
   if (nameOf(error) === 'ChunkLoadError') return true;
 
-  try {
-    return /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(
-      toErrorFacts(error).message,
-    );
-  } catch {
-    return false;
-  }
+  return /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(
+    toErrorFacts(error).message,
+  );
 }
 
 function nameOf(error: unknown): string | undefined {
