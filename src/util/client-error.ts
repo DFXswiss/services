@@ -31,6 +31,17 @@ const REPORT_DEDUP_WINDOW = 60000;
 // from here is filed as an unknown client.
 const CLIENT_NAME = 'dfx-services';
 
+// The account of the signed-in customer, so a report can be tied to whoever calls support about
+// it. Kept in the module rather than read from user context: reporting is a plain function and has
+// to work where React context does not reach it — the window listeners below, and a failure during
+// startup, which is exactly the case this reporting exists to catch. Absent until a session is
+// loaded, and absent again once it is gone.
+let reportedAccountId: number | undefined;
+
+export function setReportedAccount(accountId?: number): void {
+  reportedAccountId = accountId;
+}
+
 export interface ErrorFacts {
   message: string;
   type?: string;
@@ -230,6 +241,10 @@ export function reportClientError(error: unknown, route: string): void {
       stack: truncate(stack, LIMITS.stack),
       route: truncate(route, LIMITS.route),
       version: truncate(REACT_APP_BUILD_ID, LIMITS.version),
+      // Omitted entirely when nobody is signed in, which is a large part of what this catches.
+      // The endpoint validates the field as an integer and rejects the whole report otherwise, so
+      // anything that is not one is left out rather than sent at the cost of the report.
+      accountId: Number.isInteger(reportedAccountId) ? reportedAccountId : undefined,
     };
 
     void fetch(url({ base: Api.url, path: `/${Api.version}/log/clientError` }), {

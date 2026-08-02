@@ -7,6 +7,7 @@ import {
   isChunkLoadError,
   reloadOnceForChunkError,
   reportClientError,
+  setReportedAccount,
   toErrorFacts,
 } from '../util/client-error';
 
@@ -98,6 +99,9 @@ describe('isChunkLoadError', () => {
 describe('reportClientError', () => {
   beforeEach(() => {
     forgetReportedErrors();
+    // The account outlives a single report on purpose, so it is cleared here rather than leaking
+    // into the reports of the tests that follow.
+    setReportedAccount(undefined);
     global.fetch = jest.fn().mockResolvedValue({ ok: true }) as jest.Mock;
   });
 
@@ -164,6 +168,31 @@ describe('reportClientError', () => {
     reportClientError(new Error(''), '/buy');
 
     expect(sentBody().message).toBe('Unknown error');
+  });
+
+  // What makes a recorded failure findable for the customer who calls support about it.
+  it('sends the account of the signed-in customer', () => {
+    setReportedAccount(123456);
+
+    reportClientError(new Error('boom'), '/buy');
+
+    expect(sentBody().accountId).toBe(123456);
+  });
+
+  it('leaves the account out when nobody is signed in', () => {
+    reportClientError(new Error('boom'), '/buy');
+
+    expect(sentBody()).not.toHaveProperty('accountId');
+  });
+
+  // The endpoint takes an integer and rejects the whole report otherwise. Losing the report over a
+  // field that only helps to find it would defeat the point of sending it.
+  it('leaves out an account that is not an integer', () => {
+    setReportedAccount(null as unknown as number);
+
+    reportClientError(new Error('boom'), '/buy');
+
+    expect(sentBody()).not.toHaveProperty('accountId');
   });
 
   it('keeps an empty stack out of the payload rather than sending an empty string', () => {

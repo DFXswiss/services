@@ -1,7 +1,12 @@
-import { DfxContextProvider, PaymentRoutesContextProvider, SupportChatContextProvider } from '@dfx.swiss/react';
+import {
+  DfxContextProvider,
+  PaymentRoutesContextProvider,
+  SupportChatContextProvider,
+  useUserContext,
+} from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
-import { Suspense, lazy, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef } from 'react';
 import { LoaderFunctionArgs, Outlet, RouteObject, RouterProvider, redirect } from 'react-router-dom';
 import { LayoutWrapper } from './components/layout-wrapper';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
@@ -17,6 +22,7 @@ import ComplianceUserScreen from './screens/compliance-user.screen';
 import ErrorScreen from './screens/error.screen';
 import HomeScreen from './screens/home.screen';
 import { setupLanguages } from './translations';
+import { setReportedAccount } from './util/client-error';
 
 const SellScreen = lazy(() => import('./screens/sell.screen'));
 const SwapScreen = lazy(() => import('./screens/swap.screen'));
@@ -607,6 +613,21 @@ interface AppProps {
   params?: WidgetParams;
 }
 
+// Hands the signed-in account to the error reporter, so a recorded failure can be tied to the
+// customer who calls support about it. A component rather than a call inside reportClientError:
+// reporting also runs from window listeners and from failures during startup, where there is no
+// context to read. Rendered ahead of the router, so the account is in place before any screen can
+// fail.
+function ClientErrorAccount(): null {
+  const { user } = useUserContext();
+
+  useEffect(() => {
+    setReportedAccount(user?.accountId);
+  }, [user?.accountId]);
+
+  return null;
+}
+
 function App({ routerFactory, params }: AppProps) {
   const routerRef = useRef<Router>();
   if (!routerRef.current) {
@@ -624,6 +645,7 @@ function App({ routerFactory, params }: AppProps) {
   return (
     <WindowContextProvider>
       <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
+        <ClientErrorAccount />
         <BalanceContextProvider>
           <OrderUIContextProvider>
             <AppHandlingContextProvider

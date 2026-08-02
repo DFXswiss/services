@@ -17,6 +17,9 @@ jest.mock('@dfx.swiss/react', () => ({
   DfxContextProvider: ({ children }: any) => children,
   PaymentRoutesContextProvider: ({ children }: any) => children,
   SupportChatContextProvider: ({ children }: any) => children,
+  // App.tsx reads the signed-in account to hand it to the error reporter. Stubbed as signed out,
+  // like every other context here: this test is about the router lifecycle.
+  useUserContext: () => ({}),
 }));
 
 jest.mock('@dfx.swiss/react-components', () => ({
