@@ -233,7 +233,11 @@ export function reportClientError(error: unknown, route: string, accountId?: num
     //
     // The account belongs in the signature: the same failure under two accounts is two customers,
     // and dropping the second would hide exactly the one this reporting exists to find.
-    if (isRepeatReport(`${type ?? ''}|${message}|${route}|${account ?? ''}`)) return;
+    //
+    // Composed as JSON rather than joined by a separator, which a message is free to contain: two
+    // different failures could otherwise produce the same signature, and the second would be
+    // dropped as a repeat of the first.
+    if (isRepeatReport(JSON.stringify([type ?? '', message, route, account ?? null]))) return;
 
     const body = {
       // The endpoint rejects an empty message, and a rejected report is exactly the blind spot

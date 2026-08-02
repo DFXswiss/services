@@ -461,14 +461,22 @@ describe('repeat reports', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
-  // The same failure under two accounts is two customers. Dropping the second would hide exactly
-  // the one this reporting exists to find - and this guard is shared by every instance the page
-  // has mounted, which is where two accounts can meet.
+  // The map above is module-scoped and shared by every caller, so the account is what keeps two
+  // customers' otherwise identical reports apart.
   it('still reports the same failure for a different account', () => {
     const error = new Error('same');
 
     reportClientError(error, '/buy', 123456);
     reportClientError(error, '/buy', 654321);
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  // A message is free to contain whatever a separator would be, so the parts are composed rather
+  // than joined. Otherwise these two produce the same signature and the second is dropped.
+  it('keeps two failures apart when a value contains a separator', () => {
+    reportClientError(Object.assign(new Error('C'), { name: 'A|B' }), '/buy');
+    reportClientError(Object.assign(new Error('B|C'), { name: 'A' }), '/buy');
 
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
