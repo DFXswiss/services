@@ -221,10 +221,11 @@ export function reportClientError(error: unknown, route: string, accountId?: num
   try {
     const { message, type, stack } = toErrorFacts(error);
 
-    // Left out unless it is an integer: the endpoint validates the field and rejects the whole
-    // report otherwise, and a rejected report is the blind spot this reporting exists to close.
-    // Absent whenever nobody is signed in, which is a large part of what this catches.
-    const account = Number.isInteger(accountId) ? accountId : undefined;
+    // Left out unless it has the shape of an account id, for the same reason the limits above are
+    // kept in step with the ingest endpoint: a report it will not accept is a report nobody sees,
+    // and nothing enforces that agreement across the two repositories. Absent whenever nobody is
+    // signed in.
+    const account = accountId != null && Number.isSafeInteger(accountId) && accountId > 0 ? accountId : undefined;
 
     // Deduplicated here rather than at the call site, so every caller is covered by the same rule.
     // Without it a remount loop reports the same failure tens of times per second: the customer
@@ -237,7 +238,7 @@ export function reportClientError(error: unknown, route: string, accountId?: num
     // Composed as JSON rather than joined by a separator, which a message is free to contain: two
     // different failures could otherwise produce the same signature, and the second would be
     // dropped as a repeat of the first.
-    if (isRepeatReport(JSON.stringify([type ?? '', message, route, account ?? null]))) return;
+    if (isRepeatReport(JSON.stringify([type ?? null, message, route, account ?? null]))) return;
 
     const body = {
       // The endpoint rejects an empty message, and a rejected report is exactly the blind spot

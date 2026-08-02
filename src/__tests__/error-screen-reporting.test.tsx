@@ -75,8 +75,7 @@ describe('ErrorScreen reporting', () => {
     expect(mockReportClientError.mock.calls[0][1]).not.toBe('/host-page');
   });
 
-  // Without this the record says what broke and where, never who it happened to — and a customer
-  // reporting "it keeps failing" cannot be matched against it.
+  // Without this the record says what broke and where, never which account it happened to.
   it('reports the account of the customer who hit the failure', async () => {
     mockUser = { accountId: 123456 };
 

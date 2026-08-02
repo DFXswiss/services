@@ -179,10 +179,15 @@ describe('reportClientError', () => {
     expect(sentBody()).not.toHaveProperty('accountId');
   });
 
-  // The endpoint takes an integer and rejects the whole report otherwise. Losing the report over a
-  // field that only helps to find it would defeat the point of sending it.
-  it('leaves out an account that is not an integer', () => {
-    reportClientError(new Error('boom'), '/buy', null as unknown as number);
+  // Losing the whole report over a field that only helps to find it would defeat the point of
+  // sending it, so anything but an integer is dropped here.
+  it.each([
+    ['null', null],
+    ['zero', 0],
+    ['a negative number', -1],
+    ['a number past the safe integer range', Number.MAX_SAFE_INTEGER + 1],
+  ])('leaves out %s, which is not an account id', (_case, value) => {
+    reportClientError(new Error('boom'), '/buy', value as unknown as number);
 
     expect(sentBody()).not.toHaveProperty('accountId');
   });
@@ -461,8 +466,8 @@ describe('repeat reports', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
-  // The map above is module-scoped and shared by every caller, so the account is what keeps two
-  // customers' otherwise identical reports apart.
+  // The deduplication map in client-error.ts is module-scoped and shared by every caller, so the
+  // account is what keeps two customers' otherwise identical reports apart.
   it('still reports the same failure for a different account', () => {
     const error = new Error('same');
 
