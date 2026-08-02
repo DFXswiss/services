@@ -43,9 +43,18 @@ export function toErrorFacts(error: unknown): ErrorFacts {
     return { message: `${error.status} ${error.statusText}`, type: 'RouteErrorResponse' };
   }
 
-  if (error instanceof Error) return { message: error.message, type: error.name, stack: error.stack };
+  // Read as text or not at all. These fields come off a value someone else threw, and an Error is
+  // free to carry anything under them — a bigint name serialises nowhere, and the report would be
+  // lost to the very failure it describes.
+  if (error instanceof Error) {
+    return { message: textOf(error.message) ?? '', type: nameOf(error), stack: textOf(error.stack) };
+  }
 
   return { message: String(error) };
+}
+
+function textOf(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
 }
 
 // A chunk request that fails is reported by the bundler as a ChunkLoadError. That covers the stale

@@ -47,6 +47,14 @@ describe('toErrorFacts', () => {
     });
   });
 
+  // An Error is free to carry anything under these, and everything downstream — the payload, the
+  // deduplication signature — assumes text. A value that serialises nowhere would cost the report.
+  it('ignores a name, message or stack that is not text', () => {
+    const error = Object.assign(new Error(), { name: 10n, message: 10n, stack: {} });
+
+    expect(toErrorFacts(error as unknown as Error)).toEqual({ message: '', type: undefined, stack: undefined });
+  });
+
   it('falls back to the string form of anything else', () => {
     expect(toErrorFacts('plain failure').message).toBe('plain failure');
     expect(toErrorFacts(undefined).message).toBe('undefined');
@@ -159,6 +167,15 @@ describe('reportClientError', () => {
     };
 
     expect(() => reportClientError(hostile, '/buy')).not.toThrow();
+  });
+
+  // The report has to survive whatever the thrown value carries: composing the signature would
+  // otherwise throw, and the failure would be swallowed by the reporting built to record it.
+  it('still reports an error whose name is not text', () => {
+    reportClientError(Object.assign(new Error('boom'), { name: 10n as unknown as string }), '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(sentBody()).not.toHaveProperty('type');
   });
 
   it('identifies the app to the API', () => {
