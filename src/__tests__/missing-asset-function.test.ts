@@ -1,6 +1,5 @@
 import { onRequest } from '../../functions/[[path]].js';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import routes from '../../public/_routes.json';
 
 // The deployed Pages Function is not part of the app bundle, so nothing else in the test suite
 // reaches it. These cases pin the decision it makes: an asset path answered SUCCESSFULLY with
@@ -70,6 +69,29 @@ describe('missing asset function', () => {
 
     expect(result.status).toBe(404);
     expect(result.headers.get('cache-control')).toBe('no-store');
+  });
+
+  it('treats a case-different content-type as the fallback', async () => {
+    const fallback = new Response('<!doctype html><html></html>', {
+      status: 200,
+      headers: { 'content-type': 'Text/HTML; charset=UTF-8' },
+    });
+
+    const result = await onRequest(contextFor(fallback));
+
+    expect(result.status).toBe(404);
+  });
+
+  it('does not treat a content-type with text/html only inside a parameter as the fallback', async () => {
+    const asset = new Response('{"note":"not html"}', {
+      status: 200,
+      headers: { 'content-type': 'application/json; charset=utf-8; description="text/html example"' },
+    });
+
+    const result = await onRequest(contextFor(asset));
+
+    expect(result.status).toBe(200);
+    await expect(result.text()).resolves.toBe('{"note":"not html"}');
   });
 
   it('does not turn a non-HTML error response into a 404', async () => {
@@ -147,12 +169,22 @@ describe('missing asset function', () => {
 // and falls back to index.html on a miss -- the exact cached-fallback bug this file exists to
 // catch, just skipped for that path instead of mishandled by the Function. None of the tests
 // above would notice that regression, since they call onRequest() directly and never consult
-// this file, so its content is pinned here on its own.
+// this file, so its content is pinned here on its own -- exactly, not just as a lower bound: an
+// unnoticed addition would run the Function's content check against a path public/_headers never
+// justified for it, so both directions have to fail this test, not only a removal.
 describe('public/_routes.json include list', () => {
-  it('keeps /static/*, /widget/*, /favicon.ico and /logo.png content-checked', () => {
-    const routesPath = join(__dirname, '../../public/_routes.json');
-    const routes = JSON.parse(readFileSync(routesPath, 'utf8'));
+  it('content-checks exactly /static/*, /widget/*, /favicon.ico, /logo.png, /robots.txt, /manifest.json and /asset-manifest.json, and excludes nothing', () => {
+    const expectedInclude = [
+      '/static/*',
+      '/widget/*',
+      '/favicon.ico',
+      '/logo.png',
+      '/robots.txt',
+      '/manifest.json',
+      '/asset-manifest.json',
+    ];
 
-    expect(routes.include).toEqual(expect.arrayContaining(['/static/*', '/widget/*', '/favicon.ico', '/logo.png']));
+    expect([...routes.include].sort()).toEqual([...expectedInclude].sort());
+    expect(routes.exclude).toEqual([]);
   });
 });

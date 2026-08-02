@@ -188,10 +188,11 @@ jobs:
           echo "  url: $url"
           if [ -n "$last_error" ]; then
             echo "  last error: $last_error"
+            echo "This means the verify request itself never got a response from the server (a transport failure, not an answer) -- investigate connectivity to app.dfx.swiss or the runner's network before trusting this deploy."
           else
             echo "  last status: $status"
             echo "  last content-type: $content_type"
             echo "  last cache-control: $cache_control"
+            echo "This means an absent /static/* asset is answered with something other than a plain 404 (e.g. the SPA fallback or other HTML) -- the exact failure mode from the cached-fallback incident. Investigate functions/[[path]].js, public/_routes.json and public/_headers before trusting this deploy."
           fi
-          echo "This means an absent /static/* asset is answered with something other than a plain 404 (e.g. the SPA fallback, HTML, or a transport failure) -- the exact failure mode from the cached-fallback incident. Investigate functions/[[path]].js, public/_routes.json and public/_headers before trusting this deploy."
           exit 1

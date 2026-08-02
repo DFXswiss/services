@@ -57,7 +57,7 @@ function isFallback(response) {
   const contentType = response.headers.get('content-type');
   if (contentType === null) return true;
 
-  return contentType.toLowerCase().includes('text/html');
+  return contentType.split(';')[0].trim().toLowerCase() === 'text/html';
 }
 
 function notFound() {
