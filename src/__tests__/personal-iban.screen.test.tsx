@@ -1,8 +1,6 @@
 // Reachable CHF/Yapeal success copy and fail-loud missing-currency behavior.
 // Bank Frick EUR issuance belongs to the explicit quote-selector flow, not this endpoint.
 
-jest.mock('@dfx.swiss/react', () => ({}));
-
 jest.mock('@dfx.swiss/react-components', () => ({
   IconColor: { BLUE: 'blue' },
   SpinnerSize: { LG: 'lg' },
@@ -51,9 +49,8 @@ jest.mock('../hooks/navigation.hook', () => ({
 }));
 
 const mockCreatePersonalIban = jest.fn();
-jest.mock('../hooks/virtual-iban.hook', () => ({
-  __esModule: true,
-  default: () => ({ createPersonalIban: mockCreatePersonalIban }),
+jest.mock('@dfx.swiss/react', () => ({
+  useVirtualIban: () => ({ createPersonalIban: mockCreatePersonalIban }),
 }));
 
 import { render, screen, waitFor } from '@testing-library/react';

@@ -11,6 +11,7 @@
 const mockUseAuthContext = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({
+  ...jest.requireActual('../test-utils/personal-iban-sdk-mock').personalIbanSdkMock,
   Blockchain: {},
   PersonalIbanProvider: { FRICK: 'Frick' },
   useAuthContext: () => mockUseAuthContext(),

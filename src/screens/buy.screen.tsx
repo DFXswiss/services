@@ -9,6 +9,8 @@ import {
   FiatPaymentMethod,
   TransactionError,
   TransactionType,
+  isUnrecognizedPersonalIbanSelector,
+  toPersonalIbanProviderRequest,
   useAsset,
   useAssetContext,
   useAuthContext,
@@ -69,9 +71,7 @@ import {
   isExplicitFrickPersonalIbanRequest,
   isKycRequiredMessage,
   isPersonalIbanApplicable,
-  isUnrecognizedPersonalIbanSelector,
   isVerifiedFrickPersonalIbanResponse,
-  toPersonalIbanProviderRequest,
 } from '../util/personal-iban';
 
 enum Side {

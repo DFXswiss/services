@@ -7,6 +7,7 @@ const mockUseAppParams = jest.fn();
 const mockPersonalIban = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({
+  ...jest.requireActual('../test-utils/personal-iban-sdk-mock').personalIbanSdkMock,
   FiatPaymentMethod: { BANK: 'Bank', INSTANT: 'Instant', CARD: 'Card' },
   PersonalIbanProvider: { FRICK: 'Frick' },
   TransactionError: {
