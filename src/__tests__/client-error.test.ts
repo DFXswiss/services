@@ -486,6 +486,15 @@ describe('repeat reports', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
+  // An empty type is a value, a missing one is not, and the signature keeps them apart. A thrown
+  // value that is not an Error carries no type at all.
+  it('keeps an empty type apart from a missing one', () => {
+    reportClientError(Object.assign(new Error('same'), { name: '' }), '/buy');
+    reportClientError('same', '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
   it('reports the same failure for the same account only once', () => {
     const error = new Error('same');
 
