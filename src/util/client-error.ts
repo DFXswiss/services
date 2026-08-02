@@ -37,7 +37,19 @@ export interface ErrorFacts {
   stack?: string;
 }
 
+// Nothing read from a thrown value may cost the report. Classifying it already touches properties
+// that can be getters, and the fallback below runs a toString this code did not write — so the
+// whole reading is guarded, not just the fields. A report that says only that something failed
+// still beats the silence of losing it.
 export function toErrorFacts(error: unknown): ErrorFacts {
+  try {
+    return factsOf(error);
+  } catch {
+    return { message: '' };
+  }
+}
+
+function factsOf(error: unknown): ErrorFacts {
   if (isRouteErrorResponse(error)) {
     // Thrown when no route matches the URL, and by loaders returning a Response.
     return { message: `${error.status} ${error.statusText}`, type: 'RouteErrorResponse' };

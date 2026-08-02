@@ -56,6 +56,18 @@ describe('toErrorFacts', () => {
     expect(toErrorFacts(error as unknown as Error)).toEqual({ message: '42', type: '10', stack: undefined });
   });
 
+  // Classification reads the value before any field is: react-router's own check touches `status`
+  // and `statusText`, so a getter that throws there would otherwise take the report with it.
+  it('describes a value it cannot read at all', () => {
+    const hostile = {
+      get status(): number {
+        throw new Error('nope');
+      },
+    };
+
+    expect(toErrorFacts(hostile)).toEqual({ message: '' });
+  });
+
   it('falls back to the string form of anything else', () => {
     expect(toErrorFacts('plain failure').message).toBe('plain failure');
     expect(toErrorFacts(undefined).message).toBe('undefined');
@@ -159,8 +171,10 @@ describe('reportClientError', () => {
     expect(() => reportClientError(new Error('boom'), '/buy')).not.toThrow();
   });
 
-  // toErrorFacts falls back to String(error), which a hostile toString can turn into a throw.
-  it('swallows a thrown value whose string conversion throws', () => {
+  // A value whose string conversion throws used to cost the report entirely. Reading it is guarded
+  // now, so the failure is still recorded — as a report that says only that something broke, which
+  // beats the silence.
+  it('still reports a thrown value whose string conversion throws', () => {
     const hostile = {
       toString: () => {
         throw new Error('nope');
@@ -168,6 +182,8 @@ describe('reportClientError', () => {
     };
 
     expect(() => reportClientError(hostile, '/buy')).not.toThrow();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(sentBody().message).toBe('Unknown error');
   });
 
   // The report has to survive whatever the thrown value carries: composing the payload and the
