@@ -47,14 +47,32 @@ export function toErrorFacts(error: unknown): ErrorFacts {
   // free to carry anything under them — a bigint name serialises nowhere, and the report would be
   // lost to the very failure it describes.
   if (error instanceof Error) {
-    return { message: textOf(error.message) ?? '', type: nameOf(error), stack: textOf(error.stack) };
+    return {
+      message: textOf(() => error.message) ?? '',
+      type: nameOf(error),
+      stack: textOf(() => error.stack),
+    };
   }
 
   return { message: String(error) };
 }
 
-function textOf(value: unknown): string | undefined {
-  return typeof value === 'string' ? value : undefined;
+// Both the reading and the value are untrusted: the property can be a getter that throws, and what
+// it returns can be anything. A primitive still says something and is written out; anything else is
+// dropped, which is a smaller loss than the report it would otherwise take with it — a value that
+// serialises nowhere makes composing the payload throw.
+function textOf(read: () => unknown): string | undefined {
+  try {
+    const value = read();
+    if (typeof value === 'string') return value;
+
+    // Converting these cannot throw, unlike String() on an object or a symbol.
+    return typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean'
+      ? String(value)
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 // A chunk request that fails is reported by the bundler as a ChunkLoadError. That covers the stale
@@ -86,12 +104,7 @@ export function isChunkLoadError(error: unknown): boolean {
 }
 
 function nameOf(error: unknown): string | undefined {
-  try {
-    const name = (error as { name?: unknown })?.name;
-    return typeof name === 'string' ? name : undefined;
-  } catch {
-    return undefined;
-  }
+  return textOf(() => (error as { name?: unknown })?.name);
 }
 
 // The widget and library builds run inside someone else's page, where `window` belongs to the

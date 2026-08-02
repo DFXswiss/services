@@ -48,11 +48,12 @@ describe('toErrorFacts', () => {
   });
 
   // An Error is free to carry anything under these, and everything downstream — the payload, the
-  // deduplication signature — assumes text. A value that serialises nowhere would cost the report.
-  it('ignores a name, message or stack that is not text', () => {
-    const error = Object.assign(new Error(), { name: 10n, message: 10n, stack: {} });
+  // deduplication signature — assumes text. A value that serialises nowhere would cost the report,
+  // while one that converts without throwing still says something.
+  it('writes out a field that is not text but converts, and drops one that does not', () => {
+    const error = Object.assign(new Error(), { name: 10n, message: 42, stack: {} });
 
-    expect(toErrorFacts(error as unknown as Error)).toEqual({ message: '', type: undefined, stack: undefined });
+    expect(toErrorFacts(error as unknown as Error)).toEqual({ message: '42', type: '10', stack: undefined });
   });
 
   it('falls back to the string form of anything else', () => {
@@ -169,13 +170,33 @@ describe('reportClientError', () => {
     expect(() => reportClientError(hostile, '/buy')).not.toThrow();
   });
 
-  // The report has to survive whatever the thrown value carries: composing the signature would
-  // otherwise throw, and the failure would be swallowed by the reporting built to record it.
-  it('still reports an error whose name is not text', () => {
-    reportClientError(Object.assign(new Error('boom'), { name: 10n as unknown as string }), '/buy');
+  // The report has to survive whatever the thrown value carries: composing the payload and the
+  // signature would otherwise throw, and the failure would be swallowed by the reporting built to
+  // record it.
+  it.each([
+    ['a name', { name: 10n }, { type: '10' }],
+    ['a message', { message: 10n }, { message: '10' }],
+    ['a stack', { stack: 10n }, { stack: '10' }],
+  ])('still reports an error carrying %s that is not text', (_case, fields, expected) => {
+    reportClientError(Object.assign(new Error('boom'), fields), '/buy');
 
     expect(global.fetch).toHaveBeenCalledTimes(1);
-    expect(sentBody()).not.toHaveProperty('type');
+    expect(sentBody()).toMatchObject(expected);
+  });
+
+  // Reading the field is as untrusted as the field itself.
+  it('still reports an error whose message throws when read', () => {
+    const error = new Error('boom');
+    Object.defineProperty(error, 'message', {
+      get: () => {
+        throw new Error('nope');
+      },
+    });
+
+    reportClientError(error, '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(sentBody().message).toBe('Unknown error');
   });
 
   it('identifies the app to the API', () => {
