@@ -121,14 +121,14 @@ jobs:
                 echo "OK: deploy marker matches $expected_deploy_id (attempt $attempt)"
                 break
               fi
-              echo "Attempt $attempt/$max_attempts: deploy-id.txt body='$marker_body' expected='$expected_deploy_id' (waiting for new deploy to go live)"
+              echo "Attempt $attempt/$max_attempts: deploy-id.txt body='$marker_body' expected='$expected_deploy_id' (no matching marker observed yet, retrying)"
             else
               marker_body=''
               last_error='transport failure (curl could not complete the request)'
-              echo "Attempt $attempt/$max_attempts: curl failed fetching deploy-id.txt (waiting for new deploy to go live)"
+              echo "Attempt $attempt/$max_attempts: curl failed fetching deploy-id.txt (no marker observed this attempt, retrying)"
             fi
             if [ "$attempt" -eq "$max_attempts" ]; then
-              echo "FAIL: new deploy did not become active at the custom domain within $max_attempts attempts."
+              echo "FAIL: no marker matching this run was observed at the custom domain within $max_attempts attempts."
               echo "  url: ${marker_url}"
               if [ -n "$last_error" ]; then
                 echo "  last error: $last_error"
