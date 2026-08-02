@@ -80,10 +80,11 @@ jobs:
       - name: Verify missing assets return 404 (not the SPA fallback)
         run: |
           # functions/[[path]].js + public/_routes.json turn a missing /static/* asset into a
-          # plain 404 instead of the SPA fallback (index.html, status 200) that used to get
-          # cached under the asset's own URL for a year (see public/_headers). This step is a
-          # smoke test, run after every PRD deploy, for exactly that regression -- see below
-          # for what it actually proves and what it does not.
+          # plain 404 instead of the SPA fallback (index.html, status 200) that used to be
+          # eligible to stay cached under the asset's own URL for up to a year, until evicted or
+          # cleared (see public/_headers). This step is a smoke test, run after every PRD deploy,
+          # for exactly that regression -- see below for what it actually proves and what it does
+          # not.
           #
           # First wait until THIS deploy is live at the custom domain (build/deploy-id.txt
           # carries this run's id and attempt). Only then is the 404 check meaningful — an
@@ -159,10 +160,12 @@ jobs:
           content_type=""
           cache_control=""
           last_error=""
+          any_response_received=false
 
           while [ "$attempt" -le "$max_attempts" ]; do
             if raw=$(curl -s -D - -o /dev/null --max-time 10 -w 'HTTP_STATUS:%{http_code}\n' "$url"); then
               last_error=''
+              any_response_received=true
               status=$(printf '%s\n' "$raw" | sed -n 's/^HTTP_STATUS://p')
               content_type=$(printf '%s\n' "$raw" | tr -d '\r' | tr '[:upper:]' '[:lower:]' | awk '/^content-type:/{sub(/^[^:]+:[[:space:]]*/,""); sub(/[[:space:]]+$/,""); print; exit}')
               cache_control=$(printf '%s\n' "$raw" | tr -d '\r' | tr '[:upper:]' '[:lower:]' | awk '/^cache-control:/{sub(/^[^:]+:[[:space:]]*/,""); sub(/[[:space:]]+$/,""); print; exit}')
@@ -186,13 +189,20 @@ jobs:
 
           echo "FAIL: missing asset was not answered with a bare 404 after $max_attempts attempts."
           echo "  url: $url"
-          if [ -n "$last_error" ]; then
+          if [ "$any_response_received" = false ]; then
+            # last_error is necessarily set here: every one of the $max_attempts attempts in this
+            # run failed to complete, not just the final one.
             echo "  last error: $last_error"
-            echo "This means the verify request itself never got a response from the server (a transport failure, not an answer) -- investigate connectivity to app.dfx.swiss or the runner's network before trusting this deploy."
+            echo "None of the $max_attempts attempts completed -- the request never received a response to inspect. Investigate connectivity to app.dfx.swiss or the runner's network before trusting this deploy."
+          elif [ -n "$last_error" ]; then
+            # any_response_received is true, so an earlier attempt did get a complete answer; this
+            # is the final attempt failing to complete, not the whole run.
+            echo "  last error: $last_error"
+            echo "The final attempt did not complete -- no response was accepted from it. Earlier attempts did receive a complete response, and none of them satisfied the required contract (status 404, content-type text/plain; charset=utf-8, cache-control no-store). Investigate functions/[[path]].js, public/_routes.json and public/_headers before trusting this deploy."
           else
             echo "  last status: $status"
             echo "  last content-type: $content_type"
             echo "  last cache-control: $cache_control"
-            echo "This means an absent /static/* asset is answered with something other than a plain 404 (e.g. the SPA fallback or other HTML) -- the exact failure mode from the cached-fallback incident. Investigate functions/[[path]].js, public/_routes.json and public/_headers before trusting this deploy."
+            echo "The response received does not satisfy the required contract (status 404, content-type text/plain; charset=utf-8, cache-control no-store) -- which is what a client would see if an absent /static/* asset fell through to the SPA fallback (the cached-fallback incident this check exists for), though a mismatch here does not by itself prove that cause over an unrelated server error. Investigate functions/[[path]].js, public/_routes.json and public/_headers before trusting this deploy."
           fi
           exit 1

@@ -60,14 +60,18 @@
   Cache-Control: no-cache, must-revalidate
 
 # no-cache still stores the response and lets a later request reuse it once revalidated (a
-# 304 carries no body), so a missing manifest.json/asset-manifest.json served as the SPA
-# fallback could be confirmed valid by a later conditional request instead of being
+# 304 carries no body), so a missing manifest.json/asset-manifest.json/version.json served as
+# the SPA fallback could be confirmed valid by a later conditional request instead of being
 # refetched — the same failure mode as /static/*, reached through revalidation instead of a
-# long max-age. Both paths are listed in public/_routes.json include so
-# functions/[[path]].js content-checks them and answers 404 instead.
+# long max-age. version.json is written fresh by scripts/generate-version.js before every build
+# (a new commit hash and build time each time), so it is at least as exposed to this as the other
+# two. All three paths are listed in public/_routes.json include so functions/[[path]].js
+# content-checks them and answers 404 instead.
 /manifest.json
   Cache-Control: no-cache, must-revalidate
 /asset-manifest.json
+  Cache-Control: no-cache, must-revalidate
+/version.json
   Cache-Control: no-cache, must-revalidate
 
 # Crawler directives in robots.txt must always revalidate so they take effect on the next

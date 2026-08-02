@@ -71,6 +71,18 @@ describe('missing asset function', () => {
     expect(result.headers.get('cache-control')).toBe('no-store');
   });
 
+  it('treats a present but empty content type the same as a missing one and fails closed', async () => {
+    // The header has to be emptied after construction: passing '' in the init is discarded and
+    // the platform fills in text/plain, so the constructor route cannot produce this case at all.
+    const emptyType = new Response('data', { status: 200 });
+    emptyType.headers.set('content-type', '');
+
+    const result = await onRequest(contextFor(emptyType));
+
+    expect(result.status).toBe(404);
+    expect(result.headers.get('cache-control')).toBe('no-store');
+  });
+
   it('treats a case-different content-type as the fallback', async () => {
     const fallback = new Response('<!doctype html><html></html>', {
       status: 200,
@@ -173,7 +185,7 @@ describe('missing asset function', () => {
 // unnoticed addition would run the Function's content check against a path public/_headers never
 // justified for it, so both directions have to fail this test, not only a removal.
 describe('public/_routes.json include list', () => {
-  it('content-checks exactly /static/*, /widget/*, /favicon.ico, /logo.png, /robots.txt, /manifest.json and /asset-manifest.json, and excludes nothing', () => {
+  it('content-checks exactly /static/*, /widget/*, /favicon.ico, /logo.png, /robots.txt, /manifest.json, /asset-manifest.json and /version.json, and excludes nothing', () => {
     const expectedInclude = [
       '/static/*',
       '/widget/*',
@@ -182,6 +194,7 @@ describe('public/_routes.json include list', () => {
       '/robots.txt',
       '/manifest.json',
       '/asset-manifest.json',
+      '/version.json',
     ];
 
     expect([...routes.include].sort()).toEqual([...expectedInclude].sort());
