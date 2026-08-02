@@ -65,28 +65,43 @@ describe('toErrorFacts', () => {
       get status(): number {
         throw new Error('nope');
       },
+      toString: () => {
+        throw new Error('nope');
+      },
     };
 
     expect(toErrorFacts(hostile)).toEqual({ message: '' });
   });
 
   // And what is still readable survives that failure — the message is what identifies a chunk
-  // failure, so losing it would cost the customer the reload that recovers them.
-  it('keeps the message of a value it cannot classify', () => {
-    const error = new Error('Loading chunk 42 failed');
-    Object.defineProperty(error, 'status', {
+  // failure, so losing it would cost the customer the reload that recovers them. Both sources are
+  // tried, in the order the successful path uses them.
+  it.each([
+    ['carries it as a field', new Error('Loading chunk 42 failed')],
+    ['only has a string form', { toString: () => 'Loading chunk 42 failed' }],
+  ])('keeps the message of a value it cannot classify, when it %s', (_case, thrown) => {
+    Object.defineProperty(thrown, 'status', {
       get: () => {
         throw new Error('nope');
       },
     });
 
-    expect(toErrorFacts(error).message).toBe('Loading chunk 42 failed');
-    expect(isChunkLoadError(error)).toBe(true);
+    expect(toErrorFacts(thrown).message).toBe('Loading chunk 42 failed');
+    expect(isChunkLoadError(thrown)).toBe(true);
   });
 
   // A plain object carrying a message is a shape libraries throw, and its string form says nothing.
   it('reads the message off a thrown value that is not an Error', () => {
     expect(toErrorFacts({ message: 'boom' }).message).toBe('boom');
+  });
+
+  // An empty message is no more use than a missing one, and the string form still names the
+  // failure — which is what the chunk classification matches on.
+  it('prefers the string form over an empty message', () => {
+    const thrown = { message: '', toString: () => 'Loading chunk 42 failed' };
+
+    expect(toErrorFacts(thrown).message).toBe('Loading chunk 42 failed');
+    expect(isChunkLoadError(thrown)).toBe(true);
   });
 
   it('falls back to the string form of anything else', () => {

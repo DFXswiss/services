@@ -47,7 +47,12 @@ export function toErrorFacts(error: unknown): ErrorFacts {
   try {
     return factsOf(error);
   } catch {
-    return { message: textOf(() => (error as { message?: unknown })?.message) ?? '', type: nameOf(error) };
+    // The same two sources factsOf reads a message from, in the same order — only guarded, since
+    // whatever broke the reading above may break them too.
+    return {
+      message: textOf(() => (error as { message?: unknown })?.message) || textOf(() => String(error)) || '',
+      type: nameOf(error),
+    };
   }
 }
 
@@ -70,8 +75,9 @@ function factsOf(error: unknown): ErrorFacts {
 
   // Not every thrown value is an Error. A plain object carrying a message is a shape libraries
   // throw, and String() would reduce it to [object Object] — so the field is tried first, and the
-  // string form is what is left when there is none.
-  return { message: textOf(() => (error as { message?: unknown })?.message) ?? String(error) };
+  // string form is what is left when there is none. `||` on purpose: an empty message is no more
+  // use than a missing one, and the string form may still name the failure.
+  return { message: textOf(() => (error as { message?: unknown })?.message) || String(error) };
 }
 
 // Both the reading and the value are untrusted: the property can be a getter that throws, and what
