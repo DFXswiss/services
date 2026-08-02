@@ -49,7 +49,15 @@ async function resolveConditional(context) {
 }
 
 function isFallback(response) {
-  return response.ok && (response.headers.get('content-type') ?? '').includes('text/html');
+  if (!response.ok) return false;
+
+  // Real assets from ASSETS always carry a platform-set content-type. An ok response with
+  // none, or with one present but empty, has no guarantee it is a real file — treat both
+  // like a fallback, not as safe to pass through.
+  const contentType = (response.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
+  if (contentType === '') return true;
+
+  return contentType === 'text/html';
 }
 
 function notFound() {
