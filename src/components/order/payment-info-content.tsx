@@ -1,4 +1,4 @@
-import { Utils } from '@dfx.swiss/react';
+import { CustodyOrderPaymentInfo, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -11,13 +11,12 @@ import {
   StyledTabContainer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { OrderPaymentData } from 'src/dto/order.dto';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
 import { PaymentQrCode } from '../payment/payment-qr-code';
 
 interface PaymentInfoContentProps {
-  info: OrderPaymentData;
+  info: CustodyOrderPaymentInfo;
 }
 
 export function PaymentInfoContent({ info }: PaymentInfoContentProps): JSX.Element {
