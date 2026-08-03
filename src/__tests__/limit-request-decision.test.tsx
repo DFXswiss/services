@@ -314,6 +314,111 @@ describe('LimitRequestDecisionForm', () => {
     });
   });
 
+  // FileReader can reject as well as resolve empty; an escaping rejection would leave the button stuck
+  // on "Saving..." with no error and no way back except reloading the page.
+  it('recovers when reading the document throws', async () => {
+    mockToBase64.mockRejectedValueOnce(new Error('read failed'));
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText('Customer document (optional)', { selector: 'input' }), {
+      target: { files: [new File(['x'], 'broken.pdf', { type: 'application/pdf' })] },
+    });
+    selectDecision('Accepted');
+    await clickSave();
+
+    expect(screen.getByTestId('error-hint')).toHaveTextContent('could not be read');
+    expect(mockDecideLimitRequest).not.toHaveBeenCalled();
+    expect(saveButton()).not.toBeDisabled();
+  });
+
+  it('clears the note and the document after a successful decision', async () => {
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText('Internal file note', { selector: 'input' }), {
+      target: { value: 'Hausverkauf' },
+    });
+    fireEvent.change(screen.getByLabelText('Customer document (optional)', { selector: 'input' }), {
+      target: { files: [new File(['contract'], 'Kaufvertrag.pdf', { type: 'application/pdf' })] },
+    });
+    selectDecision('Accepted');
+    await clickSave();
+
+    expect(screen.getByLabelText('Internal file note', { selector: 'input' })).toHaveValue('');
+    expect(screen.queryByText(/Kaufvertrag\.pdf/)).not.toBeInTheDocument();
+  });
+
+  it('blocks a second submit while the first is still running', async () => {
+    let release: (v: unknown) => void = () => undefined;
+    mockDecideLimitRequest.mockReturnValue(new Promise((resolve) => (release = resolve)));
+    renderForm();
+
+    selectDecision('Rejected');
+    await act(async () => {
+      fireEvent.click(saveButton());
+    });
+
+    expect(saveButton('Saving...')).toBeDisabled();
+
+    await act(async () => {
+      release({ success: true, completedSteps: [] });
+    });
+    expect(mockDecideLimitRequest).toHaveBeenCalledTimes(1);
+  });
+
+  // Once the decision is recorded the API refuses to change it. Without switching modes right away, a
+  // retry would re-write the deposit limit with whatever is in the amount field and fail again.
+  it('switches to note mode when the decision landed but a later step failed', async () => {
+    renderForm();
+    mockDecideLimitRequest.mockResolvedValue({
+      success: false,
+      failedStep: 'log',
+      completedSteps: ['depositLimit', 'report', 'limitRequest'],
+      message: 'log down',
+    });
+
+    selectDecision('Accepted');
+    await clickSave();
+
+    expect(screen.getByTestId('error-hint')).toHaveTextContent('log down');
+    expect(screen.queryByLabelText('Decision', { selector: 'select' })).not.toBeInTheDocument();
+    expect(screen.getByText(/already decided \(Accepted\)/)).toBeInTheDocument();
+  });
+
+  // The clerk list arrives after the first render; a name typed before that must not stay in state
+  // behind a select that shows something else.
+  it('adopts a clerk from the list once it arrives', async () => {
+    const { rerender } = render(
+      <LimitRequestDecisionForm
+        limitRequestId={LIMIT_REQUEST_ID}
+        userDataId={USER_DATA_ID}
+        requestedLimit={REQUESTED}
+        currentDepositLimit={CURRENT_LIMIT}
+        clerks={[]}
+        onDecided={jest.fn()}
+      />,
+    );
+    fireEvent.change(screen.getByPlaceholderText('Sign'), { target: { value: 'typed-before-load' } });
+
+    rerender(
+      <LimitRequestDecisionForm
+        limitRequestId={LIMIT_REQUEST_ID}
+        userDataId={USER_DATA_ID}
+        requestedLimit={REQUESTED}
+        currentDepositLimit={CURRENT_LIMIT}
+        clerks={['JR', 'VR']}
+        defaultClerk="VR"
+        onDecided={jest.fn()}
+      />,
+    );
+
+    const select = screen.getByLabelText('Clerk', { selector: 'select' }) as HTMLSelectElement;
+    expect(select.value).toBe('VR');
+
+    selectDecision('Rejected');
+    await clickSave();
+    expect(mockDecideLimitRequest).toHaveBeenCalledWith(CONTEXT, 'Rejected', expect.objectContaining({ clerk: 'VR' }));
+  });
+
   it('falls back to a free-text clerk field when no clerk list is available', async () => {
     renderForm({ clerks: [], defaultClerk: undefined });
 

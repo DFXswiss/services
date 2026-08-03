@@ -1148,21 +1148,27 @@ export function useCompliance() {
   }
 
   /**
-   * Decides a limit request the way the Google Sheet does, in the same order and with the same effects:
+   * Decides a limit request with the same effects the Google Sheet had:
    *
    *   1. `PUT userData/{id} { depositLimit }` — only for a decision that grants a limit. This is the
    *      step that changes what the customer may actually trade: nothing in the API derives the annual
    *      limit from the limit request, so a decision without it would be recorded but toothless.
-   *   2. `PUT limitRequest/{id} { decision, acceptedLimit, clerk, edited }` — the decision itself. The
-   *      API closes the support issue and fires the KYC webhook once the decision is final, so neither
-   *      needs a call of its own; the sheet's separate issue update is redundant against this endpoint.
-   *   3. `POST kyc/admin/log` — the file note ("Aktennotiz"), through the same builder as the
-   *      DfxApproval flow, so both decisions read alike in the customer's file.
+   *   2. `POST support/{id}/limit-request-pdf` — the `UserNotes` / `LimitRequestReport` file record the
+   *      sheet produced for every final decision.
+   *   3. `PUT limitRequest/{id} { decision, acceptedLimit, clerk, edited }` — the decision itself. The
+   *      API closes the support issue, and for an accepting decision a cron mails the customer within
+   *      five minutes, so neither needs a call of its own.
+   *   4. `POST kyc/admin/log` — the file note ("Aktennotiz") plus the customer's document, through the
+   *      same builder as the DfxApproval flow.
    *
-   * The order matters on failure: a raised limit without a recorded decision can be repaired by
-   * repeating the decision, whereas a recorded decision without the raised limit looks finished but is
-   * not. Partial progress is therefore reported rather than swallowed — same contract as
-   * `saveCallOutcome`.
+   * The report is filed BEFORE the decision, unlike the sheet, because the decision is the only step
+   * that cannot be repeated: the API refuses to change a final decision. Failing on step 1 or 2 leaves
+   * nothing recorded and the whole sequence can simply be retried (re-writing the same deposit limit is
+   * a no-op). Had the decision gone first, a failing report would leave a decided request whose file
+   * record could never be produced. A report left behind by a failed step 3 states the decision the
+   * clerk made and is superseded by the report of the successful retry.
+   *
+   * Partial progress is reported rather than swallowed — same contract as `saveCallOutcome`.
    */
   async function decideLimitRequest(
     context: { limitRequestId: number; userDataId: number },
@@ -1191,9 +1197,19 @@ export function useCompliance() {
     const grantsLimit = LimitRequestGrantingDecisions.includes(decision);
     const results: KycLogResult[] = [];
 
+    // A granting decision without an amount would raise nothing and still record an acceptance — the
+    // customer would then be mailed the old limit by the notification cron. Refused rather than skipped.
+    if (grantsLimit && options.grantedLimit == null)
+      return {
+        success: false,
+        failedStep: 'depositLimit',
+        completedSteps,
+        message: 'An accepted limit request needs the limit it grants',
+      };
+
     // 1) Raise the annual limit
     try {
-      if (grantsLimit && options.grantedLimit != null) {
+      if (grantsLimit) {
         await updateUserData(context.userDataId, { depositLimit: options.grantedLimit });
         results.push({ table: 'userData', column: 'depositLimit', value: String(options.grantedLimit) });
         completedSteps.push('depositLimit');
@@ -1202,21 +1218,7 @@ export function useCompliance() {
       return fail('depositLimit', e);
     }
 
-    // 2) Record the decision. On a rejection the limit that stays in force is recorded on the request,
-    // which is what makes a rejected request readable later.
-    try {
-      await updateLimitRequest(context.limitRequestId, {
-        decision,
-        acceptedLimit: grantsLimit ? options.grantedLimit : options.currentDepositLimit,
-        clerk,
-      });
-      results.push({ table: 'limitRequest', column: 'decision', value: decision });
-      completedSteps.push('limitRequest');
-    } catch (e) {
-      return fail('limitRequest', e);
-    }
-
-    // 3) File the report document, the same record the sheet uploaded for every final decision
+    // 2) File the report document, the record the sheet produced for every final decision
     try {
       await generateLimitRequestPdf(context.userDataId, {
         decision,
@@ -1231,6 +1233,21 @@ export function useCompliance() {
       completedSteps.push('report');
     } catch (e) {
       return fail('report', e);
+    }
+
+    // 3) Record the decision. `acceptedLimit` is only sent for a decision that grants one: on a
+    // rejection it would read back as an accepted amount next to the rejection in every view that
+    // renders the field.
+    try {
+      await updateLimitRequest(context.limitRequestId, {
+        decision,
+        acceptedLimit: grantsLimit ? options.grantedLimit : undefined,
+        clerk,
+      });
+      results.push({ table: 'limitRequest', column: 'decision', value: decision });
+      completedSteps.push('limitRequest');
+    } catch (e) {
+      return fail('limitRequest', e);
     }
 
     // 4) File note
@@ -1264,7 +1281,13 @@ export function useCompliance() {
         buildKycLogMessage({
           description: 'LimitRequest',
           clerk: options.clerk.trim(),
-          results: [{ table: 'limitRequest', column: 'decision', value: options.decision }],
+          // `Expired`/`Closed` are set by the backend, not by a clerk; anchoring the note to them would
+          // read as a decision somebody made.
+          results: LimitRequestGrantingDecisions.concat(LimitRequestDecision.REJECTED).includes(
+            options.decision as LimitRequestDecision,
+          )
+            ? [{ table: 'limitRequest', column: 'decision', value: options.decision }]
+            : [{ table: 'limitRequest', column: 'note', value: String(context.limitRequestId) }],
           comment: options.comment,
         }),
         options.attachment,

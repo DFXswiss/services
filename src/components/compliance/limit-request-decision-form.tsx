@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import {
   LimitRequestDecision,
@@ -45,9 +45,22 @@ export function LimitRequestDecisionForm({
 }: Props): JSX.Element {
   const { decideLimitRequest, fileLimitRequestNote } = useCompliance();
 
-  const isDecided = !!decidedAs;
+  // A decision recorded by this very attempt whose later step failed: the request is final from then
+  // on, so the form must stop offering a decision before the clerk retries and re-writes the deposit
+  // limit with whatever is in the amount field. The screen only learns this on its next reload.
+  const [recordedDecision, setRecordedDecision] = useState<string>();
+  const isDecided = !!decidedAs || !!recordedDecision;
+  const effectiveDecision = decidedAs ?? recordedDecision;
 
   const [clerk, setClerk] = useState(defaultClerk ?? '');
+  // The clerk list arrives after the first render. A name typed into the free-text fallback before it
+  // does would survive in state while the select shows "-", signing the decision with a name the clerk
+  // can no longer see.
+  useEffect(() => {
+    if (clerks.length && !clerks.includes(clerk))
+      setClerk(defaultClerk && clerks.includes(defaultClerk) ? defaultClerk : (clerks[0] ?? ''));
+  }, [clerks]);
+
   const [decision, setDecision] = useState<LimitRequestDecision | ''>('');
   // Prefilled with the requested amount: accepting in full is the common case, and a partial accept is
   // an edit of that number rather than an entry from scratch.
@@ -84,9 +97,14 @@ export function LimitRequestDecisionForm({
 
   async function readDocument(): Promise<{ data: string; name: string } | undefined | 'failed'> {
     if (!document) return undefined;
-    const data = await toBase64(document);
-    if (!data) return 'failed';
-    return { data, name: document.name };
+    try {
+      // `toBase64` rejects on a FileReader error and resolves undefined on an empty result — both mean
+      // the same thing here, and neither may escape and leave the form stuck on "Saving...".
+      const data = await toBase64(document);
+      return data ? { data, name: document.name } : 'failed';
+    } catch {
+      return 'failed';
+    }
   }
 
   async function handleSubmit(): Promise<void> {
@@ -106,7 +124,7 @@ export function LimitRequestDecisionForm({
     const result = isDecided
       ? await fileLimitRequestNote(
           { limitRequestId, userDataId },
-          { clerk, decision: decidedAs as string, comment: comment.trim() || undefined, attachment },
+          { clerk, decision: effectiveDecision as string, comment: comment.trim() || undefined, attachment },
         )
       : await decideLimitRequest({ limitRequestId, userDataId }, decision as LimitRequestDecision, {
           clerk,
@@ -129,6 +147,7 @@ export function LimitRequestDecisionForm({
       // whether the limit was already raised before retrying.
       setDoneSteps(result.completedSteps);
       setError(result.message ?? 'Unknown error');
+      if (result.completedSteps.includes('limitRequest') && decision) setRecordedDecision(decision);
     }
   }
 
@@ -246,16 +265,16 @@ export function LimitRequestDecisionForm({
 
       <p className="mt-2 text-xs text-dfxGray-700">
         {isDecided
-          ? `This request is already decided (${decidedAs}) and cannot be changed. A note or a document can still be filed.`
+          ? `This request is already decided (${effectiveDecision}) and cannot be changed. A note or a document can still be filed.`
           : grantsLimit
             ? `Sets the annual limit to ${
                 isLimitValid ? parsedLimit.toLocaleString() : '-'
-              } CHF and records the decision.`
+              } CHF, records the decision and files the report. The customer is mailed automatically within a few minutes.`
             : decision
               ? `Keeps the current annual limit${
                   currentDepositLimit != null ? ` of ${currentDepositLimit.toLocaleString()} CHF` : ''
                 } and records the decision.`
-              : 'The customer message is sent separately below, as before.'}
+              : 'An accepted request also mails the customer automatically within a few minutes.'}
       </p>
 
       {error && (
