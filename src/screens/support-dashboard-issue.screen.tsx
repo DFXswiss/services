@@ -3,12 +3,13 @@ import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
+import { LimitRequestDecisionForm } from 'src/components/compliance/limit-request-decision-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { InfoPanel, InfoRow, SupportMessageList } from 'src/components/support/info-panel';
 import { TemplateArrayPickerModal } from 'src/components/support-templates/template-array-picker-modal';
 import { TemplatePickerModal } from 'src/components/support-templates/template-picker-modal';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { TransactionInfo, UserDataDetail, useCompliance } from 'src/hooks/compliance.hook';
+import { LimitRequestFinalDecisions, TransactionInfo, UserDataDetail, useCompliance } from 'src/hooks/compliance.hook';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -407,6 +408,32 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                 )}
               </InfoPanel>
             )}
+          </div>
+        )}
+
+        {/* Limit Request decision — the compliance endpoints behind it (userData, limitRequest) are
+            Compliance-gated, so a Support-role clerk would only earn a 403 from the buttons. Once the
+            decision is final the API refuses to change it, and the form drops to filing a note or a
+            document: that is how a decision whose report or note failed halfway gets completed, and how
+            a document arriving later still reaches the file. */}
+        {issueData.limitRequest && canAccessCompliance && (
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <LimitRequestDecisionForm
+              limitRequestId={issueData.limitRequest.id}
+              userDataId={issueData.account.id}
+              requestedLimit={issueData.limitRequest.limit}
+              fundOrigin={issueData.limitRequest.fundOrigin}
+              investmentDate={issueData.limitRequest.investmentDate}
+              currentDepositLimit={issueData.account.depositLimit}
+              decidedAs={
+                (LimitRequestFinalDecisions as readonly string[]).includes(issueData.limitRequest.decision ?? '')
+                  ? issueData.limitRequest.decision
+                  : undefined
+              }
+              clerks={clerks}
+              defaultClerk={updateClerk || undefined}
+              onDecided={loadIssue}
+            />
           </div>
         )}
 
