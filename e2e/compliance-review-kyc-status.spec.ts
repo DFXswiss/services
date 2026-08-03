@@ -39,6 +39,7 @@ const complianceFixture = {
       buyCryptoStatus: 'MissingLiquidity',
       buyCryptoHasBatch: false,
       buyCryptoHasChargeback: false,
+      buyCryptoReviewResetBlocked: false,
       created: '2026-07-31T08:30:00.000Z',
     },
   ],
