@@ -1,5 +1,6 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
+import { useSettingsContext } from 'src/contexts/settings.context';
 import {
   LimitRequestDecision,
   LimitRequestDecisionStep,
@@ -43,6 +44,7 @@ export function LimitRequestDecisionForm({
   defaultClerk,
   onDecided,
 }: Props): JSX.Element {
+  const { translate } = useSettingsContext();
   const { decideLimitRequest, fileLimitRequestNote } = useCompliance();
 
   // A decision recorded by this very attempt whose later step failed: the request is final from then
@@ -106,15 +108,19 @@ export function LimitRequestDecisionForm({
 
   function partialLimitHint(): string {
     if (!Number.isInteger(parsedLimit) || parsedLimit <= 0) {
-      return 'Enter a positive whole number in CHF.';
+      return translate('screens/compliance', 'Enter a positive whole number in CHF.');
     }
     if (parsedLimit >= requestedLimit) {
-      return `Must be strictly less than the requested amount (${requestedLimit.toLocaleString()} CHF).`;
+      return translate('screens/compliance', 'Must be strictly less than the requested amount ({{amount}} CHF).', {
+        amount: requestedLimit.toLocaleString(),
+      });
     }
     if (currentDepositLimit != null && parsedLimit <= currentDepositLimit) {
-      return `Must be strictly greater than the current limit (${currentDepositLimit.toLocaleString()} CHF).`;
+      return translate('screens/compliance', 'Must be strictly greater than the current limit ({{amount}} CHF).', {
+        amount: currentDepositLimit.toLocaleString(),
+      });
     }
-    return 'Enter a valid partial amount.';
+    return translate('screens/compliance', 'Enter a valid partial amount.');
   }
 
   function resetDocument(): void {
@@ -145,7 +151,7 @@ export function LimitRequestDecisionForm({
     const attachment = await readDocument();
     if (attachment === 'failed') {
       setIsSaving(false);
-      setError('The selected document could not be read');
+      setError(translate('screens/compliance', 'The selected document could not be read'));
       return;
     }
 
@@ -178,7 +184,7 @@ export function LimitRequestDecisionForm({
       // how far the sequence got before retrying.
       setDoneSteps(result.completedSteps);
       setFailedStep(result.failedStep);
-      setError(result.message ?? 'Unknown error');
+      setError(result.message ?? translate('screens/compliance', 'Unknown error'));
       if (result.completedSteps.includes('limitRequest') && decision) setRecordedDecision(decision);
     }
   }
@@ -186,14 +192,16 @@ export function LimitRequestDecisionForm({
   return (
     <div className="mt-4 border-t border-dfxGray-300 pt-4">
       <h3 className="text-sm font-semibold text-dfxBlue-800 mb-3">
-        {isDecided ? 'File note for this limit request' : 'Decide Limit Request'}
+        {isDecided
+          ? translate('screens/compliance', 'File note for this limit request')
+          : translate('screens/compliance', 'Decide Limit Request')}
       </h3>
 
       <div className="flex gap-3 flex-wrap items-end">
         {!isDecided && (
           <div className="flex flex-col gap-1">
             <label htmlFor={decisionId} className="text-xs text-dfxGray-700">
-              Decision
+              {translate('screens/compliance', 'Decision')}
             </label>
             <select
               id={decisionId}
@@ -212,7 +220,7 @@ export function LimitRequestDecisionForm({
         {grantsLimit && (
           <div className="flex flex-col gap-1">
             <label htmlFor={acceptedLimitId} className="text-xs text-dfxGray-700">
-              Accepted limit (CHF)
+              {translate('screens/compliance', 'Accepted limit (CHF)')}
             </label>
             <input
               id={acceptedLimitId}
@@ -236,7 +244,7 @@ export function LimitRequestDecisionForm({
 
         <div className="flex flex-col gap-1">
           <label htmlFor={clerkId} className="text-xs text-dfxGray-700">
-            Clerk
+            {translate('screens/compliance', 'Clerk')}
           </label>
           {clerks.length ? (
             <select
@@ -258,14 +266,14 @@ export function LimitRequestDecisionForm({
               className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 min-w-[130px]"
               value={clerk}
               onChange={(e) => setClerk(e.target.value)}
-              placeholder="Sign"
+              placeholder={translate('screens/compliance', 'Sign')}
             />
           )}
         </div>
 
         <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
           <label htmlFor={commentId} className="text-xs text-dfxGray-700">
-            Internal file note
+            {translate('screens/compliance', 'Internal file note')}
           </label>
           <input
             id={commentId}
@@ -277,7 +285,7 @@ export function LimitRequestDecisionForm({
 
         <div className="flex flex-col gap-1">
           <label htmlFor={documentId} className="text-xs text-dfxGray-700">
-            Customer document (optional)
+            {translate('screens/compliance', 'Customer document (optional)')}
           </label>
           <input
             id={documentId}
@@ -293,35 +301,58 @@ export function LimitRequestDecisionForm({
           onClick={handleSubmit}
           disabled={!canSubmit}
         >
-          {isSaving ? 'Saving...' : isDecided ? 'Save file note' : 'Save decision'}
+          {isSaving
+            ? translate('screens/compliance', 'Saving...')
+            : isDecided
+              ? translate('screens/compliance', 'Save file note')
+              : translate('screens/compliance', 'Save decision')}
         </button>
       </div>
 
       {document && (
         <p className="mt-2 text-xs text-dfxGray-700">
-          {`"${document.name}" is filed with the note under the customer's documents.`}
+          {translate('screens/compliance', `"{{name}}" is filed with the note under the customer's documents.`, {
+            name: document.name,
+          })}
         </p>
       )}
 
       <p className="mt-2 text-xs text-dfxGray-700">
         {isDecided
-          ? `This request is already decided (${effectiveDecision}) and cannot be changed. A note or a document can still be filed.`
+          ? translate(
+              'screens/compliance',
+              'This request is already decided ({{decision}}) and cannot be changed. A note or a document can still be filed.',
+              { decision: effectiveDecision as string },
+            )
           : grantsLimit
-            ? `Sets the annual limit to ${
-                isLimitValid ? parsedLimit.toLocaleString() : '-'
-              } CHF, records the decision and files the report. The customer is mailed automatically within a few minutes.`
+            ? translate(
+                'screens/compliance',
+                'Sets the annual limit to {{amount}} CHF, records the decision and files the report. The customer is mailed automatically within a few minutes.',
+                { amount: isLimitValid ? parsedLimit.toLocaleString() : '-' },
+              )
             : decision
-              ? `Keeps the current annual limit${
-                  currentDepositLimit != null ? ` of ${currentDepositLimit.toLocaleString()} CHF` : ''
-                } and records the decision.`
-              : 'An accepted request also mails the customer automatically within a few minutes.'}
+              ? currentDepositLimit != null
+                ? translate(
+                    'screens/compliance',
+                    'Keeps the current annual limit of {{limit}} CHF and records the decision.',
+                    { limit: currentDepositLimit.toLocaleString() },
+                  )
+                : translate('screens/compliance', 'Keeps the current annual limit and records the decision.')
+              : translate(
+                  'screens/compliance',
+                  'An accepted request also mails the customer automatically within a few minutes.',
+                )}
       </p>
 
       {error && (
         <div className="mt-3">
           <ErrorHint
-            message={`${error}${failedStep ? ` (failed at: ${failedStep})` : ''}${
-              doneSteps.length ? ` (already applied: ${doneSteps.join(', ')})` : ''
+            message={`${error}${
+              failedStep ? ` (${translate('screens/compliance', 'failed at: {{step}}', { step: failedStep })})` : ''
+            }${
+              doneSteps.length
+                ? ` (${translate('screens/compliance', 'already applied: {{steps}}', { steps: doneSteps.join(', ') })})`
+                : ''
             }`}
           />
         </div>

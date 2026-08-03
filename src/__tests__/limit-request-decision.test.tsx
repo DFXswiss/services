@@ -21,6 +21,15 @@ jest.mock('src/hooks/compliance.hook', () => ({
 // the test controls the encoded result.
 jest.mock('src/util/utils', () => ({ toBase64: (file: File) => mockToBase64(file) }));
 
+jest.mock('src/contexts/settings.context', () => ({
+  useSettingsContext: () => ({
+    translate: (_ns: string, key: string, params?: Record<string, string | number>) =>
+      params
+        ? Object.entries(params).reduce((acc, [k, v]) => acc.split(`{{${k}}}`).join(String(v)), key)
+        : key,
+  }),
+}));
+
 jest.mock('src/components/error-hint', () => {
   // The factory runs before this file's imports, so React has to be required here.
   // eslint-disable-next-line @typescript-eslint/no-var-requires
