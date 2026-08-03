@@ -348,10 +348,10 @@ export function LimitRequestDecisionForm({
         <div className="mt-3">
           <ErrorHint
             message={`${error}${
-              failedStep ? ` (${translate('screens/compliance', 'failed at: {{step}}', { step: failedStep })})` : ''
+              failedStep ? ` ${translate('screens/compliance', '(failed at: {{step}})', { step: failedStep })}` : ''
             }${
               doneSteps.length
-                ? ` (${translate('screens/compliance', 'already applied: {{steps}}', { steps: doneSteps.join(', ') })})`
+                ? ` ${translate('screens/compliance', '(already applied: {{steps}})', { steps: doneSteps.join(', ') })}`
                 : ''
             }`}
           />
