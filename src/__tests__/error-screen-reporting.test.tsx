@@ -1,5 +1,6 @@
 // Mock @dfx.swiss/react to avoid ES module issues
-jest.mock('@dfx.swiss/react', () => ({}));
+let mockUser: { accountId: number } | undefined;
+jest.mock('@dfx.swiss/react', () => ({ useUserContext: () => ({ user: mockUser }) }));
 jest.mock('src/dto/safe.dto', () => ({}));
 
 import { render, screen, waitFor } from '@testing-library/react';
@@ -34,7 +35,7 @@ jest.mock('src/util/client-error', () => ({
   isEmbedded: () => mockEmbedded,
 }));
 
-function renderAt(path: string, thrown?: unknown): void {
+function renderAt(path: string, thrown?: unknown): { rerender: () => void } {
   const Boom = (): JSX.Element => {
     if (thrown) throw thrown;
     return <div>ok</div>;
@@ -49,13 +50,17 @@ function renderAt(path: string, thrown?: unknown): void {
     },
   ];
 
-  render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />);
+  const router = createMemoryRouter(routes, { initialEntries: [path] });
+  const view = render(<RouterProvider router={router} />);
+
+  return { rerender: () => view.rerender(<RouterProvider router={router} />) };
 }
 
 describe('ErrorScreen reporting', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockEmbedded = false;
+    mockUser = undefined;
     // Deliberately different from every route used below. These tests run on a memory router —
     // the same setup the widget and library builds use — so the browser URL is the host page's and
     // must not be what gets reported.
@@ -71,6 +76,23 @@ describe('ErrorScreen reporting', () => {
     await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
     expect(mockReportClientError.mock.calls[0][1]).toBe('/buy');
     expect(mockReportClientError.mock.calls[0][1]).not.toBe('/host-page');
+  });
+
+  // Without this the record says what broke and where, never which account it happened to.
+  it('reports the account of the customer who hit the failure', async () => {
+    mockUser = { accountId: 123456 };
+
+    renderAt('/buy', new Error('boom'));
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][2]).toBe(123456);
+  });
+
+  it('reports without an account when nobody is signed in', async () => {
+    renderAt('/buy', new Error('boom'));
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][2]).toBeUndefined();
   });
 
   it('shows the error screen when a route render throws', async () => {
@@ -102,6 +124,21 @@ describe('ErrorScreen reporting', () => {
     renderAt('/buy', new Error('boom'));
 
     await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(mockReportClientError).toHaveBeenCalledTimes(1);
+  });
+
+  // The report goes out as soon as the failure is known. A session that finishes loading after that
+  // does not reach it — deliberately, since waiting for one would risk losing the report on a page
+  // that is already breaking. Pinned so the trade-off is a decision and not an accident.
+  it('does not report a second time once the account arrives', async () => {
+    const { rerender } = renderAt('/buy', new Error('boom'));
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][2]).toBeUndefined();
+
+    mockUser = { accountId: 123456 };
+    rerender();
+
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(mockReportClientError).toHaveBeenCalledTimes(1);
   });

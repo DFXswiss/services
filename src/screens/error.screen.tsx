@@ -1,3 +1,4 @@
+import { useUserContext } from '@dfx.swiss/react';
 import { IconVariant, StyledButton, StyledButtonColor, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useEffect, useRef } from 'react';
 import { useLocation, useRouteError, useSearchParams } from 'react-router-dom';
@@ -14,6 +15,9 @@ export default function ErrorScreen(): JSX.Element {
   // Not window.location: the widget and library builds run on a memory router, where the browser
   // URL is the host page's and never reflects the screen the customer was actually on.
   const { pathname } = useLocation();
+  // Read here rather than kept in the reporting module: this screen belongs to the tree that
+  // failed, so the account it sees is the one whose screen broke.
+  const { user } = useUserContext();
   const hasReported = useRef(false);
 
   const error = params.get('msg');
@@ -35,13 +39,16 @@ export default function ErrorScreen(): JSX.Element {
     const reportedError = error ? Object.assign(new Error(error), { name: 'HandledError' }) : routeError;
     if (reportedError == null) return;
 
-    reportClientError(reportedError, pathname);
+    reportClientError(reportedError, pathname, user?.accountId);
 
     // A chunk left stale by a deploy recovers on its own once the app reloads. React hands the
     // failed import to this boundary, so this is where it can be caught — a window listener never
     // sees it.
     if (!error && isChunkLoadError(routeError)) reloadOnceForChunkError(routeError);
-  }, [routeError, error, pathname]);
+    // The account is listed for completeness only. The report goes out once, as soon as the failure
+    // is known, so a session that finishes loading after that no longer reaches it — waiting for
+    // one would risk losing the report on a page that is already breaking.
+  }, [routeError, error, pathname, user?.accountId]);
 
   useLayoutOptions({});
 
