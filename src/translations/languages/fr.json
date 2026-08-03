@@ -82,6 +82,7 @@
     "Identification required": "Identification requise",
     "Access to internal tools now requires an identified person behind the account. Your role is unchanged — what is missing is your identification.": "L'accès aux outils internes exige désormais une personne identifiée derrière le compte. Votre rôle est inchangé — il ne manque que votre identification.",
     "Complete the identification to restore access. This is the same process customers go through and only has to be done once.": "Terminez l'identification pour rétablir l'accès. Il s'agit du même processus que pour les clients et il ne doit être effectué qu'une seule fois.",
+    "On a Compliance account the identification cannot be started here. Please contact your administrator to have your account cleared - access is restored shortly afterwards.": "Sur un compte Compliance, l'identification ne peut pas être lancée ici. Veuillez contacter votre administrateur pour faire débloquer votre compte - l'accès est rétabli peu après.",
     "Start KYC": "Démarrer le KYC",
     "Is this email address correct?": "Cette adresse e-mail est-elle correcte ?",
     "This account already has an email address. You can change it in your account settings.": "Ce compte possède déjà une adresse e-mail. Vous pouvez la modifier dans les paramètres de votre compte.",

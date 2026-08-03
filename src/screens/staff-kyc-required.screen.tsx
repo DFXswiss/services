@@ -1,3 +1,4 @@
+import { useAuthContext, UserRole } from '@dfx.swiss/react';
 import {
   StyledButton,
   StyledButtonColor,
@@ -22,6 +23,13 @@ export default function StaffKycRequiredScreen(): JSX.Element {
   const { start } = useKycHelper();
   const { navigate } = useNavigation();
   const { setRedirectPath } = useAppHandlingContext();
+  const { session } = useAuthContext();
+
+  // The API refuses self-service KYC for Compliance-role accounts ('KYC not allowed for compliance
+  // accounts'), so for them the start button below is a guaranteed dead end in a raw error. The rule
+  // itself lives in the API; the JWT role is only used to render the instruction that matches the
+  // API's answer: such accounts are cleared by an operator, not by running an identification.
+  const canStartKyc = session?.role !== UserRole.COMPLIANCE;
 
   useLayoutOptions({ title: translate('screens/kyc', 'Identification required') });
 
@@ -35,14 +43,21 @@ export default function StaffKycRequiredScreen(): JSX.Element {
       </StyledInfoText>
 
       <StyledInfoText invertedIcon>
-        {translate(
-          'screens/kyc',
-          'Complete the identification to restore access. This is the same process customers go through and only has to be done once.',
-        )}
+        {canStartKyc
+          ? translate(
+              'screens/kyc',
+              'Complete the identification to restore access. This is the same process customers go through and only has to be done once.',
+            )
+          : translate(
+              'screens/kyc',
+              'On a Compliance account the identification cannot be started here. Please contact your administrator to have your account cleared - access is restored shortly afterwards.',
+            )}
       </StyledInfoText>
 
       <StyledVerticalStack gap={3} full>
-        <StyledButton width={StyledButtonWidth.FULL} label={translate('screens/kyc', 'Start KYC')} onClick={start} />
+        {canStartKyc && (
+          <StyledButton width={StyledButtonWidth.FULL} label={translate('screens/kyc', 'Start KYC')} onClick={start} />
+        )}
         <StyledButton
           width={StyledButtonWidth.FULL}
           color={StyledButtonColor.GRAY_OUTLINE}
