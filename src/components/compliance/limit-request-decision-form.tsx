@@ -311,9 +311,9 @@ export function LimitRequestDecisionForm({
           <ErrorHint
             message={`${error}${
               doneSteps.length
-                ? translate('screens/compliance', ' (already applied: {{steps}})', {
+                ? ` ${translate('screens/compliance', '(already applied: {{steps}})', {
                     steps: doneSteps.join(', '),
-                  })
+                  })}`
                 : ''
             }`}
           />

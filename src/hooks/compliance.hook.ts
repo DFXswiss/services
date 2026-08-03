@@ -1212,7 +1212,10 @@ export function useCompliance() {
     // A granting decision without a positive integer amount would raise nothing (or the API would refuse
     // a decimal) and still record an acceptance — the customer would then be mailed the old limit by the
     // notification cron. Refused rather than skipped.
-    if (grantsLimit && !(options.grantedLimit != null && Number.isInteger(options.grantedLimit) && options.grantedLimit > 0))
+    if (
+      grantsLimit &&
+      !(options.grantedLimit != null && Number.isInteger(options.grantedLimit) && options.grantedLimit > 0)
+    )
       return {
         success: false,
         failedStep: 'depositLimit',
