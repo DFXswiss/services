@@ -24,9 +24,7 @@ jest.mock('src/util/utils', () => ({ toBase64: (file: File) => mockToBase64(file
 jest.mock('src/contexts/settings.context', () => ({
   useSettingsContext: () => ({
     translate: (_ns: string, key: string, params?: Record<string, string | number>) =>
-      params
-        ? Object.entries(params).reduce((acc, [k, v]) => acc.split(`{{${k}}}`).join(String(v)), key)
-        : key,
+      params ? Object.entries(params).reduce((acc, [k, v]) => acc.split(`{{${k}}}`).join(String(v)), key) : key,
   }),
 }));
 
