@@ -41,6 +41,43 @@ function callsTo(url: string) {
   return mockCall.mock.calls.map(([args]) => args).filter((a) => a.url === url);
 }
 
+describe('useCompliance().fileLimitRequestNote', () => {
+  beforeEach(() => {
+    mockCall.mockReset().mockResolvedValue(undefined);
+  });
+
+  // The way back into a request whose decision is recorded but whose report or note failed, and the way
+  // a document arriving after the decision reaches the file. It must never touch the decision itself.
+  it('writes only the log entry, anchored to the recorded decision', async () => {
+    const { result } = renderHook(() => useCompliance());
+
+    const outcome = await result.current.fileLimitRequestNote(CONTEXT, {
+      clerk: 'JR',
+      decision: 'Accepted',
+      comment: 'Beleg nachgereicht',
+      attachment: { data: 'data:application/pdf;base64,QQ==', name: 'Kaufvertrag.pdf' },
+    });
+
+    expect(outcome).toEqual({ success: true, completedSteps: ['log'] });
+    expect(mockCall.mock.calls.map(([a]) => `${a.method} ${a.url}`)).toEqual(['POST kyc/admin/log']);
+
+    const log = callsTo('kyc/admin/log')[0].data;
+    expect(log.comment).toContain('Services - LimitRequest');
+    expect(log.comment).toContain('limitRequest-decision-Accepted');
+    expect(log.comment).toContain('comment: Beleg nachgereicht');
+    expect(log.fileName).toBe('Kaufvertrag.pdf');
+  });
+
+  it('reports a failure without claiming the note was filed', async () => {
+    mockCall.mockRejectedValueOnce(new Error('log down'));
+    const { result } = renderHook(() => useCompliance());
+
+    const outcome = await result.current.fileLimitRequestNote(CONTEXT, { clerk: 'JR', decision: 'Rejected' });
+
+    expect(outcome).toMatchObject({ success: false, failedStep: 'log', completedSteps: [] });
+  });
+});
+
 describe('useCompliance().decideLimitRequest', () => {
   beforeEach(() => {
     mockCall.mockReset().mockResolvedValue(undefined);

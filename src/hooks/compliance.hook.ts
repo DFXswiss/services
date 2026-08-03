@@ -1248,6 +1248,38 @@ export function useCompliance() {
     return { success: true, completedSteps };
   }
 
+  /**
+   * Files a note (and optionally the customer's document) against an already-decided limit request.
+   * The API refuses to change a final decision, so without this a decision whose report or note failed
+   * halfway could never be completed, and a document arriving after the decision would have nowhere to
+   * go. Same log shape as the decision itself, so both entries read alike in the file.
+   */
+  async function fileLimitRequestNote(
+    context: { limitRequestId: number; userDataId: number },
+    options: { clerk: string; decision: string; comment?: string; attachment?: { data: string; name: string } },
+  ): Promise<LimitRequestDecisionResult> {
+    try {
+      await createKycLog(
+        context.userDataId,
+        buildKycLogMessage({
+          description: 'LimitRequest',
+          clerk: options.clerk.trim(),
+          results: [{ table: 'limitRequest', column: 'decision', value: options.decision }],
+          comment: options.comment,
+        }),
+        options.attachment,
+      );
+      return { success: true, completedSteps: ['log'] };
+    } catch (e) {
+      return {
+        success: false,
+        failedStep: 'log',
+        completedSteps: [],
+        message: e instanceof Error ? e.message : String(e),
+      };
+    }
+  }
+
   async function chargebackTransaction(transactionId: number, data: ChargebackRefundData): Promise<void> {
     return call<void>({
       url: `support/transaction/${transactionId}/refund`,
@@ -1426,6 +1458,7 @@ export function useCompliance() {
       createLimitRequest,
       updateLimitRequest,
       decideLimitRequest,
+      fileLimitRequestNote,
       generateLimitRequestPdf,
       chargebackTransaction,
       stopTransaction,

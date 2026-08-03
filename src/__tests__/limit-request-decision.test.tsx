@@ -1,5 +1,6 @@
 // jest.mock factories may only reference variables whose name starts with `mock`.
 const mockDecideLimitRequest = jest.fn();
+const mockFileLimitRequestNote = jest.fn();
 const mockToBase64 = jest.fn();
 
 // Mocked wholesale rather than via requireActual: the real module pulls in @dfx.swiss/react, which
@@ -10,7 +11,10 @@ const mockToBase64 = jest.fn();
 jest.mock('src/hooks/compliance.hook', () => ({
   LimitRequestDecision: { ACCEPTED: 'Accepted', PARTIALLY_ACCEPTED: 'PartiallyAccepted', REJECTED: 'Rejected' },
   LimitRequestGrantingDecisions: ['Accepted', 'PartiallyAccepted'],
-  useCompliance: () => ({ decideLimitRequest: mockDecideLimitRequest }),
+  useCompliance: () => ({
+    decideLimitRequest: mockDecideLimitRequest,
+    fileLimitRequestNote: mockFileLimitRequestNote,
+  }),
 }));
 
 // The component reads the picked file through this helper; jsdom's FileReader is stubbed out here so
@@ -59,8 +63,8 @@ function selectDecision(value: string) {
   fireEvent.change(screen.getByLabelText('Decision', { selector: 'select' }), { target: { value } });
 }
 
-function saveButton(): HTMLButtonElement {
-  return screen.getByRole('button', { name: 'Save decision' }) as HTMLButtonElement;
+function saveButton(name = 'Save decision'): HTMLButtonElement {
+  return screen.getByRole('button', { name }) as HTMLButtonElement;
 }
 
 async function clickSave() {
@@ -73,6 +77,7 @@ describe('LimitRequestDecisionForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockDecideLimitRequest.mockResolvedValue({ success: true, completedSteps: [] });
+    mockFileLimitRequestNote.mockResolvedValue({ success: true, completedSteps: ['log'] });
     mockToBase64.mockImplementation(async (file: File) =>
       file.name === 'Kaufvertrag.pdf' ? 'data:application/pdf;base64,Y29udHJhY3Q=' : 'data:text/plain;base64,eA==',
     );
@@ -239,6 +244,74 @@ describe('LimitRequestDecisionForm', () => {
 
     expect(screen.getByTestId('error-hint')).toHaveTextContent('could not be read');
     expect(mockDecideLimitRequest).not.toHaveBeenCalled();
+  });
+
+  // The API validates both target columns with @IsInt, so a decimal would come back as a 400 rather
+  // than being rounded. The form has to refuse it before the call.
+  it('refuses a decimal amount', () => {
+    renderForm();
+    selectDecision('Accepted');
+    const input = screen.getByLabelText('Accepted limit (CHF)', { selector: 'input' });
+
+    fireEvent.change(input, { target: { value: '150000.5' } });
+    expect(saveButton()).toBeDisabled();
+
+    fireEvent.change(input, { target: { value: '150000' } });
+    expect(saveButton()).not.toBeDisabled();
+  });
+
+  describe('when the request is already decided', () => {
+    // The API refuses to change a final decision. Without this mode a decision whose report or note
+    // failed halfway could never be completed, and a document arriving later would have nowhere to go.
+    it('offers filing a note instead of a decision', () => {
+      renderForm({ decidedAs: 'Accepted' });
+
+      expect(screen.queryByLabelText('Decision', { selector: 'select' })).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Accepted limit (CHF)', { selector: 'input' })).not.toBeInTheDocument();
+      expect(screen.getByText(/already decided \(Accepted\)/)).toBeInTheDocument();
+      // Nothing to file yet: neither a note nor a document.
+      expect(saveButton('Save file note')).toBeDisabled();
+    });
+
+    it('files a note against the recorded decision', async () => {
+      const onDecided = renderForm({ decidedAs: 'Rejected' });
+
+      fireEvent.change(screen.getByLabelText('Internal file note', { selector: 'input' }), {
+        target: { value: 'Beleg nachgereicht' },
+      });
+      await act(async () => {
+        fireEvent.click(saveButton('Save file note'));
+      });
+
+      expect(mockFileLimitRequestNote).toHaveBeenCalledWith(CONTEXT, {
+        clerk: 'JR',
+        decision: 'Rejected',
+        comment: 'Beleg nachgereicht',
+        attachment: undefined,
+      });
+      expect(mockDecideLimitRequest).not.toHaveBeenCalled();
+      expect(onDecided).toHaveBeenCalledTimes(1);
+    });
+
+    it('files a document alone, without a note', async () => {
+      renderForm({ decidedAs: 'Accepted' });
+
+      fireEvent.change(screen.getByLabelText('Customer document (optional)', { selector: 'input' }), {
+        target: { files: [new File(['contract'], 'Kaufvertrag.pdf', { type: 'application/pdf' })] },
+      });
+      expect(saveButton('Save file note')).not.toBeDisabled();
+
+      await act(async () => {
+        fireEvent.click(saveButton('Save file note'));
+      });
+
+      expect(mockFileLimitRequestNote).toHaveBeenCalledWith(
+        CONTEXT,
+        expect.objectContaining({
+          attachment: { data: 'data:application/pdf;base64,Y29udHJhY3Q=', name: 'Kaufvertrag.pdf' },
+        }),
+      );
+    });
   });
 
   it('falls back to a free-text clerk field when no clerk list is available', async () => {

@@ -412,25 +412,30 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         )}
 
         {/* Limit Request decision — the compliance endpoints behind it (userData, limitRequest) are
-            Compliance-gated, so a Support-role clerk would only earn a 403 from the buttons. A decision
-            the API treats as final can no longer be changed, so the form disappears once one is set. */}
-        {issueData.limitRequest &&
-          canAccessCompliance &&
-          !(LimitRequestFinalDecisions as readonly string[]).includes(issueData.limitRequest.decision ?? '') && (
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <LimitRequestDecisionForm
-                limitRequestId={issueData.limitRequest.id}
-                userDataId={issueData.account.id}
-                requestedLimit={issueData.limitRequest.limit}
-                fundOrigin={issueData.limitRequest.fundOrigin}
-                investmentDate={issueData.limitRequest.investmentDate}
-                currentDepositLimit={issueData.account.depositLimit}
-                clerks={clerks}
-                defaultClerk={updateClerk || undefined}
-                onDecided={loadIssue}
-              />
-            </div>
-          )}
+            Compliance-gated, so a Support-role clerk would only earn a 403 from the buttons. Once the
+            decision is final the API refuses to change it, and the form drops to filing a note or a
+            document: that is how a decision whose report or note failed halfway gets completed, and how
+            a document arriving later still reaches the file. */}
+        {issueData.limitRequest && canAccessCompliance && (
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <LimitRequestDecisionForm
+              limitRequestId={issueData.limitRequest.id}
+              userDataId={issueData.account.id}
+              requestedLimit={issueData.limitRequest.limit}
+              fundOrigin={issueData.limitRequest.fundOrigin}
+              investmentDate={issueData.limitRequest.investmentDate}
+              currentDepositLimit={issueData.account.depositLimit}
+              decidedAs={
+                (LimitRequestFinalDecisions as readonly string[]).includes(issueData.limitRequest.decision ?? '')
+                  ? issueData.limitRequest.decision
+                  : undefined
+              }
+              clerks={clerks}
+              defaultClerk={updateClerk || undefined}
+              onDecided={loadIssue}
+            />
+          </div>
+        )}
 
         {/* Update Controls */}
         <div className="bg-white rounded-lg shadow-sm p-4">
