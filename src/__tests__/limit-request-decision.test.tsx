@@ -3,6 +3,15 @@ const mockDecideLimitRequest = jest.fn();
 const mockFileLimitRequestNote = jest.fn();
 const mockToBase64 = jest.fn();
 
+jest.mock('src/contexts/settings.context', () => ({
+  useSettingsContext: () => ({
+    translate: (_ns: string, key: string, interpolation?: Record<string, string | number>) =>
+      interpolation
+        ? Object.entries(interpolation).reduce((acc, [k, v]) => acc.replace(`{{${k}}}`, String(v)), key)
+        : key,
+  }),
+}));
+
 // Mocked wholesale rather than via requireActual: the real module pulls in @dfx.swiss/react, which
 // ships ESM that this Jest setup cannot parse. The two exports the component reads at runtime are
 // restated here; their values are the API's and are pinned by the hook test next to this one, which
@@ -255,6 +264,8 @@ describe('LimitRequestDecisionForm', () => {
 
     fireEvent.change(input, { target: { value: '150000.5' } });
     expect(saveButton()).toBeDisabled();
+    fireEvent.click(saveButton());
+    expect(mockDecideLimitRequest).not.toHaveBeenCalled();
 
     fireEvent.change(input, { target: { value: '150000' } });
     expect(saveButton()).not.toBeDisabled();
@@ -359,6 +370,12 @@ describe('LimitRequestDecisionForm', () => {
 
     expect(saveButton('Saving...')).toBeDisabled();
 
+    // Second click while still saving — disabled button must not issue another call.
+    await act(async () => {
+      fireEvent.click(saveButton('Saving...'));
+    });
+    expect(mockDecideLimitRequest).toHaveBeenCalledTimes(1);
+
     await act(async () => {
       release({ success: true, completedSteps: [] });
     });
@@ -382,6 +399,36 @@ describe('LimitRequestDecisionForm', () => {
     expect(screen.getByTestId('error-hint')).toHaveTextContent('log down');
     expect(screen.queryByLabelText('Decision', { selector: 'select' })).not.toBeInTheDocument();
     expect(screen.getByText(/already decided \(Accepted\)/)).toBeInTheDocument();
+  });
+
+  // A failed grant already raised the annual limit. Switching to a rejection must restore the original
+  // value; the form surfaces that and passes revertDepositLimitTo so the hook can write it back.
+  it('offers to restore the previous limit when rejecting after a partial grant', async () => {
+    renderForm();
+    mockDecideLimitRequest.mockResolvedValueOnce({
+      success: false,
+      failedStep: 'report',
+      completedSteps: ['depositLimit'],
+      message: 'storage down',
+    });
+
+    selectDecision('Accepted');
+    await clickSave();
+
+    selectDecision('Rejected');
+    expect(
+      screen.getByText(
+        `The annual limit was already raised by the failed attempt. Saving a rejection will restore the previous limit of ${CURRENT_LIMIT.toLocaleString()} CHF.`,
+      ),
+    ).toBeInTheDocument();
+
+    await clickSave();
+
+    expect(mockDecideLimitRequest).toHaveBeenLastCalledWith(
+      CONTEXT,
+      'Rejected',
+      expect.objectContaining({ revertDepositLimitTo: CURRENT_LIMIT }),
+    );
   });
 
   // The clerk list arrives after the first render; a name typed before that must not stay in state

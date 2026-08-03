@@ -204,7 +204,7 @@ describe('useCompliance().decideLimitRequest', () => {
     });
 
     expect(outcome).toMatchObject({ success: false, failedStep: 'depositLimit', completedSteps: [] });
-    expect(outcome.message).toContain('needs the limit it grants');
+    expect(outcome.message).toContain('needs a positive integer limit');
     expect(mockCall).not.toHaveBeenCalled();
   });
 
@@ -347,5 +347,58 @@ describe('useCompliance().decideLimitRequest', () => {
       failedStep: 'log',
       completedSteps: ['depositLimit', 'report', 'limitRequest'],
     });
+  });
+
+  // Zero, negative, decimal and NaN would either no-op or be refused by @IsInt — never raise the limit.
+  it.each([0, -5, 1.5, NaN])(
+    'refuses a granting decision with non-positive-integer grantedLimit %p, before touching anything',
+    async (grantedLimit) => {
+      const { result } = renderHook(() => useCompliance());
+
+      const outcome = await result.current.decideLimitRequest(CONTEXT, LimitRequestDecision.ACCEPTED, {
+        clerk: 'JR',
+        requestedLimit: 500000,
+        grantedLimit,
+      });
+
+      expect(outcome).toMatchObject({
+        success: false,
+        failedStep: 'depositLimit',
+        completedSteps: [],
+      });
+      expect(mockCall).not.toHaveBeenCalled();
+    },
+  );
+
+  // A prior partial attempt already raised the limit; a rejection must write the original value back so
+  // the final decision does not leave a silently elevated depositLimit.
+  it('reverts the annual limit on a rejection when revertDepositLimitTo is set', async () => {
+    const { result } = renderHook(() => useCompliance());
+
+    const outcome = await result.current.decideLimitRequest(CONTEXT, LimitRequestDecision.REJECTED, {
+      clerk: 'JR',
+      requestedLimit: 500000,
+      revertDepositLimitTo: 50000,
+    });
+
+    expect(outcome.completedSteps).toContain('depositLimit');
+    expect(mockCall.mock.calls.map(([a]) => `${a.method} ${a.url}`)).toEqual([
+      'PUT userData/397328',
+      'POST support/397328/limit-request-pdf',
+      'PUT limitRequest/855',
+      'POST kyc/admin/log',
+    ]);
+    expect(callsTo('userData/397328')[0].data).toEqual({ depositLimit: 50000 });
+  });
+
+  it('does not touch userData on a rejection without revertDepositLimitTo', async () => {
+    const { result } = renderHook(() => useCompliance());
+
+    await result.current.decideLimitRequest(CONTEXT, LimitRequestDecision.REJECTED, {
+      clerk: 'JR',
+      requestedLimit: 500000,
+    });
+
+    expect(callsTo('userData/397328')).toHaveLength(0);
   });
 });

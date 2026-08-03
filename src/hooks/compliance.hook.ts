@@ -1165,9 +1165,12 @@ export function useCompliance() {
    *      same builder as the DfxApproval flow.
    *
    * The report is filed BEFORE the decision, unlike the sheet, because the decision is the only step
-   * that cannot be repeated: the API refuses to change a final decision. Failing on step 1 or 2 leaves
-   * nothing recorded and the whole sequence can simply be retried (re-writing the same deposit limit is
-   * a no-op). Had the decision gone first, a failing report would leave a decided request whose file
+   * that cannot be repeated: the API refuses to change a final decision. A failure on step 1 leaves
+   * nothing recorded. A failure after step 1 leaves the already-raised deposit limit — visible via
+   * completedSteps containing 'depositLimit'. A retry with the same (granting) decision rewrites that
+   * limit idempotently. Switching to a non-granting decision must pass `revertDepositLimitTo` with the
+   * original value, otherwise the limit stays silently raised while a rejection is stored at the end.
+   * Had the decision gone first, a failing report would leave a decided request whose file
    * record could never be produced. A report left behind by a failed step 3 states the decision the
    * clerk made and is superseded by the report of the successful retry.
    *
@@ -1181,6 +1184,12 @@ export function useCompliance() {
       requestedLimit: number;
       grantedLimit?: number;
       currentDepositLimit?: number;
+      /**
+       * Only set when a prior partial attempt already raised the limit and the current decision does
+       * not grant one; step 1 then writes this original value back so a final rejection does not leave
+       * a silently raised limit.
+       */
+      revertDepositLimitTo?: number;
       comment?: string;
       fundOrigin?: string;
       investmentDate?: string;
@@ -1200,21 +1209,26 @@ export function useCompliance() {
     const grantsLimit = LimitRequestGrantingDecisions.includes(decision);
     const results: KycLogResult[] = [];
 
-    // A granting decision without an amount would raise nothing and still record an acceptance — the
-    // customer would then be mailed the old limit by the notification cron. Refused rather than skipped.
-    if (grantsLimit && options.grantedLimit == null)
+    // A granting decision without a positive integer amount would raise nothing (or the API would refuse
+    // a decimal) and still record an acceptance — the customer would then be mailed the old limit by the
+    // notification cron. Refused rather than skipped.
+    if (grantsLimit && !(options.grantedLimit != null && Number.isInteger(options.grantedLimit) && options.grantedLimit > 0))
       return {
         success: false,
         failedStep: 'depositLimit',
         completedSteps,
-        message: 'An accepted limit request needs the limit it grants',
+        message: 'An accepted limit request needs a positive integer limit',
       };
 
-    // 1) Raise the annual limit
+    // 1) Raise the annual limit (or restore the pre-attempt value when reverting a failed grant)
     try {
       if (grantsLimit) {
         await updateUserData(context.userDataId, { depositLimit: options.grantedLimit });
         results.push({ table: 'userData', column: 'depositLimit', value: String(options.grantedLimit) });
+        completedSteps.push('depositLimit');
+      } else if (options.revertDepositLimitTo != null) {
+        await updateUserData(context.userDataId, { depositLimit: options.revertDepositLimitTo });
+        results.push({ table: 'userData', column: 'depositLimit', value: String(options.revertDepositLimitTo) });
         completedSteps.push('depositLimit');
       }
     } catch (e) {
