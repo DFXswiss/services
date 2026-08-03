@@ -19,8 +19,10 @@ import { createTestCredentials } from './test-wallet';
 // Test data - uses "max" search which returns Max Mueller (ID 1005)
 const TEST_USER_DATA_ID = '1005';
 const TEST_SEARCH_QUERY = 'max';
-// Requires a local BuyCrypto with status Stopped, amlCheck Pass on this transaction uid — the
-// standard test data has no stopped transaction, so seed one before regenerating these baselines.
+// Requires a local BuyCrypto on this transaction uid, owned by TEST_USER_DATA_ID, with status
+// Stopped, amlCheck Pass and not completed — that combination is what renders the resume button
+// (see canResume in transactions-tab.tsx). The standard test data has no stopped transaction, so
+// seed one before regenerating these baselines.
 const TEST_STOPPED_TX_UID = 'T2AC46F80RESUME01';
 
 const API_URL = process.env.REACT_APP_API_URL! + '/v1';
