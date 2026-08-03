@@ -183,7 +183,20 @@ export interface SupportMessageInfo {
   created: string;
 }
 
+// Mirrors the API's LimitRequestDecision. Accepted/PartiallyAccepted/Rejected are the decisions a
+// clerk makes; Expired/Closed/Approved1of2 are set by the backend and are therefore not offered here.
+export enum LimitRequestDecision {
+  ACCEPTED = 'Accepted',
+  PARTIALLY_ACCEPTED = 'PartiallyAccepted',
+  REJECTED = 'Rejected',
+}
+
+// A decision the API treats as final (LimitRequestFinalStates): the request can no longer be changed,
+// so the decision form is not offered for one of these.
+export const LimitRequestFinalDecisions = ['Accepted', 'PartiallyAccepted', 'Rejected', 'Expired', 'Closed'] as const;
+
 export interface LimitRequestInfo {
+  id: number;
   limit: number;
   acceptedLimit?: number;
   decision?: string;
@@ -1067,6 +1080,26 @@ export function useCompliance() {
     });
   }
 
+  // Decides a pending limit request. The API closes the support issue and triggers the KYC webhook on
+  // an accepting decision, so this is the whole action — nothing else has to be updated alongside it.
+  async function updateLimitRequest(
+    limitRequestId: number,
+    data: { decision: LimitRequestDecision; acceptedLimit?: number; clerk: string },
+  ): Promise<void> {
+    return call<void>({
+      url: `limitRequest/${limitRequestId}`,
+      method: 'PUT',
+      data: {
+        decision: data.decision,
+        // Only sent when the decision grants a limit: the API rejects a null and keeps the previous
+        // value when the field is absent, which is what a rejection should leave behind.
+        ...(data.acceptedLimit != null ? { acceptedLimit: data.acceptedLimit } : {}),
+        clerk: data.clerk,
+        edited: new Date().toISOString(),
+      },
+    });
+  }
+
   async function chargebackTransaction(transactionId: number, data: ChargebackRefundData): Promise<void> {
     return call<void>({
       url: `support/transaction/${transactionId}/refund`,
@@ -1243,6 +1276,7 @@ export function useCompliance() {
       updateKycStep,
       updateUserData,
       createLimitRequest,
+      updateLimitRequest,
       chargebackTransaction,
       stopTransaction,
       updateBankData,
