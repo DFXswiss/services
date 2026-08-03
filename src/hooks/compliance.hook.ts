@@ -114,8 +114,24 @@ export interface PendingTransactionInfo {
 }
 
 export type CallOutcomeContext =
-  | { queue: CallQueue; userDataId: number; txId: number; sourceType: CallQueueSourceType }
-  | { queue: CallQueue; userDataId: number; txId?: undefined; sourceType?: undefined };
+  | {
+      queue: CallQueue;
+      userDataId: number;
+      txId: number;
+      sourceType: CallQueueSourceType;
+      amlCheck?: string;
+      amlReason?: string;
+      buyCryptoResetEligible?: boolean;
+    }
+  | {
+      queue: CallQueue;
+      userDataId: number;
+      txId?: undefined;
+      sourceType?: undefined;
+      amlCheck?: undefined;
+      amlReason?: undefined;
+      buyCryptoResetEligible?: undefined;
+    };
 
 export enum CallOutcome {
   COMPLETED = 'Completed',
@@ -502,6 +518,11 @@ export interface TransactionInfo {
   id: number;
   uid: string;
   buyCryptoId?: number;
+  buyCryptoIsComplete?: boolean;
+  buyCryptoStatus?: string;
+  buyCryptoHasBatch?: boolean;
+  buyCryptoHasChargeback?: boolean;
+  buyCryptoReviewResetBlocked?: boolean;
   buyFiatId?: number;
   bankDataId?: number;
   type?: string;
@@ -728,6 +749,14 @@ export function useCompliance() {
     return call<ComplianceUserData>({
       url: `support/${userDataId}`,
       method: 'GET',
+    });
+  }
+
+  async function setKycStatusCheck(userDataId: number, expectedKycStatus: KycStatus): Promise<void> {
+    return call<void>({
+      url: `userData/${userDataId}/kycStatus/check`,
+      method: 'PUT',
+      data: { expectedKycStatus },
     });
   }
 
@@ -1035,8 +1064,17 @@ export function useCompliance() {
           results.push({ table: txTable, column: 'amlCheck', value: CheckStatus.FAIL });
           results.push({ table: txTable, column: 'amlReason', value: AmlReason.MANUAL_CHECK_PHONE_FAILED });
         } else {
-          if (tx.sourceType === 'BuyCrypto') await resetBuyCryptoAml(tx.id);
-          else await resetBuyFiatAml(tx.id);
+          if (tx.sourceType === 'BuyCrypto') {
+            if (!context.buyCryptoResetEligible)
+              throw new Error(
+                'BuyCrypto AML reset is unavailable; set KYC to Check and reload an eligible transaction',
+              );
+            if (!context.amlCheck) throw new Error('Current BuyCrypto AML status is missing; reload the transaction');
+            await resetBuyCryptoReviewAml(tx.id, {
+              expectedAmlCheck: context.amlCheck as CheckStatus,
+              expectedAmlReason: (context.amlReason as AmlReason | undefined) ?? null,
+            });
+          } else await resetBuyFiatAml(tx.id);
           results.push({ table: txTable, column: 'amlCheck', value: 'Reset' });
         }
         completedSteps.push('transaction');
@@ -1358,10 +1396,14 @@ export function useCompliance() {
     });
   }
 
-  async function resetBuyCryptoAml(id: number): Promise<void> {
+  async function resetBuyCryptoReviewAml(
+    id: number,
+    expected: { expectedAmlCheck: CheckStatus; expectedAmlReason: AmlReason | null },
+  ): Promise<void> {
     return call<void>({
-      url: `buyCrypto/${id}/amlCheck`,
-      method: 'DELETE',
+      url: `buyCrypto/${id}/amlCheck/reviewReset`,
+      method: 'PUT',
+      data: expected,
     });
   }
 
@@ -1457,6 +1499,7 @@ export function useCompliance() {
     () => ({
       search,
       getUserData,
+      setKycStatusCheck,
       getPendingTransactions,
       getPendingReviews,
       getPendingReviewItems,
@@ -1495,7 +1538,7 @@ export function useCompliance() {
       updateBankData,
       updateBuyCrypto,
       updateBuyFiat,
-      resetBuyCryptoAml,
+      resetBuyCryptoReviewAml,
       resetBuyFiatAml,
       listSupportNotes,
       listSupportNoteUsers,
