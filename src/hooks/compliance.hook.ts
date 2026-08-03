@@ -449,6 +449,11 @@ export interface KycStepInfo {
   created: string;
 }
 
+export interface DfxApprovalStatus {
+  ready: boolean;
+  blockers: { code: string; documentSubType?: string }[];
+}
+
 export interface KycLogInfo {
   id: number;
   type: string;
@@ -703,6 +708,13 @@ export function useCompliance() {
     });
   }
 
+  async function getDfxApprovalStatus(stepId: number): Promise<DfxApprovalStatus> {
+    return call<DfxApprovalStatus>({
+      url: `kyc/admin/dfx-approval/${stepId}/status`,
+      method: 'GET',
+    });
+  }
+
   async function downloadUserFiles(userDataIds: number[]): Promise<void> {
     const { data, headers } = await call<{ data: Blob; headers: Record<string, string> }>({
       url: 'userData/download',
@@ -809,6 +821,21 @@ export function useCompliance() {
   ): Promise<{ pdfData: string; fileName: string }> {
     return call<{ pdfData: string; fileName: string }>({
       url: `support/${userDataId}/onboarding-pdf`,
+      method: 'POST',
+      data,
+    });
+  }
+
+  async function decidePersonalDfxApproval(
+    userDataId: number,
+    data: {
+      stepId: number;
+      finalDecision: string;
+      processedBy: string;
+    },
+  ): Promise<{ pdfData: string; fileName: string }> {
+    return call<{ pdfData: string; fileName: string }>({
+      url: `support/${userDataId}/dfx-approval`,
       method: 'POST',
       data,
     });
@@ -1214,6 +1241,7 @@ export function useCompliance() {
     () => ({
       search,
       getUserData,
+      getDfxApprovalStatus,
       getPendingTransactions,
       getPendingReviews,
       getPendingReviewItems,
@@ -1232,6 +1260,7 @@ export function useCompliance() {
       downloadIpLogPdf,
       downloadTransactionPdf,
       generateOnboardingPdf,
+      decidePersonalDfxApproval,
       getCustodyOrders,
       approveCustodyOrder,
       getMrosList,
