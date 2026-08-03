@@ -195,8 +195,23 @@ export enum LimitRequestDecision {
 // so the decision form is not offered for one of these.
 export const LimitRequestFinalDecisions = ['Accepted', 'PartiallyAccepted', 'Rejected', 'Expired', 'Closed'] as const;
 
+// The decisions that grant a limit (LimitRequestAcceptedStates on the API side) and therefore require
+// the account's depositLimit to be raised alongside them.
+export const LimitRequestGrantingDecisions: LimitRequestDecision[] = [
+  LimitRequestDecision.ACCEPTED,
+  LimitRequestDecision.PARTIALLY_ACCEPTED,
+];
+
+export type LimitRequestDecisionStep = 'depositLimit' | 'limitRequest' | 'report' | 'log';
+
+export interface LimitRequestDecisionResult {
+  success: boolean;
+  failedStep?: LimitRequestDecisionStep;
+  completedSteps: LimitRequestDecisionStep[];
+  message?: string;
+}
+
 export interface LimitRequestInfo {
-  id: number;
   limit: number;
   acceptedLimit?: number;
   decision?: string;
@@ -827,6 +842,26 @@ export function useCompliance() {
     });
   }
 
+  async function generateLimitRequestPdf(
+    userDataId: number,
+    data: {
+      decision: LimitRequestDecision;
+      clerk: string;
+      requestedLimit: number;
+      grantedLimit?: number;
+      previousLimit?: number;
+      fundOrigin?: string;
+      investmentDate?: string;
+      note?: string;
+    },
+  ): Promise<{ pdfData: string; fileName: string }> {
+    return call<{ pdfData: string; fileName: string }>({
+      url: `support/${userDataId}/limit-request-pdf`,
+      method: 'POST',
+      data,
+    });
+  }
+
   async function getPendingTransactions(): Promise<PendingTransactionInfo[]> {
     return call<PendingTransactionInfo[]>({
       url: 'support/pending-transactions',
@@ -1100,6 +1135,104 @@ export function useCompliance() {
     });
   }
 
+  /**
+   * Decides a limit request the way the Google Sheet does, in the same order and with the same effects:
+   *
+   *   1. `PUT userData/{id} { depositLimit }` — only for a decision that grants a limit. This is the
+   *      step that changes what the customer may actually trade: nothing in the API derives the annual
+   *      limit from the limit request, so a decision without it would be recorded but toothless.
+   *   2. `PUT limitRequest/{id} { decision, acceptedLimit, clerk, edited }` — the decision itself. The
+   *      API closes the support issue and fires the KYC webhook once the decision is final, so neither
+   *      needs a call of its own; the sheet's separate issue update is redundant against this endpoint.
+   *   3. `POST kyc/admin/log` — the file note ("Aktennotiz"), through the same builder as the
+   *      DfxApproval flow, so both decisions read alike in the customer's file.
+   *
+   * The order matters on failure: a raised limit without a recorded decision can be repaired by
+   * repeating the decision, whereas a recorded decision without the raised limit looks finished but is
+   * not. Partial progress is therefore reported rather than swallowed — same contract as
+   * `saveCallOutcome`.
+   */
+  async function decideLimitRequest(
+    context: { limitRequestId: number; userDataId: number },
+    decision: LimitRequestDecision,
+    options: {
+      clerk: string;
+      requestedLimit: number;
+      grantedLimit?: number;
+      currentDepositLimit?: number;
+      comment?: string;
+      fundOrigin?: string;
+      investmentDate?: string;
+    },
+  ): Promise<LimitRequestDecisionResult> {
+    const completedSteps: LimitRequestDecisionStep[] = [];
+    const fail = (step: LimitRequestDecisionStep, err: unknown): LimitRequestDecisionResult => ({
+      success: false,
+      failedStep: step,
+      completedSteps,
+      message: err instanceof Error ? err.message : String(err),
+    });
+
+    const clerk = options.clerk.trim();
+    const grantsLimit = LimitRequestGrantingDecisions.includes(decision);
+    const results: KycLogResult[] = [];
+
+    // 1) Raise the annual limit
+    try {
+      if (grantsLimit && options.grantedLimit != null) {
+        await updateUserData(context.userDataId, { depositLimit: options.grantedLimit });
+        results.push({ table: 'userData', column: 'depositLimit', value: String(options.grantedLimit) });
+        completedSteps.push('depositLimit');
+      }
+    } catch (e) {
+      return fail('depositLimit', e);
+    }
+
+    // 2) Record the decision. On a rejection the limit that stays in force is recorded on the request,
+    // which is what makes a rejected request readable later.
+    try {
+      await updateLimitRequest(context.limitRequestId, {
+        decision,
+        acceptedLimit: grantsLimit ? options.grantedLimit : options.currentDepositLimit,
+        clerk,
+      });
+      results.push({ table: 'limitRequest', column: 'decision', value: decision });
+      completedSteps.push('limitRequest');
+    } catch (e) {
+      return fail('limitRequest', e);
+    }
+
+    // 3) File the report document, the same record the sheet uploaded for every final decision
+    try {
+      await generateLimitRequestPdf(context.userDataId, {
+        decision,
+        clerk,
+        requestedLimit: options.requestedLimit,
+        grantedLimit: grantsLimit ? options.grantedLimit : undefined,
+        previousLimit: options.currentDepositLimit,
+        fundOrigin: options.fundOrigin,
+        investmentDate: options.investmentDate,
+        note: options.comment,
+      });
+      completedSteps.push('report');
+    } catch (e) {
+      return fail('report', e);
+    }
+
+    // 4) File note
+    try {
+      await createKycLog(
+        context.userDataId,
+        buildKycLogMessage({ description: 'LimitRequest', clerk, results, comment: options.comment }),
+      );
+      completedSteps.push('log');
+    } catch (e) {
+      return fail('log', e);
+    }
+
+    return { success: true, completedSteps };
+  }
+
   async function chargebackTransaction(transactionId: number, data: ChargebackRefundData): Promise<void> {
     return call<void>({
       url: `support/transaction/${transactionId}/refund`,
@@ -1277,6 +1410,8 @@ export function useCompliance() {
       updateUserData,
       createLimitRequest,
       updateLimitRequest,
+      decideLimitRequest,
+      generateLimitRequestPdf,
       chargebackTransaction,
       stopTransaction,
       updateBankData,

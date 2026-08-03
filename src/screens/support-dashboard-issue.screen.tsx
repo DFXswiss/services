@@ -3,12 +3,13 @@ import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
+import { LimitRequestDecisionForm } from 'src/components/compliance/limit-request-decision-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { InfoPanel, InfoRow, SupportMessageList } from 'src/components/support/info-panel';
 import { TemplateArrayPickerModal } from 'src/components/support-templates/template-array-picker-modal';
 import { TemplatePickerModal } from 'src/components/support-templates/template-picker-modal';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { TransactionInfo, UserDataDetail, useCompliance } from 'src/hooks/compliance.hook';
+import { LimitRequestFinalDecisions, TransactionInfo, UserDataDetail, useCompliance } from 'src/hooks/compliance.hook';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -409,6 +410,27 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             )}
           </div>
         )}
+
+        {/* Limit Request decision — the compliance endpoints behind it (userData, limitRequest) are
+            Compliance-gated, so a Support-role clerk would only earn a 403 from the buttons. A decision
+            the API treats as final can no longer be changed, so the form disappears once one is set. */}
+        {issueData.limitRequest &&
+          canAccessCompliance &&
+          !(LimitRequestFinalDecisions as readonly string[]).includes(issueData.limitRequest.decision ?? '') && (
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <LimitRequestDecisionForm
+                limitRequestId={issueData.limitRequest.id}
+                userDataId={issueData.account.id}
+                requestedLimit={issueData.limitRequest.limit}
+                fundOrigin={issueData.limitRequest.fundOrigin}
+                investmentDate={issueData.limitRequest.investmentDate}
+                currentDepositLimit={issueData.account.depositLimit}
+                clerks={clerks}
+                defaultClerk={updateClerk || undefined}
+                onDecided={loadIssue}
+              />
+            </div>
+          )}
 
         {/* Update Controls */}
         <div className="bg-white rounded-lg shadow-sm p-4">

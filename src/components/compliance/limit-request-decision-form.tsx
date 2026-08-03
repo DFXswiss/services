@@ -1,86 +1,140 @@
-import { StyledButton, StyledButtonWidth } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
-import { LimitRequestDecision, LimitRequestInfo, useCompliance } from 'src/hooks/compliance.hook';
+import {
+  LimitRequestDecision,
+  LimitRequestDecisionStep,
+  LimitRequestGrantingDecisions,
+  useCompliance,
+} from 'src/hooks/compliance.hook';
 
 interface Props {
-  limitRequest: LimitRequestInfo;
+  limitRequestId: number;
+  userDataId: number;
+  requestedLimit: number;
+  fundOrigin?: string;
+  investmentDate?: string;
+  /** The account's annual limit as it stands today — what a rejection leaves in force. */
+  currentDepositLimit?: number;
+  clerks: string[];
+  defaultClerk?: string;
   onDecided: () => void;
 }
 
-// Decides a pending limit request in the compliance tool. Until this existed the decision had to be
-// made in the Google Sheet, because the API endpoint (PUT /limitRequest/:id) had no UI at all.
-export function LimitRequestDecisionForm({ limitRequest, onDecided }: Props): JSX.Element {
-  const { updateLimitRequest, getCallQueueClerks } = useCompliance();
+// Collects the decision and hands it to `useCompliance().decideLimitRequest`, which performs the same
+// steps in the same order as the Google Sheet (raise the annual limit, record the decision, file a
+// note, file the report document) and reports how far it got. The customer message stays where it
+// already lives on this screen.
+export function LimitRequestDecisionForm({
+  limitRequestId,
+  userDataId,
+  requestedLimit,
+  fundOrigin,
+  investmentDate,
+  currentDepositLimit,
+  clerks,
+  defaultClerk,
+  onDecided,
+}: Props): JSX.Element {
+  const { decideLimitRequest } = useCompliance();
 
-  const [clerks, setClerks] = useState<string[]>([]);
-  const [signature, setSignature] = useState('');
+  const [clerk, setClerk] = useState(defaultClerk ?? '');
   const [decision, setDecision] = useState<LimitRequestDecision | ''>('');
   // Prefilled with the requested amount: accepting in full is the common case, and a partial accept is
   // an edit of that number rather than an entry from scratch.
-  const [acceptedLimit, setAcceptedLimit] = useState<string>(String(limitRequest.limit));
+  const [acceptedLimit, setAcceptedLimit] = useState<string>(String(requestedLimit));
+  const [comment, setComment] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string>();
+  const [doneSteps, setDoneSteps] = useState<LimitRequestDecisionStep[]>([]);
 
-  // Ids are derived from the request so the labels stay associated even if a screen ever renders more
-  // than one of these forms.
-  const signatureId = `limit-request-${limitRequest.id}-signature`;
-  const decisionId = `limit-request-${limitRequest.id}-decision`;
-  const acceptedLimitId = `limit-request-${limitRequest.id}-accepted-limit`;
+  const clerkId = `limit-request-${limitRequestId}-clerk`;
+  const decisionId = `limit-request-${limitRequestId}-decision`;
+  const acceptedLimitId = `limit-request-${limitRequestId}-accepted-limit`;
+  const commentId = `limit-request-${limitRequestId}-comment`;
 
-  useEffect(() => {
-    getCallQueueClerks()
-      .then((list) => {
-        setClerks(list);
-        setSignature((prev) => prev || list[0] || '');
-      })
-      // The clerk list is a convenience; failing to load it must not block the decision, so the field
-      // falls back to free text below.
-      .catch(() => setClerks([]));
-  }, []);
-
-  const grantsLimit =
-    decision === LimitRequestDecision.ACCEPTED || decision === LimitRequestDecision.PARTIALLY_ACCEPTED;
+  const grantsLimit = !!decision && LimitRequestGrantingDecisions.includes(decision);
   const parsedLimit = Number(acceptedLimit);
   const isLimitValid = !grantsLimit || (acceptedLimit.trim() !== '' && Number.isFinite(parsedLimit) && parsedLimit > 0);
-  const canSubmit = !!signature.trim() && !!decision && isLimitValid && !isSaving;
+  const canSubmit = !!clerk.trim() && !!decision && isLimitValid && !isSaving;
 
   async function handleSubmit(): Promise<void> {
-    if (!decision || !signature.trim() || !isLimitValid) return;
+    if (!decision || !clerk.trim() || !isLimitValid) return;
 
     setIsSaving(true);
     setError(undefined);
-    try {
-      await updateLimitRequest(limitRequest.id, {
-        decision,
-        acceptedLimit: grantsLimit ? parsedLimit : undefined,
-        clerk: signature.trim(),
-      });
+    setDoneSteps([]);
+
+    const result = await decideLimitRequest({ limitRequestId, userDataId }, decision, {
+      clerk,
+      requestedLimit,
+      grantedLimit: grantsLimit ? parsedLimit : undefined,
+      currentDepositLimit,
+      comment: comment.trim() || undefined,
+      fundOrigin,
+      investmentDate,
+    });
+
+    setIsSaving(false);
+    if (result.success) {
       onDecided();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
-    } finally {
-      setIsSaving(false);
+    } else {
+      // Naming the steps that did land matters: after a failure in between, the operator has to know
+      // whether the limit was already raised before retrying.
+      setDoneSteps(result.completedSteps);
+      setError(result.message ?? 'Unknown error');
     }
   }
 
   return (
     <div className="mt-4 border-t border-dfxGray-300 pt-4">
-      <h3 className="text-sm font-semibold text-dfxBlue-800 mb-3">Decision</h3>
+      <h3 className="text-sm font-semibold text-dfxBlue-800 mb-3">Decide Limit Request</h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor={signatureId} className="block text-sm font-medium text-dfxBlue-800 mb-1">
-            Signature
+      <div className="flex gap-3 flex-wrap items-end">
+        <div className="flex flex-col gap-1">
+          <label htmlFor={decisionId} className="text-xs text-dfxGray-700">
+            Decision
+          </label>
+          <select
+            id={decisionId}
+            className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 min-w-[150px]"
+            value={decision}
+            onChange={(e) => setDecision(e.target.value as LimitRequestDecision | '')}
+          >
+            <option value="">-</option>
+            <option value={LimitRequestDecision.ACCEPTED}>Accepted</option>
+            <option value={LimitRequestDecision.PARTIALLY_ACCEPTED}>PartiallyAccepted</option>
+            <option value={LimitRequestDecision.REJECTED}>Rejected</option>
+          </select>
+        </div>
+
+        {grantsLimit && (
+          <div className="flex flex-col gap-1">
+            <label htmlFor={acceptedLimitId} className="text-xs text-dfxGray-700">
+              New annual limit (CHF)
+            </label>
+            <input
+              id={acceptedLimitId}
+              type="number"
+              min={1}
+              className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 min-w-[130px]"
+              value={acceptedLimit}
+              onChange={(e) => setAcceptedLimit(e.target.value)}
+            />
+          </div>
+        )}
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor={clerkId} className="text-xs text-dfxGray-700">
+            Clerk
           </label>
           {clerks.length ? (
             <select
-              id={signatureId}
-              className="w-full px-3 py-2 text-sm bg-white border border-dfxGray-300 rounded text-dfxBlue-800"
-              value={signature}
-              onChange={(e) => setSignature(e.target.value)}
+              id={clerkId}
+              className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 min-w-[130px]"
+              value={clerk}
+              onChange={(e) => setClerk(e.target.value)}
             >
-              <option value="">—</option>
+              <option value="">-</option>
               {clerks.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -89,63 +143,53 @@ export function LimitRequestDecisionForm({ limitRequest, onDecided }: Props): JS
             </select>
           ) : (
             <input
-              id={signatureId}
-              className="w-full px-3 py-2 text-sm bg-white border border-dfxGray-300 rounded text-dfxBlue-800"
-              value={signature}
-              onChange={(e) => setSignature(e.target.value)}
-              placeholder="Your sign"
+              id={clerkId}
+              className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 min-w-[130px]"
+              value={clerk}
+              onChange={(e) => setClerk(e.target.value)}
+              placeholder="Sign"
             />
           )}
         </div>
 
-        <div>
-          <label htmlFor={decisionId} className="block text-sm font-medium text-dfxBlue-800 mb-1">
-            Decision
-          </label>
-          <select
-            id={decisionId}
-            className="w-full px-3 py-2 text-sm bg-white border border-dfxGray-300 rounded text-dfxBlue-800"
-            value={decision}
-            onChange={(e) => setDecision(e.target.value as LimitRequestDecision | '')}
-          >
-            <option value="">—</option>
-            <option value={LimitRequestDecision.ACCEPTED}>Accept</option>
-            <option value={LimitRequestDecision.PARTIALLY_ACCEPTED}>Partially accept</option>
-            <option value={LimitRequestDecision.REJECTED}>Reject</option>
-          </select>
-        </div>
-      </div>
-
-      {grantsLimit && (
-        <div className="mt-4 max-w-xs">
-          <label htmlFor={acceptedLimitId} className="block text-sm font-medium text-dfxBlue-800 mb-1">
-            Accepted limit (CHF)
+        <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
+          <label htmlFor={commentId} className="text-xs text-dfxGray-700">
+            File note (optional)
           </label>
           <input
-            id={acceptedLimitId}
-            type="number"
-            min={1}
-            className="w-full px-3 py-2 text-sm bg-white border border-dfxGray-300 rounded text-dfxBlue-800"
-            value={acceptedLimit}
-            onChange={(e) => setAcceptedLimit(e.target.value)}
+            id={commentId}
+            className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 w-full"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
           />
         </div>
-      )}
+
+        <button
+          className="px-4 py-1.5 bg-dfxBlue-400 text-white rounded text-xs hover:bg-dfxBlue-800 transition-colors disabled:opacity-50"
+          onClick={handleSubmit}
+          disabled={!canSubmit}
+        >
+          {isSaving ? 'Saving...' : 'Save decision'}
+        </button>
+      </div>
+
+      <p className="mt-2 text-xs text-dfxGray-700">
+        {grantsLimit
+          ? `Sets the annual limit to ${
+              isLimitValid ? parsedLimit.toLocaleString() : '-'
+            } CHF and records the decision.`
+          : decision
+            ? `Keeps the current annual limit${
+                currentDepositLimit != null ? ` of ${currentDepositLimit.toLocaleString()} CHF` : ''
+              } and records the decision.`
+            : 'The customer message is sent separately below, as before.'}
+      </p>
 
       {error && (
         <div className="mt-3">
-          <ErrorHint message={error} />
+          <ErrorHint message={`${error}${doneSteps.length ? ` (already applied: ${doneSteps.join(', ')})` : ''}`} />
         </div>
       )}
-
-      <div className="mt-4 max-w-xs">
-        <StyledButton
-          width={StyledButtonWidth.FULL}
-          label={isSaving ? 'Saving...' : 'Save decision'}
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-        />
-      </div>
     </div>
   );
 }

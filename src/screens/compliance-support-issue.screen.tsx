@@ -1,17 +1,12 @@
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { LimitRequestDecisionForm } from 'src/components/compliance/limit-request-decision-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { LimitRequestFinalDecisions, SupportIssueInfo, useCompliance } from 'src/hooks/compliance.hook';
+import { SupportIssueInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-
-function isDecisionFinal(decision?: string): boolean {
-  return !!decision && (LimitRequestFinalDecisions as readonly string[]).includes(decision);
-}
 
 export default function ComplianceSupportIssueScreen(): JSX.Element {
   useComplianceGuard();
@@ -28,51 +23,29 @@ export default function ComplianceSupportIssueScreen(): JSX.Element {
 
   useLayoutOptions({ title: translate('screens/compliance', 'Support Issue'), backButton: true, noMaxWidth: true });
 
-  // Returns a cancel handle so the initial effect can drop a late response after unmount, while the
-  // reload after a decision can simply await the same fetch.
-  const loadIssue = useCallback((): { promise: Promise<void>; cancel: () => void } => {
-    let cancelled = false;
-    if (!userDataId || !issueId) {
-      setError('Missing parameters');
-      setIsLoading(false);
-      return { promise: Promise.resolve(), cancel: () => undefined };
-    }
-
-    setIsLoading(true);
-    const promise = getUserData(+userDataId)
-      .then((data) => {
-        if (cancelled) return;
-        const found = data.supportIssues?.find((s) => s.id === +issueId);
-        if (found) {
-          setIssue(found);
-          setError(undefined);
-        } else {
-          setError('Support issue not found');
-        }
-      })
-      .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Unknown error');
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-
-    return {
-      promise,
-      cancel: () => {
-        cancelled = true;
-      },
-    };
-  }, [userDataId, issueId]);
-
   useEffect(() => {
-    // The list passes the issue along, so the detail view renders without a round trip; only a direct
-    // hit on the URL has to fetch.
     if (issue) return;
 
-    const { cancel } = loadIssue();
-    return cancel;
-  }, [loadIssue]);
+    let cancelled = false;
+    if (userDataId && issueId) {
+      setIsLoading(true);
+      getUserData(+userDataId)
+        .then((data) => {
+          if (cancelled) return;
+          const found = data.supportIssues?.find((s) => s.id === +issueId);
+          if (found) setIssue(found);
+          else setError('Support issue not found');
+        })
+        .catch((e: unknown) => !cancelled && setError(e instanceof Error ? e.message : 'Unknown error'))
+        .finally(() => !cancelled && setIsLoading(false));
+    } else {
+      setError('Missing parameters');
+      setIsLoading(false);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [userDataId, issueId]);
 
   if (error) return <ErrorHint message={error} />;
   if (isLoading || !issue) return <StyledLoadingSpinner size={SpinnerSize.LG} />;
@@ -191,12 +164,6 @@ export default function ComplianceSupportIssueScreen(): JSX.Element {
                 )}
               </tbody>
             </table>
-
-            {/* A final decision cannot be changed (the API rejects it), so the form is only offered
-                while the request is still open. */}
-            {!isDecisionFinal(issue.limitRequest.decision) && (
-              <LimitRequestDecisionForm limitRequest={issue.limitRequest} onDecided={() => void loadIssue().promise} />
-            )}
           </div>
         )}
 
