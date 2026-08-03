@@ -103,6 +103,7 @@ const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-
 const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard-financial-liquidity.screen'));
 const DashboardFinancialLogValidityScreen = lazy(() => import('./screens/dashboard-financial-log-validity.screen'));
 const SitemapScreen = lazy(() => import('./screens/sitemap.screen'));
+const BuyCryptoResetAmlScreen = lazy(() => import('./screens/buy-crypto-reset-aml.screen'));
 
 setupLanguages();
 
@@ -287,6 +288,10 @@ export const Routes = [
       {
         path: 'buyCrypto/update',
         element: withSuspense(<BuyCryptoUpdateScreen />),
+      },
+      {
+        path: 'buyCrypto/resetAml',
+        element: withSuspense(<BuyCryptoResetAmlScreen />),
       },
       {
         path: 'tx',
