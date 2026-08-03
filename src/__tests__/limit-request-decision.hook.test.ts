@@ -55,7 +55,7 @@ describe('useCompliance().fileLimitRequestNote', () => {
       clerk: 'JR',
       decision: 'Accepted',
       comment: 'Beleg nachgereicht',
-      attachment: { data: 'data:application/pdf;base64,QQ==', name: 'Kaufvertrag.pdf' },
+      attachment: { data: '[PDF attachment removed — 0 KB]', name: 'Kaufvertrag.pdf' },
     });
 
     expect(outcome).toEqual({ success: true, completedSteps: ['log'] });
@@ -83,11 +83,11 @@ describe('useCompliance().decideLimitRequest', () => {
     mockCall.mockReset().mockResolvedValue(undefined);
   });
 
-  // The account first, then the report, then the decision, then the note. The decision is last of the
-  // three writes on purpose: it is the only one the API refuses to repeat, so anything failing before
-  // it leaves the request retryable. Nothing in the API derives the annual limit from the request, so
-  // dropping the userData call would record an acceptance that leaves the customer on the old limit.
-  it('raises the annual limit, files the report, records the acceptance, then files the note', async () => {
+  // Report first, then the decision (which raises depositLimit server-side behind the finality check),
+  // then the note. The decision is the only step the API refuses to repeat, so anything failing before
+  // it leaves the request retryable. Sending grantedDepositLimit on the decision call — rather than a
+  // separate userData write — is what closes the race with a second, later-clicking clerk.
+  it('files the report, records the accepted grant, then files the note', async () => {
     const { result } = renderHook(() => useCompliance());
 
     const outcome = await result.current.decideLimitRequest(CONTEXT, LimitRequestDecision.ACCEPTED, {
@@ -101,12 +101,11 @@ describe('useCompliance().decideLimitRequest', () => {
 
     expect(outcome).toEqual({
       success: true,
-      completedSteps: ['depositLimit', 'report', 'limitRequest', 'log'],
+      completedSteps: ['report', 'limitRequest', 'log'],
     });
 
     const urls = mockCall.mock.calls.map(([a]) => `${a.method} ${a.url}`);
     expect(urls).toEqual([
-      'PUT userData/397328',
       'POST support/397328/limit-request-pdf',
       'PUT limitRequest/855',
       'POST kyc/admin/log',
@@ -124,10 +123,16 @@ describe('useCompliance().decideLimitRequest', () => {
       note: undefined,
     });
 
-    expect(callsTo('userData/397328')[0].data).toEqual({ depositLimit: 500000 });
+    // The depositLimit write now lives inside the decision call — no separate userData PUT.
+    expect(callsTo('userData/397328')).toHaveLength(0);
 
     const decision = callsTo('limitRequest/855')[0].data;
-    expect(decision).toMatchObject({ decision: 'Accepted', acceptedLimit: 500000, clerk: 'JR' });
+    expect(decision).toMatchObject({
+      decision: 'Accepted',
+      acceptedLimit: 500000,
+      grantedDepositLimit: 500000,
+      clerk: 'JR',
+    });
     // @IsDate on the API side: the value has to parse as a date, not merely be a string.
     expect(Number.isNaN(Date.parse(decision.edited))).toBe(false);
 
@@ -135,6 +140,7 @@ describe('useCompliance().decideLimitRequest', () => {
     expect(log).toMatchObject({ type: 'ManualLog', userData: { id: 397328 } });
     expect(log.comment).toContain('Services - LimitRequest');
     expect(log.comment).toContain('Editor: JR');
+    // The KycLogResult still documents the limit change even though the write is inside the decision call.
     expect(log.comment).toContain('userData-depositLimit-500000');
     expect(log.comment).toContain('limitRequest-decision-Accepted');
   });
@@ -149,15 +155,17 @@ describe('useCompliance().decideLimitRequest', () => {
       currentDepositLimit: 100000,
     });
 
-    expect(callsTo('userData/397328')[0].data).toEqual({ depositLimit: 200000 });
+    expect(callsTo('userData/397328')).toHaveLength(0);
     expect(callsTo('limitRequest/855')[0].data).toMatchObject({
       decision: 'PartiallyAccepted',
       acceptedLimit: 200000,
+      grantedDepositLimit: 200000,
     });
   });
 
-  // A rejection must not touch the account, and must not write an acceptedLimit: every view that shows
-  // that field labels it "Accepted", so a rejected request would read as an accepted amount.
+  // A rejection must not touch the account, and must not write an acceptedLimit or grantedDepositLimit:
+  // every view that shows acceptedLimit labels it "Accepted", so a rejected request would read as an
+  // accepted amount; the API rejects grantedDepositLimit on a non-granting decision.
   it('leaves the account untouched on a rejection and grants no limit', async () => {
     const { result } = renderHook(() => useCompliance());
 
@@ -177,6 +185,7 @@ describe('useCompliance().decideLimitRequest', () => {
     expect(callsTo('userData/397328')).toHaveLength(0);
     expect(callsTo('limitRequest/855')[0].data).toMatchObject({ decision: 'Rejected', clerk: 'JR' });
     expect(callsTo('limitRequest/855')[0].data).not.toHaveProperty('acceptedLimit');
+    expect(callsTo('limitRequest/855')[0].data).not.toHaveProperty('grantedDepositLimit');
     expect(callsTo('kyc/admin/log')[0].data.comment).not.toContain('depositLimit');
   });
 
@@ -191,10 +200,11 @@ describe('useCompliance().decideLimitRequest', () => {
     });
 
     expect(callsTo('limitRequest/855')[0].data).not.toHaveProperty('acceptedLimit');
+    expect(callsTo('limitRequest/855')[0].data).not.toHaveProperty('grantedDepositLimit');
   });
 
-  // Without the amount the first step would silently do nothing while the decision still went in, and
-  // the notification cron would then mail the customer their old limit as if it had been raised.
+  // Without the amount the decision call would carry nothing to raise and still record an acceptance,
+  // and the notification cron would then mail the customer their old limit as if it had been raised.
   it('refuses a granting decision that carries no amount, before touching anything', async () => {
     const { result } = renderHook(() => useCompliance());
 
@@ -203,7 +213,7 @@ describe('useCompliance().decideLimitRequest', () => {
       requestedLimit: 500000,
     });
 
-    expect(outcome).toMatchObject({ success: false, failedStep: 'depositLimit', completedSteps: [] });
+    expect(outcome).toMatchObject({ success: false, failedStep: 'limitRequest', completedSteps: [] });
     expect(outcome.message).toContain('needs the limit it grants');
     expect(mockCall).not.toHaveBeenCalled();
   });
@@ -247,11 +257,11 @@ describe('useCompliance().decideLimitRequest', () => {
       grantedLimit: 500000,
       currentDepositLimit: 100000,
       comment: 'Hausverkauf',
-      attachment: { data: 'data:application/pdf;base64,QQ==', name: 'Kaufvertrag.pdf' },
+      attachment: { data: '[PDF attachment removed — 0 KB]', name: 'Kaufvertrag.pdf' },
     });
 
     const log = callsTo('kyc/admin/log')[0].data;
-    expect(log.file).toBe('data:application/pdf;base64,QQ==');
+    expect(log.file).toBe('[PDF attachment removed — 0 KB]');
     expect(log.fileName).toBe('Kaufvertrag.pdf');
     expect(log.comment).toContain('comment: Hausverkauf');
   });
@@ -270,12 +280,9 @@ describe('useCompliance().decideLimitRequest', () => {
   });
 
   // The failure contract: stop at the first failing step and report what already landed, so a retry
-  // cannot silently raise the limit twice or leave a decision recorded against an unchanged account.
-  it('stops and reports when the decision call fails after the limit and report landed', async () => {
-    mockCall
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(undefined)
-      .mockRejectedValueOnce(new Error('Limit request already final'));
+  // cannot re-decide a request that is already final or leave a decision recorded against a missing report.
+  it('stops and reports when the decision call fails after the report landed', async () => {
+    mockCall.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('Limit request already final'));
     const { result } = renderHook(() => useCompliance());
 
     const outcome = await result.current.decideLimitRequest(CONTEXT, LimitRequestDecision.ACCEPTED, {
@@ -287,13 +294,13 @@ describe('useCompliance().decideLimitRequest', () => {
     expect(outcome).toEqual({
       success: false,
       failedStep: 'limitRequest',
-      completedSteps: ['depositLimit', 'report'],
+      completedSteps: ['report'],
       message: 'Limit request already final',
     });
     expect(callsTo('kyc/admin/log')).toHaveLength(0);
   });
 
-  it('does not record a decision when raising the limit fails', async () => {
+  it('does not call the decision endpoint when the report fails', async () => {
     mockCall.mockRejectedValueOnce(new Error('nope'));
     const { result } = renderHook(() => useCompliance());
 
@@ -303,14 +310,14 @@ describe('useCompliance().decideLimitRequest', () => {
       grantedLimit: 500000,
     });
 
-    expect(outcome).toMatchObject({ success: false, failedStep: 'depositLimit', completedSteps: [] });
+    expect(outcome).toMatchObject({ success: false, failedStep: 'report', completedSteps: [] });
     expect(callsTo('limitRequest/855')).toHaveLength(0);
   });
 
   // The reason the report goes before the decision: a failing report leaves the request undecided, so
   // the clerk can simply try again once the report endpoint is reachable.
   it('leaves the request undecided when the report fails', async () => {
-    mockCall.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('storage down'));
+    mockCall.mockRejectedValueOnce(new Error('storage down'));
     const { result } = renderHook(() => useCompliance());
 
     const outcome = await result.current.decideLimitRequest(CONTEXT, LimitRequestDecision.ACCEPTED, {
@@ -322,7 +329,7 @@ describe('useCompliance().decideLimitRequest', () => {
     expect(outcome).toMatchObject({
       success: false,
       failedStep: 'report',
-      completedSteps: ['depositLimit'],
+      completedSteps: [],
     });
     expect(callsTo('limitRequest/855')).toHaveLength(0);
     expect(callsTo('kyc/admin/log')).toHaveLength(0);
@@ -330,7 +337,6 @@ describe('useCompliance().decideLimitRequest', () => {
 
   it('reports a failed note last, with everything before it recorded', async () => {
     mockCall
-      .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(undefined)
       .mockRejectedValueOnce(new Error('log down'));
@@ -345,7 +351,7 @@ describe('useCompliance().decideLimitRequest', () => {
     expect(outcome).toMatchObject({
       success: false,
       failedStep: 'log',
-      completedSteps: ['depositLimit', 'report', 'limitRequest'],
+      completedSteps: ['report', 'limitRequest'],
     });
   });
 });

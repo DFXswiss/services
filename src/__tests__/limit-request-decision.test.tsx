@@ -79,7 +79,7 @@ describe('LimitRequestDecisionForm', () => {
     mockDecideLimitRequest.mockResolvedValue({ success: true, completedSteps: [] });
     mockFileLimitRequestNote.mockResolvedValue({ success: true, completedSteps: ['log'] });
     mockToBase64.mockImplementation(async (file: File) =>
-      file.name === 'Kaufvertrag.pdf' ? 'data:application/pdf;base64,Y29udHJhY3Q=' : 'data:text/plain;base64,eA==',
+      file.name === 'Kaufvertrag.pdf' ? '[PDF attachment removed — 0 KB]' : 'data:text/plain;base64,eA==',
     );
   });
 
@@ -110,6 +110,15 @@ describe('LimitRequestDecisionForm', () => {
     expect(onDecided).toHaveBeenCalledTimes(1);
   });
 
+  it('disables the amount field on full acceptance and keeps it at the requested amount', () => {
+    renderForm();
+    selectDecision('Accepted');
+
+    const input = screen.getByLabelText('Accepted limit (CHF)', { selector: 'input' }) as HTMLInputElement;
+    expect(input).toBeDisabled();
+    expect(input.value).toBe(String(REQUESTED));
+  });
+
   it('submits the edited amount for a partial acceptance', async () => {
     renderForm();
 
@@ -128,7 +137,7 @@ describe('LimitRequestDecisionForm', () => {
 
   it('blocks an empty or non-positive amount on a granting decision', () => {
     renderForm();
-    selectDecision('Accepted');
+    selectDecision('PartiallyAccepted');
     const input = screen.getByLabelText('Accepted limit (CHF)', { selector: 'input' });
 
     fireEvent.change(input, { target: { value: '' } });
@@ -139,6 +148,45 @@ describe('LimitRequestDecisionForm', () => {
 
     fireEvent.change(input, { target: { value: '150000' } });
     expect(saveButton()).not.toBeDisabled();
+  });
+
+  // A partial amount must sit strictly between the current annual limit and the requested amount.
+  it('enforces partial-acceptance bounds against the requested amount and the current limit', () => {
+    renderForm();
+    selectDecision('PartiallyAccepted');
+    const input = screen.getByLabelText('Accepted limit (CHF)', { selector: 'input' }) as HTMLInputElement;
+
+    // Field is cleared on selecting PartiallyAccepted.
+    expect(input.value).toBe('');
+    expect(saveButton()).toBeDisabled();
+
+    // Equal to the requested amount is not a partial acceptance.
+    fireEvent.change(input, { target: { value: String(REQUESTED) } });
+    expect(saveButton()).toBeDisabled();
+    expect(screen.getByTestId('accepted-limit-hint')).toBeInTheDocument();
+
+    // Equal to (or below) the current limit would not raise anything.
+    fireEvent.change(input, { target: { value: String(CURRENT_LIMIT) } });
+    expect(saveButton()).toBeDisabled();
+    expect(screen.getByTestId('accepted-limit-hint')).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: '150000' } });
+    expect(saveButton()).not.toBeDisabled();
+    expect(screen.queryByTestId('accepted-limit-hint')).not.toBeInTheDocument();
+  });
+
+  it('shows the accepted-limit hint only while a partial amount is invalid', () => {
+    renderForm();
+    selectDecision('PartiallyAccepted');
+    const input = screen.getByLabelText('Accepted limit (CHF)', { selector: 'input' });
+
+    expect(screen.queryByTestId('accepted-limit-hint')).not.toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: String(REQUESTED) } });
+    expect(screen.getByTestId('accepted-limit-hint')).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: '150000' } });
+    expect(screen.queryByTestId('accepted-limit-hint')).not.toBeInTheDocument();
   });
 
   // A rejection grants nothing, so the amount field has no meaning there and must not travel with it.
@@ -172,14 +220,14 @@ describe('LimitRequestDecisionForm', () => {
     );
   });
 
-  // Partial application is the dangerous state: the limit is already raised while the decision is not
-  // recorded. The clerk has to see that before retrying, or they raise it a second time blind.
+  // Partial application is the dangerous state: some steps already landed while later ones did not.
+  // The clerk has to see that before retrying.
   it('names the steps that already landed when the sequence fails midway', async () => {
     const onDecided = renderForm();
     mockDecideLimitRequest.mockResolvedValue({
       success: false,
       failedStep: 'limitRequest',
-      completedSteps: ['depositLimit'],
+      completedSteps: ['report'],
       message: 'Limit request already final',
     });
 
@@ -187,7 +235,8 @@ describe('LimitRequestDecisionForm', () => {
     await clickSave();
 
     expect(screen.getByTestId('error-hint')).toHaveTextContent('Limit request already final');
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('already applied: depositLimit');
+    expect(screen.getByTestId('error-hint')).toHaveTextContent('failed at: limitRequest');
+    expect(screen.getByTestId('error-hint')).toHaveTextContent('already applied: report');
     expect(onDecided).not.toHaveBeenCalled();
     // The form stays usable so the clerk can retry or pick another decision.
     expect(saveButton()).not.toBeDisabled();
@@ -197,7 +246,7 @@ describe('LimitRequestDecisionForm', () => {
     renderForm();
     mockDecideLimitRequest.mockResolvedValue({
       success: false,
-      failedStep: 'depositLimit',
+      failedStep: 'report',
       completedSteps: [],
       message: 'nope',
     });
@@ -206,6 +255,7 @@ describe('LimitRequestDecisionForm', () => {
     await clickSave();
 
     expect(screen.getByTestId('error-hint')).toHaveTextContent('nope');
+    expect(screen.getByTestId('error-hint')).toHaveTextContent('failed at: report');
     expect(screen.getByTestId('error-hint')).not.toHaveTextContent('already applied');
   });
 
@@ -225,7 +275,7 @@ describe('LimitRequestDecisionForm', () => {
       CONTEXT,
       'Accepted',
       expect.objectContaining({
-        attachment: { data: 'data:application/pdf;base64,Y29udHJhY3Q=', name: 'Kaufvertrag.pdf' },
+        attachment: { data: '[PDF attachment removed — 0 KB]', name: 'Kaufvertrag.pdf' },
       }),
     );
   });
@@ -250,7 +300,7 @@ describe('LimitRequestDecisionForm', () => {
   // than being rounded. The form has to refuse it before the call.
   it('refuses a decimal amount', () => {
     renderForm();
-    selectDecision('Accepted');
+    selectDecision('PartiallyAccepted');
     const input = screen.getByLabelText('Accepted limit (CHF)', { selector: 'input' });
 
     fireEvent.change(input, { target: { value: '150000.5' } });
@@ -308,7 +358,7 @@ describe('LimitRequestDecisionForm', () => {
       expect(mockFileLimitRequestNote).toHaveBeenCalledWith(
         CONTEXT,
         expect.objectContaining({
-          attachment: { data: 'data:application/pdf;base64,Y29udHJhY3Q=', name: 'Kaufvertrag.pdf' },
+          attachment: { data: '[PDF attachment removed — 0 KB]', name: 'Kaufvertrag.pdf' },
         }),
       );
     });
@@ -366,13 +416,13 @@ describe('LimitRequestDecisionForm', () => {
   });
 
   // Once the decision is recorded the API refuses to change it. Without switching modes right away, a
-  // retry would re-write the deposit limit with whatever is in the amount field and fail again.
+  // retry would re-fire the decision sequence and fail again.
   it('switches to note mode when the decision landed but a later step failed', async () => {
     renderForm();
     mockDecideLimitRequest.mockResolvedValue({
       success: false,
       failedStep: 'log',
-      completedSteps: ['depositLimit', 'report', 'limitRequest'],
+      completedSteps: ['report', 'limitRequest'],
       message: 'log down',
     });
 
@@ -380,8 +430,31 @@ describe('LimitRequestDecisionForm', () => {
     await clickSave();
 
     expect(screen.getByTestId('error-hint')).toHaveTextContent('log down');
+    expect(screen.getByTestId('error-hint')).toHaveTextContent('failed at: log');
+    expect(screen.getByTestId('error-hint')).toHaveTextContent('already applied: report, limitRequest');
     expect(screen.queryByLabelText('Decision', { selector: 'select' })).not.toBeInTheDocument();
     expect(screen.getByText(/already decided \(Accepted\)/)).toBeInTheDocument();
+  });
+
+  // Core race-window fix: after a successful decision the form must lock into note-only mode in the
+  // same render cycle, before the parent reloads via onDecided. Without this a second click can re-
+  // fire decideLimitRequest while the parent is still refreshing.
+  it('locks into note mode immediately after a successful decision, before the parent reloads', async () => {
+    renderForm();
+    mockDecideLimitRequest.mockResolvedValue({ success: true, completedSteps: ['report', 'limitRequest', 'log'] });
+
+    selectDecision('Rejected');
+    await clickSave();
+
+    expect(mockDecideLimitRequest).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: 'Save decision' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save file note' })).toBeInTheDocument();
+
+    // a further click must not re-trigger the decision call
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save file note' }));
+    });
+    expect(mockDecideLimitRequest).toHaveBeenCalledTimes(1);
   });
 
   // The clerk list arrives after the first render; a name typed before that must not stay in state
