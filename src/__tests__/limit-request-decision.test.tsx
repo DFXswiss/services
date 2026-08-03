@@ -21,6 +21,13 @@ jest.mock('src/hooks/compliance.hook', () => ({
 // the test controls the encoded result.
 jest.mock('src/util/utils', () => ({ toBase64: (file: File) => mockToBase64(file) }));
 
+jest.mock('src/contexts/settings.context', () => ({
+  useSettingsContext: () => ({
+    translate: (_ns: string, key: string, params?: Record<string, string | number>) =>
+      params ? Object.entries(params).reduce((acc, [k, v]) => acc.split(`{{${k}}}`).join(String(v)), key) : key,
+  }),
+}));
+
 jest.mock('src/components/error-hint', () => {
   // The factory runs before this file's imports, so React has to be required here.
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -234,9 +241,11 @@ describe('LimitRequestDecisionForm', () => {
     selectDecision('Accepted');
     await clickSave();
 
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('Limit request already final');
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('failed at: limitRequest');
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('already applied: report');
+    // Byte-exact: a regression in the parenthesis/space split between template and translation key
+    // (double or missing brackets) must not survive a substring match.
+    expect(screen.getByTestId('error-hint').textContent).toBe(
+      'Limit request already final (failed at: limitRequest) (already applied: report)',
+    );
     expect(onDecided).not.toHaveBeenCalled();
     // The form stays usable so the clerk can retry or pick another decision.
     expect(saveButton()).not.toBeDisabled();
@@ -429,9 +438,9 @@ describe('LimitRequestDecisionForm', () => {
     selectDecision('Accepted');
     await clickSave();
 
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('log down');
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('failed at: log');
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('already applied: report, limitRequest');
+    expect(screen.getByTestId('error-hint').textContent).toBe(
+      'log down (failed at: log) (already applied: report, limitRequest)',
+    );
     expect(screen.queryByLabelText('Decision', { selector: 'select' })).not.toBeInTheDocument();
     expect(screen.getByText(/already decided \(Accepted\)/)).toBeInTheDocument();
   });
