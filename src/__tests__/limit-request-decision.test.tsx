@@ -79,7 +79,7 @@ describe('LimitRequestDecisionForm', () => {
     mockDecideLimitRequest.mockResolvedValue({ success: true, completedSteps: [] });
     mockFileLimitRequestNote.mockResolvedValue({ success: true, completedSteps: ['log'] });
     mockToBase64.mockImplementation(async (file: File) =>
-      file.name === 'Kaufvertrag.pdf' ? '[PDF attachment removed — 0 KB]' : 'data:text/plain;base64,eA==',
+      file.name === 'Kaufvertrag.pdf' ? 'data:application/pdf;base64,Y29udHJhY3Q=' : 'data:text/plain;base64,eA==',
     );
   });
 
@@ -275,7 +275,7 @@ describe('LimitRequestDecisionForm', () => {
       CONTEXT,
       'Accepted',
       expect.objectContaining({
-        attachment: { data: '[PDF attachment removed — 0 KB]', name: 'Kaufvertrag.pdf' },
+        attachment: { data: 'data:application/pdf;base64,Y29udHJhY3Q=', name: 'Kaufvertrag.pdf' },
       }),
     );
   });
@@ -358,7 +358,7 @@ describe('LimitRequestDecisionForm', () => {
       expect(mockFileLimitRequestNote).toHaveBeenCalledWith(
         CONTEXT,
         expect.objectContaining({
-          attachment: { data: '[PDF attachment removed — 0 KB]', name: 'Kaufvertrag.pdf' },
+          attachment: { data: 'data:application/pdf;base64,Y29udHJhY3Q=', name: 'Kaufvertrag.pdf' },
         }),
       );
     });

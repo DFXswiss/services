@@ -55,7 +55,7 @@ describe('useCompliance().fileLimitRequestNote', () => {
       clerk: 'JR',
       decision: 'Accepted',
       comment: 'Beleg nachgereicht',
-      attachment: { data: '[PDF attachment removed — 0 KB]', name: 'Kaufvertrag.pdf' },
+      attachment: { data: 'data:application/pdf;base64,QQ==', name: 'Kaufvertrag.pdf' },
     });
 
     expect(outcome).toEqual({ success: true, completedSteps: ['log'] });
@@ -257,11 +257,11 @@ describe('useCompliance().decideLimitRequest', () => {
       grantedLimit: 500000,
       currentDepositLimit: 100000,
       comment: 'Hausverkauf',
-      attachment: { data: '[PDF attachment removed — 0 KB]', name: 'Kaufvertrag.pdf' },
+      attachment: { data: 'data:application/pdf;base64,QQ==', name: 'Kaufvertrag.pdf' },
     });
 
     const log = callsTo('kyc/admin/log')[0].data;
-    expect(log.file).toBe('[PDF attachment removed — 0 KB]');
+    expect(log.file).toBe('data:application/pdf;base64,QQ==');
     expect(log.fileName).toBe('Kaufvertrag.pdf');
     expect(log.comment).toContain('comment: Hausverkauf');
   });
