@@ -1,5 +1,6 @@
-# Cloudflare Pages edge headers — replicate the cache/CORS semantics the previous
-# CDN served, so the Pages deployment behaves identically.
+# Cloudflare Pages edge headers — mostly carry over the cache/CORS semantics the previous
+# CDN served; where matching it exactly would reintroduce a caching bug, this file departs
+# from it on purpose (see the rules below for where and why).
 #
 # Note: for cached responses the CDN edge raises any max-age below four hours to four
 # hours; higher values stay as written. Uncached responses pass through unchanged, and
@@ -16,9 +17,31 @@
 # outcomes, depending only on whether that particular response gets cached.
 # Changing that is a CDN configuration matter; it cannot be fixed in this file.
 #
-# Fingerprinted build assets (content-hashed filenames) never change -> cache hard.
+# Fingerprinted build assets (content-hashed filenames) never change -> cache hard. The
+# max-age therefore stays at a year, but immutable is deliberately NOT set: immutable stops
+# a normal user-triggered reload from sending a conditional revalidation while max-age is
+# still valid — the case it is designed for — whereas a hard reload (empty cache and hard
+# reload / Ctrl+Shift+R) bypasses the browser's local cache entirely, independent of
+# immutable. This rule matches on the /static/* path, not on what actually got served under
+# it, and functions/[[path]].js + public/_routes.json are the only content check in the
+# chain — an incident there (a routing gap, a bad deploy, a fallback that slips through)
+# can still land an app-shell response under an asset URL. With immutable, that single
+# wrong response would stay eligible to be served for up to a year — for ordinary
+# navigation and a normal reload, not a hard reload — in every browser that already fetched
+# it and still holds it (an entry can be evicted under storage pressure, or a user can clear
+# their browser cache, before then). Without immutable, a user-triggered reload can still
+# send a conditional revalidation request — independent of whether max-age has expired —
+# and correct itself; ordinary navigation (no reload) keeps the stored copy for up to a
+# year without revalidating, same as with immutable. max-age=31536000 continues to apply to
+# shared/edge caches either way: dropping immutable only affects the client, and a wrong
+# response already at the edge is not cleared by this choice — only purging it, its own
+# max-age eventually running out, or the edge evicting it under storage pressure removes
+# it. Since the filename hash only changes when the content actually changes, a
+# revalidation is answered 304 (unchanged) in the normal case, so this costs a conditional
+# round trip, but not a re-transfer of the content, for the common path — it only helps the
+# broken one. Verify with: curl -sI https://app.dfx.swiss/static/js/main.<hash>.js
 /static/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=31536000
   Access-Control-Allow-Origin: *
 
 # The embeddable widget is loaded cross-origin from third-party sites -> needs CORS.
@@ -27,21 +50,49 @@
   Cache-Control: public, max-age=3600
   Access-Control-Allow-Origin: *
 
-# Entry points must always revalidate so a new deploy goes live immediately.
+# Entry points must always revalidate so a new deploy goes live immediately. / and
+# index.html ARE the SPA fallback that functions/[[path]].js exists to catch elsewhere in
+# this file, so they stay out of public/_routes.json include on purpose: adding them would
+# have the Function 404 the app shell itself.
 /
   Cache-Control: no-cache, must-revalidate
 /index.html
   Cache-Control: no-cache, must-revalidate
+
+# no-cache still stores the response and lets a later request reuse it once revalidated (a
+# 304 carries no body), so a missing manifest.json/asset-manifest.json/version.json served as
+# the SPA fallback could be confirmed valid by a later conditional request instead of being
+# refetched — the same failure mode as /static/*, reached through revalidation instead of a
+# long max-age. version.json is rewritten by scripts/generate-version.js before every main-app
+# build (the checked-out commit hash when git metadata is available, 'unknown' otherwise, plus a
+# build time that is always fresh), so it is at least as exposed to this as the other two. All
+# three paths are listed in public/_routes.json include so functions/[[path]].js content-checks
+# them and answers 404 instead.
 /manifest.json
   Cache-Control: no-cache, must-revalidate
 /asset-manifest.json
   Cache-Control: no-cache, must-revalidate
+/version.json
+  Cache-Control: no-cache, must-revalidate
 
-# Crawler directives in robots.txt must always revalidate so they take effect on the next request.
+# Crawler directives in robots.txt must always revalidate so they take effect on the next
+# request — and, per the file-top note, this specific rule is also one the CDN edge raises
+# to max-age=14400 in practice, so a missing robots.txt served as the SPA fallback would sit
+# cached at the edge for up to four hours under this URL, on top of the client-side risk
+# described above for /manifest.json. Listed in public/_routes.json include for the same
+# reason.
 /robots.txt
   Cache-Control: no-cache, must-revalidate
 
-# Non-fingerprinted root assets — a day of cache is enough.
+# Deploy marker written per CI run and polled by the PRD verify step. Must never be cached:
+# each poll has to reflect the deploy that is currently live, not a previous run's id.
+/deploy-id.txt
+  Cache-Control: no-store
+
+# Non-fingerprinted root assets — a day of cache is enough. Both paths are also listed in
+# public/_routes.json include so functions/[[path]].js content-checks them: a missing
+# favicon.ico/logo.png is answered 404 instead of landing as SPA-fallback HTML under the
+# image URL for 24h — same failure mode as /static/*, only with a shorter cache lifetime.
 /favicon.ico
   Cache-Control: public, max-age=86400
 /logo.png
