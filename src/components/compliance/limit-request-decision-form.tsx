@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import {
   LimitRequestDecision,
@@ -27,10 +27,10 @@ interface Props {
   onDecided: () => void;
 }
 
-// Collects the decision and hands it to `useCompliance().decideLimitRequest`, which performs the same
-// steps in the same order as the Google Sheet (raise the annual limit, record the decision, file the
-// report document, file the note) and reports how far it got. The customer message stays where it
-// already lives on this screen.
+// Collects the decision and hands it to `useCompliance().decideLimitRequest`, which runs the three
+// steps in order (file the report, record the decision — the API raises depositLimit itself behind
+// its finality check — then file the note) and reports how far it got. The customer message stays
+// where it already lives on this screen.
 export function LimitRequestDecisionForm({
   limitRequestId,
   userDataId,
@@ -46,8 +46,8 @@ export function LimitRequestDecisionForm({
   const { decideLimitRequest, fileLimitRequestNote } = useCompliance();
 
   // A decision recorded by this very attempt whose later step failed: the request is final from then
-  // on, so the form must stop offering a decision before the clerk retries and re-writes the deposit
-  // limit with whatever is in the amount field. The screen only learns this on its next reload.
+  // on, so the form must stop offering a decision before the clerk retries. Also set on success so the
+  // form locks into note-only mode immediately, before the parent reloads via onDecided().
   const [recordedDecision, setRecordedDecision] = useState<string>();
   const isDecided = !!decidedAs || !!recordedDecision;
   const effectiveDecision = decidedAs ?? recordedDecision;
@@ -62,8 +62,8 @@ export function LimitRequestDecisionForm({
   }, [clerks]);
 
   const [decision, setDecision] = useState<LimitRequestDecision | ''>('');
-  // Prefilled with the requested amount: accepting in full is the common case, and a partial accept is
-  // an edit of that number rather than an entry from scratch.
+  // Prefilled with the requested amount: accepting in full is the common case. On ACCEPTED the field
+  // is forced back to requestedLimit and disabled; on PARTIALLY_ACCEPTED it is cleared for a new entry.
   const [acceptedLimit, setAcceptedLimit] = useState<string>(String(requestedLimit));
   const [comment, setComment] = useState('');
   // The customer's proof of funds, filed with the note in the same step — in the sheet the clerk had to
@@ -73,6 +73,7 @@ export function LimitRequestDecisionForm({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string>();
   const [doneSteps, setDoneSteps] = useState<LimitRequestDecisionStep[]>([]);
+  const [failedStep, setFailedStep] = useState<LimitRequestDecisionStep>();
 
   const clerkId = `limit-request-${limitRequestId}-clerk`;
   const decisionId = `limit-request-${limitRequestId}-decision`;
@@ -84,11 +85,37 @@ export function LimitRequestDecisionForm({
   const parsedLimit = Number(acceptedLimit);
   // Both target columns are integers (`user_data.depositLimit`, `limit_request.acceptedLimit`) and both
   // DTOs validate with @IsInt, so a decimal would be refused by the API rather than rounded silently.
-  const isLimitValid =
-    !grantsLimit || (acceptedLimit.trim() !== '' && Number.isInteger(parsedLimit) && parsedLimit > 0);
+  // For PARTIALLY_ACCEPTED the amount must also sit strictly between the current limit and the request.
+  const isPartialLimitValid =
+    acceptedLimit.trim() !== '' &&
+    Number.isInteger(parsedLimit) &&
+    parsedLimit > 0 &&
+    parsedLimit < requestedLimit &&
+    (currentDepositLimit == null || parsedLimit > currentDepositLimit);
+  const isLimitValid = !grantsLimit || decision === LimitRequestDecision.ACCEPTED || isPartialLimitValid;
   const canSubmit = isDecided
     ? !!clerk.trim() && (!!comment.trim() || !!document) && !isSaving
     : !!clerk.trim() && !!decision && isLimitValid && !isSaving;
+
+  function handleDecisionChange(e: ChangeEvent<HTMLSelectElement>): void {
+    const value = e.target.value as LimitRequestDecision | '';
+    setDecision(value);
+    if (value === LimitRequestDecision.ACCEPTED) setAcceptedLimit(String(requestedLimit));
+    else if (value === LimitRequestDecision.PARTIALLY_ACCEPTED) setAcceptedLimit('');
+  }
+
+  function partialLimitHint(): string {
+    if (!Number.isInteger(parsedLimit) || parsedLimit <= 0) {
+      return 'Enter a positive whole number in CHF.';
+    }
+    if (parsedLimit >= requestedLimit) {
+      return `Must be strictly less than the requested amount (${requestedLimit.toLocaleString()} CHF).`;
+    }
+    if (currentDepositLimit != null && parsedLimit <= currentDepositLimit) {
+      return `Must be strictly greater than the current limit (${currentDepositLimit.toLocaleString()} CHF).`;
+    }
+    return 'Enter a valid partial amount.';
+  }
 
   function resetDocument(): void {
     setDocument(undefined);
@@ -113,6 +140,7 @@ export function LimitRequestDecisionForm({
     setIsSaving(true);
     setError(undefined);
     setDoneSteps([]);
+    setFailedStep(undefined);
 
     const attachment = await readDocument();
     if (attachment === 'failed') {
@@ -139,13 +167,17 @@ export function LimitRequestDecisionForm({
 
     setIsSaving(false);
     if (result.success) {
+      // Lock into note-only mode immediately so a second click cannot re-fire the decision sequence
+      // before the parent reloads. Only meaningful in decision mode (note-only already has no decision).
+      if (!isDecided && decision) setRecordedDecision(decision);
       setComment('');
       resetDocument();
       onDecided();
     } else {
       // Naming the steps that did land matters: after a failure in between, the operator has to know
-      // whether the limit was already raised before retrying.
+      // how far the sequence got before retrying.
       setDoneSteps(result.completedSteps);
+      setFailedStep(result.failedStep);
       setError(result.message ?? 'Unknown error');
       if (result.completedSteps.includes('limitRequest') && decision) setRecordedDecision(decision);
     }
@@ -167,7 +199,7 @@ export function LimitRequestDecisionForm({
               id={decisionId}
               className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 min-w-[150px]"
               value={decision}
-              onChange={(e) => setDecision(e.target.value as LimitRequestDecision | '')}
+              onChange={handleDecisionChange}
             >
               <option value="">-</option>
               <option value={LimitRequestDecision.ACCEPTED}>Accepted</option>
@@ -187,10 +219,18 @@ export function LimitRequestDecisionForm({
               type="number"
               min={1}
               step={1}
-              className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 min-w-[130px]"
+              className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 min-w-[130px] disabled:opacity-50"
               value={acceptedLimit}
+              disabled={decision === LimitRequestDecision.ACCEPTED}
               onChange={(e) => setAcceptedLimit(e.target.value)}
             />
+            {decision === LimitRequestDecision.PARTIALLY_ACCEPTED &&
+              acceptedLimit.trim() !== '' &&
+              !isPartialLimitValid && (
+                <p data-testid="accepted-limit-hint" className="text-xs text-primary-red">
+                  {partialLimitHint()}
+                </p>
+              )}
           </div>
         )}
 
@@ -279,7 +319,11 @@ export function LimitRequestDecisionForm({
 
       {error && (
         <div className="mt-3">
-          <ErrorHint message={`${error}${doneSteps.length ? ` (already applied: ${doneSteps.join(', ')})` : ''}`} />
+          <ErrorHint
+            message={`${error}${failedStep ? ` (failed at: ${failedStep})` : ''}${
+              doneSteps.length ? ` (already applied: ${doneSteps.join(', ')})` : ''
+            }`}
+          />
         </div>
       )}
     </div>
