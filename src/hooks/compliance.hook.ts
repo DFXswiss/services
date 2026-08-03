@@ -931,7 +931,30 @@ export function useCompliance() {
     const tx = context.txId != null && context.sourceType ? { id: context.txId, sourceType: context.sourceType } : null;
     const results: KycLogResult[] = [];
 
-    // 1) Transaction update (if applicable)
+    // 1) UserData update (phoneCallStatus + check date on completion). Must run BEFORE the
+    // transaction step: a reset transaction is re-evaluated from scratch by the AML cron, so the
+    // check date has to be visible by then or the tx re-pends into its (possibly recheck-blocked)
+    // queue reason and gets stuck again.
+    const phoneStatus = callOutcomeToPhoneStatus[outcome];
+    const skipUserData = outcome === CallOutcome.REPEAT && context.queue === CallQueue.UNAVAILABLE_SUSPICIOUS;
+    if (phoneStatus && !skipUserData) {
+      try {
+        const udData: Record<string, unknown> = { phoneCallStatus: phoneStatus };
+        results.push({ table: 'userData', column: 'phoneCallStatus', value: phoneStatus });
+        if (outcome === CallOutcome.COMPLETED) {
+          const checkDateField = checkDateFieldForQueue(context.queue);
+          const checkDateValue = new Date().toISOString();
+          udData[checkDateField] = checkDateValue;
+          results.push({ table: 'userData', column: checkDateField, value: checkDateValue });
+        }
+        await updateUserData(context.userDataId, udData);
+        completedSteps.push('userData');
+      } catch (e) {
+        return fail('userData', e);
+      }
+    }
+
+    // 2) Transaction update (if applicable)
     try {
       if (tx && options.amlAction) {
         const signature = options.signature.trim();
@@ -960,26 +983,6 @@ export function useCompliance() {
       }
     } catch (e) {
       return fail('transaction', e);
-    }
-
-    // 2) UserData update (phoneCallStatus + check date on completion)
-    const phoneStatus = callOutcomeToPhoneStatus[outcome];
-    const skipUserData = outcome === CallOutcome.REPEAT && context.queue === CallQueue.UNAVAILABLE_SUSPICIOUS;
-    if (phoneStatus && !skipUserData) {
-      try {
-        const udData: Record<string, unknown> = { phoneCallStatus: phoneStatus };
-        results.push({ table: 'userData', column: 'phoneCallStatus', value: phoneStatus });
-        if (outcome === CallOutcome.COMPLETED) {
-          const checkDateField = checkDateFieldForQueue(context.queue);
-          const checkDateValue = new Date().toISOString();
-          udData[checkDateField] = checkDateValue;
-          results.push({ table: 'userData', column: checkDateField, value: checkDateValue });
-        }
-        await updateUserData(context.userDataId, udData);
-        completedSteps.push('userData');
-      } catch (e) {
-        return fail('userData', e);
-      }
     }
 
     // 3) KYC log entry (always)
