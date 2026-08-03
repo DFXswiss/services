@@ -241,9 +241,11 @@ describe('LimitRequestDecisionForm', () => {
     selectDecision('Accepted');
     await clickSave();
 
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('Limit request already final');
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('failed at: limitRequest');
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('already applied: report');
+    // Byte-exact: a regression in the parenthesis/space split between template and translation key
+    // (double or missing brackets) must not survive a substring match.
+    expect(screen.getByTestId('error-hint').textContent).toBe(
+      'Limit request already final (failed at: limitRequest) (already applied: report)',
+    );
     expect(onDecided).not.toHaveBeenCalled();
     // The form stays usable so the clerk can retry or pick another decision.
     expect(saveButton()).not.toBeDisabled();
@@ -436,9 +438,9 @@ describe('LimitRequestDecisionForm', () => {
     selectDecision('Accepted');
     await clickSave();
 
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('log down');
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('failed at: log');
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('already applied: report, limitRequest');
+    expect(screen.getByTestId('error-hint').textContent).toBe(
+      'log down (failed at: log) (already applied: report, limitRequest)',
+    );
     expect(screen.queryByLabelText('Decision', { selector: 'select' })).not.toBeInTheDocument();
     expect(screen.getByText(/already decided \(Accepted\)/)).toBeInTheDocument();
   });
