@@ -1332,6 +1332,13 @@ export function useCompliance() {
     });
   }
 
+  async function resumeTransaction(transactionId: number): Promise<void> {
+    return call<void>({
+      url: `transaction/admin/${transactionId}/resume`,
+      method: 'POST',
+    });
+  }
+
   async function updateBuyCrypto(
     id: number,
     data: { amlCheck?: string; amlReason?: string; comment?: string; priceDefinitionAllowedDate?: string },
@@ -1488,6 +1495,7 @@ export function useCompliance() {
       generateLimitRequestPdf,
       chargebackTransaction,
       stopTransaction,
+      resumeTransaction,
       updateBankData,
       updateBuyCrypto,
       updateBuyFiat,
