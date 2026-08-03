@@ -134,9 +134,7 @@ export function LimitRequestDecisionForm({
           grantedLimit: grantsLimit ? parsedLimit : undefined,
           currentDepositLimit,
           // A prior attempt already raised the limit; a non-granting decision must restore the original.
-          ...(doneSteps.includes('depositLimit') &&
-          decision &&
-          !LimitRequestGrantingDecisions.includes(decision)
+          ...(doneSteps.includes('depositLimit') && decision && !LimitRequestGrantingDecisions.includes(decision)
             ? { revertDepositLimitTo: currentDepositLimit }
             : {}),
           comment: comment.trim() || undefined,
