@@ -112,9 +112,25 @@ export function LimitRequestDecisionForm({
   async function handleSubmit(): Promise<void> {
     if (!canSubmit) return;
 
+    // Revert needed but target unknown: fail closed rather than store a rejection while the raised limit stays.
+    if (
+      !isDecided &&
+      doneSteps.includes('depositLimit') &&
+      decision &&
+      !LimitRequestGrantingDecisions.includes(decision) &&
+      currentDepositLimit == null
+    ) {
+      setError(
+        translate(
+          'screens/compliance',
+          'The previous annual limit is unknown, so it cannot be restored. Reload the issue before rejecting.',
+        ),
+      );
+      return;
+    }
+
     setIsSaving(true);
     setError(undefined);
-    setDoneSteps([]);
 
     const attachment = await readDocument();
     if (attachment === 'failed') {
@@ -145,13 +161,16 @@ export function LimitRequestDecisionForm({
 
     setIsSaving(false);
     if (result.success) {
+      // Cleared only here: resetting at the start of a submit would lose the record of an already
+      // raised limit on any early return (e.g. an unreadable document) — the revert path depends on it.
+      setDoneSteps([]);
       setComment('');
       resetDocument();
       onDecided();
     } else {
-      // Naming the steps that did land matters: after a failure in between, the operator has to know
-      // whether the limit was already raised before retrying.
-      setDoneSteps(result.completedSteps);
+      // Once a step has landed it stays landed; a later attempt that fails before its first step must
+      // not erase knowledge of an already raised limit — the revert path above depends on it.
+      setDoneSteps(Array.from(new Set([...doneSteps, ...result.completedSteps])));
       setError(result.message ?? translate('screens/compliance', 'Unknown error'));
       if (result.completedSteps.includes('limitRequest') && decision) setRecordedDecision(decision);
     }

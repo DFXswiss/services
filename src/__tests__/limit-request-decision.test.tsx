@@ -431,6 +431,64 @@ describe('LimitRequestDecisionForm', () => {
     );
   });
 
+  // A later failed attempt can report completedSteps: []; doneSteps must still keep depositLimit so
+  // a subsequent rejection still reverts the annual limit.
+  it('keeps depositLimit as done across a chain of failed attempts, so a later rejection still reverts it', async () => {
+    renderForm();
+    mockDecideLimitRequest
+      .mockResolvedValueOnce({
+        success: false,
+        failedStep: 'report',
+        completedSteps: ['depositLimit'],
+        message: 'storage down',
+      })
+      .mockResolvedValueOnce({
+        success: false,
+        failedStep: 'depositLimit',
+        completedSteps: [],
+        message: 'db down',
+      })
+      .mockResolvedValueOnce({ success: true, completedSteps: ['depositLimit', 'report', 'limitRequest', 'log'] });
+
+    selectDecision('Accepted');
+    await clickSave();
+
+    selectDecision('Rejected');
+    await clickSave();
+    await clickSave();
+
+    expect(mockDecideLimitRequest).toHaveBeenCalledTimes(3);
+    expect(mockDecideLimitRequest).toHaveBeenNthCalledWith(
+      3,
+      CONTEXT,
+      'Rejected',
+      expect.objectContaining({ revertDepositLimitTo: CURRENT_LIMIT }),
+    );
+  });
+
+  // Without a known previous limit a non-granting decision must not save after depositLimit already
+  // landed — that would leave the raised limit in force while recording a rejection.
+  it('blocks the save and does not call the hook again when the revert target is unknown', async () => {
+    renderForm({ currentDepositLimit: undefined });
+    mockDecideLimitRequest.mockResolvedValueOnce({
+      success: false,
+      failedStep: 'report',
+      completedSteps: ['depositLimit'],
+      message: 'storage down',
+    });
+
+    selectDecision('Accepted');
+    await clickSave();
+
+    selectDecision('Rejected');
+    await clickSave();
+
+    expect(mockDecideLimitRequest).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('error-hint')).toHaveTextContent(
+      'The previous annual limit is unknown, so it cannot be restored. Reload the issue before rejecting.',
+    );
+  });
+
   // The clerk list arrives after the first render; a name typed before that must not stay in state
   // behind a select that shows something else.
   it('adopts a clerk from the list once it arrives', async () => {
