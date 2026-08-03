@@ -542,7 +542,16 @@ export default function SwapScreen(): JSX.Element {
 
     try {
       if (canSendTransaction()) {
-        await sendTransaction(paymentInfo).then(setSwapTxId);
+        // Fetch paymentInfo with depositTx for gasless wallet transaction (EIP-5792)
+        const data: SwapPaymentInfo = {
+          sourceAsset: paymentInfo.sourceAsset,
+          targetAsset: paymentInfo.targetAsset,
+          amount: paymentInfo.amount,
+          externalTransactionId,
+          exactPrice: true,
+        };
+        const paymentInfoWithTx = await receiveFor(data, true);
+        await sendTransaction(paymentInfoWithTx).then(setSwapTxId);
       }
 
       setTxDone(true);

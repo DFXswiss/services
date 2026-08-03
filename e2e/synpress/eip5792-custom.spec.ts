@@ -3,7 +3,7 @@
  *
  * These tests use custom Playwright fixtures that:
  * 1. Use Chrome 126 (last version with Manifest V2 support)
- * 2. Manually load MetaMask 11.9.1 extension
+ * 2. Manually load MetaMask 13.13.1 extension (with EIP-5792 support)
  * 3. Use Synpress's MetaMask class for wallet interactions
  *
  * This bypasses Synpress's cache system issues while keeping
@@ -181,8 +181,8 @@ test.describe('EIP-5792 Error Handling', () => {
     // Connect wallet
     await connectWallet(page, metamask);
 
-    // MetaMask 11.9.1 doesn't support EIP-5792
-    // The app should fall back gracefully
+    // MetaMask 13.13.1 supports EIP-5792 wallet_sendCalls
+    // The app can use gasless transactions with paymasterService
     // Verify no crash occurs
     expect(page).toBeTruthy();
   });
