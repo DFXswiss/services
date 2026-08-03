@@ -955,11 +955,23 @@ export function useCompliance() {
     });
   }
 
-  async function createKycLog(userDataId: number, comment: string): Promise<void> {
+  // `file` is a data URL (`data:<contentType>;base64,<data>`, what `toBase64` produces). The API stores
+  // it under the account's UserNotes and links it to this very log entry, so the document and the note
+  // explaining it stay together — which is what filing a customer's proof of funds needs.
+  async function createKycLog(
+    userDataId: number,
+    comment: string,
+    attachment?: { data: string; name: string },
+  ): Promise<void> {
     return call<void>({
       url: 'kyc/admin/log',
       method: 'POST',
-      data: { type: 'ManualLog', userData: { id: userDataId }, comment },
+      data: {
+        type: 'ManualLog',
+        userData: { id: userDataId },
+        comment,
+        ...(attachment ? { file: attachment.data, fileName: attachment.name } : {}),
+      },
     });
   }
 
@@ -1163,6 +1175,8 @@ export function useCompliance() {
       comment?: string;
       fundOrigin?: string;
       investmentDate?: string;
+      /** The customer's proof document, filed together with the note. */
+      attachment?: { data: string; name: string };
     },
   ): Promise<LimitRequestDecisionResult> {
     const completedSteps: LimitRequestDecisionStep[] = [];
@@ -1224,6 +1238,7 @@ export function useCompliance() {
       await createKycLog(
         context.userDataId,
         buildKycLogMessage({ description: 'LimitRequest', clerk, results, comment: options.comment }),
+        options.attachment,
       );
       completedSteps.push('log');
     } catch (e) {

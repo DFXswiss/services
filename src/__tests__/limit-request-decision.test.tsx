@@ -1,5 +1,6 @@
 // jest.mock factories may only reference variables whose name starts with `mock`.
 const mockDecideLimitRequest = jest.fn();
+const mockToBase64 = jest.fn();
 
 // Mocked wholesale rather than via requireActual: the real module pulls in @dfx.swiss/react, which
 // ships ESM that this Jest setup cannot parse. The two exports the component reads at runtime are
@@ -11,6 +12,10 @@ jest.mock('src/hooks/compliance.hook', () => ({
   LimitRequestGrantingDecisions: ['Accepted', 'PartiallyAccepted'],
   useCompliance: () => ({ decideLimitRequest: mockDecideLimitRequest }),
 }));
+
+// The component reads the picked file through this helper; jsdom's FileReader is stubbed out here so
+// the test controls the encoded result.
+jest.mock('src/util/utils', () => ({ toBase64: (file: File) => mockToBase64(file) }));
 
 jest.mock('src/components/error-hint', () => {
   // The factory runs before this file's imports, so React has to be required here.
@@ -68,6 +73,9 @@ describe('LimitRequestDecisionForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockDecideLimitRequest.mockResolvedValue({ success: true, completedSteps: [] });
+    mockToBase64.mockImplementation(async (file: File) =>
+      file.name === 'Kaufvertrag.pdf' ? 'data:application/pdf;base64,Y29udHJhY3Q=' : 'data:text/plain;base64,eA==',
+    );
   });
 
   it('requires a decision before it can be saved', () => {
@@ -101,7 +109,7 @@ describe('LimitRequestDecisionForm', () => {
     renderForm();
 
     selectDecision('PartiallyAccepted');
-    fireEvent.change(screen.getByLabelText('New annual limit (CHF)', { selector: 'input' }), {
+    fireEvent.change(screen.getByLabelText('Accepted limit (CHF)', { selector: 'input' }), {
       target: { value: '200000' },
     });
     await clickSave();
@@ -116,7 +124,7 @@ describe('LimitRequestDecisionForm', () => {
   it('blocks an empty or non-positive amount on a granting decision', () => {
     renderForm();
     selectDecision('Accepted');
-    const input = screen.getByLabelText('New annual limit (CHF)', { selector: 'input' });
+    const input = screen.getByLabelText('Accepted limit (CHF)', { selector: 'input' });
 
     fireEvent.change(input, { target: { value: '' } });
     expect(saveButton()).toBeDisabled();
@@ -133,7 +141,7 @@ describe('LimitRequestDecisionForm', () => {
     renderForm();
 
     selectDecision('Rejected');
-    expect(screen.queryByLabelText('New annual limit (CHF)', { selector: 'input' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Accepted limit (CHF)', { selector: 'input' })).not.toBeInTheDocument();
     await clickSave();
 
     expect(mockDecideLimitRequest).toHaveBeenCalledWith(
@@ -147,7 +155,7 @@ describe('LimitRequestDecisionForm', () => {
     renderForm();
 
     selectDecision('Rejected');
-    fireEvent.change(screen.getByLabelText('File note (optional)', { selector: 'input' }), {
+    fireEvent.change(screen.getByLabelText('Internal file note', { selector: 'input' }), {
       target: { value: 'Unterlagen nicht nachgereicht' },
     });
     await clickSave();
@@ -194,6 +202,43 @@ describe('LimitRequestDecisionForm', () => {
 
     expect(screen.getByTestId('error-hint')).toHaveTextContent('nope');
     expect(screen.getByTestId('error-hint')).not.toHaveTextContent('already applied');
+  });
+
+  it('reads the selected customer document and passes it along', async () => {
+    renderForm();
+
+    const file = new File(['contract'], 'Kaufvertrag.pdf', { type: 'application/pdf' });
+    fireEvent.change(screen.getByLabelText('Customer document (optional)', { selector: 'input' }), {
+      target: { files: [file] },
+    });
+    expect(screen.getByText(/Kaufvertrag\.pdf/)).toBeInTheDocument();
+
+    selectDecision('Accepted');
+    await clickSave();
+
+    expect(mockDecideLimitRequest).toHaveBeenCalledWith(
+      CONTEXT,
+      'Accepted',
+      expect.objectContaining({
+        attachment: { data: 'data:application/pdf;base64,Y29udHJhY3Q=', name: 'Kaufvertrag.pdf' },
+      }),
+    );
+  });
+
+  // A document that cannot be read must stop the decision rather than record it without the proof the
+  // clerk meant to file.
+  it('reports an unreadable document and decides nothing', async () => {
+    mockToBase64.mockResolvedValueOnce(undefined);
+    renderForm();
+
+    fireEvent.change(screen.getByLabelText('Customer document (optional)', { selector: 'input' }), {
+      target: { files: [new File(['x'], 'broken.pdf', { type: 'application/pdf' })] },
+    });
+    selectDecision('Accepted');
+    await clickSave();
+
+    expect(screen.getByTestId('error-hint')).toHaveTextContent('could not be read');
+    expect(mockDecideLimitRequest).not.toHaveBeenCalled();
   });
 
   it('falls back to a free-text clerk field when no clerk list is available', async () => {

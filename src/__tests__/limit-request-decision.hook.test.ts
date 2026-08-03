@@ -173,6 +173,39 @@ describe('useCompliance().decideLimitRequest', () => {
     expect(callsTo('support/397328/limit-request-pdf')[0].data.note).toBe('Unterlagen nicht nachgereicht');
   });
 
+  // The customer's proof of funds is filed with the note in one call: the API stores the file under the
+  // account's UserNotes and links it to this log entry, so document and explanation stay together.
+  it('files the customer document together with the note', async () => {
+    const { result } = renderHook(() => useCompliance());
+
+    await result.current.decideLimitRequest(CONTEXT, LimitRequestDecision.ACCEPTED, {
+      clerk: 'JR',
+      requestedLimit: 500000,
+      grantedLimit: 500000,
+      currentDepositLimit: 100000,
+      comment: 'Hausverkauf',
+      attachment: { data: 'data:application/pdf;base64,QQ==', name: 'Kaufvertrag.pdf' },
+    });
+
+    const log = callsTo('kyc/admin/log')[0].data;
+    expect(log.file).toBe('data:application/pdf;base64,QQ==');
+    expect(log.fileName).toBe('Kaufvertrag.pdf');
+    expect(log.comment).toContain('comment: Hausverkauf');
+  });
+
+  it('omits the file fields entirely when no document is attached', async () => {
+    const { result } = renderHook(() => useCompliance());
+
+    await result.current.decideLimitRequest(CONTEXT, LimitRequestDecision.REJECTED, {
+      clerk: 'JR',
+      requestedLimit: 500000,
+    });
+
+    const log = callsTo('kyc/admin/log')[0].data;
+    expect(log).not.toHaveProperty('file');
+    expect(log).not.toHaveProperty('fileName');
+  });
+
   // The failure contract: stop at the first failing step and report what already landed, so a retry
   // cannot silently raise the limit twice or leave a decision recorded against an unchanged account.
   it('stops and reports when the decision call fails after the limit was raised', async () => {

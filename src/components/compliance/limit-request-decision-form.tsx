@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import {
   LimitRequestDecision,
@@ -6,6 +6,7 @@ import {
   LimitRequestGrantingDecisions,
   useCompliance,
 } from 'src/hooks/compliance.hook';
+import { toBase64 } from 'src/util/utils';
 
 interface Props {
   limitRequestId: number;
@@ -43,6 +44,10 @@ export function LimitRequestDecisionForm({
   // an edit of that number rather than an entry from scratch.
   const [acceptedLimit, setAcceptedLimit] = useState<string>(String(requestedLimit));
   const [comment, setComment] = useState('');
+  // The customer's proof of funds, filed with the note in the same step — in the sheet the clerk had to
+  // pull it out of the message thread and file it by hand.
+  const [document, setDocument] = useState<File>();
+  const documentInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string>();
   const [doneSteps, setDoneSteps] = useState<LimitRequestDecisionStep[]>([]);
@@ -51,6 +56,7 @@ export function LimitRequestDecisionForm({
   const decisionId = `limit-request-${limitRequestId}-decision`;
   const acceptedLimitId = `limit-request-${limitRequestId}-accepted-limit`;
   const commentId = `limit-request-${limitRequestId}-comment`;
+  const documentId = `limit-request-${limitRequestId}-document`;
 
   const grantsLimit = !!decision && LimitRequestGrantingDecisions.includes(decision);
   const parsedLimit = Number(acceptedLimit);
@@ -64,6 +70,17 @@ export function LimitRequestDecisionForm({
     setError(undefined);
     setDoneSteps([]);
 
+    let attachment: { data: string; name: string } | undefined;
+    if (document) {
+      const data = await toBase64(document);
+      if (!data) {
+        setIsSaving(false);
+        setError('The selected document could not be read');
+        return;
+      }
+      attachment = { data, name: document.name };
+    }
+
     const result = await decideLimitRequest({ limitRequestId, userDataId }, decision, {
       clerk,
       requestedLimit,
@@ -72,10 +89,13 @@ export function LimitRequestDecisionForm({
       comment: comment.trim() || undefined,
       fundOrigin,
       investmentDate,
+      attachment,
     });
 
     setIsSaving(false);
     if (result.success) {
+      setDocument(undefined);
+      if (documentInputRef.current) documentInputRef.current.value = '';
       onDecided();
     } else {
       // Naming the steps that did land matters: after a failure in between, the operator has to know
@@ -110,7 +130,7 @@ export function LimitRequestDecisionForm({
         {grantsLimit && (
           <div className="flex flex-col gap-1">
             <label htmlFor={acceptedLimitId} className="text-xs text-dfxGray-700">
-              New annual limit (CHF)
+              Accepted limit (CHF)
             </label>
             <input
               id={acceptedLimitId}
@@ -154,13 +174,26 @@ export function LimitRequestDecisionForm({
 
         <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
           <label htmlFor={commentId} className="text-xs text-dfxGray-700">
-            File note (optional)
+            Internal file note
           </label>
           <input
             id={commentId}
             className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 w-full"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor={documentId} className="text-xs text-dfxGray-700">
+            Customer document (optional)
+          </label>
+          <input
+            id={documentId}
+            ref={documentInputRef}
+            type="file"
+            className="px-2 py-1 text-xs text-dfxBlue-800"
+            onChange={(e) => setDocument(e.target.files?.[0])}
           />
         </div>
 
@@ -172,6 +205,12 @@ export function LimitRequestDecisionForm({
           {isSaving ? 'Saving...' : 'Save decision'}
         </button>
       </div>
+
+      {document && (
+        <p className="mt-2 text-xs text-dfxGray-700">
+          {`"${document.name}" is filed with the note under the customer's documents.`}
+        </p>
+      )}
 
       <p className="mt-2 text-xs text-dfxGray-700">
         {grantsLimit
