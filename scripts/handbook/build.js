@@ -266,10 +266,14 @@ const ABSOLUTE_URI_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
 
 function collectRelativeRefs(html) {
   const refs = [];
-  const re = /\b(?:src|href)="([^"]+)"/g;
+  // Only match real attribute names, after start-of-string, whitespace or '<'.
+  // A word boundary alone also matches after '-' and ':', so data-src,
+  // xlink:href and ng-src would be checked as if a browser resolved them.
+  // Both quote styles are accepted: inline HTML in Markdown may use either.
+  const re = /(?:^|[\s<])(?:src|href)=("|')([^"']+)\1/g;
   let m;
   while ((m = re.exec(html)) !== null) {
-    const raw = m[1];
+    const raw = m[2];
     if (
       ABSOLUTE_URI_SCHEME_RE.test(raw) ||
       raw.startsWith('//') ||
