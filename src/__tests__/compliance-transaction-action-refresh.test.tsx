@@ -3,6 +3,7 @@
 const mockGetTransactionByUid = jest.fn();
 const mockStopTransaction = jest.fn();
 const mockResumeTransaction = jest.fn();
+const mockRootRef: { current: HTMLElement | null } = { current: null };
 
 jest.mock('@dfx.swiss/react', () => ({
   TransactionState: {
@@ -41,7 +42,7 @@ jest.mock('src/hooks/compliance.hook', () => ({
 jest.mock('src/util/compliance-helpers', () => ({
   statusBadge: (v: unknown) => v,
   boolBadge: (v: unknown) => String(v),
-  formatDate: (v: unknown) => String(v ?? ''),
+  formatDate: (v: string) => v,
   DetailRow: () => null,
   TransactionDetailRows: () => null,
 }));
@@ -54,7 +55,7 @@ jest.mock('src/contexts/settings.context', () => ({
 
 jest.mock('src/contexts/layout.context', () => ({
   useLayoutContext: () => ({
-    rootRef: { current: document.body },
+    rootRef: mockRootRef,
     modalRootRef: { current: null },
   }),
 }));
@@ -72,7 +73,7 @@ jest.mock('src/components/compliance/recall-details-modal', () => ({
 }));
 
 import type { Transaction } from '@dfx.swiss/react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { TransactionsTable } from 'src/components/compliance/transactions-tab';
@@ -87,12 +88,43 @@ const tx = {
   created: '2026-08-01T10:00:00Z',
 } as unknown as TransactionInfo;
 
-function renderTable(onStatusChanged?: () => void) {
+const otherTx = {
+  id: 130505,
+  uid: 'T2AC46F80RESUME02',
+  type: 'BuyCrypto',
+  sourceType: 'Bank',
+  isCompleted: false,
+  created: '2026-08-01T11:00:00Z',
+} as unknown as TransactionInfo;
+
+interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason: Error) => void;
+}
+
+function createDeferred<T>(): Deferred<T> {
+  const controls = {
+    resolve: (_value: T) => {
+      throw new Error('deferred not initialized');
+    },
+    reject: (_reason: Error) => {
+      throw new Error('deferred not initialized');
+    },
+  };
+  const promise = new Promise<T>((resolve, reject) => {
+    controls.resolve = resolve;
+    controls.reject = reject;
+  });
+  return { promise, resolve: controls.resolve, reject: controls.reject };
+}
+
+function renderTable(onStatusChanged?: () => void, rows: TransactionInfo[] = [tx]) {
   function Wrapper() {
     const [expandedTxUid, setExpandedTxUid] = useState<string | undefined>();
     return (
       <TransactionsTable
-        transactions={[tx]}
+        transactions={rows}
         bankTxs={[]}
         cryptoInputs={[]}
         bankDatas={[]}
@@ -111,7 +143,14 @@ function renderTable(onStatusChanged?: () => void) {
   return render(<Wrapper />);
 }
 
+async function click(element: HTMLElement): Promise<void> {
+  await act(async () => {
+    userEvent.click(element);
+  });
+}
+
 beforeEach(() => {
+  mockRootRef.current = document.body;
   jest.clearAllMocks();
   mockGetTransactionByUid.mockResolvedValue({
     uid: tx.uid,
@@ -124,31 +163,40 @@ beforeEach(() => {
 describe('TransactionsTable stop/resume refresh handling', () => {
   it('keeps the resume result when only the detail refresh fails', async () => {
     const onStatusChanged = jest.fn();
+    const refresh = createDeferred<Transaction>();
     mockResumeTransaction.mockResolvedValue(undefined);
     mockGetTransactionByUid
-      .mockResolvedValueOnce({
-        uid: tx.uid,
-        state: 'Stopped',
-      } as unknown as Transaction)
-      .mockRejectedValueOnce(new Error('Network error'));
+      .mockResolvedValueOnce({ uid: tx.uid, state: 'Stopped' } as unknown as Transaction)
+      .mockReturnValueOnce(refresh.promise);
 
     renderTable(onStatusChanged);
 
-    await userEvent.click(screen.getByText(tx.uid));
-    await userEvent.click(await screen.findByRole('button', { name: 'Resume' }));
+    await click(screen.getByText(tx.uid));
+    const resumeAction = await screen.findByRole('button', { name: 'Resume' });
+    await click(resumeAction);
     await waitFor(() => {
       expect(screen.getByText('Transaktion fortsetzen')).toBeInTheDocument();
     });
     const resumeButtons = screen.getAllByRole('button', { name: 'Resume' });
-    await userEvent.click(resumeButtons[resumeButtons.length - 1]);
+    await click(resumeButtons[resumeButtons.length - 1]);
 
     await waitFor(() => {
       expect(mockResumeTransaction).toHaveBeenCalledTimes(1);
       expect(onStatusChanged).toHaveBeenCalledTimes(1);
     });
-    expect(screen.queryByText('Resume failed')).not.toBeInTheDocument();
     expect(screen.queryByText('Transaktion fortsetzen')).not.toBeInTheDocument();
-    expect(await screen.findByText('Network error')).toBeInTheDocument();
+    expect(screen.queryByText('Resume failed')).not.toBeInTheDocument();
+    expect(mockGetTransactionByUid).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      refresh.reject(new Error('Network error'));
+      await refresh.promise.catch(() => undefined);
+    });
+
+    const refreshError = await screen.findByText('Network error');
+    expect(refreshError).toBeInTheDocument();
+    expect(refreshError.closest('td')).not.toBeNull();
+    expect(screen.queryByText('Resume failed')).not.toBeInTheDocument();
   });
 
   it('reports a failed resume and keeps the dialog open', async () => {
@@ -157,13 +205,14 @@ describe('TransactionsTable stop/resume refresh handling', () => {
 
     renderTable(onStatusChanged);
 
-    await userEvent.click(screen.getByText(tx.uid));
-    await userEvent.click(await screen.findByRole('button', { name: 'Resume' }));
+    await click(screen.getByText(tx.uid));
+    const resumeAction = await screen.findByRole('button', { name: 'Resume' });
+    await click(resumeAction);
     await waitFor(() => {
       expect(screen.getByText('Transaktion fortsetzen')).toBeInTheDocument();
     });
     const resumeButtons = screen.getAllByRole('button', { name: 'Resume' });
-    await userEvent.click(resumeButtons[resumeButtons.length - 1]);
+    await click(resumeButtons[resumeButtons.length - 1]);
 
     await waitFor(() => {
       expect(screen.getByText('Transaction is not stopped')).toBeInTheDocument();
@@ -175,30 +224,85 @@ describe('TransactionsTable stop/resume refresh handling', () => {
 
   it('keeps the stop result when only the detail refresh fails', async () => {
     const onStatusChanged = jest.fn();
+    const refresh = createDeferred<Transaction>();
     mockStopTransaction.mockResolvedValue(undefined);
     mockGetTransactionByUid
-      .mockResolvedValueOnce({
-        uid: tx.uid,
-        state: 'Created',
-      } as unknown as Transaction)
-      .mockRejectedValueOnce(new Error('Network error'));
+      .mockResolvedValueOnce({ uid: tx.uid, state: 'Created' } as unknown as Transaction)
+      .mockReturnValueOnce(refresh.promise);
 
     renderTable(onStatusChanged);
 
-    await userEvent.click(screen.getByText(tx.uid));
-    await userEvent.click(await screen.findByRole('button', { name: 'Stop' }));
+    await click(screen.getByText(tx.uid));
+    const stopAction = await screen.findByRole('button', { name: 'Stop' });
+    await click(stopAction);
     await waitFor(() => {
       expect(screen.getByText('Transaktion stoppen')).toBeInTheDocument();
     });
     const stopButtons = screen.getAllByRole('button', { name: 'Stop' });
-    await userEvent.click(stopButtons[stopButtons.length - 1]);
+    await click(stopButtons[stopButtons.length - 1]);
 
     await waitFor(() => {
       expect(mockStopTransaction).toHaveBeenCalledTimes(1);
       expect(onStatusChanged).toHaveBeenCalledTimes(1);
     });
-    expect(screen.queryByText('Stop failed')).not.toBeInTheDocument();
     expect(screen.queryByText('Transaktion stoppen')).not.toBeInTheDocument();
-    expect(await screen.findByText('Network error')).toBeInTheDocument();
+    expect(screen.queryByText('Stop failed')).not.toBeInTheDocument();
+    expect(mockGetTransactionByUid).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      refresh.reject(new Error('Network error'));
+      await refresh.promise.catch(() => undefined);
+    });
+
+    const refreshError = await screen.findByText('Network error');
+    expect(refreshError).toBeInTheDocument();
+    expect(refreshError.closest('td')).not.toBeNull();
+    expect(screen.queryByText('Stop failed')).not.toBeInTheDocument();
+  });
+
+  it('does not leak the loading state into a dialog for another transaction', async () => {
+    const onStatusChanged = jest.fn();
+    const refresh = createDeferred<Transaction>();
+    mockResumeTransaction.mockResolvedValue(undefined);
+    mockGetTransactionByUid
+      .mockResolvedValueOnce({ uid: tx.uid, state: 'Stopped' } as unknown as Transaction)
+      .mockReturnValueOnce(refresh.promise)
+      .mockResolvedValueOnce({ uid: otherTx.uid, state: 'Stopped' } as unknown as Transaction);
+
+    renderTable(onStatusChanged, [tx, otherTx]);
+
+    await click(screen.getByText(tx.uid));
+    const resumeAction = await screen.findByRole('button', { name: 'Resume' });
+    await click(resumeAction);
+    await waitFor(() => {
+      expect(screen.getByText('Transaktion fortsetzen')).toBeInTheDocument();
+    });
+    const resumeButtons = screen.getAllByRole('button', { name: 'Resume' });
+    await click(resumeButtons[resumeButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Transaktion fortsetzen')).not.toBeInTheDocument();
+    });
+
+    await click(screen.getByText(otherTx.uid));
+    const otherResumeAction = await screen.findByRole('button', { name: 'Resume' });
+    await click(otherResumeAction);
+    await waitFor(() => {
+      expect(screen.getByText('Transaktion fortsetzen')).toBeInTheDocument();
+    });
+
+    const dialogResumeButtons = screen.getAllByRole('button', { name: 'Resume' });
+    expect(dialogResumeButtons[dialogResumeButtons.length - 1]).toBeEnabled();
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+    await waitFor(() => {
+      expect(screen.queryByText('Transaktion fortsetzen')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      refresh.resolve({ uid: tx.uid, state: 'Created' } as unknown as Transaction);
+    });
   });
 });

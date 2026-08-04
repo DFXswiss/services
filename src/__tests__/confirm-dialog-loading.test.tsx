@@ -1,5 +1,7 @@
 // Direct test: ConfirmDialog blocks Escape/backdrop while isLoading is true.
 
+const mockRootRef: { current: HTMLElement | null } = { current: null };
+
 jest.mock('@dfx.swiss/react-components', () => ({
   StyledButton: ({ label, onClick, disabled, isLoading }: any) => (
     <button type="button" onClick={onClick} disabled={disabled || isLoading}>
@@ -18,7 +20,7 @@ jest.mock('src/contexts/settings.context', () => ({
 
 jest.mock('src/contexts/layout.context', () => ({
   useLayoutContext: () => ({
-    rootRef: { current: document.body },
+    rootRef: mockRootRef,
     modalRootRef: { current: null },
   }),
 }));
@@ -29,6 +31,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 const mockOnCancel = jest.fn();
 
 beforeEach(() => {
+  mockRootRef.current = document.body;
   jest.clearAllMocks();
 });
 
