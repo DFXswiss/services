@@ -77,6 +77,26 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Inverse of escapeHtml, for re-reading paths out of already-escaped HTML.
+// Order matters: undo the single-character entities first, &amp; last —
+// otherwise "&amp;lt;" would incorrectly decode to "<".
+function decodeHtmlEntities(str) {
+  return String(str)
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&');
+}
+
+// URL-encode a relative output path for safe use inside an href/src
+// attribute (spaces, quotes, angle brackets, …). Applied BEFORE escapeHtml —
+// encodeURI leaves '&' and others untouched, so escapeHtml is still needed
+// as a separate step to make the attribute value HTML-safe.
+function encodeHtmlPath(p) {
+  return encodeURI(String(p));
+}
+
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
@@ -221,6 +241,19 @@ function flattenColors(obj, prefix, out) {
   return out;
 }
 
+/**
+ * Normalize a Tailwind fontSize theme value to a plain CSS size string.
+ * Tailwind allows either a bare string or a `[size, { lineHeight, ... }]`
+ * tuple. Anything else is not a valid CSS font-size and is skipped — a
+ * future tailwind.config.js shape change must not crash the whole build
+ * over one design token.
+ */
+function normalizeFontSize(value) {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
+  return null;
+}
+
 function collectRelativeRefs(html) {
   const refs = [];
   const re = /\b(?:src|href)="([^"]+)"/g;
@@ -242,18 +275,6 @@ function collectRelativeRefs(html) {
     if (cleaned) refs.push(cleaned);
   }
   return refs;
-}
-
-function integrityCheck(html, outDir, label) {
-  const refs = collectRelativeRefs(html);
-  for (const ref of refs) {
-    const full = path.join(outDir, ref);
-    if (!fs.existsSync(full)) {
-      fail(
-        `handbook integrity check failed (${label}): referenced path does not exist: ${ref}`,
-      );
-    }
-  }
 }
 
 function main() {
@@ -372,7 +393,16 @@ function main() {
   const colorList = flattenColors(theme.colors || {}, '', []);
   const fontSizeEntries = Object.keys(theme.fontSize || {})
     .sort(sortStrings)
-    .map((k) => ({ name: k, size: theme.fontSize[k] }));
+    .map((k) => ({ name: k, size: normalizeFontSize(theme.fontSize[k]) }))
+    .filter((e) => {
+      if (e.size === null) {
+        console.error(
+          `handbook warning: tailwind fontSize "${e.name}" has an unsupported shape and was skipped.`,
+        );
+        return false;
+      }
+      return true;
+    });
 
   artifacts.push({
     category: 'token',
@@ -948,9 +978,10 @@ function main() {
   {
     let ag = '<div class="asset-grid">';
     for (const a of assetSpecs) {
+      const assetHref = escapeHtml(encodeHtmlPath(a.out));
       ag +=
-        `<div class="asset-card"><a href="${escapeHtml(a.out)}">` +
-        `<img src="${escapeHtml(a.out)}" alt="${escapeHtml(path.basename(a.src))}" loading="lazy"></a>` +
+        `<div class="asset-card"><a href="${assetHref}">` +
+        `<img src="${assetHref}" alt="${escapeHtml(path.basename(a.src))}" loading="lazy"></a>` +
         `<div class="an">${escapeHtml(path.basename(a.src))}</div></div>`;
     }
     ag += '</div>';
@@ -985,11 +1016,12 @@ function main() {
       if (e.platform) {
         badges += `<span class="badge platform">${escapeHtml(e.platform)}</span>`;
       }
+      const shotHref = escapeHtml(encodeHtmlPath(e.outputPath));
       cards +=
         `<div class="test" id="${escapeHtml(cardId)}">` +
         `<div class="head"><span class="name">${escapeHtml(e.title)}</span>${badges}</div>` +
-        `<div class="img"><a href="${escapeHtml(e.outputPath)}">` +
-        `<img src="${escapeHtml(e.outputPath)}" alt="${escapeHtml(e.title)}" loading="lazy"></a></div>` +
+        `<div class="img"><a href="${shotHref}">` +
+        `<img src="${shotHref}" alt="${escapeHtml(e.title)}" loading="lazy"></a></div>` +
         `</div>`;
     }
     cards += '</div>';
@@ -1012,7 +1044,7 @@ function main() {
       docsBody +=
         `<div class="test" id="${escapeHtml(docId)}" style="margin-bottom:22px;grid-column:1/-1">` +
         `<div class="head"><span class="name">${escapeHtml(d.title)}</span>` +
-        `<a class="badge" href="${escapeHtml(d.out)}">Vollständige Seite</a></div>` +
+        `<a class="badge" href="${escapeHtml(encodeHtmlPath(d.out))}">Vollständige Seite</a></div>` +
         `<div class="doc-preview">${d.body}</div></div>`;
     }
     pushSection(
@@ -1091,12 +1123,25 @@ function main() {
   const manifestPath = path.join(outDir, 'manifest.json');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 
-  // Integrity: every local src/href in generated HTML must exist
-  integrityCheck(indexHtml, outDir, 'index.html');
+  // Integrity: every non-token artifact outputPath must exist on disk
+  // (paths from the artifacts list — unescaped originals, not re-parsed HTML).
+  for (const a of artifacts) {
+    if (a.category === 'token') continue;
+    const full = path.join(outDir, a.outputPath);
+    if (!fs.existsSync(full)) {
+      fail(
+        `handbook integrity check failed (manifest): missing ${a.outputPath}` +
+          ` (sourcePath=${a.sourcePath}, title=${a.title})`,
+      );
+    }
+  }
+
+  // Integrity: local src/href in rendered markdown docs (not in artifacts list)
   for (const d of renderedDocs) {
     const html = fs.readFileSync(path.join(outDir, d.out), 'utf8');
     const refs = collectRelativeRefs(html);
-    for (const ref of refs) {
+    for (const rawRef of refs) {
+      const ref = decodeHtmlEntities(rawRef);
       const underOut = path.join(path.dirname(path.join(outDir, d.out)), ref);
       if (
         !ref.startsWith('/') &&
@@ -1109,15 +1154,6 @@ function main() {
           fail(`handbook integrity check failed (${d.out}): missing ${ref}`);
         }
       }
-    }
-  }
-
-  // Also verify every screenshot/asset outputPath in manifest exists
-  for (const a of artifacts) {
-    if (a.category === 'token') continue;
-    const full = path.join(outDir, a.outputPath);
-    if (!fs.existsSync(full)) {
-      fail(`handbook integrity check failed (manifest): missing ${a.outputPath}`);
     }
   }
 
