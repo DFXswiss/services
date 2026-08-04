@@ -90,11 +90,14 @@ function decodeHtmlEntities(str) {
 }
 
 // URL-encode a relative output path for safe use inside an href/src
-// attribute (spaces, quotes, angle brackets, …). Applied BEFORE escapeHtml —
-// encodeURI leaves '&' and others untouched, so escapeHtml is still needed
-// as a separate step to make the attribute value HTML-safe.
+// attribute. encodeURIComponent is applied per path segment so '/' stays a
+// separator, while reserved characters like '#' and '?' (left alone by
+// encodeURI) are encoded — otherwise a filename containing them silently
+// produces a broken link. Applied BEFORE escapeHtml — encodeURIComponent
+// still leaves '&' untouched, so escapeHtml is still needed as a separate
+// step to make the attribute value HTML-safe.
 function encodeHtmlPath(p) {
-  return encodeURI(String(p));
+  return String(p).split('/').map(encodeURIComponent).join('/');
 }
 
 function ensureDir(dir) {
@@ -1144,7 +1147,8 @@ function main() {
     const html = fs.readFileSync(path.join(outDir, d.out), 'utf8');
     const refs = collectRelativeRefs(html);
     for (const rawRef of refs) {
-      const ref = decodeHtmlEntities(rawRef);
+      let ref = decodeHtmlEntities(rawRef);
+      try { ref = decodeURI(ref); } catch { /* malformed escape: keep as-is */ }
       const underOut = path.join(path.dirname(path.join(outDir, d.out)), ref);
       if (
         !ref.startsWith('/') &&
