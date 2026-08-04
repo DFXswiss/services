@@ -137,18 +137,20 @@ export default function SettingsScreen(): JSX.Element {
       JSON.stringify(selectedPreferredPhoneTimes) !== JSON.stringify(user?.kyc.preferredPhoneTimes)
     ) {
       setPreferredPhoneTimesError(undefined);
-      updateCallSettings(selectedPreferredPhoneTimes).catch((error: ApiError) =>
-        setPreferredPhoneTimesError(error.message ?? 'Unknown error'),
-      );
+      updateCallSettings(selectedPreferredPhoneTimes).catch((error: ApiError) => {
+        setPreferredPhoneTimesError(error.message ?? 'Unknown error');
+        setValue('preferredPhoneTimes', user?.kyc.preferredPhoneTimes ?? []);
+      });
     }
   }, [selectedPreferredPhoneTimes]);
 
   useEffect(() => {
     if (acceptCall !== undefined && acceptCall !== user?.kyc.phoneCallAccepted) {
       setAcceptCallError(undefined);
-      updateCallSettings(undefined, acceptCall).catch((error: ApiError) =>
-        setAcceptCallError(error.message ?? 'Unknown error'),
-      );
+      updateCallSettings(undefined, acceptCall).catch((error: ApiError) => {
+        setAcceptCallError(error.message ?? 'Unknown error');
+        setValue('acceptCall', user?.kyc.phoneCallAccepted as boolean);
+      });
     }
   }, [acceptCall]);
 
@@ -338,7 +340,11 @@ export default function SettingsScreen(): JSX.Element {
                     }
                   />
                 </Form>
-                {acceptCallError && <ErrorHint message={acceptCallError} />}
+                {acceptCallError && (
+                  <div data-testid="accept-call-error">
+                    <ErrorHint message={acceptCallError} />
+                  </div>
+                )}
 
                 <Form control={control} errors={errors}>
                   <StyledDropdownMultiChoice<PhoneCallTime>
@@ -351,7 +357,11 @@ export default function SettingsScreen(): JSX.Element {
                     labelFunc={(item) => translate('screens/settings', PhoneCallTimeLabels[item])}
                   />
                 </Form>
-                {preferredPhoneTimesError && <ErrorHint message={preferredPhoneTimesError} />}
+                {preferredPhoneTimesError && (
+                  <div data-testid="preferred-phone-times-error">
+                    <ErrorHint message={preferredPhoneTimesError} />
+                  </div>
+                )}
               </StyledVerticalStack>
             </StyledVerticalStack>
           )}

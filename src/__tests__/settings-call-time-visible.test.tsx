@@ -1,5 +1,6 @@
 // SettingsScreen verification-call: preferred times visible without prior consent;
-// each field still saves independently; failed saves surface ErrorHint.
+// each field still saves independently; failed saves surface ErrorHint under that field
+// and roll the form value back to the server so the same choice can be retried.
 
 const mockUpdateCallSettings = jest.fn();
 const mockUser = jest.fn();
@@ -178,7 +179,7 @@ jest.mock('src/util/utils', () => ({
   sortAddressesByBlockchain: () => 0,
 }));
 
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { PhoneCallTime } from '@dfx.swiss/react';
 import SettingsScreen from 'src/screens/settings.screen';
 
@@ -195,7 +196,8 @@ function firstCustomerUser(overrides: Record<string, unknown> = {}) {
     ...overrides,
     kyc: {
       phoneCallAccepted: null,
-      preferredPhoneTimes: undefined,
+      // v2 always returns an array (empty when none chosen) — never undefined.
+      preferredPhoneTimes: [],
       phoneCallStatus: undefined,
       ...kycOverride,
     },
@@ -252,7 +254,7 @@ describe('SettingsScreen preferred call time visibility', () => {
     expect(mockUpdateCallSettings).toHaveBeenCalledWith(undefined, false);
   });
 
-  it('shows an error when preferred call time save fails', async () => {
+  it('shows preferred-time error under the time field when save fails', async () => {
     mockUpdateCallSettings.mockRejectedValueOnce(apiError('Phone call status is already set'));
 
     render(<SettingsScreen />);
@@ -262,11 +264,14 @@ describe('SettingsScreen preferred call time visibility', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('error-hint')).toHaveTextContent('Phone call status is already set');
+      expect(within(screen.getByTestId('preferred-phone-times-error')).getByTestId('error-hint')).toHaveTextContent(
+        'Phone call status is already set',
+      );
     });
+    expect(screen.queryByTestId('accept-call-error')).not.toBeInTheDocument();
   });
 
-  it('shows an error when acceptCall save fails', async () => {
+  it('shows acceptCall error under the consent field when save fails', async () => {
     mockUpdateCallSettings.mockRejectedValueOnce(apiError('Consent update rejected'));
 
     render(<SettingsScreen />);
@@ -276,8 +281,11 @@ describe('SettingsScreen preferred call time visibility', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('error-hint')).toHaveTextContent('Consent update rejected');
+      expect(within(screen.getByTestId('accept-call-error')).getByTestId('error-hint')).toHaveTextContent(
+        'Consent update rejected',
+      );
     });
+    expect(screen.queryByTestId('preferred-phone-times-error')).not.toBeInTheDocument();
   });
 
   it('keeps the acceptCall error when a later preferred-time save succeeds', async () => {
@@ -290,7 +298,9 @@ describe('SettingsScreen preferred call time visibility', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('error-hint')).toHaveTextContent('Consent update rejected');
+      expect(within(screen.getByTestId('accept-call-error')).getByTestId('error-hint')).toHaveTextContent(
+        'Consent update rejected',
+      );
     });
 
     await act(async () => {
@@ -300,7 +310,10 @@ describe('SettingsScreen preferred call time visibility', () => {
     await waitFor(() => expect(mockUpdateCallSettings).toHaveBeenCalledTimes(2));
     expect(mockUpdateCallSettings).toHaveBeenNthCalledWith(2, [PhoneCallTime.H_9_TO_10]);
 
-    expect(screen.getByTestId('error-hint')).toHaveTextContent('Consent update rejected');
+    expect(within(screen.getByTestId('accept-call-error')).getByTestId('error-hint')).toHaveTextContent(
+      'Consent update rejected',
+    );
+    expect(screen.queryByTestId('preferred-phone-times-error')).not.toBeInTheDocument();
   });
 
   it('clears the preferred-time error after a successful retry on the same field', async () => {
@@ -315,7 +328,7 @@ describe('SettingsScreen preferred call time visibility', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('error-hint')).toHaveTextContent('Phone call status is already set');
+      expect(screen.getByTestId('preferred-phone-times-error')).toBeInTheDocument();
     });
 
     await act(async () => {
@@ -324,7 +337,132 @@ describe('SettingsScreen preferred call time visibility', () => {
 
     await waitFor(() => expect(mockUpdateCallSettings).toHaveBeenCalledTimes(2));
     await waitFor(() => {
-      expect(screen.queryByTestId('error-hint')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('preferred-phone-times-error')).not.toBeInTheDocument();
+    });
+  });
+
+  it('after a failed acceptCall save, the dropdown returns to the server value and shows the error', async () => {
+    mockUser.mockReturnValue(
+      firstCustomerUser({
+        kyc: { phoneCallAccepted: true, preferredPhoneTimes: [] },
+      }),
+    );
+    mockUpdateCallSettings.mockRejectedValueOnce(apiError('Consent update rejected'));
+
+    render(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dropdown-acceptCall-value')).toHaveTextContent('Yes, call me');
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("select-acceptCall-No, don't call me"));
+    });
+
+    await waitFor(() => {
+      expect(within(screen.getByTestId('accept-call-error')).getByTestId('error-hint')).toHaveTextContent(
+        'Consent update rejected',
+      );
+    });
+    expect(screen.getByTestId('dropdown-acceptCall-value')).toHaveTextContent('Yes, call me');
+  });
+
+  it('after a failed acceptCall save, choosing the same option again sends another request', async () => {
+    mockUser.mockReturnValue(
+      firstCustomerUser({
+        kyc: { phoneCallAccepted: true, preferredPhoneTimes: [] },
+      }),
+    );
+    mockUpdateCallSettings
+      .mockRejectedValueOnce(apiError('Consent update rejected'))
+      .mockRejectedValueOnce(apiError('Consent update rejected'));
+
+    render(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dropdown-acceptCall-value')).toHaveTextContent('Yes, call me');
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("select-acceptCall-No, don't call me"));
+    });
+
+    await waitFor(() => expect(mockUpdateCallSettings).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(screen.getByTestId('dropdown-acceptCall-value')).toHaveTextContent('Yes, call me');
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("select-acceptCall-No, don't call me"));
+    });
+
+    await waitFor(() => expect(mockUpdateCallSettings).toHaveBeenCalledTimes(2));
+    expect(mockUpdateCallSettings).toHaveBeenNthCalledWith(2, undefined, false);
+  });
+
+  it('after a failed preferred-time save, the dropdown returns to the server value and a retry sends another request', async () => {
+    mockUpdateCallSettings
+      .mockRejectedValueOnce(apiError('Phone call status is already set'))
+      .mockRejectedValueOnce(apiError('Phone call status is already set'));
+
+    render(<SettingsScreen />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('select-preferredPhoneTimes-09:00 - 10:00'));
+    });
+
+    await waitFor(() => expect(mockUpdateCallSettings).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(within(screen.getByTestId('preferred-phone-times-error')).getByTestId('error-hint')).toHaveTextContent(
+        'Phone call status is already set',
+      );
+    });
+    expect(screen.getByTestId('dropdown-preferredPhoneTimes-value')).toHaveTextContent('Select...');
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('select-preferredPhoneTimes-09:00 - 10:00'));
+    });
+
+    await waitFor(() => expect(mockUpdateCallSettings).toHaveBeenCalledTimes(2));
+    expect(mockUpdateCallSettings).toHaveBeenNthCalledWith(2, [PhoneCallTime.H_9_TO_10]);
+  });
+
+  it('clears acceptCall error when the user starts another save on that field', async () => {
+    // After rollback the form already shows the server value, so a new choice always
+    // differs and enters the if — that is where the error is cleared (no outside-if sticky path).
+    mockUser.mockReturnValue(
+      firstCustomerUser({
+        kyc: { phoneCallAccepted: true, preferredPhoneTimes: [] },
+      }),
+    );
+    mockUpdateCallSettings
+      .mockRejectedValueOnce(apiError('Consent update rejected'))
+      .mockResolvedValueOnce(undefined);
+
+    render(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dropdown-acceptCall-value')).toHaveTextContent('Yes, call me');
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("select-acceptCall-No, don't call me"));
+    });
+
+    await waitFor(() => {
+      expect(within(screen.getByTestId('accept-call-error')).getByTestId('error-hint')).toHaveTextContent(
+        'Consent update rejected',
+      );
+    });
+    expect(screen.getByTestId('dropdown-acceptCall-value')).toHaveTextContent('Yes, call me');
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("select-acceptCall-No, don't call me"));
+    });
+
+    await waitFor(() => expect(mockUpdateCallSettings).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      expect(screen.queryByTestId('accept-call-error')).not.toBeInTheDocument();
     });
   });
 });

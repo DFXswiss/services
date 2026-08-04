@@ -1,49 +1,12 @@
-import { test, expect, APIRequestContext } from '@playwright/test';
-import * as dotenv from 'dotenv';
-import { HDNodeWallet } from 'ethers';
-import * as path from 'path';
-import { generateTestMnemonic } from './test-wallet';
-
-dotenv.config({ path: path.join(__dirname, '../.env') });
-
-const API_URL = `${process.env.REACT_APP_API_URL ?? ''}/v1`;
-
-/**
- * Creates a throwaway account on the Dev API (same signMessage → signature → /auth
- * flow as e2e/helpers/auth-cache.ts), so phoneCallAccepted is unset — the first-call case.
- */
-async function createFreshDevSession(request: APIRequestContext): Promise<string> {
-  const mnemonic = generateTestMnemonic();
-  const wallet = HDNodeWallet.fromPhrase(mnemonic);
-
-  const signMsgRes = await request.get(`${API_URL}/auth/signMessage?address=${encodeURIComponent(wallet.address)}`, {
-    ignoreHTTPSErrors: true,
-  });
-  if (!signMsgRes.ok()) {
-    const body = await signMsgRes.text().catch(() => 'unknown');
-    throw new Error(`signMessage failed with status ${signMsgRes.status()}: ${body}`);
-  }
-  const { message } = await signMsgRes.json();
-  const signature = await wallet.signMessage(message);
-
-  const authRes = await request.post(`${API_URL}/auth`, {
-    data: { address: wallet.address, signature },
-    ignoreHTTPSErrors: true,
-  });
-  if (!authRes.ok()) {
-    const body = await authRes.text().catch(() => 'unknown');
-    throw new Error(`Auth failed with status ${authRes.status()}: ${body}`);
-  }
-  const data = await authRes.json();
-  if (!data?.accessToken) {
-    throw new Error(`Auth response missing accessToken: ${JSON.stringify(data)}`);
-  }
-  return data.accessToken as string;
-}
+import { test, expect } from '@playwright/test';
+import { createFreshDevSession } from './helpers/fresh-auth';
 
 /**
  * First-time customer opening the mail deep-link must see preferred call times
  * without first choosing "Yes, call me".
+ *
+ * Uses a fresh (uncached) account each run: a cached session could already have
+ * phoneCallAccepted set and would not exercise the first-call UI.
  */
 test.describe('Settings preferred call time visibility', () => {
   let token: string;
