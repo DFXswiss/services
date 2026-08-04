@@ -8,6 +8,7 @@ import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { mrosStatusBadge } from 'src/util/compliance-helpers';
+import { formatSwissDateTime } from 'src/util/utils';
 
 export default function ComplianceMrosListScreen(): JSX.Element {
   useComplianceGuard();
@@ -38,14 +39,7 @@ export default function ComplianceMrosListScreen(): JSX.Element {
   }, [isLoggedIn]);
 
   function formatDate(date?: Date): string {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('de-CH', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return date ? formatSwissDateTime(date) : '-';
   }
 
   return (

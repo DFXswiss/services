@@ -395,6 +395,30 @@ export function formatChfOrDash(value?: number): string {
   return value !== undefined ? `${formatChf(value)} CHF` : '-';
 }
 
+// Dates use a fixed Swiss format, independent of the app UI language: the notation is a Swiss
+// convention, not a translation of the interface. Explicit field options (not dateStyle: 'short')
+// so the year stays four digits.
+const SWISS_DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+const SWISS_TIME_OPTIONS: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
+
+export function formatSwissDate(value: string | number | Date): string {
+  return new Date(value).toLocaleDateString('de-CH', SWISS_DATE_OPTIONS);
+}
+
+export function formatSwissTime(value: string | number | Date): string {
+  return new Date(value).toLocaleTimeString('de-CH', SWISS_TIME_OPTIONS);
+}
+
+export function formatSwissDateTime(value: string | number | Date): string {
+  return new Date(value).toLocaleString('de-CH', { ...SWISS_DATE_OPTIONS, ...SWISS_TIME_OPTIONS });
+}
+
+// Sites that emitted seconds through a bare toLocaleString() keep them: the timestamp is what
+// orders events that share a minute, so pinning the notation must not drop a field.
+export function formatSwissDateTimeWithSeconds(value: string | number | Date): string {
+  return new Date(value).toLocaleString('de-CH', { ...SWISS_DATE_OPTIONS, ...SWISS_TIME_OPTIONS, second: '2-digit' });
+}
+
 export function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;
   if (a == null || b == null) return false;

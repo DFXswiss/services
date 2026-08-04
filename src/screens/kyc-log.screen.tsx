@@ -1,4 +1,4 @@
-import { useApi, Utils, Validations } from '@dfx.swiss/react';
+import { Utils, Validations } from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -19,6 +19,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { toBase64 } from 'src/util/utils';
+import { useGuardedApi } from '../hooks/guarded-api.hook';
 
 interface FormData {
   userDataId: string;
@@ -31,7 +32,7 @@ export default function KycLogScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { call } = useApi();
+  const { call } = useGuardedApi();
   const { search } = useLocation();
   const params = new URLSearchParams(search);
 

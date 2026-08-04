@@ -9,7 +9,6 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
 import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
-import { PersonalIbanConfirmationContextProvider } from './contexts/personal-iban-confirmation.context';
 import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
@@ -23,6 +22,7 @@ const SellScreen = lazy(() => import('./screens/sell.screen'));
 const SwapScreen = lazy(() => import('./screens/swap.screen'));
 const AccountScreen = lazy(() => import('./screens/account.screen'));
 const SettingsScreen = lazy(() => import('./screens/settings.screen'));
+const StaffKycRequiredScreen = lazy(() => import('./screens/staff-kyc-required.screen'));
 const BuyFailureScreen = lazy(() => import('./screens/buy-failure.screen'));
 const BuyInfoScreen = lazy(() => import('./screens/buy-info.screen'));
 const BuySuccessScreen = lazy(() => import('./screens/buy-success.screen'));
@@ -266,6 +266,11 @@ export const Routes = [
       {
         path: '2fa',
         element: withSuspense(<TfaScreen />),
+        isKycScreen: true,
+      },
+      {
+        path: 'staff-kyc-required',
+        element: withSuspense(<StaffKycRequiredScreen />),
         isKycScreen: true,
       },
       {
@@ -605,19 +610,9 @@ export interface WidgetParams extends AppParams {
 interface AppProps {
   routerFactory: (routes: RouteObject[]) => Router;
   params?: WidgetParams;
-  personalIbanOccurrence?: number;
 }
 
-function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
-  if (
-    params?.personalIban !== undefined &&
-    personalIbanOccurrence === undefined
-  ) {
-    throw new Error(
-      'personalIbanOccurrence is required when a widget supplies personalIban',
-    );
-  }
-
+function App({ routerFactory, params }: AppProps) {
   const routerRef = useRef<Router>();
   if (!routerRef.current) {
     routerRef.current = routerFactory(Routes);
@@ -641,14 +636,11 @@ function App({ routerFactory, params, personalIbanOccurrence }: AppProps) {
               service={params?.service}
               closeCallback={params?.onClose}
               params={params}
-              personalIbanOccurrence={personalIbanOccurrence}
               router={router}
             >
               <SettingsContextProvider>
                 <WalletContextProvider router={router}>
-                  <PersonalIbanConfirmationContextProvider>
-                    <RouterProvider router={router} />
-                  </PersonalIbanConfirmationContextProvider>
+                  <RouterProvider router={router} />
                 </WalletContextProvider>
               </SettingsContextProvider>
             </AppHandlingContextProvider>

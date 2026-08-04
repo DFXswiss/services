@@ -1,3 +1,18 @@
 # SPA deep-link fallback: unknown paths serve the app shell (client-side routing).
-# Real files (static/*, widget/*, favicon, ...) are matched by the host first.
+#
+# A path with no file behind it is answered with index.html and status 200. That is what makes deep
+# links work, and it is also why an absent build asset was answered with the app shell. The
+# /static/* rule in _headers then stamped that HTML with the cache lifetime meant for fingerprinted
+# assets, so a client asking for a chunk that a later deploy had replaced received an app shell
+# parsed as JavaScript -- cached under the chunk's own URL.
+#
+# functions/[[path]].js now intercepts that case for the asset paths listed in _routes.json and
+# answers 404 with no-store, which is a failure a client can recover from. Verify with a request
+# for any absent asset:
+#   curl -sI https://app.dfx.swiss/static/js/999.deadbeef.chunk.js  -> 404
+#
+# A 404 cannot be expressed in this file: _redirects supports redirects (301, 302, 303, 307, 308)
+# and rewrites with 200, and a rule written with 404 is rejected as invalid. Narrowing the rule
+# below is not an option either: Cloudflare documents that redirects apply whether or not an asset
+# matches the request, so an explicit /static/* rule would shadow the assets themselves.
 /*    /index.html    200

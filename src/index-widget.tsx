@@ -4,6 +4,10 @@ import MainWidget from './Main.widget';
 import './index.css';
 import { preserveStringAttribute } from './util/web-component';
 
+// No chunk error handling is installed here on purpose. Main.widget marks this build as embedded,
+// which turns the page-wide listeners off: they would belong to the host's window, not ours.
+// Failures still reach the error screen and are reported there.
+
 const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'function' | 'json' } = {
   headless: 'string',
   borderless: 'string',

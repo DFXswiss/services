@@ -79,7 +79,12 @@
     "iban": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez ouvrir un ticket de support sur <1></1> et joindre la confirmation de la transaction bancaire au format PDF."
   },
   "screens/kyc": {
+    "Identification required": "Identification requise",
+    "Access to internal tools now requires an identified person behind the account. Your role is unchanged — what is missing is your identification.": "L'accès aux outils internes exige désormais une personne identifiée derrière le compte. Votre rôle est inchangé — il ne manque que votre identification.",
+    "Complete the identification to restore access. This is the same process customers go through and only has to be done once.": "Terminez l'identification pour rétablir l'accès. Il s'agit du même processus que pour les clients et il ne doit être effectué qu'une seule fois.",
+    "Start KYC": "Démarrer le KYC",
     "Is this email address correct?": "Cette adresse e-mail est-elle correcte ?",
+    "This account already has an email address. You can change it in your account settings.": "Ce compte possède déjà une adresse e-mail. Vous pouvez la modifier dans les paramètres de votre compte.",
     "DFX KYC": "DFX KYC",
     "KYC level": "KYC level",
     "Trading limit": "Limite de transactions",
@@ -480,7 +485,8 @@
 
     "Invalid link": "Lien invalide",
     "Merge is already completed": "La fusion est déjà terminée",
-    "Please return to the previous page. If this problem persists, please contact our support.": "Veuillez revenir à la page précédente. Si le problème persiste, veuillez contacter notre service d'assistance."
+    "Please return to the previous page. If this problem persists, please contact our support.": "Veuillez revenir à la page précédente. Si le problème persiste, veuillez contacter notre service d'assistance.",
+    "Please reload this page. If this problem persists, please contact our support.": "Veuillez recharger cette page. Si le problème persiste, veuillez contacter notre service d'assistance."
   },
   "screens/home": {
     "DFX services": "Services DFX",
@@ -684,8 +690,6 @@
     "Personal IBAN created successfully: {{iban}}": "IBAN personnel créé avec succès : {{iban}}",
     "Your requested personal IBAN is only available for EUR bank transfers, so it was not used for this offer.": "L'IBAN personnel demandé n'est disponible que pour les virements bancaires en EUR et n'a donc pas été utilisé pour cette offre.",
     "Continue without personal IBAN": "Continuer sans IBAN personnel",
-    "Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?": "Bank Frick vous attribue un IBAN unique pour les virements. Le compte associé appartient à DFX AG. Cette opération est irréversible. Souhaitez-vous demander et utiliser cet IBAN ?",
-    "Request and use personal IBAN": "Demander et utiliser l'IBAN personnel",
     "The personal IBAN response could not be verified for this offer. You can continue with the standard payment details, or cancel.": "La réponse d'IBAN personnel n'a pas pu être vérifiée pour cette offre. Vous pouvez continuer avec les détails de paiement standard, ou annuler.",
     "Personal IBANs require the bank transfer payment method.": "Les IBAN personnels nécessitent le mode de paiement virement bancaire.",
     "Personal IBANs require KYC level 50.": "Les IBAN personnels nécessitent le niveau KYC 50.",
@@ -947,7 +951,9 @@
 
     "Total amount": "Montant total",
     "You will be redirected to the site shortly": "Vous serez redirigé vers le site dans quelques secondes",
-    "Go back to the payment page": "Retour à la page de paiement"
+    "Go back to the payment page": "Retour à la page de paiement",
+    "Show collection IBAN": "Afficher l'IBAN collectif",
+    "Show personal IBAN": "Afficher l'IBAN personnel"
   },
   "screens/iban": {
     "Your Bank Accounts": "Vos comptes bancaires",
@@ -1134,14 +1140,9 @@
     "Download PDF": "Télécharger PDF",
     "Select a date for your portfolio report": "Sélectionnez une date pour votre rapport de portefeuille",
     "Recent Activity": "Activité récente",
-    "Deposit (Fiat)": "Dépôt (Fiat)",
-    "Withdrawal (Fiat)": "Retrait (Fiat)",
-    "Deposit (Crypto)": "Dépôt (Crypto)",
-    "Withdrawal (Crypto)": "Retrait (Crypto)",
+    "Withdrawal": "Retrait",
     "Mint": "Investir",
     "Redeem": "Racheter",
-    "Deposit (Saving)": "Dépôt (Saving)",
-    "Withdrawal (Saving)": "Retrait (Saving)",
     "Waiting for payment": "En attente de paiement",
     "Check pending": "Vérification en attente",
     "Processing": "En cours de traitement",

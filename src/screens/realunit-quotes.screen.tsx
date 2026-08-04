@@ -6,7 +6,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, formatSwissDateTimeWithSeconds } from 'src/util/utils';
 
 export default function RealunitQuotesScreen(): JSX.Element {
   useRealunitGuard();
@@ -70,7 +70,7 @@ export default function RealunitQuotesScreen(): JSX.Element {
                       {quote.userAddress ? blankedAddress(quote.userAddress, { displayLength: 12 }) : '-'}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {new Date(quote.created).toLocaleString()}
+                      {formatSwissDateTimeWithSeconds(quote.created)}
                     </td>
                   </tr>
                 ))}

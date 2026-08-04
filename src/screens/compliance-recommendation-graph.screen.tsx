@@ -21,6 +21,7 @@ import {
   shouldExpand,
   UserNodeData,
 } from 'src/util/recommendation-graph.util';
+import { formatSwissDate } from 'src/util/utils';
 
 const NEIGHBOR_PAGE_SIZE = 25;
 
@@ -347,7 +348,7 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
               </div>
               <div>
                 {translate('screens/compliance', 'Trade approved')}:{' '}
-                {selectedNode.tradeApprovalDate ? new Date(selectedNode.tradeApprovalDate).toLocaleDateString() : '-'}
+                {selectedNode.tradeApprovalDate ? formatSwissDate(selectedNode.tradeApprovalDate) : '-'}
               </div>
             </div>
           )}

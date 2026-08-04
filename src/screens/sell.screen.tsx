@@ -489,8 +489,10 @@ export default function SellScreen(): JSX.Element {
 
     await updateBankAccount();
 
-    if (canSendTransaction() && !activeWallet)
-      return closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo }, false);
+    if (canSendTransaction() && !activeWallet) {
+      closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo }, false);
+      return;
+    }
 
     try {
       if (canSendTransaction()) {

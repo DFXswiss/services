@@ -1,4 +1,4 @@
-import { useApi, Utils, Validations } from '@dfx.swiss/react';
+import { Utils, Validations } from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -17,6 +17,7 @@ import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { useGuardedApi } from '../hooks/guarded-api.hook';
 
 interface IdFormData {
   id: string;
@@ -51,7 +52,7 @@ export default function DashboardFinancialLogValidityScreen(): JSX.Element {
   useAdminGuard();
 
   const { translateError } = useSettingsContext();
-  const { call } = useApi();
+  const { call } = useGuardedApi();
 
   const [confirmation, setConfirmation] = useState<PendingConfirmation>();
 

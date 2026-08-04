@@ -33,7 +33,7 @@ interface TransactionsTableProps {
   onExpandCryptoInput: (id: number | undefined) => void;
   onExpandBankData: (id: number | undefined) => void;
   onExpandTxUid: (uid: string | undefined) => void;
-  onStopped?: () => void;
+  onStatusChanged?: () => void;
 }
 
 export function TransactionsTable({
@@ -52,10 +52,10 @@ export function TransactionsTable({
   onExpandCryptoInput,
   onExpandBankData,
   onExpandTxUid,
-  onStopped,
+  onStatusChanged,
 }: TransactionsTableProps): JSX.Element {
   const { getTransactionByUid } = useTransaction();
-  const { downloadTransactionPdf, stopTransaction } = useCompliance();
+  const { downloadTransactionPdf, stopTransaction, resumeTransaction } = useCompliance();
   const [txDetailCache, setTxDetailCache] = useState<Map<string, Transaction>>(new Map());
   const [txDetailLoading, setTxDetailLoading] = useState<string>();
   const [txDetailError, setTxDetailError] = useState<string>();
@@ -64,6 +64,9 @@ export function TransactionsTable({
   const [stoppingTxId, setStoppingTxId] = useState<number>();
   const [stopConfirmTxId, setStopConfirmTxId] = useState<number>();
   const [stopError, setStopError] = useState<string>();
+  const [resumingTxId, setResumingTxId] = useState<number>();
+  const [resumeConfirmTxId, setResumeConfirmTxId] = useState<number>();
+  const [resumeError, setResumeError] = useState<string>();
   const [chargebackTxId, setChargebackTxId] = useState<number>();
   const [recallBankTxId, setRecallBankTxId] = useState<number>();
   const [viewingRecall, setViewingRecall] = useState<RecallInfo>();
@@ -80,12 +83,33 @@ export function TransactionsTable({
         const updatedDetail = await getTransactionByUid(tx.uid);
         setTxDetailCache((prev) => new Map(prev).set(tx.uid, updatedDetail));
       }
-      onStopped?.();
+      onStatusChanged?.();
       setStopConfirmTxId(undefined);
     } catch (e) {
       setStopError(e instanceof Error ? e.message : 'Stop failed');
     } finally {
       setStoppingTxId(undefined);
+    }
+  }
+
+  async function confirmResume(): Promise<void> {
+    const txId = resumeConfirmTxId;
+    if (!txId) return;
+    const tx = transactions.find((t) => t.id === txId);
+    setResumingTxId(txId);
+    setResumeError(undefined);
+    try {
+      await resumeTransaction(txId);
+      if (tx) {
+        const updatedDetail = await getTransactionByUid(tx.uid);
+        setTxDetailCache((prev) => new Map(prev).set(tx.uid, updatedDetail));
+      }
+      onStatusChanged?.();
+      setResumeConfirmTxId(undefined);
+    } catch (e) {
+      setResumeError(e instanceof Error ? e.message : 'Resume failed');
+    } finally {
+      setResumingTxId(undefined);
     }
   }
 
@@ -176,6 +200,7 @@ export function TransactionsTable({
       </div>
       {pdfError && <p className="text-xs text-primary-red mb-1">{pdfError}</p>}
       {stopError && <p className="text-xs text-primary-red mb-1">{stopError}</p>}
+      {resumeError && <p className="text-xs text-primary-red mb-1">{resumeError}</p>}
       <table className="w-full border-collapse">
         <thead className="sticky top-0 bg-dfxGray-300">
           <tr>
@@ -408,6 +433,7 @@ export function TransactionsTable({
                                 />
                                 {(() => {
                                   const canStop = tx.type === 'BuyCrypto' && !tx.isCompleted;
+                                  const canResume = tx.type === 'BuyCrypto' && !tx.isCompleted && isStopped;
                                   const canChargeback =
                                     [
                                       TransactionState.FAILED,
@@ -419,6 +445,7 @@ export function TransactionsTable({
                                   const existingRecall = bankTx?.recall;
                                   const canRecall = bankTx != null && !existingRecall;
                                   const showStop = canStop && canPerformActions;
+                                  const showResume = canResume && canPerformActions;
                                   const showChargeback = canChargeback && canPerformActions;
                                   const showRecall = canRecall && canPerformActions;
                                   const ramp: 'onramp' | 'offramp' | undefined =
@@ -426,6 +453,7 @@ export function TransactionsTable({
                                   const showRampPdf = ramp != null;
                                   if (
                                     !showStop &&
+                                    !showResume &&
                                     !showChargeback &&
                                     !showRecall &&
                                     !existingRecall &&
@@ -469,6 +497,15 @@ export function TransactionsTable({
                                           disabled={stoppingTxId === tx.id || isStopped}
                                         >
                                           {stoppingTxId === tx.id ? 'Stopping...' : isStopped ? 'Stopped' : 'Stop'}
+                                        </button>
+                                      )}
+                                      {showResume && (
+                                        <button
+                                          className="px-3 py-1 text-xs text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          onClick={() => setResumeConfirmTxId(tx.id)}
+                                          disabled={resumingTxId === tx.id}
+                                        >
+                                          {resumingTxId === tx.id ? 'Resuming...' : 'Resume'}
                                         </button>
                                       )}
                                       {showChargeback && (
@@ -527,6 +564,15 @@ export function TransactionsTable({
         onConfirm={confirmStop}
         onCancel={() => setStopConfirmTxId(undefined)}
       />
+      <ConfirmDialog
+        isOpen={resumeConfirmTxId != null}
+        title="Transaktion fortsetzen"
+        message="Möchtest du diese Transaktion wirklich fortsetzen? Sie geht zurück in die automatische Verarbeitung."
+        confirmLabel="Resume"
+        isLoading={resumingTxId != null}
+        onConfirm={confirmResume}
+        onCancel={() => setResumeConfirmTxId(undefined)}
+      />
       <ChargebackModal
         isOpen={chargebackTxId != null}
         transactionId={chargebackTxId}
@@ -543,7 +589,7 @@ export function TransactionsTable({
             }
           }
           setChargebackTxId(undefined);
-          onStopped?.();
+          onStatusChanged?.();
         }}
       />
       <RecallModal

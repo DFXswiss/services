@@ -41,7 +41,7 @@ const REFRESH_MS = 60_000;
 export default function SupportDashboardOverviewScreen(): JSX.Element {
   useSupportDashboardGuard();
 
-  const { translate } = useSettingsContext();
+  const { translate, locale } = useSettingsContext();
   const { getIssueList, getMyClerk, getIssueStatistics } = useSupportDashboard();
   const { navigate } = useNavigation();
 
@@ -59,6 +59,7 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
   const [statistics, setStatistics] = useState<TicketStatistics>();
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string>();
+  const statsRequestId = useRef(0);
 
   const baselineLoaded = useRef(false);
 
@@ -101,24 +102,55 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
 
   // Statistics are loaded for the selected period. Primary source is the server aggregate;
   // if that endpoint is unavailable we fall back to computing from the most recent tickets.
+  // Statistics are stored with their stable bucket keys and localized at render time. Loading them
+  // per language instead would make a language switch a refetch: the chart would blank behind a
+  // spinner, and a failing refetch would replace statistics that were already correct.
   const loadStats = useCallback(
     (periodDays: number): void => {
+      // The period selector can retrigger this while a load is in flight, so only the newest
+      // request may write - otherwise a slow earlier response lands last and wins.
+      const requestId = ++statsRequestId.current;
+      const isCurrent = (): boolean => requestId === statsRequestId.current;
+
       // clear any prior error up front so a stale error can't mask freshly loaded stats
       // (the fallback success path below sets `statistics` without touching `statsError`)
       setStatsError(undefined);
       setStatsLoading(true);
       getIssueStatistics(periodDays)
         .then((dto) => {
-          setStatistics({
-            ...dto,
-            trend: dto.trend.map((b) => ({ key: trendLabel(b.key, dto.granularity), count: b.count })),
+          // An empty, unparseable or misshaped 200 body reaches us as undefined or without a
+          // usable trend. Reading dto.trend used to throw here and drop into the fallback below;
+          // keep that, or the view spins forever. Check the shape, not just truthiness: a
+          // non-array trend would pass and then throw in the render-time memo instead.
+          if (!Array.isArray(dto?.trend)) throw new Error('Invalid statistics response');
+          if (isCurrent()) setStatistics(dto);
+        })
+        .catch(() => {
+          if (!isCurrent()) return;
+          return getIssueList({ take: 1000 }).then((res) => {
+            if (isCurrent()) setStatistics(computeStatistics(res.data, periodDays));
           });
         })
-        .catch(() => getIssueList({ take: 1000 }).then((res) => setStatistics(computeStatistics(res.data, periodDays))))
-        .catch((e: Error) => setStatsError(e.message ?? 'Unknown error'))
-        .finally(() => setStatsLoading(false));
+        .catch((e: Error) => {
+          if (isCurrent()) setStatsError(e.message ?? 'Unknown error');
+        })
+        .finally(() => {
+          if (isCurrent()) setStatsLoading(false);
+        });
     },
     [getIssueStatistics, getIssueList],
+  );
+
+  const localizedStatistics = useMemo(
+    () =>
+      statistics && {
+        ...statistics,
+        trend: statistics.trend.map((b) => ({
+          key: trendLabel(b.key, statistics.granularity, locale),
+          count: b.count,
+        })),
+      },
+    [statistics, locale],
   );
 
   useEffect(() => {
@@ -190,7 +222,7 @@ export default function SupportDashboardOverviewScreen(): JSX.Element {
 
       {tab === 'statistics' && (
         <StatisticsView
-          statistics={statistics}
+          statistics={localizedStatistics}
           loading={statsLoading}
           error={statsError}
           period={statsPeriod}

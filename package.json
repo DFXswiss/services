@@ -12,7 +12,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@dfx.swiss/react": "^1.7.0-beta.0",
+    "@dfx.swiss/react": "^1.7.0",
     "@dfx.swiss/react-components": "^1.3.2",
     "@ledgerhq/hw-app-btc": "^6.24.1",
     "@ledgerhq/hw-app-eth": "^6.33.7",
@@ -83,7 +83,7 @@
     "widget": "./scripts/build-widget.sh",
     "widget:dev": "./scripts/build-widget.sh dev",
     "widget:loc": "./scripts/build-widget.sh loc",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.{ts,tsx}\" --no-fix",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.{ts,tsx}\" \"functions/**/*.js\" --no-fix --max-warnings 0",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.{ts,tsx}\" --fix",
     "test": "react-app-rewired test --watchAll=false --passWithNoTests",
     "test:e2e": "./scripts/e2e-test.sh",
@@ -180,7 +180,7 @@
       "^src/(.*)$": "<rootDir>/src/$1"
     },
     "collectCoverageFrom": [
-      "src/**/*.(t|j)s",
+      "src/**/*.{ts,tsx,js,jsx}",
       "!src/**/*.d.ts"
     ],
     "transformIgnorePatterns": [

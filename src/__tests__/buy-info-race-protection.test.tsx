@@ -1,6 +1,6 @@
 // Race-protection test: BuyInfoScreen must discard a stale, slower-resolving quote
 // when a newer fetch (triggered by personalIban change) already resolved.
-// personalIban comes from usePersonalIbanConfirmation() (not useAppParams).
+// personalIban comes from usePersonalIbanSelection() (not useAppParams).
 
 const mockReceiveFor = jest.fn();
 const mockUseAppParams = jest.fn();
@@ -57,12 +57,9 @@ jest.mock('@dfx.swiss/react-components', () => ({
   StyledVerticalStack: ({ children }: any) => <div>{children}</div>,
 }));
 
-jest.mock('src/components/payment/payment-info-buy', () => {
-  const React = require('react');
-  return {
-    PaymentInformationContent: ({ info }: any) => <div data-testid="payment-info">{info.amount}</div>,
-  };
-});
+jest.mock('src/components/payment/payment-info-buy', () => ({
+  PaymentInformationContent: ({ info }: any) => <div data-testid="payment-info">{info.amount}</div>,
+}));
 jest.mock('src/components/error-hint', () => ({ ErrorHint: () => null }));
 jest.mock('src/components/payment/buy-completion', () => ({ BuyCompletion: () => null }));
 jest.mock('src/components/quote-error-hint', () => ({ QuoteErrorHint: () => null }));
@@ -81,13 +78,10 @@ jest.mock('src/hooks/app-params.hook', () => ({
   useAppParams: () => mockUseAppParams(),
 }));
 jest.mock('src/hooks/personal-iban.hook', () => ({
-  usePersonalIbanConfirmation: () => ({
+  usePersonalIbanSelection: () => ({
     requestedPersonalIban: mockPersonalIban(),
     personalIban: mockPersonalIban(),
-    requiresCustomerConfirmation: false,
     hasAuthenticatedCustomer: true,
-    confirmForCurrentCustomer: jest.fn(),
-    declineForCurrentCustomer: jest.fn(),
   }),
 }));
 jest.mock('src/contexts/wallet.context', () => ({

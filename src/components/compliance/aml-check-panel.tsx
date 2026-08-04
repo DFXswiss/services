@@ -1,9 +1,11 @@
 import { AmlReason, CallQueue, CheckStatus } from '@dfx.swiss/react';
 import { useState } from 'react';
-import { ComplianceUserData, TransactionInfo } from 'src/hooks/compliance.hook';
+import type { ComplianceUserData, TransactionInfo } from 'src/hooks/compliance.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { canResetBuyCryptoAmlForReview, hasBuyCryptoReviewResetEligibleState } from 'src/util/buy-crypto-reset.util';
 import { statusBadge } from 'src/util/compliance-helpers';
 import { hasScorechainHighRisk, scorechainHighlightValue } from 'src/util/scorechain.util';
+import { formatSwissDate } from 'src/util/utils';
 
 function callQueueForReason(reason: string | undefined): CallQueue | undefined {
   return reason && (Object.values(CallQueue) as string[]).includes(reason) ? (reason as CallQueue) : undefined;
@@ -22,6 +24,7 @@ interface AmlCheckPendingPanelProps {
   isSaving: boolean;
   onUpdate: (tx: TransactionInfo, update: AmlCheckUpdate, clerk: string) => Promise<void>;
   onReset: (tx: TransactionInfo, clerk: string) => Promise<void>;
+  onReviewReset: (tx: TransactionInfo) => Promise<void>;
 }
 
 const AML_CHECK_OPTIONS = [CheckStatus.PASS, CheckStatus.FAIL, CheckStatus.PENDING, 'Reset'] as const;
@@ -38,6 +41,7 @@ function TransactionEntry({
   onReset,
   isSaving,
   userDataId,
+  canResetBuyCrypto,
 }: {
   tx: TransactionInfo;
   clerks: string[];
@@ -45,6 +49,7 @@ function TransactionEntry({
   onReset: (clerk: string) => Promise<void>;
   isSaving: boolean;
   userDataId?: number;
+  canResetBuyCrypto: boolean;
 }): JSX.Element {
   const { navigate } = useNavigation();
   const [amlCheck, setAmlCheck] = useState(tx.amlCheck ?? '');
@@ -80,9 +85,7 @@ function TransactionEntry({
       <div className="flex items-center gap-3">
         <span className="text-sm text-dfxGray-700 font-medium">Status:</span>
         {statusBadge(tx.amlCheck ?? '-')}
-        <span className="text-xs text-dfxGray-700">
-          Eingangsdatum: {new Date(tx.created).toLocaleDateString('de-CH')}
-        </span>
+        <span className="text-xs text-dfxGray-700">Eingangsdatum: {formatSwissDate(tx.created)}</span>
       </div>
 
       {/* Checks / Info */}
@@ -164,13 +167,20 @@ function TransactionEntry({
               onChange={(e) => setAmlCheck(e.target.value)}
             >
               <option value="">—</option>
-              {AML_CHECK_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
+              {AML_CHECK_OPTIONS.filter((opt) => opt !== 'Reset' || tx.buyCryptoId == null || canResetBuyCrypto).map(
+                (opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ),
+              )}
             </select>
           </div>
+          {tx.buyCryptoId != null && !canResetBuyCrypto && (
+            <p className="px-3 py-2 text-xs text-dfxGray-700 border-b border-dfxGray-300">
+              Reset ist erst verfügbar, wenn KYC auf Check steht und BuyCrypto weiterhin zurückgesetzt werden darf.
+            </p>
+          )}
           <div className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300">
             <span className="text-sm text-dfxBlue-800">AmlReason</span>
             <select
@@ -229,12 +239,73 @@ function TransactionEntry({
   );
 }
 
+function ResettableTransactionEntry({
+  tx,
+  isSaving,
+  canReset,
+  onReset,
+}: {
+  tx: TransactionInfo;
+  isSaving: boolean;
+  canReset: boolean;
+  onReset: () => Promise<void>;
+}): JSX.Element {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const sourceLabel = `BuyCrypto ${tx.buyCryptoId}`;
+
+  async function handleReset(): Promise<void> {
+    if (!canReset || isSaving || isProcessing) return;
+    if (
+      !window.confirm(
+        `AML-Check für ${sourceLabel} wirklich zurücksetzen?\n\nDer Status ${tx.amlCheck} wird entfernt und die Transaktion erneut durch den AML-Check verarbeitet.`,
+      )
+    )
+      return;
+
+    setIsProcessing(true);
+    try {
+      await onReset();
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-4 text-left flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-dfxBlue-800 font-semibold">{sourceLabel}</h3>
+          <p className="text-xs text-dfxGray-700">
+            Transaction {tx.id} · AML {tx.amlCheck}
+            {tx.amlReason ? ` · ${tx.amlReason}` : ''}
+            {tx.buyCryptoStatus ? ` · Status ${tx.buyCryptoStatus}` : ''}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="px-3 py-1.5 text-sm text-white bg-dfxRed-100 hover:bg-dfxRed-150 rounded transition-colors disabled:opacity-50"
+            disabled={!canReset || isSaving || isProcessing}
+            onClick={handleReset}
+          >
+            {isProcessing ? 'Wird zurückgesetzt...' : 'AML-Check zurücksetzen'}
+          </button>
+        </div>
+      </div>
+      {!canReset && (
+        <p className="text-sm text-dfxRed-100">Zuerst KYC-Status auf Check setzen und den Reload abwarten.</p>
+      )}
+    </div>
+  );
+}
+
 export function AmlCheckPendingPanel({
   data,
   clerks,
   isSaving,
   onUpdate,
   onReset,
+  onReviewReset,
 }: AmlCheckPendingPanelProps): JSX.Element {
   const { navigate } = useNavigation();
 
@@ -243,6 +314,14 @@ export function AmlCheckPendingPanel({
   );
   const callQueueTxs = data.transactions.filter(
     (tx) => tx.type != null && tx.amlCheck === CheckStatus.PENDING && callQueueForReason(tx.amlReason),
+  );
+  const handledTransactionIds = new Set([...pendingTxs, ...callQueueTxs].map((tx) => tx.id));
+  const resettableTxs = data.transactions.filter(
+    (tx) =>
+      tx.type != null &&
+      tx.amlCheck != null &&
+      hasBuyCryptoReviewResetEligibleState(tx) &&
+      !handledTransactionIds.has(tx.id),
   );
   const ud = data.userData;
 
@@ -350,7 +429,7 @@ export function AmlCheckPendingPanel({
       </div>
     ) : null;
 
-  if (pendingTxs.length === 0) {
+  if (pendingTxs.length === 0 && resettableTxs.length === 0) {
     return (
       <div className="flex flex-col gap-4">
         {userInfo}
@@ -366,6 +445,20 @@ export function AmlCheckPendingPanel({
     <div className="flex flex-col gap-6">
       {userInfo}
       {callQueueInfo}
+      {resettableTxs.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <h3 className="text-dfxGray-700 font-semibold text-sm">Bestehenden AML-Check zurücksetzen</h3>
+          {resettableTxs.map((tx) => (
+            <ResettableTransactionEntry
+              key={tx.id}
+              tx={tx}
+              isSaving={isSaving}
+              canReset={canResetBuyCryptoAmlForReview(tx, ud.kycStatus)}
+              onReset={() => onReviewReset(tx)}
+            />
+          ))}
+        </div>
+      )}
       {pendingTxs.map((tx) => (
         <div key={tx.id} className="border-b border-dfxGray-300 pb-6 last:border-0">
           <TransactionEntry
@@ -375,6 +468,7 @@ export function AmlCheckPendingPanel({
             onReset={(clerk) => onReset(tx, clerk)}
             isSaving={isSaving}
             userDataId={ud.id}
+            canResetBuyCrypto={canResetBuyCryptoAmlForReview(tx, ud.kycStatus)}
           />
         </div>
       ))}

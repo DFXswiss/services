@@ -77,7 +77,12 @@
     "iban": "Dies ist eine Multi-Account-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte öffne ein Support-Ticket auf <1></1> und füge die Bestätigung der Banktransaktion als PDF bei."
   },
   "screens/kyc": {
+    "Identification required": "Identifikation erforderlich",
+    "Access to internal tools now requires an identified person behind the account. Your role is unchanged — what is missing is your identification.": "Der Zugriff auf interne Werkzeuge setzt neu eine identifizierte Person hinter dem Konto voraus. Deine Rolle ist unverändert — es fehlt lediglich deine Identifikation.",
+    "Complete the identification to restore access. This is the same process customers go through and only has to be done once.": "Schliesse die Identifikation ab, um den Zugriff wiederherzustellen. Es ist derselbe Prozess wie für Kundinnen und Kunden und muss nur einmal durchlaufen werden.",
+    "Start KYC": "KYC starten",
     "Is this email address correct?": "Ist diese E-Mail-Adresse korrekt?",
+    "This account already has an email address. You can change it in your account settings.": "Dieses Konto hat bereits eine E-Mail-Adresse. Du kannst sie in Deinen Kontoeinstellungen ändern.",
     "DFX KYC": "DFX KYC",
     "KYC level": "KYC-Level",
     "Trading limit": "Trading-Limit",
@@ -447,7 +452,8 @@
     "Oh, sorry, something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
     "Invalid link": "Ungültiger Link",
     "Merge is already completed": "Zusammenführung ist bereits abgeschlossen",
-    "Please return to the previous page. If this problem persists, please contact our support.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, wende Dich bitte an unseren Support."
+    "Please return to the previous page. If this problem persists, please contact our support.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, wende Dich bitte an unseren Support.",
+    "Please reload this page. If this problem persists, please contact our support.": "Bitte lade diese Seite neu. Wenn dieses Problem weiterhin besteht, wende Dich bitte an unseren Support."
   },
   "screens/home": {
     "DFX services": "DFX Services",
@@ -618,8 +624,6 @@
     "Personal IBAN created successfully: {{iban}}": "Persönliche IBAN erfolgreich erstellt: {{iban}}",
     "Your requested personal IBAN is only available for EUR bank transfers, so it was not used for this offer.": "Deine angeforderte persönliche IBAN ist nur für EUR-Banküberweisungen verfügbar und wurde daher für dieses Angebot nicht verwendet.",
     "Continue without personal IBAN": "Ohne persönliche IBAN fortfahren",
-    "Bank Frick will assign you a unique IBAN for transfers. The account behind it belongs to DFX AG. This cannot be undone. Do you want to request and use it?": "Bank Frick weist dir eine eindeutige IBAN für Überweisungen zu. Das dahinterliegende Konto gehört der DFX AG. Dies kann nicht rückgängig gemacht werden. Möchtest du die IBAN beantragen und verwenden?",
-    "Request and use personal IBAN": "Persönliche IBAN beantragen und verwenden",
     "The personal IBAN response could not be verified for this offer. You can continue with the standard payment details, or cancel.": "Die persönliche IBAN-Antwort konnte für dieses Angebot nicht verifiziert werden. Du kannst mit den Standard-Zahlungsdetails fortfahren oder abbrechen.",
     "Personal IBANs require the bank transfer payment method.": "Persönliche IBANs erfordern die Zahlungsart Banküberweisung.",
     "Personal IBANs require KYC level 50.": "Persönliche IBANs erfordern KYC-Stufe 50.",
@@ -856,7 +860,9 @@
     "Assign": "Zuweisen",
     "Total amount": "Gesamtbetrag",
     "You will be redirected to the site shortly": "Du wirst in Kürze zur Seite weitergeleitet",
-    "Go back to the payment page": "Zurück zur Zahlungsseite"
+    "Go back to the payment page": "Zurück zur Zahlungsseite",
+    "Show collection IBAN": "Sammel-IBAN anzeigen",
+    "Show personal IBAN": "Persönliche IBAN anzeigen"
   },
   "screens/iban": {
     "Your Bank Accounts": "Deine Bankkonten",
@@ -1030,14 +1036,9 @@
     "Download PDF": "PDF herunterladen",
     "Select a date for your portfolio report": "Wähle ein Datum für Deinen Portfolio-Bericht",
     "Recent Activity": "Letzte Aktivitäten",
-    "Deposit (Fiat)": "Einzahlung (Fiat)",
-    "Withdrawal (Fiat)": "Auszahlung (Fiat)",
-    "Deposit (Crypto)": "Einzahlung (Crypto)",
-    "Withdrawal (Crypto)": "Auszahlung (Crypto)",
+    "Withdrawal": "Auszahlung",
     "Mint": "Investieren",
     "Redeem": "Einlösen",
-    "Deposit (Saving)": "Einzahlung (Saving)",
-    "Withdrawal (Saving)": "Auszahlung (Saving)",
     "Waiting for payment": "Warten auf Zahlung",
     "Check pending": "Prüfung ausstehend",
     "Processing": "In Bearbeitung",

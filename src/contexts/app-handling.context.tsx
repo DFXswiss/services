@@ -181,15 +181,13 @@ interface AppHandlingContextInterface {
   isWidget: boolean;
   /**
    * Live widget `personal-iban` / `personalIban` attribute/property value (widget only).
-   * Read by the confirmation hook; not part of params state.
+   * Read by usePersonalIbanSelection (src/hooks/personal-iban.hook.ts); not part of params state.
    */
   widgetPersonalIban?: string;
-  /** Internal value-change counter; not part of the Web Component's public properties. */
-  widgetPersonalIbanOccurrence?: number;
   availableBlockchains?: Blockchain[];
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
-  closeServices: (params: CloseServicesParams, navigate: boolean) => void;
+  closeServices: (params: CloseServicesParams, navigate: boolean) => boolean;
   redirectPath?: string;
   setRedirectPath: (path?: string) => void;
   canClose: boolean;
@@ -200,7 +198,6 @@ interface AppHandlingContextProps extends PropsWithChildren {
   isWidget: boolean;
   service?: Service;
   params?: AppParams;
-  personalIbanOccurrence?: number;
   router: Router;
   closeCallback?: (data: CloseMessageData) => void;
 }
@@ -323,7 +320,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
           ...Object.entries(params)
-            // personalIban stays live and is read by the confirmation hook.
+            // personalIban stays live and is read by usePersonalIbanSelection (src/hooks/personal-iban.hook.ts).
             .filter(([key, val]) => typeof val === 'string' && key !== 'personalIban')
             .reduce(
               (prev, [key, val]) => {
@@ -397,12 +394,18 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   }
 
   // closing
-  function closeServices(params: CloseServicesParams, navigate: boolean) {
+  function closeServices(params: CloseServicesParams, navigate: boolean): boolean {
+    let closed = false;
+
     if (props.isWidget) {
-      props.closeCallback?.(createCloseMessageData(params));
+      if (props.closeCallback) {
+        props.closeCallback(createCloseMessageData(params));
+        closed = true;
+      }
     } else {
       if (isUsedByIframe) {
         sendMessage(createCloseMessageData(params));
+        closed = true;
       }
 
       if (redirectUri) {
@@ -413,11 +416,17 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
         if (isSafeRedirectUri(redirectUri)) {
           const uri = getRedirectUri(redirectUri, params);
           setTimeout(() => ((window as Window).location = uri), 2000);
+          closed = true;
         }
       }
     }
 
-    if (navigate) props.router.navigate('/account');
+    if (navigate) {
+      props.router.navigate('/account');
+      closed = true;
+    }
+
+    return closed;
   }
 
   function getRedirectUri(baseUri: string, params: CloseServicesParams): string {
@@ -494,7 +503,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       isEmbedded: props.isWidget || isUsedByIframe,
       isWidget: props.isWidget,
       widgetPersonalIban,
-      widgetPersonalIbanOccurrence: props.isWidget ? props.personalIbanOccurrence : undefined,
       hasSession,
       isDfxHosted: window.location.hostname?.split('.').slice(-2).join('.') === 'dfx.swiss',
       closeServices,
@@ -517,7 +525,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     [
       props.isWidget,
       widgetPersonalIban,
-      props.personalIbanOccurrence,
       props.service,
       isUsedByIframe,
       redirectUri,

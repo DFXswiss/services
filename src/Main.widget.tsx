@@ -1,11 +1,12 @@
 import { createMemoryRouter } from 'react-router-dom';
 import App, { WidgetParams } from './App';
+import { markEmbedded } from './util/client-error';
 
-interface InternalWidgetParams extends WidgetParams {
-  __personalIbanOccurrence?: number;
-}
+// Runs on a third party's page: a chunk failure here is reported, never recovered by reloading
+// their page.
+markEmbedded();
 
-function MainWidget(params: InternalWidgetParams) {
+function MainWidget(params: WidgetParams) {
   return (
     <>
       <link type="text/css" rel="stylesheet" href="main-widget.css" />
@@ -16,7 +17,6 @@ function MainWidget(params: InternalWidgetParams) {
       <App
         routerFactory={createMemoryRouter}
         params={params}
-        personalIbanOccurrence={params.__personalIbanOccurrence}
       />
     </>
   );

@@ -34,8 +34,18 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
   }, [clerks]);
 
   const hasTx = context.txId != null && context.sourceType != null;
-  const showAmlCheck = hasTx && outcome !== CallOutcome.COMPLETED;
+  const showAmlCheck = hasTx;
+  const buyCryptoResetUnavailable = context.sourceType === 'BuyCrypto' && !context.buyCryptoResetEligible;
   const canSubmit = !!signature && !!outcome && !!comment.trim() && !isSaving;
+
+  // Some queue reasons (e.g. ManualCheckIpCountryPhone) are excluded from the AML recheck cron, so a
+  // completed call must act on the transaction explicitly. Default to Reset (not Pass): it clears
+  // amlCheck + amlReason so the cron re-runs the FULL AML check, which only passes the tx if no
+  // other errors remain. Overridable.
+  function handleOutcomeChange(value: CallOutcome | '') {
+    setOutcome(value);
+    if (hasTx) setAmlAction(value === CallOutcome.COMPLETED && !buyCryptoResetUnavailable ? 'Reset' : '');
+  }
 
   async function handleSubmit() {
     if (!outcome || !signature || !comment.trim()) return;
@@ -75,7 +85,7 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
           <select
             className="w-full px-3 py-2 text-sm bg-white border border-dfxGray-300 rounded text-dfxBlue-800"
             value={outcome}
-            onChange={(e) => setOutcome(e.target.value as CallOutcome | '')}
+            onChange={(e) => handleOutcomeChange(e.target.value as CallOutcome | '')}
           >
             <option value="">—</option>
             {availableOutcomes.map((o) => (
@@ -99,8 +109,14 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
             <option value="">— {translate('screens/compliance', 'No change')}</option>
             <option value="Pass">Pass</option>
             <option value="Fail">Fail</option>
-            <option value="Reset">Reset</option>
+            {!buyCryptoResetUnavailable && <option value="Reset">Reset</option>}
           </select>
+          {buyCryptoResetUnavailable && (
+            <p className="mt-1 text-xs text-dfxGray-700">
+              Reset is available only after KYC is set to Check and the BuyCrypto remains eligible; reload Compliance
+              review first.
+            </p>
+          )}
         </div>
       )}
       <div className="mt-4">
