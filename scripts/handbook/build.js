@@ -254,6 +254,13 @@ function normalizeFontSize(value) {
   return null;
 }
 
+// Matches any absolute URI scheme (RFC 3986 §3.1: ALPHA *( ALPHA / DIGIT /
+// "+" / "-" / "." ) ":"), e.g. "https:", "mailto:", "data:", "javascript:",
+// "vbscript:", "file:", "tel:", and anything not yet invented. A generic
+// scheme check instead of an enumeration of known-bad prefixes so nothing
+// can be missed (fixes CodeQL "Incomplete URL scheme check").
+const ABSOLUTE_URI_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
+
 function collectRelativeRefs(html) {
   const refs = [];
   const re = /\b(?:src|href)="([^"]+)"/g;
@@ -261,13 +268,9 @@ function collectRelativeRefs(html) {
   while ((m = re.exec(html)) !== null) {
     const raw = m[1];
     if (
-      raw.startsWith('http://') ||
-      raw.startsWith('https://') ||
+      ABSOLUTE_URI_SCHEME_RE.test(raw) ||
       raw.startsWith('//') ||
-      raw.startsWith('mailto:') ||
-      raw.startsWith('data:') ||
-      raw.startsWith('#') ||
-      raw.startsWith('javascript:')
+      raw.startsWith('#')
     ) {
       continue;
     }
