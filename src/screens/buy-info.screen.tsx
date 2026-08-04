@@ -8,6 +8,8 @@ import {
   TransactionError,
   TransactionType,
   Utils,
+  isUnrecognizedPersonalIbanSelector,
+  toPersonalIbanProviderRequest,
   useAsset,
   useAssetContext,
   useBuy,
@@ -45,9 +47,7 @@ import {
   isExplicitFrickPersonalIbanRequest,
   isKycRequiredMessage,
   isPersonalIbanApplicable,
-  isUnrecognizedPersonalIbanSelector,
   isVerifiedFrickPersonalIbanResponse,
-  toPersonalIbanProviderRequest,
 } from '../util/personal-iban';
 
 export default function BuyInfoScreen(): JSX.Element {

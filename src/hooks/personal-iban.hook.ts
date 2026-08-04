@@ -1,10 +1,7 @@
-import { useAuthContext } from '@dfx.swiss/react';
+import { normalizePersonalIban, useAuthContext } from '@dfx.swiss/react';
 import { useLocation } from 'react-router-dom';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
-import {
-  isExplicitFrickPersonalIbanRequest,
-  normalizePersonalIban,
-} from '../util/personal-iban';
+import { isExplicitFrickPersonalIbanRequest } from '../util/personal-iban';
 
 export interface PersonalIbanSelection {
   /** Selector requested by the URL or widget. */

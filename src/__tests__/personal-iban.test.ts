@@ -2,6 +2,7 @@
 // QuoteError enum (api/src/.../quote-error.enum.ts) and intentionally form a cross-contract check.
 
 jest.mock('@dfx.swiss/react', () => ({
+  ...jest.requireActual('../test-utils/personal-iban-sdk-mock').personalIbanSdkMock,
   FiatPaymentMethod: {
     BANK: 'Bank',
     INSTANT: 'Instant',
@@ -14,7 +15,7 @@ jest.mock('@dfx.swiss/react', () => ({
   },
 }));
 
-import { FiatPaymentMethod, PersonalIbanProvider, TransactionError } from '@dfx.swiss/react';
+import { FiatPaymentMethod, TransactionError } from '@dfx.swiss/react';
 import { readFileSync } from 'fs';
 import de from '../translations/languages/de.json';
 import fr from '../translations/languages/fr.json';
@@ -28,35 +29,9 @@ import {
   isExplicitFrickPersonalIbanRequest,
   isKycRequiredMessage,
   isPersonalIbanApplicable,
-  isUnrecognizedPersonalIbanSelector,
   isVerifiedFrickPersonalIbanResponse,
-  normalizePersonalIban,
   personalIbanOnlyParams,
-  toPersonalIbanProviderRequest,
 } from '../util/personal-iban';
-
-describe('personal IBAN selector mapping', () => {
-  it.each(['frick', 'FRICK', 'Frick'])('maps the public %s value to the API enum', (value) => {
-    expect(normalizePersonalIban(value)).toBe(PersonalIbanProvider.FRICK);
-    expect(toPersonalIbanProviderRequest(value)).toEqual({ personalIbanProvider: PersonalIbanProvider.FRICK });
-    expect(isUnrecognizedPersonalIbanSelector(value)).toBe(false);
-  });
-
-  it.each(['', 'unknown'])(
-    'omits an unrecognized value from the request (fail-closed now happens locally, not via the API round trip)',
-    (value) => {
-      expect(normalizePersonalIban(value)).toBe(value);
-      expect(toPersonalIbanProviderRequest(value)).toEqual({});
-      expect(isUnrecognizedPersonalIbanSelector(value)).toBe(true);
-    },
-  );
-
-  it('omits an absent selector and does not flag it as unrecognized', () => {
-    expect(normalizePersonalIban(undefined)).toBeUndefined();
-    expect(toPersonalIbanProviderRequest(undefined)).toEqual({});
-    expect(isUnrecognizedPersonalIbanSelector(undefined)).toBe(false);
-  });
-});
 
 describe('isPersonalIbanApplicable', () => {
   it('returns true for EUR with bank payment', () => {

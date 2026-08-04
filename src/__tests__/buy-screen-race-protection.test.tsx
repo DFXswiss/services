@@ -27,6 +27,7 @@ const mockCurrencies = [
 const mockPrefCurrency = { name: 'CHF' };
 
 jest.mock('@dfx.swiss/react', () => ({
+  ...jest.requireActual('../test-utils/personal-iban-sdk-mock').personalIbanSdkMock,
   AssetCategory: { PUBLIC: 'Public', PRIVATE: 'Private' },
   FiatPaymentMethod: { BANK: 'Bank', INSTANT: 'Instant', CARD: 'Card' },
   PersonalIbanProvider: { FRICK: 'Frick' },

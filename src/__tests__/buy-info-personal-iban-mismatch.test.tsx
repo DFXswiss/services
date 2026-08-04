@@ -10,6 +10,7 @@ const mockWalletInitialized = jest.fn();
 const mockCloseServices = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({
+  ...jest.requireActual('../test-utils/personal-iban-sdk-mock').personalIbanSdkMock,
   FiatPaymentMethod: { BANK: 'Bank', INSTANT: 'Instant', CARD: 'Card' },
   PersonalIbanProvider: { FRICK: 'Frick' },
   TransactionError: {
