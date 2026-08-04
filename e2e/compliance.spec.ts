@@ -19,6 +19,11 @@ import { createTestCredentials } from './test-wallet';
 // Test data - uses "max" search which returns Max Mueller (ID 1005)
 const TEST_USER_DATA_ID = '1005';
 const TEST_SEARCH_QUERY = 'max';
+// Requires a local BuyCrypto on this transaction uid, owned by TEST_USER_DATA_ID, with status
+// Stopped, amlCheck Pass and not completed — that combination is what renders the resume button
+// (see canResume in transactions-tab.tsx). The standard test data has no stopped transaction, so
+// seed one before regenerating these baselines.
+const TEST_STOPPED_TX_UID = 'T2AC46F80RESUME01';
 
 const API_URL = process.env.REACT_APP_API_URL! + '/v1';
 
@@ -151,6 +156,43 @@ test.describe('Compliance Pages - Visual Regression Tests', () => {
         fullPage: true,
         maxDiffPixels: 5000,
       });
+    });
+
+    test('shows resume action for a stopped transaction', async ({ page }) => {
+      await page.goto(`/compliance/user/${TEST_USER_DATA_ID}?session=${token}`);
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(2000);
+
+      const transactionsTab = page.getByRole('button', { name: /Transactions \(/i });
+      await transactionsTab.click();
+      await transactionsTab.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(500);
+
+      // Expand the stopped transaction via its UID cell
+      await page.getByText(TEST_STOPPED_TX_UID, { exact: true }).click();
+
+      const resumeButton = page.getByRole('button', { name: 'Resume', exact: true });
+      await expect(resumeButton).toBeVisible({ timeout: 10000 });
+      await resumeButton.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(500);
+
+      await expect(page).toHaveScreenshot('compliance-user-09-stopped-tx-resume-action.png', {
+        fullPage: true,
+        maxDiffPixels: 5000,
+      });
+
+      await resumeButton.click();
+      await expect(page.getByText('Transaktion fortsetzen')).toBeVisible();
+      await page.waitForTimeout(500);
+
+      await expect(page).toHaveScreenshot('compliance-user-10-resume-confirm-dialog.png', {
+        fullPage: true,
+        maxDiffPixels: 5000,
+      });
+
+      // Close without confirming — visual test must not mutate server state
+      await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await expect(page.getByText('Transaktion fortsetzen')).not.toBeVisible();
     });
 
     test('shows Users tab', async ({ page }) => {

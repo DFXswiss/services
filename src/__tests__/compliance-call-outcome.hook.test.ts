@@ -29,7 +29,15 @@ jest.mock('@dfx.swiss/react', () => ({
 import { renderHook } from '@testing-library/react';
 import { CallOutcome, useCompliance } from 'src/hooks/compliance.hook';
 
-const TX_CONTEXT = { queue: 'ManualCheckIpCountryPhone', userDataId: 7, txId: 42, sourceType: 'BuyCrypto' } as any;
+const TX_CONTEXT = {
+  queue: 'ManualCheckIpCountryPhone',
+  userDataId: 7,
+  txId: 42,
+  sourceType: 'BuyCrypto',
+  amlCheck: 'Pass',
+  amlReason: 'ManualCheckPhoneFailed',
+  buyCryptoResetEligible: true,
+} as any;
 
 describe('saveCallOutcome write order', () => {
   beforeEach(() => {
@@ -53,9 +61,13 @@ describe('saveCallOutcome write order', () => {
     expect(res.success).toBe(true);
     expect(mockCalls.map((c) => `${c.method} ${c.url}`)).toEqual([
       'PUT userData/7',
-      'DELETE buyCrypto/42/amlCheck',
+      'PUT buyCrypto/42/amlCheck/reviewReset',
       'POST kyc/admin/log',
     ]);
+    expect(mockCalls[1].data).toEqual({
+      expectedAmlCheck: 'Pass',
+      expectedAmlReason: 'ManualCheckPhoneFailed',
+    });
     const userDataCall = mockCalls[0];
     expect(userDataCall.data.phoneCallStatus).toBe('Completed');
     expect(userDataCall.data.phoneCallIpCountryCheckDate).toBeDefined();

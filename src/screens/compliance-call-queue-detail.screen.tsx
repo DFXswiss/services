@@ -20,6 +20,7 @@ import { CallOutcome, ComplianceUserData, useCompliance } from 'src/hooks/compli
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { canResetBuyCryptoAmlForReview } from 'src/util/buy-crypto-reset.util';
 
 type CheckDateField =
   | 'phoneCallCheckDate'
@@ -137,7 +138,15 @@ export default function ComplianceCallQueueDetailScreen(): JSX.Element {
   if (error) return <ErrorHint message={error} />;
   if (!data || !userDataId) return <ErrorHint message="No data" />;
 
-  const context = buildCallOutcomeContext({ queue, userDataId: +userDataId, txId: sourceTxId, sourceType });
+  const context = buildCallOutcomeContext({
+    queue,
+    userDataId: +userDataId,
+    txId: sourceTxId,
+    sourceType,
+    amlCheck: transaction?.amlCheck,
+    amlReason: transaction?.amlReason,
+    buyCryptoResetEligible: transaction != null && canResetBuyCryptoAmlForReview(transaction, data.userData.kycStatus),
+  });
 
   return (
     <StyledVerticalStack gap={4} full>

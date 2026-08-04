@@ -1,3 +1,5 @@
+import { KycStatus } from '@dfx.swiss/react';
+import { ReactNode, useRef, useState } from 'react';
 import { KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { buildAddress, display, extractLegalEntity, formatBirthday, refName } from 'src/util/compliance-helpers';
 import { formatSwissDate } from 'src/util/utils';
@@ -5,11 +7,13 @@ import { formatSwissDate } from 'src/util/utils';
 interface ComplianceReviewHeaderProps {
   userData: UserDataDetail;
   kycSteps: KycStepInfo[];
+  isSaving: boolean;
+  onSetKycStatusCheck: () => Promise<void>;
 }
 
 interface HeaderField {
   label: string;
-  value: string;
+  value: ReactNode;
   isLink?: boolean;
   href?: string;
 }
@@ -21,10 +25,38 @@ function extractStepCreatedDate(kycSteps: KycStepInfo[]): string {
   return formatSwissDate(step.created);
 }
 
-export function ComplianceReviewHeader({ userData, kycSteps }: Readonly<ComplianceReviewHeaderProps>): JSX.Element {
+export function ComplianceReviewHeader({
+  userData,
+  kycSteps,
+  isSaving,
+  onSetKycStatusCheck,
+}: Readonly<ComplianceReviewHeaderProps>): JSX.Element {
+  const [isSettingKycStatus, setIsSettingKycStatus] = useState(false);
+  const kycStatusActionPending = useRef(false);
   const contactName = [userData.firstname, userData.surname].filter(Boolean).join(' ') || '-';
   const accountType = display(userData.accountType);
   const isOrganization = accountType === 'Organization' || accountType === 'SoleProprietorship';
+
+  async function setKycStatusCheck(): Promise<void> {
+    if (kycStatusActionPending.current || isSaving) return;
+    if (
+      !window.confirm(
+        `KYC-Status für UserData ${userData.id} wirklich von ${display(
+          userData.kycStatus,
+        )} auf Check setzen?\n\nDiese produktive Änderung gilt für alle Benutzer dieser UserData.`,
+      )
+    )
+      return;
+
+    kycStatusActionPending.current = true;
+    setIsSettingKycStatus(true);
+    try {
+      await onSetKycStatusCheck();
+    } finally {
+      kycStatusActionPending.current = false;
+      setIsSettingKycStatus(false);
+    }
+  }
 
   const fields: HeaderField[] = [
     { label: 'UserDataId', value: display(userData.id) },
@@ -45,7 +77,24 @@ export function ComplianceReviewHeader({ userData, kycSteps }: Readonly<Complian
     { label: 'Mail', value: display(userData.mail) },
     { label: 'Sprache', value: refName(userData.language) },
     { label: 'KYC Level', value: display(userData.kycLevel) },
-    { label: 'KYC Status', value: display(userData.kycStatus) },
+    {
+      label: 'KYC Status',
+      value: (
+        <div className="flex flex-wrap items-center gap-3">
+          <span>{display(userData.kycStatus)}</span>
+          {userData.kycStatus !== KycStatus.CHECK && (
+            <button
+              type="button"
+              className="px-2 py-1 text-xs font-medium text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded transition-colors disabled:opacity-50"
+              disabled={isSaving || isSettingKycStatus}
+              onClick={setKycStatusCheck}
+            >
+              {isSettingKycStatus ? 'Wird gesetzt...' : 'Auf Check setzen'}
+            </button>
+          )}
+        </div>
+      ),
+    },
     ...(isOrganization ? [{ label: 'Datum Dokument eingereicht', value: extractStepCreatedDate(kycSteps) }] : []),
   ];
 

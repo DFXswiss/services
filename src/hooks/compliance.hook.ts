@@ -114,8 +114,24 @@ export interface PendingTransactionInfo {
 }
 
 export type CallOutcomeContext =
-  | { queue: CallQueue; userDataId: number; txId: number; sourceType: CallQueueSourceType }
-  | { queue: CallQueue; userDataId: number; txId?: undefined; sourceType?: undefined };
+  | {
+      queue: CallQueue;
+      userDataId: number;
+      txId: number;
+      sourceType: CallQueueSourceType;
+      amlCheck?: string;
+      amlReason?: string;
+      buyCryptoResetEligible?: boolean;
+    }
+  | {
+      queue: CallQueue;
+      userDataId: number;
+      txId?: undefined;
+      sourceType?: undefined;
+      amlCheck?: undefined;
+      amlReason?: undefined;
+      buyCryptoResetEligible?: undefined;
+    };
 
 export enum CallOutcome {
   COMPLETED = 'Completed',
@@ -202,7 +218,7 @@ export const LimitRequestGrantingDecisions: LimitRequestDecision[] = [
   LimitRequestDecision.PARTIALLY_ACCEPTED,
 ];
 
-export type LimitRequestDecisionStep = 'depositLimit' | 'limitRequest' | 'report' | 'log';
+export type LimitRequestDecisionStep = 'report' | 'limitRequest' | 'log';
 
 export interface LimitRequestDecisionResult {
   success: boolean;
@@ -502,6 +518,11 @@ export interface TransactionInfo {
   id: number;
   uid: string;
   buyCryptoId?: number;
+  buyCryptoIsComplete?: boolean;
+  buyCryptoStatus?: string;
+  buyCryptoHasBatch?: boolean;
+  buyCryptoHasChargeback?: boolean;
+  buyCryptoReviewResetBlocked?: boolean;
   buyFiatId?: number;
   bankDataId?: number;
   type?: string;
@@ -728,6 +749,14 @@ export function useCompliance() {
     return call<ComplianceUserData>({
       url: `support/${userDataId}`,
       method: 'GET',
+    });
+  }
+
+  async function setKycStatusCheck(userDataId: number, expectedKycStatus: KycStatus): Promise<void> {
+    return call<void>({
+      url: `userData/${userDataId}/kycStatus/check`,
+      method: 'PUT',
+      data: { expectedKycStatus },
     });
   }
 
@@ -1035,8 +1064,17 @@ export function useCompliance() {
           results.push({ table: txTable, column: 'amlCheck', value: CheckStatus.FAIL });
           results.push({ table: txTable, column: 'amlReason', value: AmlReason.MANUAL_CHECK_PHONE_FAILED });
         } else {
-          if (tx.sourceType === 'BuyCrypto') await resetBuyCryptoAml(tx.id);
-          else await resetBuyFiatAml(tx.id);
+          if (tx.sourceType === 'BuyCrypto') {
+            if (!context.buyCryptoResetEligible)
+              throw new Error(
+                'BuyCrypto AML reset is unavailable; set KYC to Check and reload an eligible transaction',
+              );
+            if (!context.amlCheck) throw new Error('Current BuyCrypto AML status is missing; reload the transaction');
+            await resetBuyCryptoReviewAml(tx.id, {
+              expectedAmlCheck: context.amlCheck as CheckStatus,
+              expectedAmlReason: (context.amlReason as AmlReason | undefined) ?? null,
+            });
+          } else await resetBuyFiatAml(tx.id);
           results.push({ table: txTable, column: 'amlCheck', value: 'Reset' });
         }
         completedSteps.push('transaction');
@@ -1132,9 +1170,16 @@ export function useCompliance() {
 
   // Decides a pending limit request. The API closes the support issue and triggers the KYC webhook on
   // an accepting decision, so this is the whole action — nothing else has to be updated alongside it.
+  // When `grantedDepositLimit` is present the API also raises `userData.depositLimit` itself, behind
+  // its own finality check on the request.
   async function updateLimitRequest(
     limitRequestId: number,
-    data: { decision: LimitRequestDecision; acceptedLimit?: number; clerk: string },
+    data: {
+      decision: LimitRequestDecision;
+      acceptedLimit?: number;
+      grantedDepositLimit?: number;
+      clerk: string;
+    },
   ): Promise<void> {
     return call<void>({
       url: `limitRequest/${limitRequestId}`,
@@ -1142,8 +1187,12 @@ export function useCompliance() {
       data: {
         decision: data.decision,
         // Only sent when the decision grants a limit: the API rejects a null and keeps the previous
-        // value when the field is absent, which is what a rejection should leave behind.
+        // value when the field is absent.
         ...(data.acceptedLimit != null ? { acceptedLimit: data.acceptedLimit } : {}),
+        // The API raises userData.depositLimit itself, behind its own finality check on the request —
+        // sending it here (rather than through a separate userData call) is what closes the race with a
+        // second, later-decided clerk. Only sent on a granting decision; the API rejects it otherwise.
+        ...(data.grantedDepositLimit != null ? { grantedDepositLimit: data.grantedDepositLimit } : {}),
         clerk: data.clerk,
         edited: new Date().toISOString(),
       },
@@ -1151,25 +1200,23 @@ export function useCompliance() {
   }
 
   /**
-   * Decides a limit request with the same effects the Google Sheet had:
+   * Decides a limit request in three steps:
    *
-   *   1. `PUT userData/{id} { depositLimit }` — only for a decision that grants a limit. This is the
-   *      step that changes what the customer may actually trade: nothing in the API derives the annual
-   *      limit from the limit request, so a decision without it would be recorded but toothless.
-   *   2. `POST support/{id}/limit-request-pdf` — the `UserNotes` / `LimitRequestReport` file record the
-   *      sheet produced for every final decision.
-   *   3. `PUT limitRequest/{id} { decision, acceptedLimit, clerk, edited }` — the decision itself. The
-   *      API closes the support issue, and for an accepting decision a cron mails the customer within
-   *      five minutes, so neither needs a call of its own.
-   *   4. `POST kyc/admin/log` — the file note ("Aktennotiz") plus the customer's document, through the
-   *      same builder as the DfxApproval flow.
-   *
-   * The report is filed BEFORE the decision, unlike the sheet, because the decision is the only step
-   * that cannot be repeated: the API refuses to change a final decision. Failing on step 1 or 2 leaves
-   * nothing recorded and the whole sequence can simply be retried (re-writing the same deposit limit is
-   * a no-op). Had the decision gone first, a failing report would leave a decided request whose file
-   * record could never be produced. A report left behind by a failed step 3 states the decision the
-   * clerk made and is superseded by the report of the successful retry.
+   *   1. `POST support/{id}/limit-request-pdf` — the `UserNotes` / `LimitRequestReport` file record the
+   *      sheet produced for every final decision. Filed before the decision because the decision is
+   *      the only step the API refuses to repeat: a failing report leaves the request undecided and
+   *      the whole sequence can simply be retried.
+   *   2. `PUT limitRequest/{id} { decision, acceptedLimit?, grantedDepositLimit?, clerk, edited }` —
+   *      the decision itself. The API closes the support issue, and for an accepting decision a cron
+   *      mails the customer within five minutes. When `grantedDepositLimit` is present the API also
+   *      raises `userData.depositLimit` itself, behind its own finality check on the request — that is
+   *      the difference from the former separate `PUT userData/{id} { depositLimit }` call and closes
+   *      the race with a second, later-clicking clerk who could still raise the limit after another
+   *      clerk had already finalised the request.
+   *   3. `POST kyc/admin/log` — the file note ("Aktennotiz") plus the customer's document, through the
+   *      same builder as the DfxApproval flow. The `KycLogResult` entry for `userData.depositLimit` is
+   *      still written into this note (documenting the limit change) even though the actual write now
+   *      lives inside the decision call.
    *
    * Partial progress is reported rather than swallowed — same contract as `saveCallOutcome`.
    */
@@ -1202,26 +1249,18 @@ export function useCompliance() {
 
     // A granting decision without an amount would raise nothing and still record an acceptance — the
     // customer would then be mailed the old limit by the notification cron. Refused rather than skipped.
+    // failedStep is 'limitRequest': that decision call is what would carry (and reject) the missing amount.
     if (grantsLimit && options.grantedLimit == null)
       return {
         success: false,
-        failedStep: 'depositLimit',
+        failedStep: 'limitRequest',
         completedSteps,
         message: 'An accepted limit request needs the limit it grants',
       };
 
-    // 1) Raise the annual limit
-    try {
-      if (grantsLimit) {
-        await updateUserData(context.userDataId, { depositLimit: options.grantedLimit });
-        results.push({ table: 'userData', column: 'depositLimit', value: String(options.grantedLimit) });
-        completedSteps.push('depositLimit');
-      }
-    } catch (e) {
-      return fail('depositLimit', e);
-    }
-
-    // 2) File the report document, the record the sheet produced for every final decision
+    // 1) File the report document, the record the sheet produced for every final decision. Filed before
+    // the decision because the decision is the only step the API refuses to repeat: a failing report
+    // leaves the request undecided and the whole sequence can simply be retried.
     try {
       await generateLimitRequestPdf(context.userDataId, {
         decision,
@@ -1238,22 +1277,25 @@ export function useCompliance() {
       return fail('report', e);
     }
 
-    // 3) Record the decision. `acceptedLimit` is only sent for a decision that grants one: on a
-    // rejection it would read back as an accepted amount next to the rejection in every view that
-    // renders the field.
+    // 2) Record the decision. The API raises userData.depositLimit itself when grantedDepositLimit is
+    // present, behind its own finality check — nothing else has to touch the account. acceptedLimit and
+    // grantedDepositLimit are only sent for a decision that grants one; on a rejection either would read
+    // back as an accepted amount, or be rejected outright by the API.
     try {
       await updateLimitRequest(context.limitRequestId, {
         decision,
         acceptedLimit: grantsLimit ? options.grantedLimit : undefined,
+        grantedDepositLimit: grantsLimit ? options.grantedLimit : undefined,
         clerk,
       });
+      if (grantsLimit) results.push({ table: 'userData', column: 'depositLimit', value: String(options.grantedLimit) });
       results.push({ table: 'limitRequest', column: 'decision', value: decision });
       completedSteps.push('limitRequest');
     } catch (e) {
       return fail('limitRequest', e);
     }
 
-    // 4) File note
+    // 3) File note
     try {
       await createKycLog(
         context.userDataId,
@@ -1332,6 +1374,13 @@ export function useCompliance() {
     });
   }
 
+  async function resumeTransaction(transactionId: number): Promise<void> {
+    return call<void>({
+      url: `transaction/admin/${transactionId}/resume`,
+      method: 'POST',
+    });
+  }
+
   async function updateBuyCrypto(
     id: number,
     data: { amlCheck?: string; amlReason?: string; comment?: string; priceDefinitionAllowedDate?: string },
@@ -1354,10 +1403,14 @@ export function useCompliance() {
     });
   }
 
-  async function resetBuyCryptoAml(id: number): Promise<void> {
+  async function resetBuyCryptoReviewAml(
+    id: number,
+    expected: { expectedAmlCheck: CheckStatus; expectedAmlReason: AmlReason | null },
+  ): Promise<void> {
     return call<void>({
-      url: `buyCrypto/${id}/amlCheck`,
-      method: 'DELETE',
+      url: `buyCrypto/${id}/amlCheck/reviewReset`,
+      method: 'PUT',
+      data: expected,
     });
   }
 
@@ -1453,6 +1506,7 @@ export function useCompliance() {
     () => ({
       search,
       getUserData,
+      setKycStatusCheck,
       getPendingTransactions,
       getPendingReviews,
       getPendingReviewItems,
@@ -1488,10 +1542,11 @@ export function useCompliance() {
       generateLimitRequestPdf,
       chargebackTransaction,
       stopTransaction,
+      resumeTransaction,
       updateBankData,
       updateBuyCrypto,
       updateBuyFiat,
-      resetBuyCryptoAml,
+      resetBuyCryptoReviewAml,
       resetBuyFiatAml,
       listSupportNotes,
       listSupportNoteUsers,

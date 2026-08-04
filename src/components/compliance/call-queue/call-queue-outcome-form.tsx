@@ -35,6 +35,7 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
 
   const hasTx = context.txId != null && context.sourceType != null;
   const showAmlCheck = hasTx;
+  const buyCryptoResetUnavailable = context.sourceType === 'BuyCrypto' && !context.buyCryptoResetEligible;
   const canSubmit = !!signature && !!outcome && !!comment.trim() && !isSaving;
 
   // Some queue reasons (e.g. ManualCheckIpCountryPhone) are excluded from the AML recheck cron, so a
@@ -43,7 +44,7 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
   // other errors remain. Overridable.
   function handleOutcomeChange(value: CallOutcome | '') {
     setOutcome(value);
-    if (hasTx) setAmlAction(value === CallOutcome.COMPLETED ? 'Reset' : '');
+    if (hasTx) setAmlAction(value === CallOutcome.COMPLETED && !buyCryptoResetUnavailable ? 'Reset' : '');
   }
 
   async function handleSubmit() {
@@ -108,8 +109,14 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
             <option value="">— {translate('screens/compliance', 'No change')}</option>
             <option value="Pass">Pass</option>
             <option value="Fail">Fail</option>
-            <option value="Reset">Reset</option>
+            {!buyCryptoResetUnavailable && <option value="Reset">Reset</option>}
           </select>
+          {buyCryptoResetUnavailable && (
+            <p className="mt-1 text-xs text-dfxGray-700">
+              Reset is available only after KYC is set to Check and the BuyCrypto remains eligible; reload Compliance
+              review first.
+            </p>
+          )}
         </div>
       )}
       <div className="mt-4">

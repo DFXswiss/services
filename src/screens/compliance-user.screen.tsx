@@ -273,7 +273,7 @@ export default function ComplianceUserScreen(): JSX.Element {
               onExpandCryptoInput={handleExpandCryptoInput}
               onExpandBankData={handleExpandBankData}
               onExpandTxUid={handleExpandTxUid}
-              onStopped={loadData}
+              onStatusChanged={loadData}
             />
           )}
 

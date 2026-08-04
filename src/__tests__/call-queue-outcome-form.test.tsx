@@ -1,9 +1,6 @@
 // Component tests for the call-queue outcome form: the AmlCheck action must be offered for
-// transaction-based queue items on ALL outcomes (queues like ManualCheckIpCountryPhone are excluded
-// from the AML recheck cron, so a completed call has to act on the transaction explicitly) and must
-// default to Reset when the call was completed (clears amlCheck/amlReason so the cron re-runs the
-// full AML check instead of force-passing). Heavy transitive deps are mocked so the form can
-// render under @testing-library/react without the full app shell.
+// transaction-based queue items on all outcomes and must default to Reset when the call was
+// completed, while BuyCrypto reset eligibility remains fail-closed.
 
 jest.mock('@dfx.swiss/react-components', () => ({
   StyledButton: ({ label, onClick, disabled }: any) => (
@@ -42,7 +39,16 @@ const OUTCOMES = [
   CallOutcome.REPEAT,
 ];
 
-const TX_CONTEXT = { queue: 'ManualCheckIpCountryPhone', userDataId: 1, txId: 42, sourceType: 'BuyCrypto' } as any;
+const TX_CONTEXT = {
+  queue: 'ManualCheckIpCountryPhone',
+  userDataId: 1,
+  txId: 42,
+  sourceType: 'BuyCrypto',
+  amlCheck: 'Pass',
+  amlReason: 'NA',
+  buyCryptoResetEligible: true,
+} as any;
+const INELIGIBLE_TX_CONTEXT = { ...TX_CONTEXT, buyCryptoResetEligible: false };
 const USER_CONTEXT = { queue: 'UnavailableSuspicious', userDataId: 1 } as any;
 
 function renderForm(context: any) {
@@ -118,5 +124,18 @@ describe('CallQueueOutcomeForm AmlCheck action', () => {
 
     await waitFor(() => expect(mockSaveCallOutcome).toHaveBeenCalledTimes(1));
     expect(mockSaveCallOutcome.mock.calls[0][2].amlAction).toBeUndefined();
+  });
+
+  it('hides Reset and explains the prerequisite when BuyCrypto is ineligible', () => {
+    renderForm(INELIGIBLE_TX_CONTEXT);
+
+    expect(screen.queryByRole('option', { name: 'Reset' })).not.toBeInTheDocument();
+    expect(screen.getByText(/Reset is available only after KYC is set to Check/)).toBeInTheDocument();
+  });
+
+  it('offers Reset when BuyCrypto is eligible', () => {
+    renderForm(TX_CONTEXT);
+
+    expect(screen.getByRole('option', { name: 'Reset' })).toBeInTheDocument();
   });
 });

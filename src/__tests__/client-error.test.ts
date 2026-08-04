@@ -20,7 +20,16 @@ function routeErrorResponse(status: number, statusText: string): unknown {
   return { status, statusText, data: '', internal: true };
 }
 
-function sentBody(): Record<string, string | undefined> {
+interface ReportedBody {
+  message: string;
+  type?: string;
+  stack?: string;
+  route?: string;
+  version?: string;
+  accountId?: number;
+}
+
+function sentBody(): ReportedBody {
   return JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
 }
 
@@ -36,6 +45,63 @@ describe('toErrorFacts', () => {
       message: '404 Not Found',
       type: 'RouteErrorResponse',
     });
+  });
+
+  // An Error is free to carry anything under these, and everything downstream — the payload, the
+  // deduplication signature — assumes text. A value that serialises nowhere would cost the report,
+  // while one that converts without throwing still says something. Reading is a separate concern,
+  // covered by the two tests below.
+  it('writes out a field that is not text but converts, and drops one it does not convert', () => {
+    const error = Object.assign(new Error(), { name: 10n, message: 42, stack: {} });
+
+    expect(toErrorFacts(error as unknown as Error)).toEqual({ message: '42', type: '10', stack: undefined });
+  });
+
+  // Classification reads the value before any field is read for the report: react-router's own
+  // check touches `status` first, so a getter that throws there would otherwise take the report
+  // with it.
+  it('describes a value it cannot read at all', () => {
+    const hostile = {
+      get status(): number {
+        throw new Error('nope');
+      },
+      toString: () => {
+        throw new Error('nope');
+      },
+    };
+
+    expect(toErrorFacts(hostile)).toEqual({ message: '' });
+  });
+
+  // And what is still readable survives that failure — the message is what identifies a chunk
+  // failure, so losing it would cost the customer the reload that recovers them. Both sources are
+  // tried, in the order the successful path uses them.
+  it.each([
+    ['carries it as a field', new Error('Loading chunk 42 failed')],
+    ['only has a string form', { toString: () => 'Loading chunk 42 failed' }],
+  ])('keeps the message of a value it cannot classify, when it %s', (_case, thrown) => {
+    Object.defineProperty(thrown, 'status', {
+      get: () => {
+        throw new Error('nope');
+      },
+    });
+
+    expect(toErrorFacts(thrown).message).toBe('Loading chunk 42 failed');
+    expect(isChunkLoadError(thrown)).toBe(true);
+  });
+
+  // A thrown plain object can still carry a useful message, while its string form says nothing.
+  it('reads the message off a thrown value that is not an Error', () => {
+    expect(toErrorFacts({ message: 'boom' }).message).toBe('boom');
+  });
+
+  // An empty message is no more use than a missing one, and the string form still names the
+  // failure — which is what the chunk classification matches on.
+  it('prefers the string form over an empty message', () => {
+    const thrown = { message: '', toString: () => 'Loading chunk 42 failed' };
+
+    expect(toErrorFacts(thrown).message).toBe('Loading chunk 42 failed');
+    expect(isChunkLoadError(thrown)).toBe(true);
   });
 
   it('falls back to the string form of anything else', () => {
@@ -141,8 +207,10 @@ describe('reportClientError', () => {
     expect(() => reportClientError(new Error('boom'), '/buy')).not.toThrow();
   });
 
-  // toErrorFacts falls back to String(error), which a hostile toString can turn into a throw.
-  it('swallows a thrown value whose string conversion throws', () => {
+  // A value whose string conversion throws used to cost the report entirely. Reading it is guarded
+  // now, so the failure is still recorded — as a report that says only that something broke, which
+  // beats the silence.
+  it('still reports a thrown value whose string conversion throws', () => {
     const hostile = {
       toString: () => {
         throw new Error('nope');
@@ -150,6 +218,37 @@ describe('reportClientError', () => {
     };
 
     expect(() => reportClientError(hostile, '/buy')).not.toThrow();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(sentBody().message).toBe('Unknown error');
+  });
+
+  // The report has to survive whatever the thrown value carries: composing the payload and the
+  // signature would otherwise throw, and the failure would be swallowed by the reporting built to
+  // record it.
+  it.each([
+    ['a name', { name: 10n }, { type: '10' }],
+    ['a message', { message: 10n }, { message: '10' }],
+    ['a stack', { stack: 10n }, { stack: '10' }],
+  ])('still reports an error carrying %s that is not text', (_case, fields, expected) => {
+    reportClientError(Object.assign(new Error('boom'), fields), '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(sentBody()).toMatchObject(expected);
+  });
+
+  // Reading the field is as untrusted as the field itself.
+  it('still reports an error whose message throws when read', () => {
+    const error = new Error('boom');
+    Object.defineProperty(error, 'message', {
+      get: () => {
+        throw new Error('nope');
+      },
+    });
+
+    reportClientError(error, '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(sentBody().message).toBe('Unknown error');
   });
 
   it('identifies the app to the API', () => {
@@ -164,6 +263,32 @@ describe('reportClientError', () => {
     reportClientError(new Error(''), '/buy');
 
     expect(sentBody().message).toBe('Unknown error');
+  });
+
+  // What makes a recorded failure findable for the customer who calls support about it.
+  it('sends the account of the signed-in customer', () => {
+    reportClientError(new Error('boom'), '/buy', 123456);
+
+    expect(sentBody().accountId).toBe(123456);
+  });
+
+  it('leaves the account out when nobody is signed in', () => {
+    reportClientError(new Error('boom'), '/buy');
+
+    expect(sentBody()).not.toHaveProperty('accountId');
+  });
+
+  // Anything that is not a positive safe integer is not an account id, so it is dropped here
+  // rather than sent as one.
+  it.each([
+    ['null', null],
+    ['zero', 0],
+    ['a negative number', -1],
+    ['a number past the safe integer range', Number.MAX_SAFE_INTEGER + 1],
+  ])('leaves out %s, which is not an account id', (_case, value) => {
+    reportClientError(new Error('boom'), '/buy', value as unknown as number);
+
+    expect(sentBody()).not.toHaveProperty('accountId');
   });
 
   it('keeps an empty stack out of the payload rather than sending an empty string', () => {
@@ -438,6 +563,44 @@ describe('repeat reports', () => {
     reportClientError(new Error('two'), '/buy');
 
     expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  // The deduplication map in client-error.ts is module-scoped and shared by every caller, so the
+  // account is what keeps two customers' otherwise identical reports apart.
+  it('still reports the same failure for a different account', () => {
+    const error = new Error('same');
+
+    reportClientError(error, '/buy', 123456);
+    reportClientError(error, '/buy', 654321);
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  // A message is free to contain whatever a separator would be, so the parts are composed rather
+  // than joined. Otherwise these two produce the same signature and the second is dropped.
+  it('keeps two failures apart when a value contains a separator', () => {
+    reportClientError(Object.assign(new Error('C'), { name: 'A|B' }), '/buy');
+    reportClientError(Object.assign(new Error('B|C'), { name: 'A' }), '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  // An empty type is a value, a missing one is not, and the signature keeps them apart. A thrown
+  // value that is not an Error carries no type at all.
+  it('keeps an empty type apart from a missing one', () => {
+    reportClientError(Object.assign(new Error('same'), { name: '' }), '/buy');
+    reportClientError('same', '/buy');
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports the same failure for the same account only once', () => {
+    const error = new Error('same');
+
+    reportClientError(error, '/buy', 123456);
+    reportClientError(error, '/buy', 123456);
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
   it('reports again once the window has passed', () => {

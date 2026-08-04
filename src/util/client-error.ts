@@ -37,15 +37,70 @@ export interface ErrorFacts {
   stack?: string;
 }
 
+// Nothing read from a thrown value may cost the report. Classifying it already touches properties
+// that can be getters, and the fallback below runs a toString this code did not write — so the
+// whole reading is guarded, not just the fields.
+//
+// What survives the failure is still read: the message is what the chunk classification matches
+// on, so giving up on it would cost the customer their recovery as well as the record.
 export function toErrorFacts(error: unknown): ErrorFacts {
+  try {
+    return factsOf(error);
+  } catch {
+    // Reached only when reading the value threw, so each field is attempted on its own and none is
+    // required to succeed. What survives may be the string form, which the Error branch below
+    // deliberately does not fall back to — here there is no telling what the value was.
+    return { message: messageOf(error), type: nameOf(error), stack: stackOf(error) };
+  }
+}
+
+function factsOf(error: unknown): ErrorFacts {
   if (isRouteErrorResponse(error)) {
     // Thrown when no route matches the URL, and by loaders returning a Response.
     return { message: `${error.status} ${error.statusText}`, type: 'RouteErrorResponse' };
   }
 
-  if (error instanceof Error) return { message: error.message, type: error.name, stack: error.stack };
+  // Read as text or not at all. These fields come off a value someone else threw, and an Error is
+  // free to carry anything under them — a name that is an object serialises nowhere, and the report
+  // would be lost to the very failure it describes.
+  if (error instanceof Error) {
+    // No string form as a fallback here: for an Error it is normally the name and the message
+    // joined, so it repeats what the other two fields already carry. An empty message stays empty
+    // and is substituted where the report is composed.
+    return { message: textOf(() => error.message) ?? '', type: nameOf(error), stack: stackOf(error) };
+  }
 
-  return { message: String(error) };
+  return { message: messageOf(error) };
+}
+
+// The field first, the string form after it: a thrown plain object can carry a useful message,
+// while String() would reduce it to [object Object]. `||` on purpose — an empty message is no more
+// use than a missing one, and the string form may still name the failure, which is what the chunk
+// classification matches on.
+function messageOf(error: unknown): string {
+  return textOf(() => (error as { message?: unknown })?.message) || textOf(() => String(error)) || '';
+}
+
+function stackOf(error: unknown): string | undefined {
+  return textOf(() => (error as { stack?: unknown })?.stack);
+}
+
+// Both the reading and the value are untrusted: the property can be a getter that throws, and what
+// it returns can be anything. A number, bigint or boolean still says something and is written out;
+// everything else is dropped, which is a smaller loss than the report it would otherwise take with
+// it — a value that serialises nowhere makes composing the payload throw.
+function textOf(read: () => unknown): string | undefined {
+  try {
+    const value = read();
+    if (typeof value === 'string') return value;
+
+    // Converting these cannot throw, unlike String() on an object with a hostile toString.
+    return typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean'
+      ? String(value)
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 // A chunk request that fails is reported by the bundler as a ChunkLoadError. That covers the stale
@@ -60,29 +115,20 @@ export function toErrorFacts(error: unknown): ErrorFacts {
 // had typed, which is worse than the failure it recovers from. The wordings below identify the
 // real case on their own.
 export function isChunkLoadError(error: unknown): boolean {
-  // The name first, read in isolation: it is the cheaper signal, and a getter or proxy trap behind
-  // it is contained rather than left to escape. Deriving the message is the riskier step, since it
-  // calls String() on the value. Classification is the first thing the global handler does with a
-  // thrown value, so a throw here would cost the recovery that follows — the failure would be
-  // classified as nothing at all and the customer left on the broken page.
+  // The name first: it is the cheaper signal. Deriving the message is the riskier step, since it
+  // reads more of a value this code did not create — but both are guarded at the source now, so
+  // neither can throw here. That matters because classification is the first thing the global
+  // handler does with a thrown value: a throw would cost the recovery that follows, leaving the
+  // failure classified as nothing at all and the customer on the broken page.
   if (nameOf(error) === 'ChunkLoadError') return true;
 
-  try {
-    return /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(
-      toErrorFacts(error).message,
-    );
-  } catch {
-    return false;
-  }
+  return /Loading (CSS )?chunk [\w-]+ failed|ChunkLoadError|Failed to fetch dynamically imported module/i.test(
+    toErrorFacts(error).message,
+  );
 }
 
 function nameOf(error: unknown): string | undefined {
-  try {
-    const name = (error as { name?: unknown })?.name;
-    return typeof name === 'string' ? name : undefined;
-  } catch {
-    return undefined;
-  }
+  return textOf(() => (error as { name?: unknown })?.name);
 }
 
 // The widget and library builds run inside someone else's page, where `window` belongs to the
@@ -210,17 +256,32 @@ function isRepeatReport(signature: string): boolean {
 
 // Reports an error the user actually saw. Fire-and-forget: a failing report must never surface as
 // a second error. `keepalive` lets the request outlive the reload that may follow it.
-export function reportClientError(error: unknown, route: string): void {
+//
+// The account is passed in rather than read here, and stays optional: this function also runs from
+// the window listeners below and from failures during startup, where there is no session to read —
+// which is exactly the case this reporting exists to catch. The caller that has one hands it over;
+// the callers that do not report without it.
+export function reportClientError(error: unknown, route: string, accountId?: number): void {
   if (!Api.url) return;
 
   try {
     const { message, type, stack } = toErrorFacts(error);
 
+    // Only sent when it has the shape of an account id: a positive safe integer.
+    const account = accountId != null && Number.isSafeInteger(accountId) && accountId > 0 ? accountId : undefined;
+
     // Deduplicated here rather than at the call site, so every caller is covered by the same rule.
     // Without it a remount loop reports the same failure tens of times per second: the customer
     // sees one broken page while the API sees a flood, and the rate limit then hides the very
     // reports this exists to collect.
-    if (isRepeatReport(`${type ?? ''}|${message}|${route}`)) return;
+    //
+    // The account belongs in the signature: the same failure under two accounts is two customers,
+    // and dropping the second would hide exactly the one this reporting exists to find.
+    //
+    // Composed as JSON rather than joined by a separator, which a message is free to contain: two
+    // different failures could otherwise produce the same signature, and the second would be
+    // dropped as a repeat of the first.
+    if (isRepeatReport(JSON.stringify([type ?? null, message, route, account ?? null]))) return;
 
     const body = {
       // The endpoint rejects an empty message, and a rejected report is exactly the blind spot
@@ -230,6 +291,7 @@ export function reportClientError(error: unknown, route: string): void {
       stack: truncate(stack, LIMITS.stack),
       route: truncate(route, LIMITS.route),
       version: truncate(REACT_APP_BUILD_ID, LIMITS.version),
+      accountId: account,
     };
 
     void fetch(url({ base: Api.url, path: `/${Api.version}/log/clientError` }), {
@@ -239,9 +301,9 @@ export function reportClientError(error: unknown, route: string): void {
       keepalive: true,
     }).catch(() => undefined);
   } catch {
-    // ignore — reporting must never throw into the render that is already failing. toErrorFacts
-    // falls back to String(error), which a thrown value with a hostile toString can turn into a
-    // throw of its own, so it belongs inside this block.
+    // ignore — reporting must never throw into the render that is already failing. Reading the
+    // thrown value is guarded on its own, so what remains here is the rest: composing the payload
+    // and handing it to fetch.
   }
 }
 
