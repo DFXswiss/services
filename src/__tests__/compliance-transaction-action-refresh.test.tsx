@@ -305,4 +305,94 @@ describe('TransactionsTable stop/resume refresh handling', () => {
       refresh.resolve({ uid: tx.uid, state: 'Created' } as unknown as Transaction);
     });
   });
+
+  it('keeps the loading state of a second action when the first refresh settles', async () => {
+    const onStatusChanged = jest.fn();
+    const refreshA = createDeferred<Transaction>();
+    const postB = createDeferred<void>();
+    mockResumeTransaction.mockResolvedValueOnce(undefined).mockReturnValueOnce(postB.promise);
+    mockGetTransactionByUid
+      .mockResolvedValueOnce({ uid: tx.uid, state: 'Stopped' } as unknown as Transaction)
+      .mockReturnValueOnce(refreshA.promise)
+      .mockResolvedValueOnce({ uid: otherTx.uid, state: 'Stopped' } as unknown as Transaction);
+
+    renderTable(onStatusChanged, [tx, otherTx]);
+
+    await click(screen.getByText(tx.uid));
+    const resumeAction = await screen.findByRole('button', { name: 'Resume' });
+    await click(resumeAction);
+    await waitFor(() => {
+      expect(screen.getByText('Transaktion fortsetzen')).toBeInTheDocument();
+    });
+    const resumeButtons = screen.getAllByRole('button', { name: 'Resume' });
+    await click(resumeButtons[resumeButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Transaktion fortsetzen')).not.toBeInTheDocument();
+    });
+
+    await click(screen.getByText(otherTx.uid));
+    const otherResumeAction = await screen.findByRole('button', { name: 'Resume' });
+    await click(otherResumeAction);
+    await waitFor(() => {
+      expect(screen.getByText('Transaktion fortsetzen')).toBeInTheDocument();
+    });
+
+    const dialogResumeButtons = screen.getAllByRole('button', { name: 'Resume' });
+    await click(dialogResumeButtons[dialogResumeButtons.length - 1]);
+
+    await waitFor(() => {
+      const buttons = screen.getAllByRole('button', { name: 'Resume' });
+      expect(buttons[buttons.length - 1]).toBeDisabled();
+    });
+
+    await act(async () => {
+      refreshA.resolve({ uid: tx.uid, state: 'Created' } as unknown as Transaction);
+    });
+
+    const buttonsAfterRefreshA = screen.getAllByRole('button', { name: 'Resume' });
+    expect(buttonsAfterRefreshA[buttonsAfterRefreshA.length - 1]).toBeDisabled();
+    expect(screen.getByText('Transaktion fortsetzen')).toBeInTheDocument();
+
+    await act(async () => {
+      postB.resolve(undefined);
+    });
+  });
+
+  it('keeps a detail error of another transaction when a refresh succeeds', async () => {
+    const onStatusChanged = jest.fn();
+    const refreshA = createDeferred<Transaction>();
+    mockResumeTransaction.mockResolvedValue(undefined);
+    mockGetTransactionByUid
+      .mockResolvedValueOnce({ uid: tx.uid, state: 'Stopped' } as unknown as Transaction)
+      .mockReturnValueOnce(refreshA.promise)
+      .mockRejectedValueOnce(new Error('Detail load failed'));
+
+    renderTable(onStatusChanged, [tx, otherTx]);
+
+    await click(screen.getByText(tx.uid));
+    const resumeAction = await screen.findByRole('button', { name: 'Resume' });
+    await click(resumeAction);
+    await waitFor(() => {
+      expect(screen.getByText('Transaktion fortsetzen')).toBeInTheDocument();
+    });
+    const resumeButtons = screen.getAllByRole('button', { name: 'Resume' });
+    await click(resumeButtons[resumeButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Transaktion fortsetzen')).not.toBeInTheDocument();
+    });
+
+    await click(screen.getByText(otherTx.uid));
+    const detailError = await screen.findByText('Detail load failed');
+    expect(detailError).toBeInTheDocument();
+
+    await act(async () => {
+      refreshA.resolve({ uid: tx.uid, state: 'Created' } as unknown as Transaction);
+    });
+
+    const detailErrorAfterRefreshA = screen.getByText('Detail load failed');
+    expect(detailErrorAfterRefreshA).toBeInTheDocument();
+    expect(detailErrorAfterRefreshA.closest('td')).not.toBeNull();
+  });
 });
