@@ -42,6 +42,7 @@ import {
   formatLocationAddress,
   apiUrl,
   relativeUrl,
+  redirectAllowedParams,
 } from '../util/utils';
 
 describe('utils', () => {
@@ -434,6 +435,21 @@ describe('utils', () => {
       });
       const query = new URLSearchParams(result.slice(result.indexOf('?') + 1));
       expect(query.get('issue-type')).toBe('LimitRequest');
+    });
+  });
+
+  describe('redirectAllowedParams', () => {
+    it('copies only a when present', () => {
+      const params = redirectAllowedParams('?a=call&code=secret&user=alice@example.com');
+      expect(params.get('a')).toBe('call');
+      expect(params.get('code')).toBeNull();
+      expect(params.get('user')).toBeNull();
+      expect([...params.keys()]).toEqual(['a']);
+    });
+
+    it('returns an empty set when a is absent', () => {
+      const params = redirectAllowedParams('?code=secret&user=alice@example.com');
+      expect([...params.keys()]).toEqual([]);
     });
   });
 });
