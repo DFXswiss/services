@@ -60,6 +60,39 @@ export function isVerifiedFrickPersonalIbanResponse(info: {
 }
 
 /**
+ * Electronic-format IBAN of DFX's shared EUR collection account at Bank Frick (the same value
+ * the public `GET /v1/bank` endpoint serves for the "Bank Frick" EUR row). Display-only
+ * alternative next to a Frick personal IBAN; transfers to it are attributable only via the
+ * remittance reference, so it must never be shown without one.
+ */
+export const FRICK_EUR_COLLECTION_IBAN = 'LI75088110105923K000E';
+
+/**
+ * True when the customer holds a verified Bank Frick personal IBAN but their e-banking cannot
+ * accept it (vBAN, contains letters), and it is safe to additionally offer the shared collection
+ * account as a display-only alternative. `remittanceInfo` must be present: attribution on the
+ * shared collection account runs entirely on the reference, and the backend enforces the same
+ * rule before it ever shows the collection account itself as the primary IBAN. Customers already
+ * on the collection account (`isPersonalIban` false) get no toggle - they already see it.
+ */
+export function canOfferCollectionIban(info: {
+  currency?: { name?: string };
+  isPersonalIban?: boolean;
+  bank?: string;
+  name?: string;
+  remittanceInfo?: string;
+  iban?: string;
+}): boolean {
+  if (info.currency?.name !== 'EUR') return false;
+  if (!isVerifiedFrickPersonalIbanResponse(info)) return false;
+  if (!info.remittanceInfo) return false;
+  if (!info.iban) return false;
+
+  const normalized = info.iban.replace(/\s+/g, '').toUpperCase();
+  return normalized !== FRICK_EUR_COLLECTION_IBAN;
+}
+
+/**
  * Allowlist for external-login callbacks: only forward an explicitly present `personal-iban`.
  * Do not copy the entire live search (would leak `user`, `arbitrary`, etc.).
  */
