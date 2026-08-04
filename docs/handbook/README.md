@@ -32,7 +32,9 @@ Guards (Build bricht ab bei Verletzung):
 
 - **Floor:** mindestens `MIN_SCREENSHOTS` (170) PNGs
 - **PNG-Integrität:** Magic-Bytes `\x89PNG…` und Grösse > 1000 Bytes
-- **HTML-Integrität:** jedes lokale `src`/`href` in der generierten Seite muss existieren
+- **HTML-Integrität:** jedes Artefakt im Manifest muss im Ausgabeverzeichnis liegen; zusätzlich
+  muss jedes lokale `src`/`href` in den gerenderten Markdown-Seiten auflösen. Die `index.html`
+  wird dafür nicht erneut geparst — ihre Artefakte deckt die Manifest-Prüfung ab
 
 Überschreitung der Mindestzahl ist **kein** Fehler — neue Baselines landen automatisch.
 
