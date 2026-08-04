@@ -11,8 +11,10 @@ import {
   StyledTabContainer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useState } from 'react';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
+import { FRICK_EUR_COLLECTION_IBAN, canOfferCollectionIban } from '../../util/personal-iban';
 import { PaymentQrCode } from './payment-qr-code';
 
 interface PaymentInformationContentProps {
@@ -72,6 +74,9 @@ export function PaymentInformationContent({ info, showBank }: PaymentInformation
 function PaymentInformationText({ info, showBank }: PaymentInformationContentProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { copy } = useClipboard();
+  const [showCollectionIban, setShowCollectionIban] = useState(false);
+  const offerCollectionIban = canOfferCollectionIban(info);
+  const displayedIban = offerCollectionIban && showCollectionIban ? FRICK_EUR_COLLECTION_IBAN : info.iban;
 
   return (
     <>
@@ -84,14 +89,28 @@ function PaymentInformationText({ info, showBank }: PaymentInformationContentPro
         </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
           <div>
-            <p>{Utils.formatIban(info.iban)}</p>
+            <p>{Utils.formatIban(displayedIban)}</p>
             {info.sepaInstant && (
               <div className="text-white">
                 <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColor.RED} />
               </div>
             )}
           </div>
-          <CopyButton onCopy={() => copy(info.iban)} />
+          {offerCollectionIban && (
+            <button
+              type="button"
+              className="ml-1"
+              onClick={() => setShowCollectionIban((current) => !current)}
+              aria-label={translate(
+                'screens/payment',
+                showCollectionIban ? 'Show personal IBAN' : 'Show collection IBAN',
+              )}
+              title={translate('screens/payment', showCollectionIban ? 'Show personal IBAN' : 'Show collection IBAN')}
+            >
+              🔄
+            </button>
+          )}
+          <CopyButton onCopy={() => copy(displayedIban)} />
         </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
           {info.bic}
