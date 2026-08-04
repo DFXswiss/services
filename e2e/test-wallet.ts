@@ -36,13 +36,6 @@ function encodeBase58(buffer: Uint8Array): string {
 }
 
 /**
- * DFX sign message format
- * The message that must be signed for authentication
- */
-const DFX_SIGN_MESSAGE =
-  'By_signing_this_message,_you_confirm_that_you_are_the_sole_owner_of_the_provided_Blockchain_address._Your_ID:_';
-
-/**
  * Lightning.space sign message format
  * Different from DFX - used for lightning.space custodial service
  */
@@ -109,6 +102,28 @@ export function getTestConfig(): TestConfig {
 }
 
 /**
+ * Fetches the environment-specific sign message from the API for any DFX blockchain.
+ * The API prefixes it outside production (e.g. `[loc]_...`), so it must not be hardcoded.
+ */
+async function fetchSignMessage(address: string): Promise<string> {
+  const apiUrl = process.env.REACT_APP_API_URL;
+  if (!apiUrl) {
+    throw new Error('REACT_APP_API_URL environment variable is required to fetch the sign message.');
+  }
+
+  const response = await fetch(`${apiUrl}/v1/auth/signMessage?address=${address}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch sign message: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!data.message) {
+    throw new Error('Sign message response contains no message.');
+  }
+  return data.message;
+}
+
+/**
  * Creates EVM test credentials from a mnemonic seed phrase.
  * Derives an EVM address and signs the DFX authentication message.
  */
@@ -120,7 +135,7 @@ export async function createTestCredentials(
   const wallet = derivationPath ? hdNode.derivePath(derivationPath.replace('m/', '')) : hdNode;
 
   const address = wallet.address;
-  const message = DFX_SIGN_MESSAGE + address;
+  const message = await fetchSignMessage(address);
   const signature = await wallet.signMessage(message);
 
   return { address, signature };
@@ -147,7 +162,7 @@ export async function createBitcoinCredentials(mnemonic: string): Promise<TestCr
 
   if (!address) throw new Error('Failed to generate Bitcoin address');
 
-  const message = DFX_SIGN_MESSAGE + address;
+  const message = await fetchSignMessage(address);
 
   // Sign message using bitcoinjs-message
   const signature = bitcoinMessage.sign(message, Buffer.from(privateKey), true, { segwitType: 'p2wpkh' });
@@ -205,7 +220,7 @@ export async function createSolanaCredentials(mnemonic: string): Promise<TestCre
   const keypair = Keypair.fromSeed(derivedKey.privateKey!);
 
   const address = keypair.publicKey.toBase58();
-  const message = DFX_SIGN_MESSAGE + address;
+  const message = await fetchSignMessage(address);
 
   // Sign using tweetnacl
   const messageBytes = new TextEncoder().encode(message);
@@ -225,7 +240,7 @@ export async function createTronCredentials(mnemonic: string): Promise<TestCrede
   const address = account.address;
   const privateKey = account.privateKey.replace(/^0x/, '');
 
-  const message = DFX_SIGN_MESSAGE + address;
+  const message = await fetchSignMessage(address);
 
   // Create TronWeb instance and sign message
   const tronWeb = new TronWeb({
@@ -414,7 +429,7 @@ export async function createBitcoinCredentialsWallet2(mnemonic: string): Promise
 
   if (!address) throw new Error('Failed to generate Bitcoin address');
 
-  const message = DFX_SIGN_MESSAGE + address;
+  const message = await fetchSignMessage(address);
 
   // Sign message using bitcoinjs-message
   const signature = bitcoinMessage.sign(message, Buffer.from(privateKey), true, { segwitType: 'p2wpkh' });
