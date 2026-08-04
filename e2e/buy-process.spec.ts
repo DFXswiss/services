@@ -155,25 +155,49 @@ test.describe('Buy Process - UI Flow', () => {
     const token = await getToken(request);
 
     await page.route('**/v1/buy/paymentInfos', async (route) => {
-      const requestData = route.request().postDataJSON() as Record<string, unknown>;
-
-      // Keep this visual test independent of Bank Frick and avoid allocating a real vIBAN.
-      const upstreamData = { ...requestData };
-      delete upstreamData.personalIbanProvider;
-      const response = await route.fetch({ postData: JSON.stringify(upstreamData) });
-      const paymentInfo = (await response.json()) as Record<string, unknown>;
-
+      // Fully static quote: since the personal-IBAN rollout the local API rejects EUR bank
+      // quotes for sub-KYC-50 accounts with HTTP 400 KycRequired, and fulfilling with the
+      // upstream response keeps that status. A static 200 keeps this visual test independent
+      // of local KYC state, price rules and Bank Frick issuance. remittanceInfo is fixed in
+      // the real bankUsage format so the screenshots stay deterministic across regenerations.
       await route.fulfill({
-        response,
+        status: 200,
+        contentType: 'application/json',
         json: {
-          ...paymentInfo,
+          id: 1,
+          isValid: true,
+          amount: 100,
+          estimatedAmount: 0.0251,
+          rate: 3862.5,
+          exchangeRate: 3984.06,
+          priceSteps: [],
+          minVolume: 10,
+          maxVolume: 990000,
+          minVolumeTarget: 0.0026,
+          maxVolumeTarget: 248.5,
+          fees: {
+            rate: 0.0099,
+            fixed: 0,
+            min: 0,
+            dfx: 0.99,
+            network: 0,
+            bank: 0,
+            bankFixed: 2,
+            bankVariable: 0,
+            platform: 0,
+            total: 2.99,
+          },
+          currency: { id: 2, name: 'EUR' },
+          asset: { id: 111, name: 'ETH', blockchain: 'Ethereum', category: 'Public' },
           bank: 'Bank Frick',
           bic: 'BFRILI22XXX',
           iban: 'LI21088100002324013AA',
           name: 'DFX AG',
-          // Fixed reference in the real bankUsage format so the screenshots are
-          // deterministic across regenerations; a present remittanceInfo is exactly
-          // the state in which the toggle renders.
+          street: 'Bahnhofstrasse',
+          number: '7',
+          zip: '6300',
+          city: 'Zug',
+          country: 'Schweiz',
           remittanceInfo: 'A1B2-C3D4-E5F6',
           sepaInstant: false,
           isPersonalIban: true,
@@ -181,8 +205,10 @@ test.describe('Buy Process - UI Flow', () => {
       });
     });
 
+    // asset-out is pinned: without it the screen picks the first listed asset, which has
+    // no price rule in the local seed and the quote never reaches the payment details.
     await page.goto(
-      `/buy?session=${token}&blockchain=Ethereum&asset-in=EUR&amount-in=100&personal-iban=frick`,
+      `/buy?session=${token}&blockchain=Ethereum&asset-in=EUR&asset-out=ETH&amount-in=100&personal-iban=frick`,
     );
 
     const paymentDetails = page
