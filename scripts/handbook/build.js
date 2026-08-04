@@ -58,14 +58,65 @@ function loadMarked() {
 }
 
 const markedModule = loadMarked();
-const markedParse =
-  typeof markedModule.parse === 'function'
-    ? (md) => markedModule.parse(md)
-    : typeof markedModule.marked?.parse === 'function'
-      ? (md) => markedModule.marked.parse(md)
+const MarkedRenderer =
+  typeof markedModule.Renderer === 'function'
+    ? markedModule.Renderer
+    : markedModule.marked && typeof markedModule.marked.Renderer === 'function'
+      ? markedModule.marked.Renderer
       : null;
-if (!markedParse) {
+const markedParseImpl =
+  typeof markedModule.parse === 'function'
+    ? (md, opts) => markedModule.parse(md, opts)
+    : typeof markedModule.marked?.parse === 'function'
+      ? (md, opts) => markedModule.marked.parse(md, opts)
+      : null;
+if (!markedParseImpl) {
   fail('handbook: marked loaded but no parse() API found (expected marked@15).');
+}
+if (!MarkedRenderer) {
+  fail('handbook: marked loaded but no Renderer class found (expected marked@15).');
+}
+
+// GitHub-compatible heading slug: lowercase; strip chars that are not letters
+// (\p{L}), digits (\p{N}), marks (\p{M}), underscore (\p{Pc}), hyphen or space;
+// spaces → '-'. No collapsing of multiple hyphens, no trim of leading/trailing
+// hyphens. Unicode letters/digits/marks/underscore are kept. Duplicate slugs
+// within one document get -1, -2, … (first occurrence keeps the bare slug).
+// Counter is per parse call only.
+function createHeadingRenderer() {
+  const renderer = new MarkedRenderer();
+  const seen = new Map();
+  renderer.heading = function ({ tokens, depth }) {
+    const text = this.parser.parseInline(tokens, this.parser.textRenderer);
+    let slug = String(text)
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\p{M}\p{Pc}\- ]/gu, '')
+      .replace(/ /g, '-');
+    if (seen.has(slug)) {
+      const n = seen.get(slug);
+      seen.set(slug, n + 1);
+      slug = slug + '-' + n;
+    } else {
+      seen.set(slug, 1);
+    }
+    return (
+      '<h' +
+      depth +
+      ' id="' +
+      slug +
+      '">' +
+      this.parser.parseInline(tokens) +
+      '</h' +
+      depth +
+      '>\n'
+    );
+  };
+  return renderer;
+}
+
+// Renderer is created per call so heading-id counters never leak across documents.
+function markedParse(md) {
+  return markedParseImpl(md, { renderer: createHeadingRenderer() });
 }
 
 function escapeHtml(str) {
@@ -98,6 +149,22 @@ function decodeHtmlEntities(str) {
 // step to make the attribute value HTML-safe.
 function encodeHtmlPath(p) {
   return String(p).split('/').map(encodeURIComponent).join('/');
+}
+
+// Inverse of encodeHtmlPath: decodeURIComponent per path segment. decodeURI
+// does not reverse encodeURIComponent for reserved characters (# ? & +), so
+// a filename like hash#tag.png encoded as hash%23tag.png would not round-trip.
+function decodeHtmlPath(p) {
+  return String(p)
+    .split('/')
+    .map((seg) => {
+      try {
+        return decodeURIComponent(seg);
+      } catch {
+        return seg;
+      }
+    })
+    .join('/');
 }
 
 function ensureDir(dir) {
@@ -269,11 +336,12 @@ function collectRelativeRefs(html) {
   // Only match real attribute names, after start-of-string, whitespace or '<'.
   // A word boundary alone also matches after '-' and ':', so data-src,
   // xlink:href and ng-src would be checked as if a browser resolved them.
-  // Both quote styles are accepted: inline HTML in Markdown may use either.
-  const re = /(?:^|[\s<])(?:src|href)=("|')([^"']+)\1/g;
+  // Alternation per quote style so a double-quoted value may contain apostrophes
+  // (e.g. href="docs/Bank's%20Guide.md" from marked link parsing).
+  const re = /(?:^|[\s<])(?:src|href)=(?:"([^"]*)"|'([^']*)')/g;
   let m;
   while ((m = re.exec(html)) !== null) {
-    const raw = m[2];
+    const raw = m[1] !== undefined ? m[1] : m[2];
     if (
       ABSOLUTE_URI_SCHEME_RE.test(raw) ||
       raw.startsWith('//') ||
@@ -281,6 +349,8 @@ function collectRelativeRefs(html) {
     ) {
       continue;
     }
+    // Fragment/query stripped on the still-encoded raw value so a %23 in a
+    // filename is not mistaken for a fragment separator.
     const cleaned = raw.split('#')[0].split('?')[0];
     if (cleaned) refs.push(cleaned);
   }
@@ -1151,8 +1221,9 @@ function main() {
     const html = fs.readFileSync(path.join(outDir, d.out), 'utf8');
     const refs = collectRelativeRefs(html);
     for (const rawRef of refs) {
-      let ref = decodeHtmlEntities(rawRef);
-      try { ref = decodeURI(ref); } catch { /* malformed escape: keep as-is */ }
+      // Segment-wise decodeURIComponent (mirrors encodeHtmlPath); decodeURI
+      // leaves %23/%3F/… intact and would miss files we encoded ourselves.
+      const ref = decodeHtmlPath(decodeHtmlEntities(rawRef));
       const underOut = path.join(path.dirname(path.join(outDir, d.out)), ref);
       if (
         !ref.startsWith('/') &&
