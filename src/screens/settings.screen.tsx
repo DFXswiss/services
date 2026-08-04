@@ -1,4 +1,5 @@
 import {
+  ApiError,
   BankAccount,
   Fiat,
   Language,
@@ -25,6 +26,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import ActionableList from 'src/components/actionable-list';
+import { ErrorHint } from 'src/components/error-hint';
 import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
 import { EditBankAccount } from 'src/components/overlay/edit-bank-overlay';
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
@@ -81,6 +83,8 @@ export default function SettingsScreen(): JSX.Element {
 
   const [overlayData, setOverlayData] = useState<UserAddress | BankAccount>();
   const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
+  const [acceptCallError, setAcceptCallError] = useState<string>();
+  const [preferredPhoneTimesError, setPreferredPhoneTimesError] = useState<string>();
 
   useUserGuard('/login');
 
@@ -132,13 +136,19 @@ export default function SettingsScreen(): JSX.Element {
       selectedPreferredPhoneTimes &&
       JSON.stringify(selectedPreferredPhoneTimes) !== JSON.stringify(user?.kyc.preferredPhoneTimes)
     ) {
-      updateCallSettings(selectedPreferredPhoneTimes);
+      setPreferredPhoneTimesError(undefined);
+      updateCallSettings(selectedPreferredPhoneTimes).catch((error: ApiError) =>
+        setPreferredPhoneTimesError(error.message ?? 'Unknown error'),
+      );
     }
   }, [selectedPreferredPhoneTimes]);
 
   useEffect(() => {
     if (acceptCall !== undefined && acceptCall !== user?.kyc.phoneCallAccepted) {
-      updateCallSettings(undefined, acceptCall);
+      setAcceptCallError(undefined);
+      updateCallSettings(undefined, acceptCall).catch((error: ApiError) =>
+        setAcceptCallError(error.message ?? 'Unknown error'),
+      );
     }
   }, [acceptCall]);
 
@@ -328,20 +338,20 @@ export default function SettingsScreen(): JSX.Element {
                     }
                   />
                 </Form>
+                {acceptCallError && <ErrorHint message={acceptCallError} />}
 
-                {acceptCall && (
-                  <Form control={control} errors={errors}>
-                    <StyledDropdownMultiChoice<PhoneCallTime>
-                      rootRef={rootRef}
-                      name="preferredPhoneTimes"
-                      label={translate('screens/settings', 'Preferred call time')}
-                      smallLabel={true}
-                      placeholder={translate('general/actions', 'Select') + '...'}
-                      items={Object.values(PhoneCallTime)}
-                      labelFunc={(item) => translate('screens/settings', PhoneCallTimeLabels[item])}
-                    />
-                  </Form>
-                )}
+                <Form control={control} errors={errors}>
+                  <StyledDropdownMultiChoice<PhoneCallTime>
+                    rootRef={rootRef}
+                    name="preferredPhoneTimes"
+                    label={translate('screens/settings', 'Preferred call time')}
+                    smallLabel={true}
+                    placeholder={translate('general/actions', 'Select') + '...'}
+                    items={Object.values(PhoneCallTime)}
+                    labelFunc={(item) => translate('screens/settings', PhoneCallTimeLabels[item])}
+                  />
+                </Form>
+                {preferredPhoneTimesError && <ErrorHint message={preferredPhoneTimesError} />}
               </StyledVerticalStack>
             </StyledVerticalStack>
           )}
