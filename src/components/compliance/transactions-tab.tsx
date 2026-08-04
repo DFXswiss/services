@@ -58,7 +58,7 @@ export function TransactionsTable({
   const { downloadTransactionPdf, stopTransaction, resumeTransaction } = useCompliance();
   const [txDetailCache, setTxDetailCache] = useState<Map<string, Transaction>>(new Map());
   const [txDetailLoading, setTxDetailLoading] = useState<string>();
-  const [txDetailError, setTxDetailError] = useState<{ uid: string; message: string }>();
+  const [txDetailErrors, setTxDetailErrors] = useState<Map<string, string>>(new Map());
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
   const [stoppingTxId, setStoppingTxId] = useState<number>();
@@ -71,18 +71,30 @@ export function TransactionsTable({
   const [recallBankTxId, setRecallBankTxId] = useState<number>();
   const [viewingRecall, setViewingRecall] = useState<RecallInfo>();
 
+  function setTxDetailError(uid: string, message: string): void {
+    setTxDetailErrors((prev) => new Map(prev).set(uid, message));
+  }
+
+  function clearTxDetailError(uid: string): void {
+    setTxDetailErrors((prev) => {
+      const next = new Map(prev);
+      next.delete(uid);
+      return next;
+    });
+  }
+
   async function refreshTxDetail(uid: string): Promise<void> {
     try {
       const updatedDetail = await getTransactionByUid(uid);
       setTxDetailCache((prev) => new Map(prev).set(uid, updatedDetail));
-      setTxDetailError((current) => (current?.uid === uid ? undefined : current));
+      clearTxDetailError(uid);
     } catch (e) {
       setTxDetailCache((prev) => {
         const next = new Map(prev);
         next.delete(uid);
         return next;
       });
-      setTxDetailError({ uid, message: e instanceof Error ? e.message : 'Failed to refresh transaction details' });
+      setTxDetailError(uid, e instanceof Error ? e.message : 'Failed to refresh transaction details');
     }
   }
 
@@ -176,7 +188,7 @@ export function TransactionsTable({
     }
 
     onExpandTxUid(uid);
-    setTxDetailError(undefined);
+    clearTxDetailError(uid);
 
     if (txDetailCache.has(uid)) return;
 
@@ -186,7 +198,7 @@ export function TransactionsTable({
         setTxDetailCache((prev) => new Map(prev).set(uid, detail));
       })
       .catch((e: unknown) => {
-        setTxDetailError({ uid, message: e instanceof Error ? e.message : 'Failed to load transaction details' });
+        setTxDetailError(uid, e instanceof Error ? e.message : 'Failed to load transaction details');
       })
       .finally(() => setTxDetailLoading(undefined));
   }
@@ -247,6 +259,7 @@ export function TransactionsTable({
               const isBankTxExpanded = expandedBankTxId === bankTx?.id;
               const isCryptoExpanded = expandedCryptoInputId === cryptoInput?.id;
               const isBankDataExpanded = expandedBankDataId === bankData?.id;
+              const detailError = txDetailErrors.get(tx.uid);
 
               return (
                 <Fragment key={tx.id}>
@@ -429,8 +442,8 @@ export function TransactionsTable({
                       <td colSpan={15} className="px-6 py-3">
                         {txDetailLoading === tx.uid ? (
                           <StyledLoadingSpinner size={SpinnerSize.SM} />
-                        ) : txDetailError?.uid === tx.uid && !txDetailCache.has(tx.uid) ? (
-                          <p className="text-primary-red text-sm">{txDetailError.message}</p>
+                        ) : detailError != null && !txDetailCache.has(tx.uid) ? (
+                          <p className="text-primary-red text-sm">{detailError}</p>
                         ) : txDetailCache.has(tx.uid) ? (
                           (() => {
                             const detail = txDetailCache.get(tx.uid) as Transaction;

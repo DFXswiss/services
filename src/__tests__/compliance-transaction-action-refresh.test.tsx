@@ -395,4 +395,43 @@ describe('TransactionsTable stop/resume refresh handling', () => {
     expect(detailErrorAfterRefreshA).toBeInTheDocument();
     expect(detailErrorAfterRefreshA.closest('td')).not.toBeNull();
   });
+
+  it('keeps a detail error of another transaction when a refresh fails', async () => {
+    const onStatusChanged = jest.fn();
+    const refreshA = createDeferred<Transaction>();
+    mockResumeTransaction.mockResolvedValue(undefined);
+    mockGetTransactionByUid
+      .mockResolvedValueOnce({ uid: tx.uid, state: 'Stopped' } as unknown as Transaction)
+      .mockReturnValueOnce(refreshA.promise)
+      .mockRejectedValueOnce(new Error('Detail load failed'));
+
+    renderTable(onStatusChanged, [tx, otherTx]);
+
+    await click(screen.getByText(tx.uid));
+    const resumeAction = await screen.findByRole('button', { name: 'Resume' });
+    await click(resumeAction);
+    await waitFor(() => {
+      expect(screen.getByText('Transaktion fortsetzen')).toBeInTheDocument();
+    });
+    const resumeButtons = screen.getAllByRole('button', { name: 'Resume' });
+    await click(resumeButtons[resumeButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Transaktion fortsetzen')).not.toBeInTheDocument();
+    });
+
+    await click(screen.getByText(otherTx.uid));
+    const detailError = await screen.findByText('Detail load failed');
+    expect(detailError).toBeInTheDocument();
+
+    await act(async () => {
+      refreshA.reject(new Error('Refresh failed'));
+      await refreshA.promise.catch(() => undefined);
+    });
+
+    const detailErrorAfterRefreshA = screen.getByText('Detail load failed');
+    expect(detailErrorAfterRefreshA).toBeInTheDocument();
+    expect(detailErrorAfterRefreshA.closest('td')).not.toBeNull();
+    expect(screen.queryByText('Refresh failed')).not.toBeInTheDocument();
+  });
 });
