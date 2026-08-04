@@ -148,6 +148,66 @@ test.describe('Buy Process - UI Flow', () => {
       'buy-bank-frick-payment-details.png',
     );
   });
+
+  // Visual review aid for the collection-IBAN toggle. The neighboring test above
+  // deliberately mocks no remittanceInfo and therefore never renders the toggle.
+  test('should toggle between the personal and the collection IBAN', async ({ page, request }) => {
+    const token = await getToken(request);
+
+    await page.route('**/v1/buy/paymentInfos', async (route) => {
+      const requestData = route.request().postDataJSON() as Record<string, unknown>;
+
+      // Keep this visual test independent of Bank Frick and avoid allocating a real vIBAN.
+      const upstreamData = { ...requestData };
+      delete upstreamData.personalIbanProvider;
+      const response = await route.fetch({ postData: JSON.stringify(upstreamData) });
+      const paymentInfo = (await response.json()) as Record<string, unknown>;
+
+      await route.fulfill({
+        response,
+        json: {
+          ...paymentInfo,
+          bank: 'Bank Frick',
+          bic: 'BFRILI22XXX',
+          iban: 'LI21088100002324013AA',
+          name: 'DFX AG',
+          // Fixed reference in the real bankUsage format so the screenshots are
+          // deterministic across regenerations; a present remittanceInfo is exactly
+          // the state in which the toggle renders.
+          remittanceInfo: 'A1B2-C3D4-E5F6',
+          sepaInstant: false,
+          isPersonalIban: true,
+        },
+      });
+    });
+
+    await page.goto(
+      `/buy?session=${token}&blockchain=Ethereum&asset-in=EUR&amount-in=100&personal-iban=frick`,
+    );
+
+    const paymentDetails = page
+      .getByRole('heading', { name: 'Payment Information' })
+      .locator('..');
+
+    const toggle = paymentDetails.getByRole('button', { name: 'Show collection IBAN' });
+    await expect(toggle).toBeVisible({ timeout: 15000 });
+
+    // Personal IBAN state, formatted via Utils.formatIban (ibantools friendlyFormat, groups of 4).
+    await expect(paymentDetails.getByText('LI21 0881 0000 2324 013A A')).toBeVisible();
+    await expect(paymentDetails).toHaveScreenshot('buy-collection-iban-toggle-personal.png');
+
+    await toggle.click();
+
+    // Collection IBAN state.
+    await expect(paymentDetails.getByText('LI75 0881 1010 5923 K000 E')).toBeVisible();
+    await expect(paymentDetails.getByRole('button', { name: 'Show personal IBAN' })).toBeVisible();
+    await expect(paymentDetails.getByText('A1B2-C3D4-E5F6')).toBeVisible();
+    await expect(paymentDetails).toHaveScreenshot('buy-collection-iban-toggle-collection.png');
+
+    // Toggle back to personal IBAN.
+    await paymentDetails.getByRole('button', { name: 'Show personal IBAN' }).click();
+    await expect(paymentDetails.getByText('LI21 0881 0000 2324 013A A')).toBeVisible();
+  });
 });
 
 test.describe('Buy Process - Wallet 2 (BIP-44 derived)', () => {
