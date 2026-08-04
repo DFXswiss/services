@@ -20,6 +20,7 @@ const path = require('path');
 
 // --- Floor guards (today's counts minus a small buffer; never exact) ---
 const MIN_SCREENSHOTS = 170;
+const MIN_DOCS = 4;
 const MIN_PNG_BYTES = 1000;
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const MARKED_INSTALL =
@@ -78,11 +79,12 @@ if (!MarkedRenderer) {
 }
 
 // GitHub-compatible heading slug: lowercase; strip chars that are not letters
-// (\p{L}), digits (\p{N}), marks (\p{M}), underscore (\p{Pc}), hyphen or space;
-// spaces → '-'. No collapsing of multiple hyphens, no trim of leading/trailing
-// hyphens. Unicode letters/digits/marks/underscore are kept. Duplicate slugs
-// within one document get -1, -2, … (first occurrence keeps the bare slug).
-// Counter is per parse call only.
+// (\p{L}), decimal digits (\p{Nd}) and letter numbers (\p{Nl}), marks (\p{M}),
+// underscore (\p{Pc}), hyphen or space; spaces → '-'. No collapsing of multiple
+// hyphens, no trim of leading/trailing hyphens. Unicode letters/digits/marks/
+// underscore are kept. Other number categories (e.g. No: ² ³ ¼) are stripped,
+// matching GitHub. Duplicate slugs within one document get -1, -2, … (first
+// occurrence keeps the bare slug). Counter is per parse call only.
 function createHeadingRenderer() {
   const renderer = new MarkedRenderer();
   const seen = new Map();
@@ -90,15 +92,19 @@ function createHeadingRenderer() {
     const text = this.parser.parseInline(tokens, this.parser.textRenderer);
     let slug = String(text)
       .toLowerCase()
-      .replace(/[^\p{L}\p{N}\p{M}\p{Pc}\- ]/gu, '')
+      .replace(/[^\p{L}\p{Nd}\p{Nl}\p{M}\p{Pc}\- ]/gu, '')
       .replace(/ /g, '-');
-    if (seen.has(slug)) {
+    // Register every emitted id in `seen` so later collisions never re-use a
+    // suffix that is already taken (e.g. ["A","A","A-1"] → a, a-1, a-1-1).
+    let candidate = slug;
+    while (seen.has(candidate)) {
       const n = seen.get(slug);
       seen.set(slug, n + 1);
-      slug = slug + '-' + n;
-    } else {
-      seen.set(slug, 1);
+      candidate = slug + '-' + n;
     }
+    seen.set(candidate, 1);
+    if (!seen.has(slug)) seen.set(slug, 1);
+    slug = candidate;
     return (
       '<h' +
       depth +
@@ -183,6 +189,67 @@ function listPngFiles(dir) {
     .filter((d) => d.isFile() && d.name.toLowerCase().endsWith('.png'))
     .map((d) => d.name)
     .sort(sortStrings);
+}
+
+function listSvgFiles(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isFile() && d.name.toLowerCase().endsWith('.svg'))
+    .map((d) => d.name)
+    .sort(sortStrings);
+}
+
+// Directory basenames skipped at any depth during markdown discovery.
+const SKIP_MD_DIR_NAMES = new Set([
+  'node_modules',
+  '.git',
+  '_handbook-deps',
+  'build',
+  'dist',
+  'coverage',
+  'e2e',
+]);
+
+/**
+ * Recursive scan of repoRoot for *.md (case-insensitive). Skips well-known
+ * dependency/build dirs, any dot-directory, and the exact path docs/handbook
+ * (handbook self-docs / local build output — not repo documentation).
+ * Returns repo-relative posix paths, sorted.
+ */
+function listMarkdownFiles(rootDir) {
+  const results = [];
+  function walk(absDir, relDir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(absDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const d of entries) {
+      const name = d.name;
+      const relPath = relDir ? path.posix.join(relDir, name) : name;
+      if (d.isDirectory()) {
+        if (name.startsWith('.')) continue;
+        if (SKIP_MD_DIR_NAMES.has(name)) continue;
+        // Exact path only — not every directory named "handbook".
+        if (relPath === 'docs/handbook') continue;
+        walk(path.join(absDir, name), relPath);
+      } else if (d.isFile() && name.toLowerCase().endsWith('.md')) {
+        results.push(relPath);
+      }
+    }
+  }
+  walk(rootDir, '');
+  return results.sort(sortStrings);
+}
+
+/** Deterministic title from filename when metadata.docs has no override. */
+function defaultDocTitle(relSrc) {
+  const base = path.posix.basename(relSrc).replace(/\.md$/i, '');
+  const words = base.split(/[-_]+/).filter(Boolean);
+  if (words.length === 0) return base;
+  return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
 function assertValidPng(filePath) {
@@ -349,9 +416,12 @@ function collectRelativeRefs(html) {
     ) {
       continue;
     }
-    // Fragment/query stripped on the still-encoded raw value so a %23 in a
-    // filename is not mistaken for a fragment separator.
-    const cleaned = raw.split('#')[0].split('?')[0];
+    // Browser order: decode HTML entities first (a literal '#' inside an entity
+    // like &#39; must not be mistaken for the fragment separator), THEN strip
+    // fragment/query, THEN percent-decode (done later by the caller via
+    // decodeHtmlPath). Percent-encoding must stay untouched here so a literal
+    // %23 in a filename is still not mistaken for a fragment separator.
+    const cleaned = decodeHtmlEntities(raw).split('#')[0].split('?')[0];
     if (cleaned) refs.push(cleaned);
   }
   return refs;
@@ -498,10 +568,17 @@ function main() {
   });
 
   // --- Source D: logos / assets ---
+  // SVGs under src/static/assets are auto-discovered; public/logo.png is
+  // curated (public/ holds many unrelated static files).
+  const ASSET_SVG_DIR = 'src/static/assets';
   const assetSpecs = [
-    { src: 'src/static/assets/logo.svg', out: 'assets/logo.svg' },
-    { src: 'src/static/assets/logo-dark.svg', out: 'assets/logo-dark.svg' },
-    { src: 'src/static/assets/path-arrow.svg', out: 'assets/path-arrow.svg' },
+    ...listSvgFiles(path.join(repoRoot, ASSET_SVG_DIR)).map((name) => ({
+      src: path.posix.join(ASSET_SVG_DIR, name),
+      out: path.posix.join('assets', name),
+    })),
+    // Curated on purpose: public/ holds many unrelated static files (favicon,
+    // manifest.json, _headers, _redirects, index.html, robots.txt) — only this
+    // one PNG is a handbook-relevant brand asset, so it is NOT auto-discovered.
     { src: 'public/logo.png', out: 'assets/logo.png' },
   ];
   for (const a of assetSpecs) {
@@ -521,21 +598,28 @@ function main() {
     });
   }
 
-  // --- Source E: markdown docs ---
-  const docSpecs = [
-    { src: 'README.md', out: 'docs/README.html', title: 'README' },
-    { src: 'CONTRIBUTING.md', out: 'docs/CONTRIBUTING.html', title: 'CONTRIBUTING' },
-    {
-      src: 'docs/EIP7702-Implementierungsplan.md',
-      out: 'docs/EIP7702-Implementierungsplan.html',
-      title: 'EIP-7702 Implementierungsplan',
-    },
-    {
-      src: 'docs/gasless-token-transfer-analysis.md',
-      out: 'docs/gasless-token-transfer-analysis.html',
-      title: 'Gasless Token Transfer Analysis',
-    },
-  ];
+  // --- Source E: markdown docs (recursive discovery) ---
+  // Optional title overrides via metadata.json → docs[relSrc].title.
+  // Missing docs key / missing entry is fine (not an error).
+  const docsMeta = (metadata && metadata.docs) || {};
+  const discoveredDocs = listMarkdownFiles(repoRoot);
+  const docSpecs = discoveredDocs.map((relSrc) => {
+    const outInner = (
+      relSrc.startsWith('docs/') ? relSrc.slice(5) : relSrc
+    ).replace(/\.md$/i, '.html');
+    const out = path.posix.join('docs', outInner);
+    const title =
+      (docsMeta[relSrc] && docsMeta[relSrc].title) || defaultDocTitle(relSrc);
+    return { src: relSrc, out, title };
+  });
+  if (docSpecs.length < MIN_DOCS) {
+    fail(
+      `handbook floor guard: found ${docSpecs.length} docs, ` +
+        `need at least MIN_DOCS=${MIN_DOCS}. ` +
+        'Check recursive *.md discovery from repo root (excludes node_modules, ' +
+        '.git, _handbook-deps, build, dist, coverage, e2e, docs/handbook, dot-dirs).',
+    );
+  }
   const renderedDocs = [];
   for (const d of docSpecs) {
     const src = path.join(repoRoot, d.src);
@@ -579,10 +663,21 @@ function main() {
   const groupKeys = Array.from(groups.keys()).sort(sortStrings);
 
   // Orphan metadata entries → warning only
+  // Skip reserved top-level key "docs" (doc title overrides, not a group).
   for (const key of Object.keys(metadata).sort(sortStrings)) {
+    if (key === 'docs') continue;
     if (!groups.has(key)) {
       console.error(
         `handbook warning: metadata.json entry "${key}" has no matching screenshots (orphan).`,
+      );
+    }
+  }
+  // Symmetric orphan warning for docs title overrides without a discovered file.
+  const discoveredDocSet = new Set(discoveredDocs);
+  for (const key of Object.keys(docsMeta).sort(sortStrings)) {
+    if (!discoveredDocSet.has(key)) {
+      console.error(
+        `handbook warning: metadata.json docs entry "${key}" has no matching document (orphan).`,
       );
     }
   }
@@ -1221,9 +1316,9 @@ function main() {
     const html = fs.readFileSync(path.join(outDir, d.out), 'utf8');
     const refs = collectRelativeRefs(html);
     for (const rawRef of refs) {
-      // Segment-wise decodeURIComponent (mirrors encodeHtmlPath); decodeURI
-      // leaves %23/%3F/… intact and would miss files we encoded ourselves.
-      const ref = decodeHtmlPath(decodeHtmlEntities(rawRef));
+      // Entity decoding already happened in collectRelativeRefs (before the
+      // fragment/query split); only percent-decoding remains here.
+      const ref = decodeHtmlPath(rawRef);
       const underOut = path.join(path.dirname(path.join(outDir, d.out)), ref);
       if (
         !ref.startsWith('/') &&

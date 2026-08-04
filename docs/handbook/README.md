@@ -6,16 +6,18 @@ Docker-Image hinter Basic Auth unter [handbook.app.dfx.swiss](https://handbook.a
 
 ## Wie es funktioniert
 
-Das Assembly-Script `scripts/handbook/build.js` **findet** Artefakte selbst (kein
-handgepflegtes Mapping):
+Das Assembly-Script `scripts/handbook/build.js` **findet** die meisten Artefakte selbst
+(echte Discovery für Screenshots A/B, SVG-Teil von D und Docs E). Die Einzeldatei
+`public/logo.png` ist bewusst kuratiert — `public/` enthält viele unzusammenhängende
+Statik-Dateien, die nicht ins Handbook gehören:
 
 | Quelle | Pfad | Inhalt |
 |--------|------|--------|
 | A | `e2e/screenshots/baseline/*.png` | Playwright Visual-Baselines (flach) |
 | B | `e2e/screenshots/*.png` | Top-Level-Screenshots (nicht rekursiv; `baseline/` und `debug/` ausgenommen) |
 | C | `tailwind.config.js` | Farben und Schriftgrössen |
-| D | `src/static/assets/*`, `public/logo.png` | Logos |
-| E | `README.md`, `CONTRIBUTING.md`, `docs/*.md` | Markdown-Doku (gerendert mit `marked`) |
+| D | `src/static/assets/*.svg` (Verzeichnis-Scan) plus `public/logo.png` (kuratiert, einzelne Datei) | Logos |
+| E | rekursiver Scan aller `*.md` ab Repo-Root, mit Ausschlussliste (`node_modules`, `.git`, `_handbook-deps`, `build`, `dist`, `coverage`, `e2e`, `docs/handbook`, sowie jedes mit `.` beginnende Verzeichnis) | Markdown-Doku (gerendert mit `marked`) |
 
 Ausgabe pro Build:
 
@@ -31,6 +33,7 @@ Ausgabe pro Build:
 Guards (Build bricht ab bei Verletzung):
 
 - **Floor:** mindestens `MIN_SCREENSHOTS` (170) PNGs
+- **Floor:** mindestens `MIN_DOCS` (4) Markdown-Dokumente (nach Ausschlussregeln)
 - **PNG-Integrität:** Magic-Bytes `\x89PNG…` und Grösse > 1000 Bytes
 - **HTML-Integrität:** jedes Artefakt im Manifest muss im Ausgabeverzeichnis liegen; zusätzlich
   muss jedes lokale `src`/`href` in den gerenderten Markdown-Seiten auflösen. Die `index.html`
@@ -39,8 +42,9 @@ Guards (Build bricht ab bei Verletzung):
 Überschreitung der Mindestzahl ist **kein** Fehler — neue Baselines landen automatisch.
 
 Metadaten in `scripts/handbook/metadata.json` sind **nur Anreicherung** (deutsche Titel/
-Beschreibungen pro Gruppe). Fehlende Einträge sind kein Fehler; verwaiste Einträge
-erzeugen nur eine Warnung auf stderr.
+Beschreibungen pro Screenshot-Gruppe; optional Titel-Overrides für Docs unter dem
+Schlüssel `docs`, pro repo-relativem Markdown-Pfad). Fehlende Einträge sind kein Fehler;
+verwaiste Einträge erzeugen nur eine Warnung auf stderr.
 
 ## Lokal bauen
 
