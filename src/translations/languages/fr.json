@@ -951,7 +951,9 @@
 
     "Total amount": "Montant total",
     "You will be redirected to the site shortly": "Vous serez redirigé vers le site dans quelques secondes",
-    "Go back to the payment page": "Retour à la page de paiement"
+    "Go back to the payment page": "Retour à la page de paiement",
+    "Show collection IBAN": "Afficher l'IBAN collectif",
+    "Show personal IBAN": "Afficher l'IBAN personnel"
   },
   "screens/iban": {
     "Your Bank Accounts": "Vos comptes bancaires",
