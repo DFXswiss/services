@@ -1,0 +1,138 @@
+{
+  "buy-process": {
+    "title": "Kaufprozess",
+    "description": "Buy-Flow: Seitenladezustand, Betragseingabe, Zahlungsdetails und Collection-/Personal-IBAN-Umschaltung."
+  },
+  "buy-bitcoin": {
+    "title": "Bitcoin kaufen",
+    "description": "Buy-Flow für Bitcoin: geladene Seite, Betrag und Wechselkurs."
+  },
+  "buy-lightning": {
+    "title": "Lightning kaufen",
+    "description": "Buy-Flow für Lightning Network."
+  },
+  "buy-lightning-linked": {
+    "title": "Lightning kaufen (verknüpft)",
+    "description": "Buy-Flow für Lightning mit verknüpftem Wallet-Konto."
+  },
+  "buy-ethereum-linked": {
+    "title": "Ethereum kaufen (verknüpft)",
+    "description": "Buy-Flow für Ethereum mit verknüpftem Wallet-Konto."
+  },
+  "buy-crypto-fail-refund": {
+    "title": "Fehlgeschlagener Kauf & Refund",
+    "description": "Transaktionsliste, Details und Refund-Formular nach fehlgeschlagenem Crypto-Kauf."
+  },
+  "sell-process": {
+    "title": "Verkaufsprozess",
+    "description": "Sell-Flow: geladene Seite, Betrag und Sepolia-ETH/USDT-Verkaufsschritte."
+  },
+  "sell-bitcoin": {
+    "title": "Bitcoin verkaufen",
+    "description": "Sell-Flow für Bitcoin."
+  },
+  "sell-lightning": {
+    "title": "Lightning verkaufen",
+    "description": "Sell-Flow für Lightning Network."
+  },
+  "sell-lightning-linked": {
+    "title": "Lightning verkaufen (verknüpft)",
+    "description": "Sell-Flow für Lightning mit verknüpftem Wallet-Konto."
+  },
+  "sell-ethereum-linked": {
+    "title": "Ethereum verkaufen (verknüpft)",
+    "description": "Sell-Flow für Ethereum mit verknüpftem Wallet-Konto."
+  },
+  "sell-complete": {
+    "title": "Verkauf vollständig (MetaMask)",
+    "description": "End-to-End-Sell mit MetaMask: Seite, Betrag, Transaktion und Etherscan-Verifikation für zwei Wallets."
+  },
+  "compliance": {
+    "title": "Compliance",
+    "description": "Compliance-Suche, Trefferliste und Nutzerdossier mit Tabs (KYC, Transaktionen, Bankdaten, Routen)."
+  },
+  "compliance-recommendation-graph": {
+    "title": "Compliance-Empfehlungsgraph",
+    "description": "Initialansicht, Expansion, Load-More und Fehlerzustand des Empfehlungsgraphen."
+  },
+  "compliance-review-kyc-status": {
+    "title": "Compliance KYC-Status",
+    "description": "KYC-Status und AML-Reset in der Compliance-Review."
+  },
+  "realunit-compliance": {
+    "title": "RealUnit Compliance",
+    "description": "RealUnit-spezifische Compliance-Suche und Dossier."
+  },
+  "realunit-support": {
+    "title": "RealUnit Support",
+    "description": "RealUnit-Support: Fallliste und Issue-Detail."
+  },
+  "responsive": {
+    "title": "Responsive Layout",
+    "description": "Homepage, Buy und Login auf Mobile, Tablet und Desktop."
+  },
+  "refund-flow": {
+    "title": "Refund-Flow",
+    "description": "Refund von Transaktionsliste über Adresse und Land bis Submit und Pending-Status."
+  },
+  "safe": {
+    "title": "Safe",
+    "description": "Safe-Portfolio (CHF/USD), Einzahlung, Auszahlung, Swap und PDF-Modal."
+  },
+  "safe-accounts": {
+    "title": "Safe-Konten",
+    "description": "Kontoauswahl: eigenes Konto, Picker, geteilt read-only und mit Schreibmandat."
+  },
+  "user-flows": {
+    "title": "User-Flows",
+    "description": "Übergreifende Nutzerflüsse der Services-App."
+  },
+  "swap-process": {
+    "title": "Swap-Prozess",
+    "description": "Swap-Flow der Services-App."
+  },
+  "swap-btc-to-ln": {
+    "title": "Swap Bitcoin → Lightning",
+    "description": "Manuelle Screenshots: Swap von Bitcoin zu Lightning (geladen und abgeschlossen)."
+  },
+  "swap-ln-to-btc": {
+    "title": "Swap Lightning → Bitcoin",
+    "description": "Manuelle Screenshots: Swap von Lightning zu Bitcoin."
+  },
+  "swap-lightning-url-param": {
+    "title": "Swap Lightning (URL-Parameter)",
+    "description": "Swap-Flow mit Lightning-URL-Parameter."
+  },
+  "login-process": {
+    "title": "Login-Prozess",
+    "description": "Login und Home-Seite nach Authentifizierung."
+  },
+  "signature-login": {
+    "title": "Signatur-Login",
+    "description": "Wallet-Signatur-Login: Home, Buy, Sell, Settings, Transaktionen und Fehlerfall."
+  },
+  "sepolia-dual-wallet": {
+    "title": "Sepolia Dual-Wallet",
+    "description": "ETH- und USDT-Verkauf über zwei Sepolia-Testwallets."
+  },
+  "trading-flows": {
+    "title": "Trading-Flows",
+    "description": "Trading-bezogene End-to-End-Flows."
+  },
+  "support-dashboard": {
+    "title": "Support-Dashboard",
+    "description": "Support-Dashboard: Übersicht und Detailansichten."
+  },
+  "support-dashboard-overview": {
+    "title": "Support-Dashboard Übersicht",
+    "description": "Support-Dashboard-Übersicht und Statistiken."
+  },
+  "subpage": {
+    "title": "Unterseiten",
+    "description": "Buy-, Sell-, Swap- und Transaktions-Unterseiten."
+  },
+  "bug-session": {
+    "title": "Session-Wechsel (Debug)",
+    "description": "Debug-Screenshots zum Session-/Account-Wechsel."
+  }
+}

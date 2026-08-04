@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1
+#
+# Static nginx host for the DFX Services handbook.
+# Multi-stage: Node discovers baselines + docs and generates index.html;
+# nginx serves the result behind Basic Auth (credentials from env at start).
+
+FROM node:20-alpine AS builder
+WORKDIR /work
+
+ARG GIT_SHA=unknown
+ENV GIT_SHA=${GIT_SHA}
+
+# marked is installed in isolation — never added to the app package.json.
+RUN npm install --prefix ./_handbook-deps --no-save --no-audit --no-fund marked@15.0.7
+
+# Only paths needed for discovery/build (keep context small).
+COPY scripts/handbook/ ./scripts/handbook/
+COPY e2e/screenshots/ ./e2e/screenshots/
+COPY tailwind.config.js ./
+COPY src/static/assets/ ./src/static/assets/
+COPY public/logo.png ./public/logo.png
+COPY docs/ ./docs/
+COPY README.md CONTRIBUTING.md ./
+
+RUN NODE_PATH=./_handbook-deps/node_modules node scripts/handbook/build.js /out
+
+FROM nginx:1.27-alpine
+
+# htpasswd binary for runtime credential file generation.
+RUN apk add --no-cache apache2-utils
+
+COPY handbook.nginx.conf /etc/nginx/conf.d/default.conf
+COPY scripts/handbook/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+COPY --from=builder /out/ /usr/share/nginx/html/
+
+# Do not bake htpasswd into the image — entrypoint creates it from env.
+ENTRYPOINT ["/docker-entrypoint.sh"]
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget -qO- --timeout=3 http://127.0.0.1:8080/healthz >/dev/null || exit 1
