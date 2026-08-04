@@ -134,5 +134,16 @@
   "bug-session": {
     "title": "Session-Wechsel (Debug)",
     "description": "Debug-Screenshots zum Session-/Account-Wechsel."
+  },
+  "docs": {
+    "docs/EIP7702-Implementierungsplan.md": {
+      "title": "EIP-7702 Implementierungsplan"
+    },
+    "infrastructure/Readme.md": {
+      "title": "Infrastruktur (Azure, Legacy)"
+    },
+    "src/README.md": {
+      "title": "NPM-Package: Export und Einbindung"
+    }
   }
 }
