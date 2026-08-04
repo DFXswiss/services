@@ -953,7 +953,10 @@
     "You will be redirected to the site shortly": "Du wirst in Kürze zur Seite weitergeleitet",
     "Go back to the payment page": "Zurück zur Zahlungsseite",
     "Show collection IBAN": "Sammel-IBAN anzeigen",
-    "Show personal IBAN": "Persönliche IBAN anzeigen"
+    "Show personal IBAN": "Persönliche IBAN anzeigen",
+    "Your bank does not accept this IBAN? Use the swap symbol to switch to our collection account.": "Deine Bank akzeptiert diese IBAN nicht? Mit dem Tauschsymbol wechselst Du auf unser Sammelkonto.",
+    "This is the collection account of DFX AG. Please be sure to enter the remittance info below, otherwise we cannot assign your payment.": "Das ist das Sammelkonto der DFX AG. Gib unbedingt den unten stehenden Verwendungszweck an, sonst können wir Deine Zahlung nicht zuordnen.",
+    "No QR code is available for the collection account. Please enter the IBAN and the remittance info manually.": "Für das Sammelkonto steht kein QR-Code zur Verfügung. Bitte gib IBAN und Verwendungszweck von Hand ein."
   },
   "screens/iban": {
     "Your Bank Accounts": "Deine Bankkonten",

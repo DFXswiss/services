@@ -1,6 +1,46 @@
 import { test, expect } from '@playwright/test';
 import { BlockchainType, getCachedAuth } from './helpers/auth-cache';
 
+/** Static EUR Frick personal-IBAN quote shared by the collection-IBAN visual tests. */
+const COLLECTION_IBAN_TOGGLE_PAYMENT_INFOS = {
+  id: 1,
+  isValid: true,
+  amount: 100,
+  estimatedAmount: 0.0251,
+  rate: 3862.5,
+  exchangeRate: 3984.06,
+  priceSteps: [] as unknown[],
+  minVolume: 10,
+  maxVolume: 990000,
+  minVolumeTarget: 0.0026,
+  maxVolumeTarget: 248.5,
+  fees: {
+    rate: 0.0099,
+    fixed: 0,
+    min: 0,
+    dfx: 0.99,
+    network: 0,
+    bank: 0,
+    bankFixed: 2,
+    bankVariable: 0,
+    platform: 0,
+    total: 2.99,
+  },
+  currency: { id: 2, name: 'EUR' },
+  asset: { id: 111, name: 'ETH', blockchain: 'Ethereum', category: 'Public' },
+  bank: 'Bank Frick',
+  bic: 'BFRILI22XXX',
+  iban: 'LI21088100002324013AA',
+  name: 'DFX AG',
+  street: 'Bahnhofstrasse',
+  number: '7',
+  zip: '6300',
+  city: 'Zug',
+  country: 'Schweiz',
+  remittanceInfo: 'A1B2-C3D4-E5F6',
+  sepaInstant: false,
+  isPersonalIban: true,
+};
 
 test.describe('Buy Process - UI Flow', () => {
   async function getToken(
@@ -163,45 +203,7 @@ test.describe('Buy Process - UI Flow', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        json: {
-          id: 1,
-          isValid: true,
-          amount: 100,
-          estimatedAmount: 0.0251,
-          rate: 3862.5,
-          exchangeRate: 3984.06,
-          priceSteps: [],
-          minVolume: 10,
-          maxVolume: 990000,
-          minVolumeTarget: 0.0026,
-          maxVolumeTarget: 248.5,
-          fees: {
-            rate: 0.0099,
-            fixed: 0,
-            min: 0,
-            dfx: 0.99,
-            network: 0,
-            bank: 0,
-            bankFixed: 2,
-            bankVariable: 0,
-            platform: 0,
-            total: 2.99,
-          },
-          currency: { id: 2, name: 'EUR' },
-          asset: { id: 111, name: 'ETH', blockchain: 'Ethereum', category: 'Public' },
-          bank: 'Bank Frick',
-          bic: 'BFRILI22XXX',
-          iban: 'LI21088100002324013AA',
-          name: 'DFX AG',
-          street: 'Bahnhofstrasse',
-          number: '7',
-          zip: '6300',
-          city: 'Zug',
-          country: 'Schweiz',
-          remittanceInfo: 'A1B2-C3D4-E5F6',
-          sepaInstant: false,
-          isPersonalIban: true,
-        },
+        json: COLLECTION_IBAN_TOGGLE_PAYMENT_INFOS,
       });
     });
 
@@ -233,6 +235,82 @@ test.describe('Buy Process - UI Flow', () => {
     // Toggle back to personal IBAN.
     await paymentDetails.getByRole('button', { name: 'Show personal IBAN' }).click();
     await expect(paymentDetails.getByText('LI21 0881 0000 2324 013A A')).toBeVisible();
+  });
+
+  // Visible proof that the QR tab follows the collection-IBAN toggle. Content of the QR payload
+  // is covered by unit tests; here we only assert that a GiroCode is rendered (not the fail-closed
+  // hint) and capture screenshots for review. StyledTab sets role="tablist" on each tab anchor.
+  test('should switch the QR code between personal and collection IBAN', async ({ page, request }) => {
+    const token = await getToken(request);
+
+    // Production-shaped GiroCode (api config: version 001, encoding 2).
+    const paymentRequest = [
+      'BCD',
+      '001',
+      '2',
+      'SCT',
+      'BFRILI22XXX',
+      'DFX AG, Bahnhofstrasse 7, 6300 Zug, Schweiz',
+      'LI21088100002324013AA',
+      'EUR100',
+      '',
+      '',
+      'A1B2-C3D4-E5F6',
+    ].join('\n');
+
+    await page.route('**/v1/buy/paymentInfos', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        json: {
+          ...COLLECTION_IBAN_TOGGLE_PAYMENT_INFOS,
+          paymentRequest,
+        },
+      });
+    });
+
+    // lang=en: selectors and baselines are English; without it user.language decides the UI locale.
+    await page.goto(
+      `/buy?session=${token}&blockchain=Ethereum&asset-in=EUR&asset-out=ETH&amount-in=100&personal-iban=frick&lang=en`,
+    );
+
+    const paymentDetails = page
+      .getByRole('heading', { name: 'Payment Information' })
+      .locator('..');
+
+    const toggle = paymentDetails.getByRole('button', { name: 'Show collection IBAN' });
+    await expect(toggle).toBeVisible({ timeout: 15000 });
+
+    // StyledTab sets role="tablist" on each <a> (and the parent <ul>). That role does not take
+    // its accessible name from content, so getByRole(..., { name: 'QR Code' }) matches nothing.
+    // Exact text: a plain hasText substring would also hit the outer <ul> that contains both titles.
+    const qrTab = paymentDetails.getByRole('tablist').filter({ hasText: /^QR Code$/ });
+    const textTab = paymentDetails.getByRole('tablist').filter({ hasText: /^Text$/ });
+
+    // Personal IBAN QR state.
+    await qrTab.click();
+    await expect(paymentDetails.getByText('GiroCode')).toBeVisible();
+    await expect(
+      paymentDetails.getByText(
+        'No QR code is available for the collection account. Please enter the IBAN and the remittance info manually.',
+      ),
+    ).not.toBeVisible();
+    await expect(paymentDetails).toHaveScreenshot('buy-collection-iban-qr-personal.png');
+
+    // Back to Text, switch to the collection account, hard-assert the displayed IBAN.
+    await textTab.click();
+    await toggle.click();
+    await expect(paymentDetails.getByText('LI75 0881 1010 5923 K000 E')).toBeVisible();
+
+    // Collection IBAN QR state — still a GiroCode, not the fail-closed hint.
+    await qrTab.click();
+    await expect(paymentDetails.getByText('GiroCode')).toBeVisible();
+    await expect(
+      paymentDetails.getByText(
+        'No QR code is available for the collection account. Please enter the IBAN and the remittance info manually.',
+      ),
+    ).not.toBeVisible();
+    await expect(paymentDetails).toHaveScreenshot('buy-collection-iban-qr-collection.png');
   });
 });
 

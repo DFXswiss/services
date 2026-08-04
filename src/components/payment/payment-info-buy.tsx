@@ -14,7 +14,11 @@ import {
 import { useState } from 'react';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
-import { FRICK_EUR_COLLECTION_IBAN, canOfferCollectionIban } from '../../util/personal-iban';
+import {
+  FRICK_EUR_COLLECTION_IBAN,
+  canOfferCollectionIban,
+  toCollectionIbanGiroCode,
+} from '../../util/personal-iban';
 import { PaymentQrCode } from './payment-qr-code';
 
 interface PaymentInformationContentProps {
@@ -27,8 +31,49 @@ interface PaymentInformationContentProps {
   showBank?: boolean;
 }
 
+interface PaymentInformationTextProps extends PaymentInformationContentProps {
+  showCollectionIban: boolean;
+  offerCollectionIban: boolean;
+  onToggleCollectionIban: () => void;
+}
+
 export function PaymentInformationContent({ info, showBank }: PaymentInformationContentProps): JSX.Element {
   const { translate } = useSettingsContext();
+  const [showCollectionIban, setShowCollectionIban] = useState(false);
+  const offerCollectionIban = canOfferCollectionIban(info);
+
+  const textContent = (
+    <PaymentInformationText
+      info={info}
+      showBank={showBank}
+      showCollectionIban={showCollectionIban}
+      offerCollectionIban={offerCollectionIban}
+      onToggleCollectionIban={() => setShowCollectionIban((current) => !current)}
+    />
+  );
+
+  const qrTabContent = (() => {
+    if (!info.paymentRequest) return null;
+    // Same gate as the Text branch: only rewrite when the collection account is still offerable.
+    if (!offerCollectionIban || !showCollectionIban) {
+      return <PaymentQrCode value={info.paymentRequest} txId={info.id} />;
+    }
+
+    const collectionGiroCode =
+      info.iban !== undefined ? toCollectionIbanGiroCode(info.paymentRequest, info.iban) : undefined;
+    if (collectionGiroCode) {
+      return <PaymentQrCode value={collectionGiroCode} txId={info.id} />;
+    }
+
+    return (
+      <StyledInfoText iconColor={IconColor.BLUE}>
+        {translate(
+          'screens/payment',
+          'No QR code is available for the collection account. Please enter the IBAN and the remittance info manually.',
+        )}
+      </StyledInfoText>
+    );
+  })();
 
   return (
     <>
@@ -52,11 +97,11 @@ export function PaymentInformationContent({ info, showBank }: PaymentInformation
             tabs={[
               {
                 title: translate('screens/payment', 'Text'),
-                content: <PaymentInformationText info={info} showBank={showBank} />,
+                content: textContent,
               },
               {
                 title: translate('screens/payment', 'QR Code'),
-                content: <PaymentQrCode value={info.paymentRequest} txId={info.id} />,
+                content: qrTabContent,
               },
             ]}
             darkTheme
@@ -64,18 +109,22 @@ export function PaymentInformationContent({ info, showBank }: PaymentInformation
             small
           />
         ) : (
-          <PaymentInformationText info={info} showBank={showBank} />
+          textContent
         )}
       </StyledVerticalStack>
     </>
   );
 }
 
-function PaymentInformationText({ info, showBank }: PaymentInformationContentProps): JSX.Element {
+function PaymentInformationText({
+  info,
+  showBank,
+  showCollectionIban,
+  offerCollectionIban,
+  onToggleCollectionIban,
+}: PaymentInformationTextProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { copy } = useClipboard();
-  const [showCollectionIban, setShowCollectionIban] = useState(false);
-  const offerCollectionIban = canOfferCollectionIban(info);
   const displayedIban = offerCollectionIban && showCollectionIban ? FRICK_EUR_COLLECTION_IBAN : info.iban;
 
   return (
@@ -87,7 +136,22 @@ function PaymentInformationText({ info, showBank }: PaymentInformationContentPro
           {info.amount}
           <CopyButton onCopy={() => copy(`${info.amount}`)} />
         </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
+        <StyledDataTableRow
+          label={translate('screens/payment', 'IBAN')}
+          infoText={
+            offerCollectionIban
+              ? showCollectionIban
+                ? translate(
+                    'screens/payment',
+                    'This is the collection account of DFX AG. Please be sure to enter the remittance info below, otherwise we cannot assign your payment.',
+                  )
+                : translate(
+                    'screens/payment',
+                    'Your bank does not accept this IBAN? Use the swap symbol to switch to our collection account.',
+                  )
+              : undefined
+          }
+        >
           <div>
             <p>{Utils.formatIban(displayedIban)}</p>
             {info.sepaInstant && (
@@ -99,15 +163,16 @@ function PaymentInformationText({ info, showBank }: PaymentInformationContentPro
           {offerCollectionIban && (
             <button
               type="button"
-              className="ml-1"
-              onClick={() => setShowCollectionIban((current) => !current)}
+              className="inline-block flex h-full align-top hover:scale-110 transition ease-in-out delay-100 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dfxRed-100"
+              onClick={onToggleCollectionIban}
+              aria-pressed={showCollectionIban}
               aria-label={translate(
                 'screens/payment',
                 showCollectionIban ? 'Show personal IBAN' : 'Show collection IBAN',
               )}
               title={translate('screens/payment', showCollectionIban ? 'Show personal IBAN' : 'Show collection IBAN')}
             >
-              🔄
+              <DfxIcon icon={IconVariant.SWAP} />
             </button>
           )}
           <CopyButton onCopy={() => copy(displayedIban)} />
