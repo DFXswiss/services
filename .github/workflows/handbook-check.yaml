@@ -11,6 +11,7 @@ on:
       - 'scripts/handbook/**'
       - 'tailwind.config.js'
       - 'src/static/assets/**'
+      - 'public/logo.png'
       - 'docs/**'
       - 'README.md'
       - 'CONTRIBUTING.md'
