@@ -38,13 +38,17 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import { RealUnitCustomerDetailDto } from 'src/dto/realunit-compliance.dto';
 import RealunitComplianceUserScreen from 'src/screens/realunit-compliance-user.screen';
 
+// Built from local components so the expectations hold in any timezone the suite runs in: the formatter renders in
+// local time, so a UTC literal would fall back to the previous day on negative offsets.
+const FILE_DATE = new Date(2024, 0, 2);
+
 const DOSSIER: RealUnitCustomerDetailDto = {
   id: 7101,
-  created: '2024-01-01T00:00:00.000Z',
+  created: new Date(2024, 0, 1).toISOString(),
   kycStatus: 'Completed',
   checks: {},
   kycFiles: [
-    { uid: 'file-1', type: 'Identification', name: 'passport.pdf', created: '2024-01-02T00:00:00.000Z' },
+    { uid: 'file-1', type: 'Identification', name: 'passport.pdf', created: FILE_DATE.toISOString() },
     // catalogued legacy document — the api could not establish its date and therefore omits the field
     { uid: 'file-2', type: 'NameCheck', name: 'legacy-name-check.pdf' },
   ],
