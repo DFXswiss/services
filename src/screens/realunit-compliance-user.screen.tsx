@@ -254,7 +254,10 @@ export default function RealunitComplianceUserScreen(): JSX.Element {
         columns={[
           { header: translate('screens/kyc', 'Name'), render: (f) => f.name },
           { header: translate('screens/compliance', 'Type'), render: (f) => f.type },
-          { header: translate('screens/compliance', 'Created'), render: (f) => formatDate(f.created) },
+          {
+            header: translate('screens/compliance', 'Created'),
+            render: (f) => (f.created ? formatDate(f.created) : '-'),
+          },
           {
             header: '',
             render: (f) => (
