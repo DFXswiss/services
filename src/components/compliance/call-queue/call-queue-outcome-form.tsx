@@ -11,6 +11,11 @@ import {
   useCompliance,
 } from 'src/hooks/compliance.hook';
 
+// Completed and Failed leave nothing to decide: the phone-call status written in the same save
+// already determines the transaction — the API passes it on the check date a completed call writes,
+// and fails it on a failed one (`UserDataFailedCall`).
+const OutcomesImplyingAmlAction: (CallOutcome | '')[] = [CallOutcome.COMPLETED, CallOutcome.FAILED];
+
 interface Props {
   context: CallOutcomeContext;
   availableOutcomes: CallOutcome[];
@@ -36,11 +41,9 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
 
   const hasTx = context.txId != null && context.sourceType != null;
   const buyCryptoResetUnavailable = context.sourceType === 'BuyCrypto' && !context.buyCryptoResetEligible;
-  // Completed and Failed leave nothing to decide: the phone-call status written in the same save
-  // already determines the transaction — the API passes it on the check date a completed call
-  // writes, and fails it on a failed one (`UserDataFailedCall`). So the clerk is not asked for an
-  // AML action there. Every other outcome is open-ended and keeps the selector.
-  const outcomeImpliesAmlAction = outcome === CallOutcome.COMPLETED || outcome === CallOutcome.FAILED;
+  // The clerk is not asked for an AML action on those outcomes; every other one is open-ended and
+  // keeps the selector.
+  const outcomeImpliesAmlAction = OutcomesImplyingAmlAction.includes(outcome);
   const showAmlCheck = hasTx && !outcomeImpliesAmlAction;
   const impliedResetUnavailable =
     hasTx && outcomeImpliesAmlAction && needsExplicitAmlReset(context.queue) && buyCryptoResetUnavailable;
