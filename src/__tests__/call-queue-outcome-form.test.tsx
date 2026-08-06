@@ -180,14 +180,26 @@ describe('CallQueueOutcomeForm AmlCheck action', () => {
     expect(screen.getByText(/Reset is available only after KYC is set to Check/)).toBeInTheDocument();
   });
 
-  // Fail-closed: an ineligible BuyCrypto must not silently swallow the automatic reset — the clerk
-  // has to learn that the transaction is still pending.
-  it('warns instead of resetting when the automatic reset is unavailable', async () => {
+  // Fail-closed: an ineligible BuyCrypto must not silently swallow the automatic reset. Saving a
+  // no-op would report success and navigate away while the transaction stays pending, so the form
+  // blocks the save until KYC is set to Check.
+  it('disables the save and explains why when the automatic reset is unavailable', async () => {
     renderForm(INELIGIBLE_TX_CONTEXT);
 
     fillAndSubmit(CallOutcome.COMPLETED);
 
-    expect(screen.getByText(/excluded from the AML recheck/)).toBeInTheDocument();
+    expect(screen.getByText(/Saving is disabled/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save Outcome' })).toBeDisabled();
+    await waitFor(() => expect(mockSaveCallOutcome).not.toHaveBeenCalled());
+  });
+
+  // The block is specific to the recheck-excluded queue: on a cron-re-evaluated queue the save
+  // legitimately sends nothing, so an ineligible BuyCrypto must not get in the way there.
+  it('keeps the save enabled for an ineligible BuyCrypto on a cron-re-evaluated queue', async () => {
+    renderForm({ ...INELIGIBLE_TX_CONTEXT, queue: 'ManualCheckPhone' });
+
+    fillAndSubmit(CallOutcome.COMPLETED);
+
     await waitFor(() => expect(mockSaveCallOutcome).toHaveBeenCalledTimes(1));
     expect(submittedAmlAction()).toBeUndefined();
   });

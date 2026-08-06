@@ -45,9 +45,11 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
   // keeps the selector.
   const outcomeImpliesAmlAction = OutcomesImplyingAmlAction.includes(outcome);
   const showAmlCheck = hasTx && !outcomeImpliesAmlAction;
+  // Blocks the save: without the reset the transaction stays Pending forever on a recheck-blocked
+  // queue, while the form would still report success and navigate away.
   const impliedResetUnavailable =
     hasTx && outcomeImpliesAmlAction && needsExplicitAmlReset(context.queue) && buyCryptoResetUnavailable;
-  const canSubmit = !!signature && !!outcome && !!comment.trim() && !isSaving;
+  const canSubmit = !!signature && !!outcome && !!comment.trim() && !isSaving && !impliedResetUnavailable;
 
   // What the save sends for a Completed/Failed outcome. Only the queues whose AML reason the API
   // excludes from the recheck cron need an explicit action: their transaction would otherwise stay
@@ -138,9 +140,10 @@ export function CallQueueOutcomeForm({ context, availableOutcomes, clerks, onSav
         </div>
       )}
       {impliedResetUnavailable && (
-        <p className="mt-4 text-xs text-dfxGray-700">
-          This queue is excluded from the AML recheck, and the automatic reset is unavailable for this BuyCrypto: set
-          KYC to Check and reload Compliance review, otherwise the transaction stays pending.
+        <p className="mt-4 text-xs text-primary-red">
+          Saving is disabled: this queue is excluded from the AML recheck and the automatic reset is unavailable for
+          this BuyCrypto, so the transaction would stay pending. Set KYC to Check and reload Compliance review, then
+          save the outcome.
         </p>
       )}
       <div className="mt-4">
