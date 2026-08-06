@@ -19,8 +19,8 @@ interface AmlCheckPendingPanelProps {
   data: ComplianceUserData;
   clerks: string[];
   isSaving: boolean;
-  onUpdate: (tx: TransactionInfo, update: AmlCheckUpdate, clerk: string) => Promise<void>;
-  onReset: (tx: TransactionInfo, clerk: string) => Promise<void>;
+  onUpdate: (tx: TransactionInfo, update: AmlCheckUpdate, clerk: string, note: string) => Promise<void>;
+  onReset: (tx: TransactionInfo, clerk: string, note: string) => Promise<void>;
 }
 
 const AML_CHECK_OPTIONS = [CheckStatus.PASS, CheckStatus.FAIL, CheckStatus.PENDING, 'Reset'] as const;
@@ -39,22 +39,23 @@ function TransactionEntry({
 }: {
   tx: TransactionInfo;
   clerks: string[];
-  onUpdate: (data: AmlCheckUpdate, clerk: string) => Promise<void>;
-  onReset: (clerk: string) => Promise<void>;
+  onUpdate: (data: AmlCheckUpdate, clerk: string, note: string) => Promise<void>;
+  onReset: (clerk: string, note: string) => Promise<void>;
   isSaving: boolean;
 }): JSX.Element {
   const [amlCheck, setAmlCheck] = useState(tx.amlCheck ?? '');
   const [amlReason, setAmlReason] = useState<AmlReason>((tx.amlReason as AmlReason) ?? AmlReason.NA);
   const [setPriceDate, setSetPriceDate] = useState(false);
   const [clerk, setClerk] = useState('');
+  const [note, setNote] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
   async function handleSave(): Promise<void> {
-    if (!amlCheck || !clerk) return;
+    if (!amlCheck || !clerk || !note.trim()) return;
     setIsProcessing(true);
     try {
       if (amlCheck === 'Reset') {
-        await onReset(clerk);
+        await onReset(clerk, note);
       } else {
         await onUpdate(
           {
@@ -63,6 +64,7 @@ function TransactionEntry({
             priceDefinitionAllowedDate: setPriceDate ? new Date().toISOString() : undefined,
           },
           clerk,
+          note,
         );
       }
     } finally {
@@ -175,6 +177,21 @@ function TransactionEntry({
         </div>
       </div>
 
+      {/* Notiz: geht ins KycLog (wie bei den Telefon-Notizen), NICHT in den Transaktions-Comment —
+          dort stehen die AML-Fehler, auf die der Release-Mechanismus matcht. */}
+      <div className="bg-white rounded-lg shadow-sm px-3 py-3">
+        <label className="block text-sm text-dfxBlue-800 font-medium mb-1">Notiz *</label>
+        <textarea
+          className="w-full px-3 py-2 text-sm bg-white border border-dfxGray-300 rounded text-dfxBlue-800"
+          rows={3}
+          maxLength={500}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Infos zum Entscheid"
+          required
+        />
+      </div>
+
       {/* Clerk */}
       <div className="bg-white rounded-lg shadow-sm px-3 py-3">
         <div className="flex items-center justify-between">
@@ -198,7 +215,7 @@ function TransactionEntry({
         <button
           className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
           onClick={handleSave}
-          disabled={isSaving || isProcessing || !amlCheck || !clerk}
+          disabled={isSaving || isProcessing || !amlCheck || !clerk || !note.trim()}
         >
           {isProcessing ? 'Speichern...' : 'Speichern'}
         </button>
@@ -349,8 +366,8 @@ export function AmlCheckPendingPanel({
           <TransactionEntry
             tx={tx}
             clerks={clerks}
-            onUpdate={(updateData, clerk) => onUpdate(tx, updateData, clerk)}
-            onReset={(clerk) => onReset(tx, clerk)}
+            onUpdate={(updateData, clerk, note) => onUpdate(tx, updateData, clerk, note)}
+            onReset={(clerk, note) => onReset(tx, clerk, note)}
             isSaving={isSaving}
           />
         </div>

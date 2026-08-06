@@ -261,7 +261,12 @@ export default function ComplianceReviewScreen(): JSX.Element {
     }
   }
 
-  async function handleAmlUpdate(tx: TransactionInfo, update: AmlCheckUpdate, clerk: string): Promise<void> {
+  async function handleAmlUpdate(
+    tx: TransactionInfo,
+    update: AmlCheckUpdate,
+    clerk: string,
+    note: string,
+  ): Promise<void> {
     setIsSaving(true);
     setError(undefined);
     try {
@@ -275,7 +280,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
         if (update.amlReason) results.push({ table, column: 'amlReason', value: update.amlReason });
         if (update.priceDefinitionAllowedDate)
           results.push({ table, column: 'priceDefinitionAllowedDate', value: update.priceDefinitionAllowedDate });
-        await createKycLog(+userDataId, buildKycLogMessage({ description: 'AmlCheck', clerk, results }));
+        await createKycLog(+userDataId, buildKycLogMessage({ description: 'AmlCheck', clerk, results, comment: note }));
       }
       loadData();
     } catch (e: unknown) {
@@ -285,7 +290,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
     }
   }
 
-  async function handleAmlReset(tx: TransactionInfo, clerk: string): Promise<void> {
+  async function handleAmlReset(tx: TransactionInfo, clerk: string, note: string): Promise<void> {
     setIsSaving(true);
     setError(undefined);
     try {
@@ -300,6 +305,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
             description: 'AmlCheck',
             clerk,
             results: [{ table, column: 'amlCheck', value: 'Reset' }],
+            comment: note,
           }),
         );
       }
