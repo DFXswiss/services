@@ -24,6 +24,7 @@ import { useMemo } from 'react';
 import { useGuardedApi } from './guarded-api.hook';
 import { CreateMrosDto, MrosListEntry, UpdateMrosDto } from 'src/dto/mros.dto';
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
+import { PendingChargebackEntry } from 'src/dto/chargeback.dto';
 import { CreateRecallDto, RecallListEntry } from 'src/dto/recall.dto';
 import { buildKycLogMessage, KycLogResult } from 'src/util/compliance-helpers';
 import { downloadFile, downloadPdfFromString, filenameDateFormat } from 'src/util/utils';
@@ -955,6 +956,13 @@ export function useCompliance() {
     });
   }
 
+  async function getPendingChargebacks(): Promise<PendingChargebackEntry[]> {
+    return call<PendingChargebackEntry[]>({
+      url: 'support/pending-chargebacks',
+      method: 'GET',
+    });
+  }
+
   async function createRecall(dto: CreateRecallDto): Promise<void> {
     return call<void>({
       url: 'recall',
@@ -1532,6 +1540,7 @@ export function useCompliance() {
       createMros,
       updateMros,
       getRecalls,
+      getPendingChargebacks,
       createRecall,
       updateKycStep,
       updateUserData,
