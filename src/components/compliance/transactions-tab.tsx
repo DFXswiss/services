@@ -58,7 +58,7 @@ export function TransactionsTable({
   const { downloadTransactionPdf, stopTransaction, resumeTransaction } = useCompliance();
   const [txDetailCache, setTxDetailCache] = useState<Map<string, Transaction>>(new Map());
   const [txDetailLoading, setTxDetailLoading] = useState<string>();
-  const [txDetailError, setTxDetailError] = useState<string>();
+  const [txDetailErrors, setTxDetailErrors] = useState<Map<string, string>>(new Map());
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
   const [stoppingTxId, setStoppingTxId] = useState<number>();
@@ -71,6 +71,33 @@ export function TransactionsTable({
   const [recallBankTxId, setRecallBankTxId] = useState<number>();
   const [viewingRecall, setViewingRecall] = useState<RecallInfo>();
 
+  function setTxDetailError(uid: string, message: string): void {
+    setTxDetailErrors((prev) => new Map(prev).set(uid, message));
+  }
+
+  function clearTxDetailError(uid: string): void {
+    setTxDetailErrors((prev) => {
+      const next = new Map(prev);
+      next.delete(uid);
+      return next;
+    });
+  }
+
+  async function refreshTxDetail(uid: string): Promise<void> {
+    try {
+      const updatedDetail = await getTransactionByUid(uid);
+      setTxDetailCache((prev) => new Map(prev).set(uid, updatedDetail));
+      clearTxDetailError(uid);
+    } catch (e) {
+      setTxDetailCache((prev) => {
+        const next = new Map(prev);
+        next.delete(uid);
+        return next;
+      });
+      setTxDetailError(uid, e instanceof Error ? e.message : 'Failed to refresh transaction details');
+    }
+  }
+
   async function confirmStop(): Promise<void> {
     const txId = stopConfirmTxId;
     if (!txId) return;
@@ -78,17 +105,18 @@ export function TransactionsTable({
     setStoppingTxId(txId);
     setStopError(undefined);
     try {
-      await stopTransaction(txId);
-      if (tx) {
-        const updatedDetail = await getTransactionByUid(tx.uid);
-        setTxDetailCache((prev) => new Map(prev).set(tx.uid, updatedDetail));
+      try {
+        await stopTransaction(txId);
+      } catch (e) {
+        setStopError(e instanceof Error ? e.message : 'Stop failed');
+        return;
       }
-      onStatusChanged?.();
+
       setStopConfirmTxId(undefined);
-    } catch (e) {
-      setStopError(e instanceof Error ? e.message : 'Stop failed');
+      onStatusChanged?.();
+      if (tx) await refreshTxDetail(tx.uid);
     } finally {
-      setStoppingTxId(undefined);
+      setStoppingTxId((current) => (current === txId ? undefined : current));
     }
   }
 
@@ -99,17 +127,18 @@ export function TransactionsTable({
     setResumingTxId(txId);
     setResumeError(undefined);
     try {
-      await resumeTransaction(txId);
-      if (tx) {
-        const updatedDetail = await getTransactionByUid(tx.uid);
-        setTxDetailCache((prev) => new Map(prev).set(tx.uid, updatedDetail));
+      try {
+        await resumeTransaction(txId);
+      } catch (e) {
+        setResumeError(e instanceof Error ? e.message : 'Resume failed');
+        return;
       }
-      onStatusChanged?.();
+
       setResumeConfirmTxId(undefined);
-    } catch (e) {
-      setResumeError(e instanceof Error ? e.message : 'Resume failed');
+      onStatusChanged?.();
+      if (tx) await refreshTxDetail(tx.uid);
     } finally {
-      setResumingTxId(undefined);
+      setResumingTxId((current) => (current === txId ? undefined : current));
     }
   }
 
@@ -159,7 +188,7 @@ export function TransactionsTable({
     }
 
     onExpandTxUid(uid);
-    setTxDetailError(undefined);
+    clearTxDetailError(uid);
 
     if (txDetailCache.has(uid)) return;
 
@@ -169,7 +198,7 @@ export function TransactionsTable({
         setTxDetailCache((prev) => new Map(prev).set(uid, detail));
       })
       .catch((e: unknown) => {
-        setTxDetailError(e instanceof Error ? e.message : 'Failed to load transaction details');
+        setTxDetailError(uid, e instanceof Error ? e.message : 'Failed to load transaction details');
       })
       .finally(() => setTxDetailLoading(undefined));
   }
@@ -230,6 +259,7 @@ export function TransactionsTable({
               const isBankTxExpanded = expandedBankTxId === bankTx?.id;
               const isCryptoExpanded = expandedCryptoInputId === cryptoInput?.id;
               const isBankDataExpanded = expandedBankDataId === bankData?.id;
+              const detailError = txDetailErrors.get(tx.uid);
 
               return (
                 <Fragment key={tx.id}>
@@ -412,8 +442,8 @@ export function TransactionsTable({
                       <td colSpan={15} className="px-6 py-3">
                         {txDetailLoading === tx.uid ? (
                           <StyledLoadingSpinner size={SpinnerSize.SM} />
-                        ) : txDetailError && !txDetailCache.has(tx.uid) ? (
-                          <p className="text-primary-red text-sm">{txDetailError}</p>
+                        ) : detailError != null && !txDetailCache.has(tx.uid) ? (
+                          <p className="text-primary-red text-sm">{detailError}</p>
                         ) : txDetailCache.has(tx.uid) ? (
                           (() => {
                             const detail = txDetailCache.get(tx.uid) as Transaction;
@@ -560,7 +590,7 @@ export function TransactionsTable({
         message="Möchtest du diese Transaktion wirklich stoppen? Nach dem Stopp muss sie manuell weiterbearbeitet werden."
         confirmLabel="Stop"
         destructive
-        isLoading={stoppingTxId != null}
+        isLoading={stoppingTxId != null && stoppingTxId === stopConfirmTxId}
         onConfirm={confirmStop}
         onCancel={() => setStopConfirmTxId(undefined)}
       />
@@ -569,7 +599,7 @@ export function TransactionsTable({
         title="Transaktion fortsetzen"
         message="Möchtest du diese Transaktion wirklich fortsetzen? Sie geht zurück in die automatische Verarbeitung."
         confirmLabel="Resume"
-        isLoading={resumingTxId != null}
+        isLoading={resumingTxId != null && resumingTxId === resumeConfirmTxId}
         onConfirm={confirmResume}
         onCancel={() => setResumeConfirmTxId(undefined)}
       />

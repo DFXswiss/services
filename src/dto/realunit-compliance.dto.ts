@@ -105,7 +105,10 @@ export interface RealUnitKycFileDto {
   uid: string;
   type: string;
   name: string;
-  created: string;
+  // Optional: for legacy documents catalogued from the Spider era the real document date cannot be established, so
+  // the api omits the field instead of substituting the day of the catalogue run — that would present a years-old
+  // document as brand new, and a wrong date is worse than a visible gap.
+  created?: string;
 }
 
 // Reduced KYC step: raw result/comment and the recommendation/referral graph are omitted by the api.

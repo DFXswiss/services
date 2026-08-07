@@ -61,3 +61,8 @@ e2e/screenshots/debug/
 # Chrome for testing (installed via @puppeteer/browsers)
 /chrome/
 playwright-report-local/
+
+# Handbook build scratch (isolated marked install + generated site)
+_handbook-deps/
+docs/handbook/build/
+
