@@ -23,37 +23,37 @@ describe('useClipboard', () => {
 
   it('should set isCopying to true when copying', () => {
     const { result } = renderHook(() => useClipboard());
-    
+
     act(() => {
       result.current.copy('test text');
     });
-    
+
     expect(result.current.isCopying).toBe(true);
   });
 
   it('should reset isCopying after 500ms', () => {
     const { result } = renderHook(() => useClipboard());
-    
+
     act(() => {
       result.current.copy('test text');
     });
-    
+
     expect(result.current.isCopying).toBe(true);
-    
+
     act(() => {
       jest.advanceTimersByTime(500);
     });
-    
+
     expect(result.current.isCopying).toBe(false);
   });
 
   it('should not copy if text is undefined', () => {
     const { result } = renderHook(() => useClipboard());
-    
+
     act(() => {
       result.current.copy(undefined);
     });
-    
+
     expect(result.current.isCopying).toBe(false);
   });
 
