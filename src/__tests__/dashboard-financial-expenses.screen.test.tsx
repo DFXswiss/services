@@ -48,6 +48,13 @@ import DashboardFinancialExpensesScreen from 'src/screens/dashboard-financial-ex
 
 type Formatter = (val: number) => string;
 
+// The screen renders CHF amounts through toLocaleString('de-CH'). Building the expectation the same
+// way pins the locale and the digits while staying independent of the group separator the runtime's
+// ICU build emits (U+2019 on current Node, U+0027 on older ones).
+const chf = (value: number): string => `${value.toLocaleString('de-CH')} CHF`;
+
+// Fractional offsets: the first entry rounds down and the second rounds up, so the Math.round calls
+// in the series builders are what makes the expected integers come out.
 function entry(timestamp: string, offset: number): FinancialChangesEntry {
   return {
     timestamp,
@@ -64,10 +71,10 @@ function entry(timestamp: string, offset: number): FinancialChangesEntry {
   };
 }
 
-const ENTRIES: FinancialChangesEntry[] = [entry('2026-01-01T00:00:00Z', 100), entry('2026-01-02T00:00:00Z', 200)];
+const ENTRIES: FinancialChangesEntry[] = [entry('2026-01-01T00:00:00Z', 100.4), entry('2026-01-02T00:00:00Z', 200.6)];
 
-// Recipients are identified by their raw userDataId — the screen must never resolve one to a
-// display name (see issue #1281), so the fixture carries nothing but the numbers the API returns.
+// RefRewardRecipient carries no name field, and the screen must not invent one (see issue #1281):
+// every row renders the identifier the API returned. The two ids are invented for this fixture.
 const RECIPIENTS: RefRewardRecipient[] = [
   { userDataId: 42, count: 3, totalChf: 1234.5 },
   { userDataId: 4711, count: 1, totalChf: 7 },
@@ -75,6 +82,10 @@ const RECIPIENTS: RefRewardRecipient[] = [
 
 function timestamps(): number[] {
   return ENTRIES.map((e) => new Date(e.timestamp).getTime());
+}
+
+function cellTexts(row: HTMLElement): (string | null)[] {
+  return within(row).getAllByRole('cell').map((cell) => cell.textContent);
 }
 
 describe('DashboardFinancialExpensesScreen', () => {
@@ -111,17 +122,17 @@ describe('DashboardFinancialExpensesScreen', () => {
     const at = timestamps();
 
     expect(ref.series).toEqual([
-      { name: 'Ref Amount', data: [[at[0], 101], [at[1], 201]] },
-      { name: 'Ref Fee', data: [[at[0], 102], [at[1], 202]] },
+      { name: 'Ref Amount', data: [[at[0], 101], [at[1], 202]] },
+      { name: 'Ref Fee', data: [[at[0], 102], [at[1], 203]] },
     ]);
     expect(binance.series).toEqual([
-      { name: 'Trading', data: [[at[0], 104], [at[1], 204]] },
-      { name: 'Withdraw', data: [[at[0], 103], [at[1], 203]] },
+      { name: 'Trading', data: [[at[0], 104], [at[1], 205]] },
+      { name: 'Withdraw', data: [[at[0], 103], [at[1], 204]] },
     ]);
     expect(blockchain.series).toEqual([
-      { name: 'TX Out', data: [[at[0], 106], [at[1], 206]] },
-      { name: 'TX In', data: [[at[0], 105], [at[1], 205]] },
-      { name: 'Trading', data: [[at[0], 107], [at[1], 207]] },
+      { name: 'TX Out', data: [[at[0], 106], [at[1], 207]] },
+      { name: 'TX In', data: [[at[0], 105], [at[1], 206]] },
+      { name: 'Trading', data: [[at[0], 107], [at[1], 208]] },
     ]);
 
     expect(ref.options.colors).toEqual(['#ef4444', '#f97316']);
@@ -130,18 +141,34 @@ describe('DashboardFinancialExpensesScreen', () => {
     expect(ref.options.chart?.type).toBe('area');
   });
 
-  it('lists every referral recipient by its raw identifier', async () => {
+  it('lists every referral recipient by its raw identifier, in column order', async () => {
     render(<DashboardFinancialExpensesScreen />);
 
     const rows = await screen.findAllByRole('row');
 
     expect(rows).toHaveLength(RECIPIENTS.length + 1);
-    expect(within(rows[0]).getByRole('columnheader', { name: 'UserData ID' })).toBeInTheDocument();
-    expect(within(rows[1]).getByRole('cell', { name: '42' })).toBeInTheDocument();
-    expect(within(rows[1]).getByRole('cell', { name: '3' })).toBeInTheDocument();
-    expect(within(rows[1]).getByRole('cell', { name: /^1.234\.5 CHF$/ })).toBeInTheDocument();
-    expect(within(rows[2]).getByRole('cell', { name: '4711' })).toBeInTheDocument();
-    expect(within(rows[2]).getByRole('cell', { name: '7 CHF' })).toBeInTheDocument();
+    expect(within(rows[0]).getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
+      'UserData ID',
+      'Payouts',
+      'Total (CHF)',
+    ]);
+    expect(cellTexts(rows[1])).toEqual(['42', '3', chf(1234.5)]);
+    expect(cellTexts(rows[2])).toEqual(['4711', '1', chf(7)]);
+  });
+
+  it('starts fetching once the session becomes logged in', async () => {
+    mockUseSessionContext.mockReturnValue({ isLoggedIn: false });
+    const { rerender } = render(<DashboardFinancialExpensesScreen />);
+
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+    expect(mockGetFinancialChanges).not.toHaveBeenCalled();
+
+    mockUseSessionContext.mockReturnValue({ isLoggedIn: true });
+    rerender(<DashboardFinancialExpensesScreen />);
+
+    await waitFor(() => expect(screen.getAllByTestId('chart')).toHaveLength(3));
+    expect(mockGetFinancialChanges).toHaveBeenCalledTimes(1);
+    expect(mockGetRefRecipients).toHaveBeenCalledTimes(1);
   });
 
   it('abbreviates thousands on the y axis and formats tooltip values as CHF', async () => {
@@ -158,7 +185,7 @@ describe('DashboardFinancialExpensesScreen', () => {
     expect(axisFormatter(999.6)).toBe('1000');
     expect(axisFormatter(0)).toBe('0');
 
-    expect(tooltipFormatter(1234.5)).toMatch(/^1.235 CHF$/);
+    expect(tooltipFormatter(1234.5)).toBe(chf(1235));
     expect(tooltipFormatter(12)).toBe('12 CHF');
   });
 });
