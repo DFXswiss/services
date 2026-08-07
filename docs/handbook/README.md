@@ -107,6 +107,7 @@ Basic-Auth-Zugangsdaten werden **ausschliesslich** in der Deployment-Umgebung al
 `HANDBOOK_USER` / `HANDBOOK_PASSWORD` gesetzt. Weder Klartext noch Hash gehören in
 dieses öffentliche Repository.
 
-Pull Requests (nicht-Draft) laufen durch `.github/workflows/handbook-check.yaml`:
-Image-Build ohne Push, Container-Smoke (`/healthz`, Auth-Wand, Stichprobe aus
-`manifest.json`).
+Pull Requests (nicht-Draft) laufen durch `.github/workflows/handbook-check.yaml`,
+sofern sie einen Pfad aus dessen `paths`-Filter berühren — unterhalb von `src/` ist
+das nur `src/static/assets/**`. Der Check macht einen Image-Build ohne Push und
+einen Container-Smoke (`/healthz`, Auth-Wand, Stichprobe aus `manifest.json`).
