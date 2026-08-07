@@ -15,13 +15,14 @@ next reviewer then finds the same points again and the work is done twice.
 ### Report every bug you find, including pre-existing ones
 
 A defect in code a pull request touches is reported as a bug — with the same
-severity rating and the same evidence — whether the change introduced it or it
-was already there. Age does not make a defect milder, and "pre-existing" is not
-a category that demotes it to an observation or puts it out of scope.
+rigour and the same evidence — whether the change introduced it or it was
+already there. Age does not make a defect milder, and "pre-existing" is not a
+category that demotes it to an observation or puts it out of scope.
 
 Whether a pre-existing bug is fixed in the same pull request is a separate
-decision and has to be stated explicitly. It is never a reason to leave the bug
-unreported.
+decision, and it follows the same route as any other deferral above: the
+reviewer grants the exception in writing on the pull request. It is never a
+reason to leave the bug unreported.
 
 ## Testing
 
@@ -46,6 +47,12 @@ Partial coverage hides exactly what a code review cannot see either: error paths
 guard clauses and the state combinations a screen only reaches in production. If
 a line genuinely cannot be exercised, delete it rather than excluding it from the
 measurement.
+
+CI runs the suite without a coverage gate, so this is a review gate, not an
+automated one: state the per-file numbers in the pull-request description and let
+the reviewer check them against the diff. Most files in this repository are far
+below the mark today, so touching a long-neglected one means bringing that whole
+file up — plan for it rather than discovering it in review.
 
 ### Visual regression tests (Playwright)
 
@@ -108,7 +115,16 @@ changes has to be represented there:
 If the screen you touched has no baseline yet, create one. That is the case this
 rule exists for, and it does not conflict with "regenerate only the screenshots
 your change actually affects" above: a screen you changed is affected, whether or
-not it had a baseline before.
+not it had a baseline before. `--update-snapshots` writes missing baselines as
+well as changed ones, so the same command covers both. If the screen has no spec
+at all, add one next to the existing specs in `e2e/` — a spec that navigates to
+the screen and takes one `toHaveScreenshot` per visual variant is enough.
+
+The build itself does not enforce any of this: it guards a global screenshot and
+document floor, and a missing `metadata.json` entry only produces a stderr warning
+(see `docs/handbook/README.md`). Completeness is therefore checked in review, and
+`handbook-check.yaml` does not even run on a pull request that only touches
+`src/`, because its path filter does not cover it.
 
 ## API access goes through the SDK
 
