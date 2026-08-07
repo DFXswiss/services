@@ -32,16 +32,17 @@ reason to leave the bug unreported.
 npm run test
 ```
 
-Unit tests run in CI on every pull request and must pass. The one exception is a
-pull request whose head branch is `develop` — the release pull request — where the
-build job is skipped by design.
+Unit tests run in CI on every pull request against `develop` or `main` and must
+pass. The one exception is the release pull request, whose head branch is
+`develop` — there the build job is skipped by design.
 
 #### Coverage
 
 Every file a pull request touches must reach **100 % statement, branch, function
-and line coverage**, for every file Jest instruments — the `src/**/*.{ts,tsx,js,jsx}`
-set from `collectCoverageFrom` in `package.json`. Translations, lock files, assets
-and documentation carry no coverage and are not measured. Measure per file:
+and line coverage**, for every file Jest instruments — `src/**/*.{ts,tsx,js,jsx}`
+minus `src/**/*.d.ts`, the two globs `collectCoverageFrom` in `package.json` is
+built from. Translation JSON, lock files, assets, type declarations and
+documentation carry no coverage and are not measured. Measure per file:
 
 ```
 npm run test -- --coverage --collectCoverageFrom='src/screens/example.screen.tsx'
