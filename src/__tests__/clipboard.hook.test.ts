@@ -102,5 +102,66 @@ describe('useClipboard', () => {
 
       expect(copyToClipboardMock).toHaveBeenCalledWith('test text');
     });
+
+    it('should not reset isCopying until the write settles', async () => {
+      let resolveWrite!: () => void;
+      writeText.mockReturnValue(
+        new Promise<void>((resolve) => {
+          resolveWrite = resolve;
+        }),
+      );
+      const { result } = renderHook(() => useClipboard());
+
+      act(() => {
+        result.current.copy('test text');
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+      expect(result.current.isCopying).toBe(true);
+
+      await act(async () => {
+        resolveWrite();
+        await Promise.resolve();
+      });
+      expect(result.current.isCopying).toBe(true);
+
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(result.current.isCopying).toBe(false);
+    });
+
+    it('should not reset isCopying until the copy-to-clipboard fallback runs', async () => {
+      let rejectWrite!: (reason: unknown) => void;
+      writeText.mockReturnValue(
+        new Promise<void>((_, reject) => {
+          rejectWrite = reject;
+        }),
+      );
+      const { result } = renderHook(() => useClipboard());
+
+      act(() => {
+        result.current.copy('test text');
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+      expect(result.current.isCopying).toBe(true);
+
+      await act(async () => {
+        rejectWrite(new Error('denied'));
+        await Promise.resolve();
+      });
+      expect(copyToClipboardMock).toHaveBeenCalledWith('test text');
+      expect(result.current.isCopying).toBe(true);
+
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(result.current.isCopying).toBe(false);
+    });
   });
 });
