@@ -58,9 +58,9 @@ export default function ComplianceChargebackListScreen(): JSX.Element {
   function rowClassName(entry: PendingChargebackEntry): string {
     const base = 'border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer';
     // Safety sentinel: chargebackDate must be empty in this backlog; surface API exclusion loss.
-    if (entry.chargebackDate) return `${base} bg-red-100`;
+    if (entry.chargebackDate) return `${base} bg-dfxRed-100/20`;
     // Customer not released / risk-flagged — must not be waved through casually.
-    if (hasBlockReason(entry, ChargebackBlockReason.USER_NOT_RELEASED)) return `${base} bg-yellow-50`;
+    if (hasBlockReason(entry, ChargebackBlockReason.USER_NOT_RELEASED)) return `${base} bg-dfxYellow-500/20`;
     return base;
   }
 
@@ -78,10 +78,10 @@ export default function ComplianceChargebackListScreen(): JSX.Element {
 
   return (
     <StyledVerticalStack gap={6} full>
-      {error && <ErrorHint message={error} />}
-
       {isLoading && data.length === 0 ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
+      ) : error ? (
+        <ErrorHint message={error} />
       ) : (
         <div className="w-full overflow-x-auto">
           <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
@@ -112,7 +112,7 @@ export default function ComplianceChargebackListScreen(): JSX.Element {
                       <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                         {txReference(entry)}
                         {entry.chargebackDate ? (
-                          <span className="ml-2 px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800">
+                          <span className="ml-2 px-2 py-1 rounded text-xs font-semibold bg-dfxRed-100/20 text-dfxRed-150">
                             ERROR: chargebackDate set
                           </span>
                         ) : null}
