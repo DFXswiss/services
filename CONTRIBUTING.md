@@ -1,5 +1,28 @@
 # Contributing
 
+## Pull requests
+
+### Every pull request is self-contained
+
+A pull request lands complete or it does not land. Findings raised in review on
+your own pull request are fixed in that pull request — never deferred to a
+follow-up. Deferring a fix requires an explicit exception from the reviewer,
+granted in writing on the pull request.
+
+A follow-up that exists only as an intention is a follow-up nobody opens. The
+next reviewer then finds the same points again and the work is done twice.
+
+### Report every bug you find, including pre-existing ones
+
+A defect in code a pull request touches is reported as a bug — with the same
+severity rating and the same evidence — whether the change introduced it or it
+was already there. Age does not make a defect milder, and "pre-existing" is not
+a category that demotes it to an observation or puts it out of scope.
+
+Whether a pre-existing bug is fixed in the same pull request is a separate
+decision and has to be stated explicitly. It is never a reason to leave the bug
+unreported.
+
 ## Testing
 
 ### Unit tests
@@ -9,6 +32,20 @@ npm run test
 ```
 
 Unit tests run in CI on every pull request and must pass.
+
+#### Coverage
+
+Every file a pull request touches must reach **100 % statement, branch, function
+and line coverage**. Measure per file:
+
+```
+npm run test -- --coverage --collectCoverageFrom='src/screens/example.screen.tsx'
+```
+
+Partial coverage hides exactly what a code review cannot see either: error paths,
+guard clauses and the state combinations a screen only reaches in production. If
+a line genuinely cannot be exercised, delete it rather than excluding it from the
+measurement.
 
 ### Visual regression tests (Playwright)
 
@@ -51,3 +88,38 @@ platform-, font- and data-dependent — needlessly blocking PRs.
   is expected — these tests are not a regression gate and do not fail the build.
 - For a clean, reviewable diff, regenerate on a realistic data set so the
   screenshot isolates your actual UI change rather than seed-data noise.
+
+## Handbook
+
+The handbook assembles the committed Playwright baselines, the design tokens and
+the Markdown documentation of this repository into a static site. It is built by
+`scripts/handbook/build.js`; see `docs/handbook/README.md` for the sources and
+the build guards.
+
+**Handbook coverage must be complete.** Every screen or flow a pull request
+changes has to be represented there:
+
+- a committed Playwright baseline under `e2e/screenshots/baseline/`, covering each
+  visual variant the change introduces — for example both sides of a device or
+  mode split, not just the one you happened to look at, and
+- an entry in `scripts/handbook/metadata.json` giving the flow a title and a
+  description.
+
+If the screen you touched has no baseline yet, create one. That is the case this
+rule exists for, and it does not conflict with "regenerate only the screenshots
+your change actually affects" above: a screen you changed is affected, whether or
+not it had a baseline before.
+
+## API access goes through the SDK
+
+Every API call that `@dfx.swiss/react` already encapsulates must go through the
+SDK. Do not hand-build an API URL and fire it with `fetch`, and do not fall back
+to a raw `useApi().call` for a call the SDK covers.
+
+If an SDK hook is missing a parameter or an endpoint, the fix belongs in the SDK
+(DFXswiss/packages, `packages/react/src/hooks/`): add it additively so existing
+callers stay source-compatible, release it, then consume it here. Working around
+it at the call site moves endpoint knowledge — verb, query shape, response type —
+into this repository, where it goes stale silently: the SDK gets updated, the call
+site does not, and `call<T>()` type-checks against the generic you asserted
+yourself, so nothing fails at build time.
