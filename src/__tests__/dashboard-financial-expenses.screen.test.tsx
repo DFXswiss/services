@@ -13,10 +13,12 @@ jest.mock('@dfx.swiss/react-components', () => ({
   StyledLoadingSpinner: () => <div data-testid="loading-spinner" />,
 }));
 
-const mockChartProps: { options: ApexOptions; series: { name: string; data: number[][] }[] }[] = [];
+type ChartProps = { type: string; height: number; options: ApexOptions; series: { name: string; data: number[][] }[] };
+
+const mockChartProps: ChartProps[] = [];
 jest.mock('react-apexcharts', () => ({
   __esModule: true,
-  default: (props: { options: ApexOptions; series: { name: string; data: number[][] }[] }) => {
+  default: (props: ChartProps) => {
     mockChartProps.push(props);
     return <div data-testid="chart" />;
   },
@@ -50,7 +52,7 @@ type Formatter = (val: number) => string;
 
 // The screen renders CHF amounts through toLocaleString('de-CH'). Building the expectation the same
 // way pins the locale and the digits while staying independent of the group separator the runtime's
-// ICU build emits (U+2019 on current Node, U+0027 on older ones).
+// ICU build emits (U+2019 on ICU 71, U+0027 on ICU 78).
 const chf = (value: number): string => `${value.toLocaleString('de-CH')} CHF`;
 
 // Fractional offsets: the first entry rounds down and the second rounds up, so the Math.round calls
@@ -118,6 +120,14 @@ describe('DashboardFinancialExpensesScreen', () => {
     expect(mockGetFinancialChanges).toHaveBeenCalledWith(undefined, true);
     expect(mockGetRefRecipients).toHaveBeenCalledWith();
 
+    // The headings are what tells the three sections apart once the charts themselves are mocked.
+    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+      'Referral Expenses (cumulative)',
+      'Referral Recipients',
+      'Binance Expenses (cumulative)',
+      'Blockchain Expenses (cumulative)',
+    ]);
+
     const [ref, binance, blockchain] = mockChartProps.slice(-3);
     const at = timestamps();
 
@@ -138,7 +148,8 @@ describe('DashboardFinancialExpensesScreen', () => {
     expect(ref.options.colors).toEqual(['#ef4444', '#f97316']);
     expect(binance.options.colors).toEqual(['#f97316', '#8b5cf6']);
     expect(blockchain.options.colors).toEqual(['#3b82f6', '#ef4444', '#64748b']);
-    expect(ref.options.chart?.type).toBe('area');
+    // The type prop is what react-apexcharts honours; options.chart.type would be overwritten by it.
+    expect(mockChartProps.slice(-3).map((chart) => chart.type)).toEqual(['area', 'area', 'area']);
   });
 
   it('lists every referral recipient by its raw identifier, in column order', async () => {
