@@ -11,7 +11,12 @@ export function useClipboard(): ClipboardInterface {
   function copyHelper(text?: string): void {
     if (!text) return;
     setIsCopying(true);
-    copy(text);
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => copy(text));
+    } else {
+      copy(text);
+    }
 
     setTimeout(() => {
       setIsCopying(false);
