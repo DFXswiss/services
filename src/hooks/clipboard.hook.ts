@@ -12,15 +12,17 @@ export function useClipboard(): ClipboardInterface {
     if (!text) return;
     setIsCopying(true);
 
+    const resetIsCopying = () => setTimeout(() => setIsCopying(false), 500);
+
     if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(text).catch(() => copy(text));
+      navigator.clipboard
+        .writeText(text)
+        .catch(() => copy(text))
+        .finally(resetIsCopying);
     } else {
       copy(text);
+      resetIsCopying();
     }
-
-    setTimeout(() => {
-      setIsCopying(false);
-    }, 500);
   }
 
   return { copy: copyHelper, isCopying };
