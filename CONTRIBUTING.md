@@ -32,12 +32,16 @@ reason to leave the bug unreported.
 npm run test
 ```
 
-Unit tests run in CI on every pull request and must pass.
+Unit tests run in CI on every pull request and must pass. The one exception is a
+pull request whose head branch is `develop` — the release pull request — where the
+build job is skipped by design.
 
 #### Coverage
 
 Every file a pull request touches must reach **100 % statement, branch, function
-and line coverage**. Measure per file:
+and line coverage**, for every file Jest instruments — the `src/**/*.{ts,tsx,js,jsx}`
+set from `collectCoverageFrom` in `package.json`. Translations, lock files, assets
+and documentation carry no coverage and are not measured. Measure per file:
 
 ```
 npm run test -- --coverage --collectCoverageFrom='src/screens/example.screen.tsx'
@@ -121,10 +125,12 @@ at all, add one next to the existing specs in `e2e/` — a spec that navigates t
 the screen and takes one `toHaveScreenshot` per visual variant is enough.
 
 The build itself does not enforce any of this: it guards a global screenshot and
-document floor, and a missing `metadata.json` entry only produces a stderr warning
-(see `docs/handbook/README.md`). Completeness is therefore checked in review, and
-`handbook-check.yaml` does not even run on a pull request that only touches
-`src/`, because its path filter does not cover it.
+document floor, and a missing `metadata.json` entry is accepted silently, falling
+back to a title derived from the file name — only an orphaned entry, one with no
+matching screenshots, produces a stderr warning (see `docs/handbook/README.md`).
+Completeness is therefore checked in review, and `handbook-check.yaml` does not
+even run on a pull request that touches application code under `src/` and nothing
+else: its path filter covers `src/static/assets/**` and no other path below `src/`.
 
 ## API access goes through the SDK
 
