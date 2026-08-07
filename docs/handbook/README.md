@@ -91,9 +91,10 @@ Ohne `HANDBOOK_USER` / `HANDBOOK_PASSWORD` startet der Container **nicht** (fail
    `e2e/screenshots/` ablegen und committen.
 2. Nächster Handbook-Build (lokal oder CI nach Merge auf `develop`) nimmt die Datei
    automatisch auf — **keine** Mapping-Tabelle und **keinen** Count anpassen.
-3. Optional: in `scripts/handbook/metadata.json` einen deutschen Titel/Beschreibung für
-   den Gruppenschlüssel ergänzen (Präfix vor `.spec.ts-` bzw. gemeinsamer Präfix bei
-   manuellen Screenshots).
+3. In `scripts/handbook/metadata.json` einen deutschen Titel/Beschreibung für den
+   Gruppenschlüssel ergänzen (Präfix vor `.spec.ts-` bzw. gemeinsamer Präfix bei
+   manuellen Screenshots). Für den Build ist das optional; für einen Screen, den ein
+   PR ändert, verlangt `CONTRIBUTING.md` den Eintrag.
 
 ## Deployment
 
@@ -106,6 +107,7 @@ Basic-Auth-Zugangsdaten werden **ausschliesslich** in der Deployment-Umgebung al
 `HANDBOOK_USER` / `HANDBOOK_PASSWORD` gesetzt. Weder Klartext noch Hash gehören in
 dieses öffentliche Repository.
 
-Pull Requests (nicht-Draft) laufen durch `.github/workflows/handbook-check.yaml`:
-Image-Build ohne Push, Container-Smoke (`/healthz`, Auth-Wand, Stichprobe aus
-`manifest.json`).
+Pull Requests (nicht-Draft) laufen durch `.github/workflows/handbook-check.yaml`,
+sofern sie einen Pfad aus dessen `paths`-Filter berühren — unterhalb von `src/` ist
+das nur `src/static/assets/**`. Der Check macht einen Image-Build ohne Push und
+einen Container-Smoke (`/healthz`, Auth-Wand, Stichprobe aus `manifest.json`).
