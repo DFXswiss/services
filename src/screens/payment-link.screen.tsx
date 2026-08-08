@@ -59,6 +59,7 @@ import {
   PaymentStandard,
   WalletInfo,
 } from 'src/dto/payment-link.dto';
+import { useIsHandheld } from 'src/hooks/device.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { usePaymentLinkWallets } from 'src/hooks/payment-link-wallets.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
@@ -117,6 +118,8 @@ export default function PaymentLinkScreen(): JSX.Element {
     error: walletsError,
   } = usePaymentLinkWallets();
 
+  const isHandheld = useIsHandheld();
+
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
   const [walletData, setWalletData] = useState<WalletInfo>();
@@ -135,6 +138,15 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const selectedPaymentStandard = useWatch({ control, name: 'paymentStandard' });
   const selectedAsset = useWatch({ control, name: 'asset' });
+
+  // Large QR only exists inside the OpenCryptoPay section; displayQr forces it there on every device.
+  // Outside OCP (or MetaMask error/info), fall back to the collapsible "QR Code" row.
+  const showsOcpSection =
+    !metaMaskError &&
+    !metaMaskInfo &&
+    (!selectedPaymentStandard ||
+      PaymentStandardType.OPEN_CRYPTO_PAY === (selectedPaymentStandard.id as PaymentStandardType));
+  const showLargeQr = showsOcpSection && (Boolean(payRequest?.displayQr) || !isHandheld);
 
   useEffect(() => {
     const walletIdParam = searchParams.get('wallet-id');
@@ -517,7 +529,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
                         </StyledDataTableExpandableRow>
                       )}
-                      {paymentHasQuote(payRequest) && !payRequest.displayQr && (
+                      {paymentHasQuote(payRequest) && !showLargeQr && (
                         <StyledDataTableExpandableRow
                           label={translate('screens/payment', 'QR Code')}
                           expansionContent={
@@ -603,12 +615,11 @@ export default function PaymentLinkScreen(): JSX.Element {
                   />
                 </>
               ) : (
-                (!selectedPaymentStandard ||
-                  PaymentStandardType.OPEN_CRYPTO_PAY === (selectedPaymentStandard.id as PaymentStandardType)) && (
+                showsOcpSection && (
                   <StyledVerticalStack full gap={8} center>
                     {paymentHasQuote(payRequest) ? (
                       <div className="flex flex-col w-full items-center justify-center">
-                        {payRequest.displayQr && (
+                        {showLargeQr && (
                           <div className="w-48 my-3">
                             <QrBasic
                               data={OpenCryptoPayUtils.getOcpUrlByUniqueId(payRequest.id)}
@@ -619,7 +630,9 @@ export default function PaymentLinkScreen(): JSX.Element {
                         <p className="text-base pt-3 text-dfxGray-700">
                           {translate(
                             'screens/payment',
-                            'Scan the QR-Code with a compatible app to complete the payment.',
+                            showLargeQr
+                              ? 'Scan the QR-Code with a compatible app to complete the payment.'
+                              : 'Choose your wallet to open the payment.',
                           )}
                         </p>
                       </div>
@@ -629,7 +642,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                       <p className="text-base pt-3 text-dfxGray-700">
                         {translate(
                           'screens/payment',
-                          'Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible app to complete the payment.',
+                          'Tell the cashier that you want to pay with crypto to start the payment.',
                         )}
                       </p>
                     )}
