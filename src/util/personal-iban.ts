@@ -93,6 +93,43 @@ export function canOfferCollectionIban(info: {
 }
 
 /**
+ * Rewrites a GiroCode (EPC069-12) payment request so line 6 (IBAN) becomes the DFX shared EUR
+ * collection IBAN. Fail-closed: returns undefined unless the payload is a well-formed SCT
+ * GiroCode (full 10+-line shape (index 9 = structured reference; unstructured line 10 may be
+ * omitted), version 001/002) whose IBAN line matches the given personal IBAN
+ * (whitespace/case ignored) and whose remittance line (structured line 9 or unstructured
+ * line 10) equals the quote's remittance info. Swiss QR-Bill SVG payloads are never rewritten —
+ * callers must treat undefined as "no QR available".
+ */
+export function toCollectionIbanGiroCode(
+  paymentRequest: string,
+  personalIban: string,
+  remittanceInfo: string,
+): string | undefined {
+  if (paymentRequest.includes('<svg')) return undefined;
+
+  const lines = paymentRequest.trim().split(/\r?\n/);
+  if (lines.length < 10) return undefined;
+  if (lines[0] !== 'BCD') return undefined;
+  if (lines[1] !== '001' && lines[1] !== '002') return undefined;
+  if (lines[3] !== 'SCT') return undefined;
+
+  const trimmedRemittance = remittanceInfo.trim();
+  if (!trimmedRemittance) return undefined;
+  const structuredReference = lines[9].trim();
+  const unstructuredRemittance = lines.length > 10 ? lines[10].trim() : '';
+  if (structuredReference !== trimmedRemittance && unstructuredRemittance !== trimmedRemittance) return undefined;
+
+  const normalizedLine = lines[6].replace(/\s+/g, '').toUpperCase();
+  const normalizedPersonal = personalIban.replace(/\s+/g, '').toUpperCase();
+  if (!normalizedPersonal) return undefined;
+  if (normalizedLine !== normalizedPersonal) return undefined;
+
+  lines[6] = FRICK_EUR_COLLECTION_IBAN;
+  return lines.join('\n');
+}
+
+/**
  * Allowlist for external-login callbacks: only forward an explicitly present `personal-iban`.
  * Do not copy the entire live search (would leak `user`, `arbitrary`, etc.).
  */
@@ -157,16 +194,20 @@ export function isKycRequiredMessage(message: string | undefined): boolean {
 }
 
 /**
- * Feature-local error copy for reconstructing stored bank/IBAN payment details when
- * opening an invoice or receipt PDF (transaction.screen TransactionList). These tokens
- * describe missing or obsolete stored selection state, not buy-quote failures. Returns
- * untranslated English defaults; callers translate via translate('screens/payment', text).
+ * Feature-local error copy for invoice/receipt PDF failures. Returns untranslated English
+ * defaults; callers translate via translate('screens/payment', text).
  *
- * Maps QuoteError tokens thrown by getBankInfoForRequest only:
+ * Maps QuoteError tokens from getBankInfoForRequest (stored-detail reconstruction):
  * StoredTransactionRequestBankSelectionIncomplete, StoredTransactionRequestBankNoLongerExists,
  * StoredPersonalIbanUserMismatch, StoredPersonalIbanTransactionRequestMismatch,
  * StoredPersonalIbanIsNoLongerActive, StoredBankNoLongerAcceptsPayments.
- * Buy-flow tokens (e.g. KycRequired, CurrencyUnsupported, NoBankAvailableForThisCurrency)
+ *
+ * Also maps collection-account invoice guards from PUT buy/paymentInfos/:id/invoice
+ * (?collectionAccount=true): CollectionAccountInvoicePersonalIbanMissing and
+ * CollectionAccountInvoiceCurrencyNotSupported — both share one customer-facing message;
+ * the tokens stay separate so the logs still say which guard rejected.
+ *
+ * Buy-quote tokens (e.g. KycRequired, CurrencyUnsupported, NoBankAvailableForThisCurrency)
  * are intentionally not matched so invoice/receipt errors never show purchase-flow wording.
  */
 export function getStoredPaymentDetailErrorMessage(message: string | undefined): string | undefined {
@@ -189,6 +230,13 @@ export function getStoredPaymentDetailErrorMessage(message: string | undefined):
   }
   if (message.includes('StoredBankNoLongerAcceptsPayments')) {
     return 'This bank no longer accepts payments. Please start a new purchase.';
+  }
+
+  if (
+    message.includes('CollectionAccountInvoicePersonalIbanMissing') ||
+    message.includes('CollectionAccountInvoiceCurrencyNotSupported')
+  ) {
+    return 'The invoice for the collection account cannot be created right now. Please use the payment details shown on this screen.';
   }
 
   return undefined;

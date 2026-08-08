@@ -22,6 +22,7 @@ import italian from '../translations/languages/it.json';
 import {
   FRICK_ACCOUNT_HOLDER_NAME,
   FRICK_BANK_NAME,
+  FRICK_EUR_COLLECTION_IBAN,
   getPersonalIbanErrorMessage,
   getPersonalIbanKycMessage,
   getStoredPaymentDetailErrorMessage,
@@ -32,6 +33,7 @@ import {
   isVerifiedFrickPersonalIbanResponse,
   normalizePersonalIban,
   personalIbanOnlyParams,
+  toCollectionIbanGiroCode,
   toPersonalIbanProviderRequest,
 } from '../util/personal-iban';
 
@@ -208,6 +210,14 @@ describe('getStoredPaymentDetailErrorMessage', () => {
     ],
     ['StoredPersonalIbanIsNoLongerActive', 'This personal IBAN is no longer active. Please start a new purchase.'],
     ['StoredBankNoLongerAcceptsPayments', 'This bank no longer accepts payments. Please start a new purchase.'],
+    [
+      'CollectionAccountInvoicePersonalIbanMissing',
+      'The invoice for the collection account cannot be created right now. Please use the payment details shown on this screen.',
+    ],
+    [
+      'CollectionAccountInvoiceCurrencyNotSupported',
+      'The invoice for the collection account cannot be created right now. Please use the payment details shown on this screen.',
+    ],
   ] as const)('maps %s to customer-facing copy', (token, text) => {
     expect(getStoredPaymentDetailErrorMessage(token)).toBe(text);
     expect(getStoredPaymentDetailErrorMessage(token)).toBeTruthy();
@@ -217,6 +227,7 @@ describe('getStoredPaymentDetailErrorMessage', () => {
     'StoredPersonalIbanDoesNotBelongToThisUser',
     'StoredPersonalIbanDoesNotMatchThisTransactionRequest',
     'CurrencyNotFound',
+    'CollectionAccountInvoiceSomethingElse',
   ] as const)('does not match obsolete/wrong token %s', (token) => {
     expect(getStoredPaymentDetailErrorMessage(token)).toBeUndefined();
   });
@@ -293,5 +304,200 @@ describe('personalIbanOnlyParams', () => {
   it('returns an empty set when personal-iban is absent', () => {
     const params = personalIbanOnlyParams('?user=alice@example.com&arbitrary=value');
     expect([...params.keys()]).toEqual([]);
+  });
+});
+
+const PERSONAL_GIRO_IBAN = 'LI21088110102979K002E';
+const SAMPLE_REMITTANCE = 'DFX-BUY-1';
+
+/** Production-shaped GiroCode (api config: version 001, encoding 2). */
+function sampleGiroCode(
+  overrides: {
+    line0?: string;
+    line1?: string;
+    line3?: string;
+    iban?: string;
+    line9?: string;
+    line10?: string;
+  } = {},
+): string {
+  return [
+    overrides.line0 ?? 'BCD',
+    overrides.line1 ?? '001',
+    '2',
+    overrides.line3 ?? 'SCT',
+    'BFRILI22',
+    'DFX AG, Bahnhofstrasse 7, 6300 Zug, Schweiz',
+    overrides.iban ?? PERSONAL_GIRO_IBAN,
+    'EUR100',
+    '',
+    overrides.line9 ?? '',
+    overrides.line10 ?? SAMPLE_REMITTANCE,
+  ].join('\n');
+}
+
+describe('toCollectionIbanGiroCode', () => {
+  it('replaces only line 6 and leaves all other lines and the line count untouched', () => {
+    const input = sampleGiroCode();
+    const originalLines = input.split('\n');
+    const result = toCollectionIbanGiroCode(input, PERSONAL_GIRO_IBAN, SAMPLE_REMITTANCE);
+
+    expect(result).toBeDefined();
+    if (result === undefined) return;
+    const resultLines = result.split('\n');
+    expect(resultLines).toHaveLength(originalLines.length);
+
+    for (let i = 0; i < originalLines.length; i++) {
+      if (i === 6) {
+        expect(resultLines[i]).toBe(FRICK_EUR_COLLECTION_IBAN);
+      } else {
+        expect(resultLines[i]).toBe(originalLines[i]);
+      }
+    }
+  });
+
+  it('returns undefined when line 0 is not BCD', () => {
+    expect(
+      toCollectionIbanGiroCode(sampleGiroCode({ line0: 'EPC' }), PERSONAL_GIRO_IBAN, SAMPLE_REMITTANCE),
+    ).toBeUndefined();
+  });
+
+  it('returns undefined when line 3 is not SCT', () => {
+    expect(
+      toCollectionIbanGiroCode(sampleGiroCode({ line3: 'SDD' }), PERSONAL_GIRO_IBAN, SAMPLE_REMITTANCE),
+    ).toBeUndefined();
+  });
+
+  it('returns undefined when line 6 is a different IBAN than the given personal IBAN', () => {
+    expect(
+      toCollectionIbanGiroCode(
+        sampleGiroCode({ iban: 'LI99088110100000K999E' }),
+        PERSONAL_GIRO_IBAN,
+        SAMPLE_REMITTANCE,
+      ),
+    ).toBeUndefined();
+  });
+
+  it('returns undefined when the payload contains a Swiss QR-Bill SVG marker', () => {
+    // Valid GiroCode shape so only the <svg guard (not BCD/length) rejects it.
+    const svgEmbedded = [
+      'BCD',
+      '001',
+      '2',
+      'SCT',
+      'BFRILI22',
+      'DFX AG, Bahnhofstrasse 7, 6300 Zug, Schweiz',
+      PERSONAL_GIRO_IBAN,
+      'EUR100',
+      '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+      '',
+      SAMPLE_REMITTANCE,
+    ].join('\n');
+    expect(toCollectionIbanGiroCode(svgEmbedded, PERSONAL_GIRO_IBAN, SAMPLE_REMITTANCE)).toBeUndefined();
+  });
+
+  it('returns undefined when the payload has fewer than 10 lines', () => {
+    const shortPayload = [
+      'BCD',
+      '001',
+      '2',
+      'SCT',
+      'BFRILI22',
+      'DFX AG, Bahnhofstrasse 7, 6300 Zug, Schweiz',
+      PERSONAL_GIRO_IBAN,
+      'EUR100',
+      '',
+    ].join('\n');
+    expect(shortPayload.split('\n')).toHaveLength(9);
+    expect(toCollectionIbanGiroCode(shortPayload, PERSONAL_GIRO_IBAN, SAMPLE_REMITTANCE)).toBeUndefined();
+  });
+
+  it('returns undefined when the payload has exactly 7 lines (BCD..IBAN only)', () => {
+    const sevenLinePayload = [
+      'BCD',
+      '001',
+      '2',
+      'SCT',
+      'BFRILI22',
+      'DFX AG, Bahnhofstrasse 7, 6300 Zug, Schweiz',
+      PERSONAL_GIRO_IBAN,
+    ].join('\n');
+    expect(sevenLinePayload.split('\n')).toHaveLength(7);
+    expect(toCollectionIbanGiroCode(sevenLinePayload, PERSONAL_GIRO_IBAN, SAMPLE_REMITTANCE)).toBeUndefined();
+  });
+
+  it('returns undefined when the remittance does not match the payload', () => {
+    expect(toCollectionIbanGiroCode(sampleGiroCode(), PERSONAL_GIRO_IBAN, 'OTHER-REF')).toBeUndefined();
+  });
+
+  it('returns undefined when the expected remittance is empty', () => {
+    expect(toCollectionIbanGiroCode(sampleGiroCode(), PERSONAL_GIRO_IBAN, '')).toBeUndefined();
+  });
+
+  it('returns undefined when the version line is not 001 or 002', () => {
+    expect(
+      toCollectionIbanGiroCode(sampleGiroCode({ line1: '003' }), PERSONAL_GIRO_IBAN, SAMPLE_REMITTANCE),
+    ).toBeUndefined();
+  });
+
+  it('rewrites when the remittance is carried on the structured-reference line', () => {
+    const result = toCollectionIbanGiroCode(
+      sampleGiroCode({ line9: SAMPLE_REMITTANCE, line10: '' }),
+      PERSONAL_GIRO_IBAN,
+      SAMPLE_REMITTANCE,
+    );
+    expect(result).toBeDefined();
+    if (result === undefined) return;
+    expect(result.split('\n')[6]).toBe(FRICK_EUR_COLLECTION_IBAN);
+  });
+
+  it('rewrites a 10-line payload ending at the structured reference (line 10 omitted)', () => {
+    const tenLinePayload = [
+      'BCD',
+      '001',
+      '2',
+      'SCT',
+      'BFRILI22',
+      'DFX AG, Bahnhofstrasse 7, 6300 Zug, Schweiz',
+      PERSONAL_GIRO_IBAN,
+      'EUR100',
+      '',
+      SAMPLE_REMITTANCE,
+    ].join('\n');
+    expect(tenLinePayload.split('\n')).toHaveLength(10);
+    const result = toCollectionIbanGiroCode(tenLinePayload, PERSONAL_GIRO_IBAN, SAMPLE_REMITTANCE);
+    expect(result).toBeDefined();
+    if (result === undefined) return;
+    expect(result.split('\n')[6]).toBe(FRICK_EUR_COLLECTION_IBAN);
+  });
+
+  it('tolerates surrounding whitespace on the payload remittance line', () => {
+    const result = toCollectionIbanGiroCode(
+      sampleGiroCode({ line10: ' DFX-BUY-1 ' }),
+      PERSONAL_GIRO_IBAN,
+      SAMPLE_REMITTANCE,
+    );
+    expect(result).toBeDefined();
+    if (result === undefined) return;
+    expect(result.split('\n')[6]).toBe(FRICK_EUR_COLLECTION_IBAN);
+  });
+
+  it('returns undefined when the personal IBAN is empty', () => {
+    expect(toCollectionIbanGiroCode(sampleGiroCode({ iban: '' }), '', SAMPLE_REMITTANCE)).toBeUndefined();
+  });
+
+  it('tolerates CRLF line endings from the payload', () => {
+    const input = sampleGiroCode().replace(/\n/g, '\r\n');
+    const result = toCollectionIbanGiroCode(input, PERSONAL_GIRO_IBAN, SAMPLE_REMITTANCE);
+    expect(result).toBeDefined();
+    if (result === undefined) return;
+    expect(result.split('\n')[6]).toBe(FRICK_EUR_COLLECTION_IBAN);
+  });
+
+  it('tolerates whitespace and lowercase in the given personal IBAN', () => {
+    const result = toCollectionIbanGiroCode(sampleGiroCode(), 'li21 0881 1010 2979 k002 e', SAMPLE_REMITTANCE);
+    expect(result).toBeDefined();
+    if (result === undefined) return;
+    expect(result.split('\n')[6]).toBe(FRICK_EUR_COLLECTION_IBAN);
   });
 });

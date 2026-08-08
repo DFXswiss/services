@@ -702,6 +702,7 @@
     "This stored personal IBAN does not match this transaction. Please start a new purchase.": "Cet IBAN personnel enregistré ne correspond pas à cette transaction. Veuillez démarrer un nouvel achat.",
     "This personal IBAN is no longer active. Please start a new purchase.": "Cet IBAN personnel n'est plus actif. Veuillez démarrer un nouvel achat.",
     "This bank no longer accepts payments. Please start a new purchase.": "Cette banque n'accepte plus les paiements. Veuillez démarrer un nouvel achat.",
+    "The invoice for the collection account cannot be created right now. Please use the payment details shown on this screen.": "La facture pour le compte collectif ne peut pas être établie pour le moment. Veuillez utiliser les informations de paiement affichées sur cet écran.",
     "The selected currency is not available. Please try a different currency or contact support.": "La devise sélectionnée n'est pas disponible. Veuillez essayer une autre devise ou contacter le support.",
     "No bank is available for this currency. Please try a different currency or contact support.": "Aucune banque n'est disponible pour cette devise. Veuillez essayer une autre devise ou contacter le support.",
 
@@ -953,7 +954,10 @@
     "You will be redirected to the site shortly": "Vous serez redirigé vers le site dans quelques secondes",
     "Go back to the payment page": "Retour à la page de paiement",
     "Show collection IBAN": "Afficher l'IBAN collectif",
-    "Show personal IBAN": "Afficher l'IBAN personnel"
+    "Show personal IBAN": "Afficher l'IBAN personnel",
+    "Your bank does not accept this IBAN? Use the swap symbol to switch to our collection account.": "Votre banque n'accepte pas cet IBAN ? Utilisez le symbole d'échange pour passer à notre compte collectif.",
+    "This is the collection account of DFX AG. Please be sure to enter the remittance info below, otherwise we cannot assign your payment.": "Ceci est le compte collectif de DFX AG. Veuillez impérativement indiquer l'objet du paiement ci-dessous, sinon nous ne pourrons pas attribuer votre paiement.",
+    "No QR code is available for the collection account. Please enter the IBAN and the remittance info manually.": "Aucun code QR n'est disponible pour le compte collectif. Veuillez saisir l'IBAN et l'objet du paiement manuellement."
   },
   "screens/iban": {
     "Your Bank Accounts": "Vos comptes bancaires",
