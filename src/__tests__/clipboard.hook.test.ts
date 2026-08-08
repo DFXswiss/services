@@ -133,6 +133,25 @@ describe('useClipboard', () => {
       expect(result.current.isCopying).toBe(false);
     });
 
+    it('should still reset isCopying when the copy-to-clipboard fallback throws', async () => {
+      writeText.mockRejectedValue(new Error('denied'));
+      copyToClipboardMock.mockImplementationOnce(() => {
+        throw new Error('copy failed');
+      });
+      const { result } = renderHook(() => useClipboard());
+
+      await act(async () => {
+        result.current.copy('test text');
+      });
+
+      expect(copyToClipboardMock).toHaveBeenCalledWith('test text');
+
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(result.current.isCopying).toBe(false);
+    });
+
     it('should not reset isCopying until the copy-to-clipboard fallback runs', async () => {
       let rejectWrite!: (reason: unknown) => void;
       writeText.mockReturnValue(

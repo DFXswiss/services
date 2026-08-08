@@ -18,7 +18,8 @@ export function useClipboard(): ClipboardInterface {
       navigator.clipboard
         .writeText(text)
         .catch(() => copy(text))
-        .finally(resetIsCopying);
+        .finally(resetIsCopying)
+        .catch(() => undefined); // a throwing fallback must not reach the global unhandledrejection reporter
     } else {
       copy(text);
       resetIsCopying();
