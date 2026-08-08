@@ -183,4 +183,26 @@ describe('useClipboard', () => {
       expect(result.current.isCopying).toBe(false);
     });
   });
+
+  describe('when navigator.clipboard is unavailable', () => {
+    beforeEach(() => {
+      copyToClipboardMock.mockClear();
+      Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
+    });
+
+    afterEach(() => {
+      delete (navigator as { clipboard?: unknown }).clipboard;
+    });
+
+    it('should copy synchronously via copy-to-clipboard', () => {
+      const { result } = renderHook(() => useClipboard());
+
+      act(() => {
+        result.current.copy('test text');
+      });
+
+      expect(copyToClipboardMock).toHaveBeenCalledWith('test text');
+      expect(result.current.isCopying).toBe(true);
+    });
+  });
 });
