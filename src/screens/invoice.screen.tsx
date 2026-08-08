@@ -8,14 +8,16 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
+  SpinnerSize,
   StyledInput,
   StyledLink,
+  StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { addYears } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Api } from 'src/config/api';
@@ -36,6 +38,8 @@ interface FormData {
 const baseUrl = url({ base: Api.url, path: `/${Api.version}/paymentLink/payment` });
 const relativeBaseUrl = '/pl';
 
+const PAYER_PAY_VALUES = ['1', 'true', 'yes'];
+
 export default function InvoiceScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { getPaymentRecipient } = usePaymentRoutes();
@@ -46,11 +50,18 @@ export default function InvoiceScreen(): JSX.Element {
   const [urlParams, setUrlParams] = useSearchParams();
   const [currency, setCurrency] = useState<string>();
   const [callback, setCallback] = useState<string>();
+  const [callbackSearch, setCallbackSearch] = useState<string>();
   const [errorPayment, setErrorPayment] = useState<string>();
   const [errorRecipient, setErrorRecipient] = useState<string>();
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
   const [isLoadingRecipient, setIsLoadingRecipient] = useState(false);
   const [validatedRecipient, setValidatedRecipient] = useState<string>();
+
+  const recipientFromUrl = urlParams.get('recipient');
+  const payParam = urlParams.get('pay');
+  const isPayerMode = payParam != null && PAYER_PAY_VALUES.includes(payParam.trim().toLowerCase());
+  // Printed QR: payee is information, not an input — show text instead of a disabled field.
+  const isPayeeFromUrl = isPayerMode && !!recipientFromUrl;
 
   const {
     watch,
@@ -67,7 +78,7 @@ export default function InvoiceScreen(): JSX.Element {
   useEffect(() => {
     const recipient = urlParams.get('recipient');
     if (recipient) setValue('recipient', recipient);
-    setUrlParams(new URLSearchParams());
+    if (!isPayerMode) setUrlParams(new URLSearchParams());
     setTimeout(() => recipientFieldRef.current?.focus(), 200);
   }, []);
 
@@ -76,6 +87,7 @@ export default function InvoiceScreen(): JSX.Element {
     setErrorRecipient(undefined);
     setErrorPayment(undefined);
     setCallback(undefined);
+    setCallbackSearch(undefined);
     setCurrency(undefined);
     resetField('invoiceId');
     resetField('amount');
@@ -111,6 +123,7 @@ export default function InvoiceScreen(): JSX.Element {
     setErrorPayment(undefined);
     setErrorRecipient(undefined);
     setCallback(undefined);
+    setCallbackSearch(undefined);
     setIsLoadingPayment(true);
 
     const searchParams = new URLSearchParams({
@@ -126,6 +139,7 @@ export default function InvoiceScreen(): JSX.Element {
           setErrorPayment(response.message ?? 'Unknown Error');
         } else {
           setCallback(relativeUrl({ path: relativeBaseUrl, params: searchParams }));
+          setCallbackSearch(searchParams.toString());
         }
       })
       .catch((error: ApiError) => setErrorPayment(error.message ?? 'Unknown Error'))
@@ -138,45 +152,97 @@ export default function InvoiceScreen(): JSX.Element {
     amount: Validations.Required,
   });
 
-  useLayoutOptions({ title: translate('screens/payment', 'Create Invoice') });
+  useLayoutOptions({
+    title: translate('screens/payment', isPayerMode ? 'Pay invoice' : 'Create Invoice'),
+  });
 
   return (
     <StyledVerticalStack gap={6} full center>
-      <div className="flex flex-col gap-2 w-48 my-3">
-        <QrBasic data={url({ path: callback })} isLoading={!callback} />
-        <StyledButton
-          label={translate('general/actions', 'Copy Link')}
-          onClick={() => copy(url({ path: callback }))}
-          color={StyledButtonColor.STURDY_WHITE}
-          width={StyledButtonWidth.FULL}
-          disabled={!callback}
-        />
-      </div>
+      {!isPayerMode && (
+        <div className="flex flex-col gap-2 w-48 my-3">
+          <QrBasic data={url({ path: callback })} isLoading={!callback} />
+          <StyledButton
+            label={translate('general/actions', 'Copy Link')}
+            onClick={() => copy(url({ path: callback }))}
+            color={StyledButtonColor.STURDY_WHITE}
+            width={StyledButtonWidth.FULL}
+            disabled={!callback}
+          />
+        </div>
+      )}
       <Form control={control} rules={rules} errors={errors} translate={translateError}>
         <StyledVerticalStack gap={6} full center>
+          {isPayerMode && (
+            <p className="text-dfxGray-800 text-sm">
+              {translate(
+                'screens/payment',
+                'Enter the invoice number and invoice amount exactly as printed on your invoice.',
+              )}
+            </p>
+          )}
           <div className="relative w-full">
-            <StyledInput
-              name="recipient"
-              autocomplete="name"
-              label={translate('screens/payment', 'Recipient')}
-              placeholder={translate('screens/kyc', 'John Doe')}
-              full
-              smallLabel
-              forceError={!!errorRecipient}
-              loading={isLoadingRecipient}
-              ref={recipientFieldRef}
-            />
-            {validatedRecipient && (
-              <div className="absolute bottom-[19px] right-5">
-                <DfxIcon icon={IconVariant.CHECK} size={IconSize.MD} color={IconColor.BLUE} />
-              </div>
+            {isPayeeFromUrl ? (
+              <Controller
+                name="recipient"
+                control={control}
+                render={({ field }) => (
+                  <div
+                    role="group"
+                    aria-labelledby="invoice-payee-label"
+                    aria-busy={isLoadingRecipient}
+                    className="w-full text-start"
+                  >
+                    <p id="invoice-payee-label" className="text-sm font-semibold pl-3 text-dfxGray-800">
+                      {translate('screens/payment', 'Payee')}
+                    </p>
+                    <div className="flex flex-row items-center gap-2 pl-3">
+                      <p className={`text-base ${errorRecipient ? 'text-dfxRed-100' : 'text-dfxBlue-800'}`}>
+                        {field.value}
+                      </p>
+                      {isLoadingRecipient && (
+                        <span className="inline-flex" aria-hidden="true">
+                          <StyledLoadingSpinner size={SpinnerSize.SM} />
+                        </span>
+                      )}
+                      {validatedRecipient && !isLoadingRecipient && (
+                        <span
+                          role="img"
+                          aria-label={translate('screens/payment', 'Recipient verified')}
+                          className="inline-flex"
+                        >
+                          <DfxIcon icon={IconVariant.CHECK} size={IconSize.MD} color={IconColor.BLUE} />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              />
+            ) : (
+              <>
+                <StyledInput
+                  name="recipient"
+                  autocomplete="name"
+                  label={translate('screens/payment', isPayerMode ? 'Payee' : 'Recipient')}
+                  placeholder={isPayerMode ? undefined : translate('screens/kyc', 'John Doe')}
+                  full
+                  smallLabel
+                  forceError={!!errorRecipient}
+                  loading={isLoadingRecipient}
+                  ref={recipientFieldRef}
+                />
+                {validatedRecipient && (
+                  <div className="absolute bottom-[19px] right-5">
+                    <DfxIcon icon={IconVariant.CHECK} size={IconSize.MD} color={IconColor.BLUE} />
+                  </div>
+                )}
+              </>
             )}
           </div>
           <StyledInput
             name="invoiceId"
             autocomplete="invoice-id"
-            label={translate('screens/payment', 'Invoice ID')}
-            placeholder={translate('screens/payment', 'Invoice ID')}
+            label={translate('screens/payment', isPayerMode ? 'Invoice number' : 'Invoice ID')}
+            placeholder={translate('screens/payment', isPayerMode ? 'Invoice number' : 'Invoice ID')}
             full
             smallLabel
             disabled={!validatedRecipient}
@@ -184,16 +250,23 @@ export default function InvoiceScreen(): JSX.Element {
           <StyledInput
             type="number"
             name="amount"
-            label={translate('screens/payment', 'Amount')}
-            placeholder={translate('screens/payment', 'Amount')}
+            label={translate('screens/payment', isPayerMode ? 'Invoice amount' : 'Amount')}
+            placeholder={translate('screens/payment', isPayerMode ? 'Invoice amount' : 'Amount')}
             full
             smallLabel
             prefix={currency}
             disabled={!validatedRecipient}
           />
           <StyledButton
-            label={translate('general/actions', 'Open invoice')}
-            onClick={() => callback && navigate(callback)}
+            label={translate('general/actions', isPayerMode ? 'Continue to payment' : 'Open invoice')}
+            onClick={() =>
+              callback &&
+              navigate(
+                { pathname: relativeBaseUrl, search: callbackSearch },
+                // Allowlist only: never inherit unrelated query (e.g. lightning/merchant hijack).
+                { replaceParams: true },
+              )
+            }
             width={StyledButtonWidth.FULL}
             disabled={!isValid || !callback}
             isLoading={isLoadingPayment}
