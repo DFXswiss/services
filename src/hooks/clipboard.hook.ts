@@ -19,7 +19,8 @@ export function useClipboard(): ClipboardInterface {
         .writeText(text)
         .catch(() => copy(text))
         .finally(resetIsCopying)
-        .catch(() => undefined); // a throwing fallback must not reach the global unhandledrejection reporter
+        // settle deliberately: a throwing fallback would otherwise escape as an unhandled rejection
+        .catch(() => undefined);
     } else {
       copy(text);
       resetIsCopying();

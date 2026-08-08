@@ -133,23 +133,35 @@ describe('useClipboard', () => {
       expect(result.current.isCopying).toBe(false);
     });
 
-    it('should still reset isCopying when the copy-to-clipboard fallback throws', async () => {
+    it('should swallow the rejection and reset isCopying when the copy-to-clipboard fallback throws', async () => {
       writeText.mockRejectedValue(new Error('denied'));
       copyToClipboardMock.mockImplementationOnce(() => {
         throw new Error('copy failed');
       });
-      const { result } = renderHook(() => useClipboard());
+      const onUnhandledRejection = jest.fn();
+      process.on('unhandledRejection', onUnhandledRejection);
 
-      await act(async () => {
-        result.current.copy('test text');
-      });
+      try {
+        const { result } = renderHook(() => useClipboard());
 
-      expect(copyToClipboardMock).toHaveBeenCalledWith('test text');
+        await act(async () => {
+          result.current.copy('test text');
+        });
 
-      act(() => {
-        jest.advanceTimersByTime(500);
-      });
-      expect(result.current.isCopying).toBe(false);
+        expect(copyToClipboardMock).toHaveBeenCalledWith('test text');
+
+        act(() => {
+          jest.advanceTimersByTime(500);
+        });
+        expect(result.current.isCopying).toBe(false);
+
+        jest.useRealTimers();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      } finally {
+        process.off('unhandledRejection', onUnhandledRejection);
+      }
+
+      expect(onUnhandledRejection).not.toHaveBeenCalled();
     });
 
     it('should not reset isCopying until the copy-to-clipboard fallback runs', async () => {
@@ -203,6 +215,11 @@ describe('useClipboard', () => {
 
       expect(copyToClipboardMock).toHaveBeenCalledWith('test text');
       expect(result.current.isCopying).toBe(true);
+
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(result.current.isCopying).toBe(false);
     });
   });
 });
