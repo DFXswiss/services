@@ -22,8 +22,11 @@ export function useClipboard(): ClipboardInterface {
         // settle deliberately: a throwing fallback would otherwise escape as an unhandled rejection
         .catch(() => undefined);
     } else {
-      copy(text);
-      resetIsCopying();
+      try {
+        copy(text);
+      } finally {
+        resetIsCopying();
+      }
     }
   }
 

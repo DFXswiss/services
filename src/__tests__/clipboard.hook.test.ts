@@ -69,15 +69,21 @@ describe('useClipboard', () => {
 
   describe('when navigator.clipboard.writeText is available', () => {
     const writeText = jest.fn();
+    let originalClipboardDescriptor: PropertyDescriptor | undefined;
 
     beforeEach(() => {
       copyToClipboardMock.mockClear();
       writeText.mockReset();
+      originalClipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
       Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     });
 
     afterEach(() => {
-      delete (navigator as { clipboard?: unknown }).clipboard;
+      if (originalClipboardDescriptor) {
+        Object.defineProperty(navigator, 'clipboard', originalClipboardDescriptor);
+      } else {
+        delete (navigator as { clipboard?: unknown }).clipboard;
+      }
     });
 
     it('should copy via navigator.clipboard.writeText instead of copy-to-clipboard', async () => {
@@ -197,13 +203,20 @@ describe('useClipboard', () => {
   });
 
   describe('when navigator.clipboard is unavailable', () => {
+    let originalClipboardDescriptor: PropertyDescriptor | undefined;
+
     beforeEach(() => {
       copyToClipboardMock.mockClear();
+      originalClipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
       Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
     });
 
     afterEach(() => {
-      delete (navigator as { clipboard?: unknown }).clipboard;
+      if (originalClipboardDescriptor) {
+        Object.defineProperty(navigator, 'clipboard', originalClipboardDescriptor);
+      } else {
+        delete (navigator as { clipboard?: unknown }).clipboard;
+      }
     });
 
     it('should copy synchronously via copy-to-clipboard', () => {
@@ -215,6 +228,26 @@ describe('useClipboard', () => {
 
       expect(copyToClipboardMock).toHaveBeenCalledWith('test text');
       expect(result.current.isCopying).toBe(true);
+
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(result.current.isCopying).toBe(false);
+    });
+
+    it('should still reset isCopying when copy-to-clipboard throws', () => {
+      copyToClipboardMock.mockImplementationOnce(() => {
+        throw new Error('copy failed');
+      });
+      const { result } = renderHook(() => useClipboard());
+
+      expect(() => {
+        act(() => {
+          result.current.copy('test text');
+        });
+      }).toThrow('copy failed');
+
+      expect(copyToClipboardMock).toHaveBeenCalledWith('test text');
 
       act(() => {
         jest.advanceTimersByTime(500);
