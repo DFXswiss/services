@@ -110,4 +110,41 @@ describe('useReportDisplayedError', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(mockReportClientError).toHaveBeenCalledTimes(1);
   });
+
+  it('reports with the provided type instead of HandledError', async () => {
+    renderHook(() => useReportDisplayedError('boom', 'QuoteError'), { wrapper });
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][0]).toMatchObject({ message: 'boom', name: 'QuoteError' });
+    expect(mockReportClientError.mock.calls[0][1]).toBe('/buy');
+  });
+
+  it('reports again when the type changes', async () => {
+    const { rerender } = renderHook(({ message, type }) => useReportDisplayedError(message, type), {
+      wrapper,
+      initialProps: { message: 'boom', type: 'HandledError' },
+    });
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][0]).toMatchObject({ message: 'boom', name: 'HandledError' });
+
+    rerender({ message: 'boom', type: 'QuoteError' });
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(2));
+    expect(mockReportClientError.mock.calls[1][0]).toMatchObject({ message: 'boom', name: 'QuoteError' });
+  });
+
+  it('does not report again when type is unchanged', async () => {
+    const { rerender } = renderHook(({ message, type }) => useReportDisplayedError(message, type), {
+      wrapper,
+      initialProps: { message: 'boom', type: 'QuoteError' },
+    });
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+
+    rerender({ message: 'boom', type: 'QuoteError' });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(mockReportClientError).toHaveBeenCalledTimes(1);
+  });
 });

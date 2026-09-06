@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { reportClientError } from 'src/util/client-error';
 
-export function useReportDisplayedError(message: string | undefined): void {
+export function useReportDisplayedError(message: string | undefined, type = 'HandledError'): void {
   const { pathname } = useLocation();
   const { user } = useUserContext();
   const accountIdRef = useRef(user?.accountId);
@@ -12,6 +12,6 @@ export function useReportDisplayedError(message: string | undefined): void {
   useEffect(() => {
     if (!message) return;
 
-    reportClientError(Object.assign(new Error(message), { name: 'HandledError' }), pathname, accountIdRef.current);
-  }, [message, pathname]);
+    reportClientError(Object.assign(new Error(message), { name: type }), pathname, accountIdRef.current);
+  }, [message, pathname, type]);
 }
