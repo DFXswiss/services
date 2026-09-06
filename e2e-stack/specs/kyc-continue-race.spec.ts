@@ -117,8 +117,8 @@ async function ensureCompletedStep(
     name,
     status: 'Completed',
     sequenceNumber: 0,
-    type: extra.type,
-    result: extra.result,
+    type: extra.type ?? undefined,
+    result: extra.result ?? undefined,
   });
 }
 
