@@ -112,6 +112,14 @@ else
   log_info "Using prebuilt frontend-widget image ${E2E_WIDGET_IMAGE} - skipping the local build."
 fi
 
+# Rebuild the tests image here (not only from run.sh): Compose never rebuilds an *existing*
+# image on its own, and specs are COPY'd at build time with no bind mounts. A shared stack
+# started by up.sh and exercised from a separate shell — including a CI rerun that reuses the
+# same Compose project — would otherwise keep running a stale tests image while the checkout
+# already has newer specs. Always rebuild, even when frontend/widget images are prebuilt;
+# normal Docker layer cache still applies.
+build_tests_image
+
 log_info "Starting stack (db, api, frontend, proxy)..."
 compose up -d db api frontend proxy
 

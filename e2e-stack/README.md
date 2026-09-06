@@ -141,13 +141,18 @@ and the workflow that drives the stack against API changes live in the API repos
 
 **Spec changes not picked up**
 
-If you edit a spec file and start the test run by hand via `docker compose ... run --rm tests` (bypassing `npm run e2e:stack`, which rebuilds the image automatically via `run.sh`), you **must** rebuild the tests image first:
+`up.sh` rebuilds the `tests` image on every stack start. Compose never rebuilds an existing
+image on its own, and the image `COPY`s specs at build time with no bind mounts — so without
+that step a reused Compose project (including a CI path that starts the stack with `up.sh`
+and runs tests from a separate shell) silently keeps the old specs. `npm run e2e:stack` /
+`e2e:stack:up` go through `up.sh`, so they are covered. If you start tests by hand with
+`docker compose ... run --rm tests` and skip `up.sh`, rebuild explicitly first:
 
 ```bash
 docker compose -p <project> -f e2e-stack/compose.yml -f e2e-stack/compose.tests.yml build tests
 ```
 
-Otherwise the **old** spec content runs silently: the image `COPY`s spec files in at build time, and there are no bind mounts in this environment. This exact mistake has already cost several people a full test run each.
+Otherwise the **old** spec content runs silently.
 
 **frontend-widget image not rebuilt**
 
