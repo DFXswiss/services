@@ -7,7 +7,18 @@
  */
 
 import type { Locator, Page } from '@playwright/test';
-import { apiGet, expect, gotoWithSession, loginAs, normPath, openScreen, queryOne, test } from './fixtures';
+import {
+  apiGet,
+  expect,
+  gotoWithSession,
+  loginAs,
+  normPath,
+  openScreen,
+  queryOne,
+  settleFinancialHubDestination,
+  test,
+  waitForFinancialDestinationRequests,
+} from './fixtures';
 
 /** Routes owned by this lane's dashboard half (8 paths). */
 const DASHBOARD_ROUTES = [
@@ -157,8 +168,13 @@ test.describe('Financial dashboard', () => {
       await expect(page.getByText(tile.title, { exact: true })).toBeVisible();
     }
 
+    // URL-only waits let the next openScreen abort in-flight destination GETs
+    // (financial/latest|log|changes, plus shell language/user/asset/bankAccount) with
+    // net::ERR_ABORTED and fail the strict console check. Settle each destination's real
+    // requests + post-load UI before leaving it.
     for (const tile of FINANCIAL_HUB_TILES) {
       await openScreen(page, '/dashboard/financial', jwt);
+      const destinationRequests = waitForFinancialDestinationRequests(page, tile.path);
       await page.getByText(tile.title, { exact: true }).click();
       await expect
         .poll(() => normPath(new URL(page.url()).pathname), {
@@ -166,6 +182,7 @@ test.describe('Financial dashboard', () => {
           timeout: 15000,
         })
         .toBe(tile.path);
+      await settleFinancialHubDestination(page, tile.path, destinationRequests);
     }
 
     assertNoErrors(pageErrors, consoleErrors);
