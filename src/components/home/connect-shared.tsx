@@ -3,6 +3,7 @@ import { RefObject } from 'react';
 import { BitcoinAddressType } from '../../config/key-path';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
+import { useReportDisplayedError } from '../../hooks/report-displayed-error.hook';
 
 export type Account =
   | {
@@ -40,6 +41,7 @@ export interface ConnectContentProps {
 }
 
 export function ConnectError({ error }: { error: string }): JSX.Element {
+  useReportDisplayedError(error);
   const { translate } = useSettingsContext();
 
   return (

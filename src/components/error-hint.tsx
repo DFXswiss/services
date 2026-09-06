@@ -1,7 +1,9 @@
 import { StyledButton, StyledButtonColor } from '@dfx.swiss/react-components';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useReportDisplayedError } from '../hooks/report-displayed-error.hook';
 
 export function ErrorHint({ message, onBack }: { message: string; onBack?: () => void }): JSX.Element {
+  useReportDisplayedError(message);
   const { translate } = useSettingsContext();
 
   return (
