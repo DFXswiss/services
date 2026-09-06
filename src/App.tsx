@@ -95,6 +95,8 @@ const RealunitSupportScreen = lazy(() => import('./screens/realunit-support.scre
 const RealunitSupportIssueScreen = lazy(() => import('./screens/realunit-support-issue.screen'));
 const RealunitComplianceScreen = lazy(() => import('./screens/realunit-compliance.screen'));
 const RealunitComplianceUserScreen = lazy(() => import('./screens/realunit-compliance-user.screen'));
+const RealunitReferralScreen = lazy(() => import('./screens/realunit-referral.screen'));
+const RealunitReferralDetailScreen = lazy(() => import('./screens/realunit-referral-detail.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
 const DashboardScreen = lazy(() => import('./screens/dashboard.screen'));
@@ -565,6 +567,14 @@ export const Routes = [
           {
             path: 'compliance/user/:id',
             element: withSuspense(<RealunitComplianceUserScreen />),
+          },
+          {
+            path: 'referral',
+            element: withSuspense(<RealunitReferralScreen />),
+          },
+          {
+            path: 'referral/:id',
+            element: withSuspense(<RealunitReferralDetailScreen />),
           },
         ],
       },
