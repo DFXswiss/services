@@ -8,6 +8,7 @@ export * from './db';
 export * from './factories';
 export * from './mail';
 export * from './routes';
+export * from './screen-sync';
 export * from './test-data';
 export { expect };
 
@@ -34,6 +35,11 @@ export function required<T>(value: T | null | undefined, description: string): T
  * Navigates to `path` with an authenticated session and waits until the screen has actually
  * rendered — not the loading spinner, and not a redirect away from `path` (the latter is the
  * typical symptom of a missing role).
+ *
+ * This is not a guarantee that every post-mount fetch finished. Suspense can detach and
+ * networkidle can briefly hold before a screen's own useEffect GET starts (e.g. /file/:id
+ * getFile). Callers that assert absence of result UI, or that navigate away from a hydrating
+ * destination, must wait for that screen's terminal state — see fixtures/screen-sync.ts.
  */
 export async function openScreen(page: Page, path: string, jwt: string): Promise<void> {
   await gotoWithSession(page, path, jwt);

@@ -199,6 +199,13 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   It does not prove that a live account has those kyc fields, that those bootstrap
   endpoints return real data, that `updateCallSettings` persists, or that
   Completed/Failed hide the section.
+- **Full-stack screen-sync regressions hold delivery of real API responses.**
+  `e2e-stack/specs/screen-sync.spec.ts` intercepts `GET /v2/kyc/file/:id` and
+  `GET /v1/dashboard/financial/latest`, calls `route.fetch()` against the real API, then
+  delays `route.fulfill` of that same response body (no invented success payload). A green
+  run does **not** prove the API's natural latency or that production clients never race; it
+  only proves the wait barriers refuse to conclude while that held real response is still
+  undelivered, and that hub re-navigation does not abort it.
 
 ## Known gaps
 
