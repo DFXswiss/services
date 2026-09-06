@@ -35,6 +35,7 @@ export default function RealunitReferralDetailScreen(): JSX.Element {
     setIsLoading(true);
     setError(undefined);
     setNotFound(false);
+    setRelation(undefined); // drop any stale record so the loading/not-found guards work on an id change
     // No single-relation GET exists api-side; source the detail from the admin list.
     getRelations()
       .then((res) => {
@@ -44,7 +45,7 @@ export default function RealunitReferralDetailScreen(): JSX.Element {
       })
       .catch((e: Error) => setError(e.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
-  }, [id]);
+  }, [id, getRelations]);
 
   if (isLoading && !relation) return <StyledLoadingSpinner size={SpinnerSize.LG} />;
   if (error && !relation) return <ErrorHint message={error} />;
