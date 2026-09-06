@@ -94,4 +94,20 @@ describe('useReportDisplayedError', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(mockReportClientError).toHaveBeenCalledTimes(1);
   });
+
+  it('does not report a second time once the account arrives', async () => {
+    const { rerender } = renderHook(({ message }) => useReportDisplayedError(message), {
+      wrapper,
+      initialProps: { message: 'boom' },
+    });
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalledTimes(1));
+    expect(mockReportClientError.mock.calls[0][2]).toBeUndefined();
+
+    mockUser = { accountId: 123456 };
+    rerender({ message: 'boom' });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(mockReportClientError).toHaveBeenCalledTimes(1);
+  });
 });
