@@ -20,6 +20,7 @@ import {
   SupportMessageInfo,
   useSupportDashboard,
 } from 'src/hooks/support-dashboard.hook';
+import { useSupportDraft } from 'src/hooks/support-draft.hook';
 import { STAFF_NAME_MISSING, staffNameLoadError } from 'src/components/compliance/staff-identity';
 import { useStaffVerifiedName } from 'src/hooks/staff-verified-name.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
@@ -54,7 +55,8 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Message form state
-  const [messageText, setMessageText] = useState('');
+  // Draft persisted per ticket, so a detour to the customer profile does not lose the text.
+  const [messageText, setMessageText, clearDraft] = useSupportDraft(id);
   const { name: messageAuthor, isLoading: isLoadingAuthor, error: authorError } = useStaffVerifiedName();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
@@ -209,9 +211,13 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     }
     setIsSending(true);
     setActionError(undefined);
+    // The draft is dropped before the request, so a detour during the send cannot bring back text
+    // that is already on its way; a failed send puts it back into the composer.
+    const draft = messageText;
+    clearDraft();
     try {
       const author = messageAuthor;
-      const text = messageText.trim() || undefined;
+      const text = draft.trim() || undefined;
 
       if (selectedFiles.length > 0) {
         for (let i = 0; i < selectedFiles.length; i++) {
@@ -228,11 +234,11 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         await sendMessage(+id, { author, message: text });
       }
 
-      setMessageText('');
       setSelectedFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
       loadMessages();
     } catch (e: unknown) {
+      setMessageText(draft);
       setActionError(e instanceof Error ? e.message : 'Send failed');
     } finally {
       setIsSending(false);
