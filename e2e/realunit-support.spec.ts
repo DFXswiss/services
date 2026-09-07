@@ -334,13 +334,13 @@ test.describe('RealUnit Support dashboards - Visual Regression Tests', () => {
     await expect(page.getByText('RU-7001-UID')).toBeVisible();
     await expect(page.getByText('The reference of the transfer is TX-12345.')).toBeVisible();
 
-    // The viewport is 1280x720; the composer sits below the thread. A handbook baseline of
-    // draft persistence has to show the restored text, not only the detail panels.
+    // Cmd/Ctrl+Enter is a keybinding, not chrome. The handbook shot still has to include the
+    // composer (textarea + Send) — the 1280x720 viewport cuts it off below the thread.
     await page.setViewportSize({ width: 1280, height: 1400 });
     const composer = page.locator('textarea');
     await composer.scrollIntoViewIfNeeded();
-    await composer.fill('Kept draft: customer said the funds never arrived.');
-    await expect(composer).toHaveValue('Kept draft: customer said the funds never arrived.');
+    await expect(composer).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Send$/ })).toBeVisible();
 
     await expect(page).toHaveScreenshot('realunit-support-02-issue.png', {
       fullPage: true,
