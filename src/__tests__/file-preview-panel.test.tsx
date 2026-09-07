@@ -70,4 +70,29 @@ describe('FilePreviewPanel', () => {
     expect(screen.getAllByRole('link', { name: 'Download' })).toHaveLength(2);
     expect(container.querySelector('embed')).not.toBeInTheDocument();
   });
+
+  it('shows a JPEG again after a HEIC decode error on the same panel instance', () => {
+    const { container, rerender } = render(
+      <FilePreviewPanel
+        preview={{ url: 'blob:heic', contentType: 'image/heic', name: 'foto.heic' }}
+        label="Dateien"
+        onClose={jest.fn()}
+      />,
+    );
+    const heicImg = container.querySelector('img') as HTMLImageElement;
+    fireEvent.error(heicImg);
+    expect(container.querySelector('img')).not.toBeInTheDocument();
+
+    rerender(
+      <FilePreviewPanel
+        preview={{ url: 'blob:jpeg', contentType: 'image/jpeg', name: 'foto.jpg' }}
+        label="Dateien"
+        onClose={jest.fn()}
+      />,
+    );
+
+    const jpegImg = screen.getByRole('img', { name: 'foto.jpg' });
+    expect(jpegImg).toHaveAttribute('src', 'blob:jpeg');
+    expect(screen.queryByText('No preview for this format, download it instead.')).not.toBeInTheDocument();
+  });
 });

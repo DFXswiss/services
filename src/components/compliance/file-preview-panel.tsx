@@ -53,10 +53,15 @@ export function FilePreviewPanel({ preview, label, onClose }: FilePreviewPanelPr
           <embed src={`${preview.url}#navpanes=0`} type="application/pdf" className="w-full h-full" />
         ) : (
           <img
+            key={preview.url}
             src={preview.url}
             alt={preview.name}
             className="max-w-full max-h-full object-contain"
-            onError={() => setUndecodableUrl(preview.url)}
+            onError={(event) => {
+              if (event.currentTarget.src === preview.url) {
+                setUndecodableUrl(preview.url);
+              }
+            }}
           />
         )}
       </div>
