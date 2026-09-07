@@ -2,7 +2,16 @@
 
 import { isSendShortcut } from 'src/util/message-composer';
 
-function key(name: string, mods: Partial<{ metaKey: boolean; ctrlKey: boolean }> = {}) {
+function key(
+  name: string,
+  mods: Partial<{
+    metaKey: boolean;
+    ctrlKey: boolean;
+    shiftKey: boolean;
+    repeat: boolean;
+    isComposing: boolean;
+  }> = {},
+) {
   return { key: name, metaKey: false, ctrlKey: false, ...mods };
 }
 
@@ -16,5 +25,30 @@ describe('isSendShortcut', () => {
     expect(isSendShortcut(key('Enter'))).toBe(false);
     expect(isSendShortcut(key('a', { metaKey: true }))).toBe(false);
     expect(isSendShortcut(key('a', { ctrlKey: true }))).toBe(false);
+  });
+
+  it('treats Shift+Enter and Shift+Cmd/Ctrl+Enter as a newline', () => {
+    expect(isSendShortcut(key('Enter', { shiftKey: true }))).toBe(false);
+    expect(isSendShortcut(key('Enter', { metaKey: true, shiftKey: true }))).toBe(false);
+    expect(isSendShortcut(key('Enter', { ctrlKey: true, shiftKey: true }))).toBe(false);
+  });
+
+  it('ignores a held (repeated) Cmd/Ctrl+Enter', () => {
+    expect(isSendShortcut(key('Enter', { metaKey: true, repeat: true }))).toBe(false);
+    expect(isSendShortcut(key('Enter', { ctrlKey: true, repeat: true }))).toBe(false);
+  });
+
+  it('ignores Cmd/Ctrl+Enter while an IME composition is active', () => {
+    expect(isSendShortcut(key('Enter', { metaKey: true, isComposing: true }))).toBe(false);
+    expect(isSendShortcut(key('Enter', { ctrlKey: true, isComposing: true }))).toBe(false);
+  });
+
+  it('still sends when optional flags are explicitly false', () => {
+    expect(
+      isSendShortcut(key('Enter', { metaKey: true, shiftKey: false, repeat: false, isComposing: false })),
+    ).toBe(true);
+    expect(
+      isSendShortcut(key('Enter', { ctrlKey: true, shiftKey: false, repeat: false, isComposing: false })),
+    ).toBe(true);
   });
 });
