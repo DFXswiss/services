@@ -213,7 +213,7 @@ describe('NoteComposer', () => {
     expect(onSubmittingChange.mock.calls.map((c) => c[0])).toEqual([true, false]);
   });
 
-  it('does not call parent callbacks after unmount during submit', async () => {
+  it('still calls onCreated after unmount during submit, but skips local UI callbacks', async () => {
     const onCreated = jest.fn();
     const onContentChange = jest.fn();
     const onSubmittingChange = jest.fn();
@@ -239,8 +239,24 @@ describe('NoteComposer', () => {
       await Promise.resolve();
     });
 
-    expect(onCreated).not.toHaveBeenCalled();
+    expect(onCreated).toHaveBeenCalledTimes(1);
     expect(onContentChange).not.toHaveBeenCalledWith('');
     expect(onSubmittingChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it('ignores a second sync click while create is in flight', async () => {
+    const onCreated = jest.fn();
+    let resolveCreate!: (value: unknown) => void;
+    mockCreateSupportNote.mockReturnValueOnce(new Promise((resolve) => (resolveCreate = resolve)));
+
+    render(<NoteComposer userDataId={7} onCreated={onCreated} />);
+    fireEvent.change(content(), { target: { value: 'Inhalt' } });
+    fireEvent.click(submit());
+    fireEvent.click(submit());
+
+    expect(mockCreateSupportNote).toHaveBeenCalledTimes(1);
+
+    resolveCreate({});
+    await waitFor(() => expect(onCreated).toHaveBeenCalledTimes(1));
   });
 });

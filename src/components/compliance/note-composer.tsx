@@ -59,6 +59,8 @@ export function NoteComposer({
   const [error, setError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mountedRef = useRef(true);
+  // Sync guard: isSubmitting only disables the button after re-render; a second click in the same tick must not start another create.
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -84,6 +86,9 @@ export function NoteComposer({
       return;
     }
 
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+
     setError(undefined);
     setIsSubmitting(true);
     onSubmittingChange?.(true);
@@ -93,16 +98,18 @@ export function NoteComposer({
         subject: subject.trim() || undefined,
         department: department || undefined,
       });
-      if (!mountedRef.current) return;
-      setSubject('');
-      setContent('');
-      setDepartment('');
-      setUserDataIdInput('');
+      if (mountedRef.current) {
+        setSubject('');
+        setContent('');
+        setDepartment('');
+        setUserDataIdInput('');
+      }
       onCreated();
     } catch (e: unknown) {
       if (!mountedRef.current) return;
       setError(e instanceof Error ? e.message : 'Failed to save note');
     } finally {
+      submittingRef.current = false;
       if (!mountedRef.current) return;
       setIsSubmitting(false);
       onSubmittingChange?.(false);
