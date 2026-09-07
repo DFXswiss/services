@@ -99,6 +99,10 @@
     "title": "RealUnit Quotes",
     "description": "RealUnit-Quote-Liste und -Detail: aktives WaitingForPayment-Buy mit Confirm Payment und Deactivate, Bestätigungs-Overlay, deaktiviertes Quote mit Deactivated At ohne Aktions-Buttons, und Support sieht bei aktivem WaitingForPayment-Buy nur Deactivate (kein Confirm Payment)."
   },
+  "realunit-referral": {
+    "title": "RealUnit Referral",
+    "description": "RealUnit-Referral-Admin: Beziehungsliste mit Filter „nur zu prüfende\", Detail mit Prüf-/Auszahlungsverlauf und Aktionen Genehmigen/Ablehnen/Manuelle Prämie (jeweils mit Pflicht-Begründung)."
+  },
   "realunit-dashboard": {
     "title": "RealUnit Dashboard",
     "description": "RealUnit-Startseite: Pending-Tabelle mit Address und Kundenname ohne deaktivierte Quotes, Kaufvolumen (CHF und Shares), Holder im Zeitverlauf und Registrierungs-Funnel (Registered → Completed, Drop-off Manual review)."

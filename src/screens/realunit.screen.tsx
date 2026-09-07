@@ -126,6 +126,12 @@ export default function RealunitScreen(): JSX.Element {
               width={StyledButtonWidth.MIN}
               color={StyledButtonColor.STURDY_WHITE}
             />
+            <StyledButton
+              label={translate('screens/referral', 'RealUnit Referral')}
+              onClick={() => navigate('/realunit/referral')}
+              width={StyledButtonWidth.MIN}
+              color={StyledButtonColor.STURDY_WHITE}
+            />
           </div>
           <div className="mb-4">
             <h2 className="text-dfxGray-700 justify-center  mb-2">{translate('screens/realunit', 'Price History')}</h2>

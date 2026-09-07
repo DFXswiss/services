@@ -16,7 +16,6 @@ if ! compose config --services | grep -qx tests; then
   exit 1
 fi
 
-build_tests_image
 log_info "Running e2e tests..."
 # Declares that every spec is in scope, which is what lets the coverage gate check that each route
 # was actually opened rather than merely claimed. A filtered run instead gets only the gate's

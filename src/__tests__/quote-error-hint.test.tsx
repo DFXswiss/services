@@ -97,6 +97,10 @@ jest.mock('../hooks/navigation.hook', () => ({
   }),
 }));
 
+jest.mock('../hooks/report-displayed-error.hook', () => ({
+  useReportDisplayedError: jest.fn(),
+}));
+
 import { QuoteErrorHint } from '../components/quote-error-hint';
 import { TransactionError, TransactionType, KycStepName } from '@dfx.swiss/react';
 

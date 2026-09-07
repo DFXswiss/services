@@ -12,6 +12,8 @@ const claims: RouteClaim[] = [
   { path: '/realunit/support/issue/:id', spec: 'realunit.spec.ts' },
   { path: '/realunit/compliance', spec: 'realunit.spec.ts' },
   { path: '/realunit/compliance/user/:id', spec: 'realunit.spec.ts' },
+  { path: '/realunit/referral', spec: 'realunit.spec.ts' },
+  { path: '/realunit/referral/:id', spec: 'realunit.spec.ts' },
   { path: '/dashboard', spec: 'dashboard-financial.spec.ts' },
   { path: '/dashboard/financial', spec: 'dashboard-financial.spec.ts' },
   { path: '/dashboard/financial/overview', spec: 'dashboard-financial.spec.ts' },

@@ -9,6 +9,7 @@ import {
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import { useReportDisplayedError } from '../hooks/report-displayed-error.hook';
 
 export function QuoteErrorHint({
   type,
@@ -111,6 +112,7 @@ export function QuoteErrorHint({
   }
 
   const hint = message ?? getHint(error);
+  useReportDisplayedError(hint != null ? hint || String(error) : undefined, 'QuoteError');
 
   return hint != null ? (
     <StyledVerticalStack gap={4} full center>
