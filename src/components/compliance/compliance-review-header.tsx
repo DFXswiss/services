@@ -1,5 +1,5 @@
 import { KycStatus } from '@dfx.swiss/react';
-import { ReactNode, useRef, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { buildAddress, display, extractLegalEntity, formatBirthday, refName } from 'src/util/compliance-helpers';
 import { formatSwissDate } from 'src/util/utils';
@@ -14,8 +14,8 @@ interface ComplianceReviewHeaderProps {
 interface HeaderField {
   label: string;
   value: ReactNode;
-  isLink?: boolean;
-  href?: string;
+  // Values that are always copied as a whole (ids, names, mail): one click selects the entire value.
+  copyWhole?: boolean;
 }
 
 function extractStepCreatedDate(kycSteps: KycStepInfo[]): string {
@@ -32,13 +32,11 @@ export function ComplianceReviewHeader({
   onSetKycStatusCheck,
 }: Readonly<ComplianceReviewHeaderProps>): JSX.Element {
   const [isSettingKycStatus, setIsSettingKycStatus] = useState(false);
-  const kycStatusActionPending = useRef(false);
   const contactName = [userData.firstname, userData.surname].filter(Boolean).join(' ') || '-';
   const accountType = display(userData.accountType);
   const isOrganization = accountType === 'Organization' || accountType === 'SoleProprietorship';
 
   async function setKycStatusCheck(): Promise<void> {
-    if (kycStatusActionPending.current || isSaving) return;
     if (
       !window.confirm(
         `KYC-Status für UserData ${userData.id} wirklich von ${display(
@@ -48,33 +46,31 @@ export function ComplianceReviewHeader({
     )
       return;
 
-    kycStatusActionPending.current = true;
     setIsSettingKycStatus(true);
     try {
       await onSetKycStatusCheck();
     } finally {
-      kycStatusActionPending.current = false;
       setIsSettingKycStatus(false);
     }
   }
 
   const fields: HeaderField[] = [
-    { label: 'UserDataId', value: display(userData.id) },
+    { label: 'UserDataId', value: display(userData.id), copyWhole: true },
     { label: 'Account Type', value: accountType },
     ...(isOrganization
       ? [
-          { label: 'Organization', value: display(userData.organization?.name) },
+          { label: 'Organization', value: display(userData.organization?.name), copyWhole: true },
           { label: 'Legal Entity', value: extractLegalEntity(kycSteps, accountType) },
           { label: 'Adresse', value: buildAddress(userData.organization) },
-          { label: 'Ansprechsperson', value: contactName },
+          { label: 'Ansprechsperson', value: contactName, copyWhole: true },
         ]
       : [
-          { label: 'Name', value: contactName },
+          { label: 'Name', value: contactName, copyWhole: true },
           { label: 'Adresse', value: buildAddress(userData) },
           { label: 'Geburtstag', value: userData.birthday ? formatBirthday(userData.birthday) : '-' },
-          { label: 'VerifiedName', value: display(userData.verifiedName) },
+          { label: 'VerifiedName', value: display(userData.verifiedName), copyWhole: true },
         ]),
-    { label: 'Mail', value: display(userData.mail) },
+    { label: 'Mail', value: display(userData.mail), copyWhole: true },
     { label: 'Sprache', value: refName(userData.language) },
     { label: 'KYC Level', value: display(userData.kycLevel) },
     {
@@ -110,20 +106,12 @@ export function ComplianceReviewHeader({
         <tbody>
           {fields.map((field) => (
             <tr key={field.label} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-              <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 font-medium">{field.label}</td>
-              <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 break-all">
-                {field.isLink && field.href ? (
-                  <a
-                    href={field.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-dfxBlue-300 underline hover:text-dfxBlue-800 transition-colors"
-                  >
-                    {field.value}
-                  </a>
-                ) : (
-                  field.value
-                )}
+              {/* The label cannot be selected, so a copied value never carries the label cell. */}
+              <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 font-medium select-none">{field.label}</td>
+              <td
+                className={`px-3 py-2 text-left text-sm text-dfxBlue-800 break-all ${field.copyWhole ? 'select-all' : ''}`}
+              >
+                {field.value}
               </td>
             </tr>
           ))}

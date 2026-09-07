@@ -28,8 +28,10 @@ export function InfoRow({
 }): JSX.Element {
   return (
     <tr>
-      <td className="pr-4 py-1 font-medium whitespace-nowrap text-sm">{label}:</td>
-      <td className={`py-1 text-sm break-all ${mono ? 'font-mono' : ''}`}>{value}</td>
+      {/* The label cannot be selected, so a copied value never carries the label cell. Mono values
+          (ids, hashes, IBANs) are copied as a whole: one click selects the entire value. */}
+      <td className="pr-4 py-1 font-medium whitespace-nowrap text-sm select-none">{label}:</td>
+      <td className={`py-1 text-sm break-all ${mono ? 'font-mono select-all' : ''}`}>{value}</td>
     </tr>
   );
 }
