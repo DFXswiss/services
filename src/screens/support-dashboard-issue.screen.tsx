@@ -6,6 +6,7 @@ import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
 import { LimitRequestDecisionForm } from 'src/components/compliance/limit-request-decision-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { InfoPanel, InfoRow, SupportMessageList } from 'src/components/support/info-panel';
+import { TicketNotePanel } from 'src/components/support/ticket-note-panel';
 import { TemplateArrayPickerModal } from 'src/components/support-templates/template-array-picker-modal';
 import { TemplatePickerModal } from 'src/components/support-templates/template-picker-modal';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -81,6 +82,9 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     name: string;
     messageId: number;
   }>();
+  // Internal customer note in progress (undefined = composer closed). Screen-level so it survives the
+  // reload spinner after Update.
+  const [noteDraft, setNoteDraft] = useState<{ text: string }>();
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   const isComplianceDept = issueData?.department === Department.COMPLIANCE;
@@ -543,6 +547,14 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             >
               {isUpdating ? 'Updating...' : 'Update'}
             </button>
+            {id && (
+              <TicketNotePanel
+                userDataId={issueData.account.id}
+                issueId={+id}
+                draft={noteDraft}
+                onDraftChange={setNoteDraft}
+              />
+            )}
           </div>
         </div>
 

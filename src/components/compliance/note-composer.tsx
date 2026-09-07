@@ -3,12 +3,23 @@ import { useState } from 'react';
 import { useCompliance } from 'src/hooks/compliance.hook';
 import { adminDeptOptions } from './note-utils';
 
+// Mirrors CreateSupportNoteDto @MaxLength(8000) in DFXswiss/backend. The textarea caps typing at this
+// length; pre-filled content (a customer message) can exceed it and then blocks the submit instead.
+export const MAX_CONTENT_LENGTH = 8000;
+
 interface Props {
   // Fixed user data id (NotesTab). Ignored when allowUserDataIdInput is true.
   userDataId?: number;
   allowUserDataIdInput?: boolean;
   // Pre-fills the user data id input when allowUserDataIdInput is true (e.g. deep link from a user).
   initialUserDataId?: string;
+  // Pre-fills the subject on mount (e.g. the ticket a note belongs to). Like the other initial*
+  // props it is read once; a caller that needs a fresh seed remounts the composer.
+  initialSubject?: string;
+  // Controlled content: when both are given the caller owns the text (and keeps it across remounts);
+  // otherwise the composer keeps it itself. Cleared after a successful save either way.
+  content?: string;
+  onContentChange?: (content: string) => void;
   submitLabel?: string;
   contentPlaceholder?: string;
   onCreated: () => void;
@@ -18,6 +29,9 @@ export function NoteComposer({
   userDataId,
   allowUserDataIdInput,
   initialUserDataId,
+  initialSubject,
+  content: controlledContent,
+  onContentChange,
   submitLabel,
   contentPlaceholder,
   onCreated,
@@ -29,8 +43,14 @@ export function NoteComposer({
 
   const { createSupportNote } = useCompliance();
 
-  const [subject, setSubject] = useState('');
-  const [content, setContent] = useState('');
+  const [subject, setSubject] = useState(initialSubject ?? '');
+  const [ownContent, setOwnContent] = useState('');
+  const content = controlledContent ?? ownContent;
+  const setContent = (value: string): void => {
+    if (onContentChange) onContentChange(value);
+    else setOwnContent(value);
+  };
+  const isTooLong = content.length > MAX_CONTENT_LENGTH;
   const [department, setDepartment] = useState<Department | ''>('');
   const [userDataIdInput, setUserDataIdInput] = useState(initialUserDataId ?? '');
   const [error, setError] = useState<string>();
@@ -45,12 +65,8 @@ export function NoteComposer({
     return { value: n };
   }
 
+  // Content, its length and (for admins) the department are enforced by the disabled submit button.
   async function handleSubmit(): Promise<void> {
-    if (!content.trim()) return;
-    if (isAdmin && !department) {
-      setError('Please select a department');
-      return;
-    }
     const resolved = resolveUserDataId();
     if (resolved.error) {
       setError(resolved.error);
@@ -119,15 +135,21 @@ export function NoteComposer({
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder={contentPlaceholder ?? 'Neue Notiz...'}
+        maxLength={MAX_CONTENT_LENGTH}
         disabled={isSubmitting}
       />
+      {isTooLong && (
+        <p className="text-sm text-dfxRed-100">
+          Notiz zu lang: {content.length} / {MAX_CONTENT_LENGTH} Zeichen
+        </p>
+      )}
       {error && <p className="text-sm text-dfxRed-100">{error}</p>}
       <div className="flex justify-end">
         <button
           type="button"
           className="px-4 py-1.5 text-sm font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors disabled:opacity-50"
           onClick={handleSubmit}
-          disabled={isSubmitting || !content.trim() || (isAdmin && !department)}
+          disabled={isSubmitting || !content.trim() || isTooLong || (isAdmin && !department)}
         >
           {isSubmitting ? 'Speichern...' : (submitLabel ?? 'Notiz hinzufügen')}
         </button>
