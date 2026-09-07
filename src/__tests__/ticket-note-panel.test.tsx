@@ -11,6 +11,7 @@ jest.mock('src/components/compliance/note-composer', () => ({
     content: string;
     onContentChange: (text: string) => void;
     onCreated: () => void;
+    onSubmittingChange?: (isSubmitting: boolean) => void;
   }) => {
     mockComposer(props);
     return (
@@ -22,6 +23,12 @@ jest.mock('src/components/compliance/note-composer', () => ({
         />
         <button type="button" data-testid="save" onClick={props.onCreated}>
           save
+        </button>
+        <button type="button" data-testid="start-submit" onClick={() => props.onSubmittingChange?.(true)}>
+          start-submit
+        </button>
+        <button type="button" data-testid="end-submit" onClick={() => props.onSubmittingChange?.(false)}>
+          end-submit
         </button>
       </div>
     );
@@ -89,5 +96,24 @@ describe('TicketNotePanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Notiz hinzufügen' }));
     expect(screen.queryByText(/Gespeichert/)).not.toBeInTheDocument();
+  });
+
+  it('disables Cancel while the composer is submitting and re-enables it afterwards', () => {
+    const onDraftChange = jest.fn();
+    render(
+      <TicketNotePanel userDataId={7} issueId={42} draft={{ text: 'Wichtig' }} onDraftChange={onDraftChange} />,
+    );
+
+    const cancel = () => screen.getByRole('button', { name: 'Abbrechen' });
+
+    fireEvent.click(screen.getByTestId('start-submit'));
+    expect(cancel()).toBeDisabled();
+    fireEvent.click(cancel());
+    expect(onDraftChange).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('end-submit'));
+    expect(cancel()).toBeEnabled();
+    fireEvent.click(cancel());
+    expect(onDraftChange).toHaveBeenCalledWith(undefined);
   });
 });

@@ -146,11 +146,12 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     loadMessages();
   }, [loadMessages]);
 
-  // Clear send UI state when navigating to a different ticket
+  // Clear send UI and an in-progress note draft when navigating to a different ticket.
   useEffect(() => {
     setIsSending(false);
     setSelectedFiles([]);
     setActionError(undefined);
+    setNoteDraft(undefined);
   }, [id]);
 
   // Reset cached UserData when the issue (and thus the account) changes
@@ -549,6 +550,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             </button>
             {id && (
               <TicketNotePanel
+                key={id}
                 userDataId={issueData.account.id}
                 issueId={+id}
                 draft={noteDraft}

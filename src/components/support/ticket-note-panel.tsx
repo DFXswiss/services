@@ -22,9 +22,11 @@ export function TicketNotePanel({
   onDraftChange: (draft: TicketNoteDraft | undefined) => void;
 }>): JSX.Element {
   const [isSaved, setIsSaved] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isOpen = draft != null;
 
   function handleCreated(): void {
+    setIsSubmitting(false);
     onDraftChange(undefined);
     setIsSaved(true);
   }
@@ -36,8 +38,10 @@ export function TicketNotePanel({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="px-4 py-1.5 border border-dfxBlue-400 text-dfxBlue-400 rounded text-xs hover:bg-dfxBlue-400 hover:text-white transition-colors"
+            className="px-4 py-1.5 border border-dfxBlue-400 text-dfxBlue-400 rounded text-xs hover:bg-dfxBlue-400 hover:text-white transition-colors disabled:opacity-50"
+            disabled={isSubmitting}
             onClick={() => {
+              if (isSubmitting) return;
               setIsSaved(false);
               onDraftChange(isOpen ? undefined : { text: '' });
             }}
@@ -59,6 +63,7 @@ export function TicketNotePanel({
             onContentChange={(text) => onDraftChange({ text })}
             contentPlaceholder="Was Compliance über diesen Kunden wissen sollte..."
             onCreated={handleCreated}
+            onSubmittingChange={setIsSubmitting}
           />
         </div>
       )}

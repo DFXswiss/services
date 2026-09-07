@@ -195,4 +195,21 @@ describe('NoteComposer', () => {
     ).toBeInTheDocument();
     expect(submit()).toBeDisabled();
   });
+
+  it('reports submitting true then false around a successful create', async () => {
+    const onSubmittingChange = jest.fn();
+    let resolveCreate!: (value: unknown) => void;
+    mockCreateSupportNote.mockReturnValueOnce(new Promise((resolve) => (resolveCreate = resolve)));
+
+    render(<NoteComposer userDataId={7} onCreated={jest.fn()} onSubmittingChange={onSubmittingChange} />);
+    fireEvent.change(content(), { target: { value: 'Inhalt' } });
+    fireEvent.click(submit());
+
+    await waitFor(() => expect(onSubmittingChange).toHaveBeenCalledWith(true));
+    expect(onSubmittingChange).not.toHaveBeenCalledWith(false);
+
+    resolveCreate({});
+    await waitFor(() => expect(onSubmittingChange).toHaveBeenCalledWith(false));
+    expect(onSubmittingChange.mock.calls.map((c) => c[0])).toEqual([true, false]);
+  });
 });

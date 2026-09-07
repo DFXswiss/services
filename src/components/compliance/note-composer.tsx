@@ -23,6 +23,8 @@ interface Props {
   submitLabel?: string;
   contentPlaceholder?: string;
   onCreated: () => void;
+  // Notifies the parent when a submit is in flight (true at start, false in finally).
+  onSubmittingChange?: (isSubmitting: boolean) => void;
 }
 
 export function NoteComposer({
@@ -35,6 +37,7 @@ export function NoteComposer({
   submitLabel,
   contentPlaceholder,
   onCreated,
+  onSubmittingChange,
 }: Readonly<Props>): JSX.Element {
   const { session } = useAuthContext();
   const role = session?.role;
@@ -75,6 +78,7 @@ export function NoteComposer({
 
     setError(undefined);
     setIsSubmitting(true);
+    onSubmittingChange?.(true);
     try {
       await createSupportNote(content.trim(), {
         userDataId: resolved.value,
@@ -90,6 +94,7 @@ export function NoteComposer({
       setError(e instanceof Error ? e.message : 'Failed to save note');
     } finally {
       setIsSubmitting(false);
+      onSubmittingChange?.(false);
     }
   }
 
