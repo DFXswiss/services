@@ -257,9 +257,9 @@ test.describe('Support dashboard (staff)', () => {
     );
     expect(updated.state).toBe(targetState);
 
-    // Staff reply via this screen's message form (Send button; Enter also works).
+    // Staff reply via this screen's message form (Send button; Cmd/Ctrl+Enter also works).
     const staffReply = `E2E staff reply ${Date.now()}`;
-    const msgBox = page.getByPlaceholder('Type a message... (Shift+Enter = neue Zeile, Enter = senden)');
+    const msgBox = page.getByPlaceholder('Type a message... (Enter = neue Zeile, Cmd/Ctrl+Enter = senden)');
     await expect(msgBox).toBeVisible();
     await msgBox.fill(staffReply);
     await page.getByRole('button', { name: 'Send', exact: true }).click();

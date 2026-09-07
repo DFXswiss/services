@@ -24,6 +24,7 @@ import { useSupportDraft } from 'src/hooks/support-draft.hook';
 import { STAFF_NAME_MISSING, staffNameLoadError } from 'src/components/compliance/staff-identity';
 import { useStaffVerifiedName } from 'src/hooks/staff-verified-name.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
+import { isSendShortcut } from 'src/util/message-composer';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
 import { writeDraft } from 'src/util/support-draft';
 import { detectPlaceholders, requiresArraySelection, resolvePlaceholders } from 'src/util/template-placeholders';
@@ -634,10 +635,10 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
               value={messageText}
               rows={Math.min(8, Math.max(1, messageText.split('\n').length))}
               onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Type a message... (Shift+Enter = neue Zeile, Enter = senden)"
+              placeholder="Type a message... (Enter = neue Zeile, Cmd/Ctrl+Enter = senden)"
               disabled={isSending}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (isSendShortcut(e)) {
                   e.preventDefault();
                   handleSendMessage();
                 }

@@ -16,6 +16,7 @@ import { useSplitPane } from 'src/hooks/split-pane.hook';
 import { ASSIGNABLE_DEPARTMENTS, SupportIssueInternalData, SupportMessageInfo } from 'src/hooks/support-dashboard.hook';
 import { useSupportDraft } from 'src/hooks/support-draft.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
+import { isSendShortcut } from 'src/util/message-composer';
 import { writeDraft } from 'src/util/support-draft';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
 import { saveBufferedFile, toBase64 } from 'src/util/utils';
@@ -431,7 +432,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
               placeholder={translate('screens/support', 'Type a message...')}
               disabled={isSending}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (isSendShortcut(e)) {
                   e.preventDefault();
                   handleSendMessage();
                 }
