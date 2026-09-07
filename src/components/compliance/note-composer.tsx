@@ -1,5 +1,5 @@
 import { Department, useAuthContext, UserRole } from '@dfx.swiss/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCompliance } from 'src/hooks/compliance.hook';
 import { adminDeptOptions } from './note-utils';
 
@@ -58,6 +58,14 @@ export function NoteComposer({
   const [userDataIdInput, setUserDataIdInput] = useState(initialUserDataId ?? '');
   const [error, setError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   function resolveUserDataId(): { value?: number; error?: string } {
     if (!allowUserDataIdInput) return { value: userDataId };
@@ -85,14 +93,17 @@ export function NoteComposer({
         subject: subject.trim() || undefined,
         department: department || undefined,
       });
+      if (!mountedRef.current) return;
       setSubject('');
       setContent('');
       setDepartment('');
       setUserDataIdInput('');
       onCreated();
     } catch (e: unknown) {
+      if (!mountedRef.current) return;
       setError(e instanceof Error ? e.message : 'Failed to save note');
     } finally {
+      if (!mountedRef.current) return;
       setIsSubmitting(false);
       onSubmittingChange?.(false);
     }

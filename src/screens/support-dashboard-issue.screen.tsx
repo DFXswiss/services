@@ -548,7 +548,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             >
               {isUpdating ? 'Updating...' : 'Update'}
             </button>
-            {id && (
+            {id && issueData.id === +id && (
               <TicketNotePanel
                 key={id}
                 userDataId={issueData.account.id}

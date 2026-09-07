@@ -14,7 +14,7 @@ jest.mock('src/hooks/compliance.hook', () => ({
   useCompliance: () => ({ createSupportNote: mockCreateSupportNote }),
 }));
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MAX_CONTENT_LENGTH, NoteComposer } from 'src/components/compliance/note-composer';
 
 function content(): HTMLElement {
@@ -211,5 +211,36 @@ describe('NoteComposer', () => {
     resolveCreate({});
     await waitFor(() => expect(onSubmittingChange).toHaveBeenCalledWith(false));
     expect(onSubmittingChange.mock.calls.map((c) => c[0])).toEqual([true, false]);
+  });
+
+  it('does not call parent callbacks after unmount during submit', async () => {
+    const onCreated = jest.fn();
+    const onContentChange = jest.fn();
+    const onSubmittingChange = jest.fn();
+    let resolveCreate!: (value: unknown) => void;
+    mockCreateSupportNote.mockReturnValueOnce(new Promise((resolve) => (resolveCreate = resolve)));
+
+    const { unmount } = render(
+      <NoteComposer
+        userDataId={7}
+        content="Inhalt"
+        onContentChange={onContentChange}
+        onCreated={onCreated}
+        onSubmittingChange={onSubmittingChange}
+      />,
+    );
+    fireEvent.click(submit());
+
+    await waitFor(() => expect(onSubmittingChange).toHaveBeenCalledWith(true));
+    unmount();
+
+    await act(async () => {
+      resolveCreate({});
+      await Promise.resolve();
+    });
+
+    expect(onCreated).not.toHaveBeenCalled();
+    expect(onContentChange).not.toHaveBeenCalledWith('');
+    expect(onSubmittingChange).not.toHaveBeenCalledWith(false);
   });
 });
