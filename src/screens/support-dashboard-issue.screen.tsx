@@ -25,6 +25,7 @@ import { STAFF_NAME_MISSING, staffNameLoadError } from 'src/components/complianc
 import { useStaffVerifiedName } from 'src/hooks/staff-verified-name.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
+import { writeDraft } from 'src/util/support-draft';
 import { detectPlaceholders, requiresArraySelection, resolvePlaceholders } from 'src/util/template-placeholders';
 import { toBase64 } from 'src/util/utils';
 
@@ -57,6 +58,9 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   // Message form state
   // Draft persisted per ticket, so a detour to the customer profile does not lose the text.
   const [messageText, setMessageText, clearDraft] = useSupportDraft(id);
+  // Live ticket id for in-flight send catch: the closure's `id` stays the send-start id.
+  const idRef = useRef(id);
+  idRef.current = id;
   const { name: messageAuthor, isLoading: isLoadingAuthor, error: authorError } = useStaffVerifiedName();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
@@ -212,7 +216,9 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     setIsSending(true);
     setActionError(undefined);
     // The draft is dropped before the request, so a detour during the send cannot bring back text
-    // that is already on its way; a failed send puts it back into the composer.
+    // that is already on its way. On failure, storage is restored for the ticket that was sending;
+    // the composer is only updated if the clerk is still on that same ticket.
+    const sendIssueId = id;
     const draft = messageText;
     clearDraft();
     try {
@@ -223,7 +229,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         for (let i = 0; i < selectedFiles.length; i++) {
           const fileData = await toBase64(selectedFiles[i]);
           const isLast = i === selectedFiles.length - 1;
-          await sendMessage(+id, {
+          await sendMessage(+sendIssueId, {
             author,
             message: isLast ? text : undefined,
             file: fileData,
@@ -231,14 +237,15 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
           });
         }
       } else {
-        await sendMessage(+id, { author, message: text });
+        await sendMessage(+sendIssueId, { author, message: text });
       }
 
       setSelectedFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
       loadMessages();
     } catch (e: unknown) {
-      setMessageText(draft);
+      writeDraft(sendIssueId, draft);
+      if (idRef.current === sendIssueId) setMessageText(draft);
       setActionError(e instanceof Error ? e.message : 'Send failed');
     } finally {
       setIsSending(false);
@@ -597,6 +604,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
               rows={Math.min(8, Math.max(1, messageText.split('\n').length))}
               onChange={(e) => setMessageText(e.target.value)}
               placeholder="Type a message... (Shift+Enter = neue Zeile, Enter = senden)"
+              disabled={isSending}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();

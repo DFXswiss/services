@@ -16,6 +16,7 @@ import { useSplitPane } from 'src/hooks/split-pane.hook';
 import { ASSIGNABLE_DEPARTMENTS, SupportIssueInternalData, SupportMessageInfo } from 'src/hooks/support-dashboard.hook';
 import { useSupportDraft } from 'src/hooks/support-draft.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
+import { writeDraft } from 'src/util/support-draft';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
 import { toBase64 } from 'src/util/utils';
 
@@ -45,6 +46,9 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
   // Message form state
   // Draft persisted per ticket, so a detour to the customer profile does not lose the text.
   const [messageText, setMessageText, clearDraft] = useSupportDraft(id);
+  // Live ticket id for in-flight send catch: the closure's `id` stays the send-start id.
+  const idRef = useRef(id);
+  idRef.current = id;
   const { name: messageAuthor, isLoading: isLoadingAuthor, error: authorError } = useStaffVerifiedName();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
@@ -154,7 +158,9 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
     setIsSending(true);
     setActionError(undefined);
     // The draft is dropped before the request, so a detour during the send cannot bring back text
-    // that is already on its way; a failed send puts it back into the composer.
+    // that is already on its way. On failure, storage is restored for the ticket that was sending;
+    // the composer is only updated if the clerk is still on that same ticket.
+    const sendIssueId = id;
     const draft = messageText;
     clearDraft();
     try {
@@ -165,7 +171,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
         for (let i = 0; i < selectedFiles.length; i++) {
           const fileData = await toBase64(selectedFiles[i]);
           const isLast = i === selectedFiles.length - 1;
-          await createMessage(+id, {
+          await createMessage(+sendIssueId, {
             author,
             message: isLast ? text : undefined,
             file: fileData,
@@ -173,14 +179,15 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
           });
         }
       } else {
-        await createMessage(+id, { author, message: text });
+        await createMessage(+sendIssueId, { author, message: text });
       }
 
       setSelectedFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
       loadMessages();
     } catch (e: unknown) {
-      setMessageText(draft);
+      writeDraft(sendIssueId, draft);
+      if (idRef.current === sendIssueId) setMessageText(draft);
       setActionError(e instanceof Error ? e.message : 'Send failed');
     } finally {
       setIsSending(false);
@@ -391,6 +398,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
               rows={Math.min(8, Math.max(1, messageText.split('\n').length))}
               onChange={(e) => setMessageText(e.target.value)}
               placeholder={translate('screens/support', 'Type a message...')}
+              disabled={isSending}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
