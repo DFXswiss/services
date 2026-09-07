@@ -131,7 +131,7 @@ interface SupportMessageInfo {
 }
 
 // Open issues (states Created/Pending) returned by realunit/support/list for the default Open tab. Spread across
-// the three groups the screen renders: "Awaiting reply" (lastMessageAuthor === Customer), "Created", "Pending".
+// the two groups the screen renders: "Awaiting reply" (customer or bot wrote last) and "Answered" (we wrote last).
 const OPEN_ISSUES: SupportIssueListItem[] = [
   // Awaiting reply (customer waiting) — sorted by lastMessageDate desc by the screen
   {
@@ -162,7 +162,7 @@ const OPEN_ISSUES: SupportIssueListItem[] = [
     lastMessageDate: '2024-01-02T08:30:00.000Z',
     lastMessageAuthor: CUSTOMER_AUTHOR,
   },
-  // Created (we answered last / no customer wait)
+  // Answered (we answered last / no customer wait)
   {
     id: 7003,
     uid: 'RU-7003-UID',
@@ -177,7 +177,7 @@ const OPEN_ISSUES: SupportIssueListItem[] = [
     lastMessageDate: '2024-01-04T15:00:00.000Z',
     lastMessageAuthor: 'Rita Clerk',
   },
-  // Pending (we answered last / no customer wait)
+  // Answered (we answered last / no customer wait)
   {
     id: 7004,
     uid: 'RU-7004-UID',
@@ -303,7 +303,7 @@ test.describe('RealUnit Support dashboards - Visual Regression Tests', () => {
     token = await getAdminAuth(request);
   });
 
-  test('list screen groups open issues (awaiting reply / created / pending)', async ({ page }) => {
+  test('list screen groups open issues (awaiting reply / answered)', async ({ page }) => {
     await installSupportRoutes(page);
 
     await page.goto(`/realunit/support?session=${token}`);

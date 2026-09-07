@@ -8,6 +8,7 @@ import {
   granularityFor,
   groupOpenIssues,
   hoursSince,
+  isUnassigned,
   trendLabel,
   waitTier,
 } from '../util/support-stats';
@@ -78,17 +79,19 @@ describe('support-helpers customer waiting', () => {
 
   it('returns null when we replied last (timer resets on author flip) or there are no messages', () => {
     expect(customerWaitingHours(issue({ lastMessageAuthor: 'Josh', lastMessageDate: hoursAgo(40) }), NOW)).toBeNull();
-    expect(customerWaitingHours(issue({ messageCount: 0 }), NOW)).toBeNull();
     expect(
-      customerWaitingHours(issue({ lastMessageAuthor: 'Customer', lastMessageDate: undefined }), NOW),
-    ).toBeNull();
+      customerWaitingHours(issue({ lastMessageAuthor: 'AutoResponder', lastMessageDate: hoursAgo(2) }), NOW),
+    ).toBeCloseTo(2, 5);
+    expect(customerWaitingHours(issue({ messageCount: 0 }), NOW)).toBeNull();
+    expect(customerWaitingHours(issue({ lastMessageAuthor: 'Customer', lastMessageDate: undefined }), NOW)).toBeNull();
   });
 
   it('defaults customerWaitingHours now to the current time', () => {
     const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
-    expect(
-      customerWaitingHours(issue({ lastMessageAuthor: 'Customer', lastMessageDate: threeHoursAgo })),
-    ).toBeCloseTo(3, 0);
+    expect(customerWaitingHours(issue({ lastMessageAuthor: 'Customer', lastMessageDate: threeHoursAgo }))).toBeCloseTo(
+      3,
+      0,
+    );
   });
 
   it('maps waiting time to rising-severity tiers (1h/12h/24h; 24h = escalated)', () => {
@@ -230,51 +233,96 @@ describe('support-helpers trendLabel', () => {
   });
 });
 
+describe('isUnassigned', () => {
+  it('flags tickets without a clerk or with only the bot as clerk', () => {
+    expect(isUnassigned(issue({ clerk: undefined }))).toBe(true);
+    expect(isUnassigned(issue({ clerk: '' }))).toBe(true);
+    expect(isUnassigned(issue({ clerk: 'AutoResponder' }))).toBe(true);
+    expect(isUnassigned(issue({ clerk: 'Jana' }))).toBe(false);
+  });
+});
+
 describe('groupOpenIssues', () => {
-  it('puts customer-waiting tickets first, newest customer message on top, regardless of state', () => {
+  it('puts tickets whose last message came from the customer first, newest on top, regardless of state', () => {
     const groups = groupOpenIssues([
       issue({ id: 1, state: 'Pending', lastMessageAuthor: 'Customer', lastMessageDate: '2026-08-30T11:00:00Z' }),
       issue({ id: 2, state: 'Created', lastMessageAuthor: 'Customer', lastMessageDate: '2026-08-31T09:00:00Z' }),
-      issue({ id: 3, state: 'Created', lastMessageAuthor: 'Jana' }),
+      issue({ id: 3, state: 'Created', lastMessageAuthor: 'Jana', lastMessageDate: '2026-08-31T10:00:00Z' }),
     ]);
 
-    expect(groups.customerWaiting.map((i) => i.id)).toEqual([2, 1]);
-    expect(groups.created.map((i) => i.id)).toEqual([3]);
-    expect(groups.pending).toEqual([]);
+    expect(groups.needsReply.map((i) => i.id)).toEqual([2, 1]);
+    expect(groups.answered.map((i) => i.id)).toEqual([3]);
     expect(countOpenIssueGroups(groups)).toBe(3);
   });
 
-  it('splits the rest into Created and Pending, newest created on top', () => {
+  it('sorts answered tickets by last message, not by creation date, and ignores the state', () => {
     const groups = groupOpenIssues([
-      issue({ id: 1, state: 'Pending', created: '2026-08-28T10:00:00Z', lastMessageAuthor: 'Jana' }),
-      issue({ id: 2, state: 'Pending', created: '2026-08-30T10:00:00Z', lastMessageAuthor: 'Jana' }),
-      issue({ id: 3, state: 'Created', created: '2026-08-29T10:00:00Z' }),
+      issue({
+        id: 1,
+        state: 'Pending',
+        created: '2026-08-30T10:00:00Z',
+        lastMessageAuthor: 'Jana',
+        lastMessageDate: '2026-08-30T11:00:00Z',
+      }),
+      issue({
+        id: 2,
+        state: 'Created',
+        created: '2026-08-28T10:00:00Z',
+        lastMessageAuthor: 'Jana',
+        lastMessageDate: '2026-08-31T09:00:00Z',
+      }),
     ]);
 
-    expect(groups.customerWaiting).toEqual([]);
-    expect(groups.created.map((i) => i.id)).toEqual([3]);
-    expect(groups.pending.map((i) => i.id)).toEqual([2, 1]);
+    expect(groups.needsReply).toEqual([]);
+    // ticket 2 was created earlier but has the more recent message, so it comes first
+    expect(groups.answered.map((i) => i.id)).toEqual([2, 1]);
   });
 
-  it('applies the state filter before grouping, also to customer-waiting tickets', () => {
+  it('treats a bot auto-response and a ticket without any message as still awaiting a human reply', () => {
+    const groups = groupOpenIssues([
+      issue({ id: 1, lastMessageAuthor: 'AutoResponder', lastMessageDate: '2026-08-30T11:00:00Z' }),
+      issue({ id: 2, lastMessageAuthor: 'Jana', lastMessageDate: '2026-08-31T09:00:00Z' }),
+      issue({ id: 3, created: '2026-08-29T10:00:00Z', lastMessageAuthor: undefined, messageCount: 0 }),
+    ]);
+
+    expect(groups.needsReply.map((i) => i.id)).toEqual([1, 3]);
+    expect(groups.answered.map((i) => i.id)).toEqual([2]);
+  });
+
+  it('falls back to the creation date for tickets without a message', () => {
+    const groups = groupOpenIssues([
+      issue({ id: 1, created: '2026-08-28T10:00:00Z', lastMessageAuthor: 'Jana' }),
+      issue({
+        id: 2,
+        created: '2026-08-27T10:00:00Z',
+        lastMessageAuthor: 'Jana',
+        lastMessageDate: '2026-08-29T10:00:00Z',
+      }),
+      issue({ id: 3, created: '2026-08-30T10:00:00Z', lastMessageAuthor: 'Jana' }),
+    ]);
+
+    expect(groups.answered.map((i) => i.id)).toEqual([3, 2, 1]);
+  });
+
+  it('applies the state filter before grouping, to both groups', () => {
     const groups = groupOpenIssues(
       [
         issue({ id: 1, state: 'Pending', lastMessageAuthor: 'Customer', lastMessageDate: '2026-08-30T11:00:00Z' }),
         issue({ id: 2, state: 'Created', lastMessageAuthor: 'Customer', lastMessageDate: '2026-08-31T09:00:00Z' }),
-        issue({ id: 3, state: 'Created' }),
+        issue({ id: 3, state: 'Created', lastMessageAuthor: 'Jana' }),
+        issue({ id: 4, state: 'Pending', lastMessageAuthor: 'Jana' }),
       ],
       'Created',
     );
 
-    expect(groups.customerWaiting.map((i) => i.id)).toEqual([2]);
-    expect(groups.created.map((i) => i.id)).toEqual([3]);
-    expect(groups.pending).toEqual([]);
+    expect(groups.needsReply.map((i) => i.id)).toEqual([2]);
+    expect(groups.answered.map((i) => i.id)).toEqual([3]);
     expect(countOpenIssueGroups(groups)).toBe(2);
   });
 
   it('returns empty groups and a zero count for an empty input', () => {
     const groups = groupOpenIssues([]);
-    expect(groups).toEqual({ customerWaiting: [], created: [], pending: [] });
+    expect(groups).toEqual({ needsReply: [], answered: [] });
     expect(countOpenIssueGroups(groups)).toBe(0);
   });
 
@@ -287,37 +335,22 @@ describe('groupOpenIssues', () => {
       '',
     );
 
-    expect(groups.created.map((i) => i.id)).toEqual([2]);
-    expect(groups.pending.map((i) => i.id)).toEqual([1]);
+    expect(groups.answered.map((i) => i.id).sort()).toEqual([1, 2]);
     expect(countOpenIssueGroups(groups)).toBe(2);
   });
 
-  it('puts a customer-authored ticket without lastMessageDate into customerWaiting', () => {
+  it('puts a customer-authored ticket without lastMessageDate into needsReply, ordered by creation', () => {
     const groups = groupOpenIssues([
-      issue({ id: 9, state: 'Pending', lastMessageAuthor: 'Customer', lastMessageDate: undefined }),
+      issue({ id: 9, created: '2026-08-30T08:00:00Z', lastMessageAuthor: 'Customer', lastMessageDate: undefined }),
       issue({
         id: 10,
-        state: 'Created',
+        created: '2026-08-29T08:00:00Z',
         lastMessageAuthor: 'Customer',
         lastMessageDate: '2026-08-31T09:00:00Z',
       }),
     ]);
 
-    expect(groups.customerWaiting.map((i) => i.id)).toEqual([10, 9]);
-    expect(groups.created).toEqual([]);
-    expect(groups.pending).toEqual([]);
-  });
-
-  it('drops tickets that are neither Created nor Pending and not customer-waiting', () => {
-    const groups = groupOpenIssues([
-      issue({ id: 1, state: 'OnHold', lastMessageAuthor: 'Jana' }),
-      issue({ id: 2, state: 'Completed', lastMessageAuthor: 'Josh' }),
-      issue({ id: 3, state: 'Canceled' }),
-    ]);
-
-    expect(groups.customerWaiting).toEqual([]);
-    expect(groups.created).toEqual([]);
-    expect(groups.pending).toEqual([]);
-    expect(countOpenIssueGroups(groups)).toBe(0);
+    expect(groups.needsReply.map((i) => i.id)).toEqual([10, 9]);
+    expect(groups.answered).toEqual([]);
   });
 });
