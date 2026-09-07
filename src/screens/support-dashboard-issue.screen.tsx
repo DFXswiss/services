@@ -65,6 +65,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   const { name: messageAuthor, isLoading: isLoadingAuthor, error: authorError } = useStaffVerifiedName();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const sendInFlight = useRef(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -212,6 +213,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   }
 
   async function handleSendMessage(): Promise<void> {
+    if (isSending || sendInFlight.current) return;
     if (!id || (!messageText.trim() && selectedFiles.length === 0)) return;
     const remainingPlaceholders = detectPlaceholders(messageText);
     if (remainingPlaceholders.length > 0) {
@@ -226,6 +228,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
       setActionError(authorError ? staffNameLoadError(authorError) : STAFF_NAME_MISSING);
       return;
     }
+    sendInFlight.current = true;
     setIsSending(true);
     setActionError(undefined);
     // The draft is dropped before the request, so a detour during the send cannot bring back text
@@ -265,6 +268,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         setActionError(e instanceof Error ? e.message : 'Send failed');
       }
     } finally {
+      sendInFlight.current = false;
       if (idRef.current === sendIssueId) setIsSending(false);
     }
   }
