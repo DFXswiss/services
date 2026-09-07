@@ -167,8 +167,9 @@ test.describe('Compliance area (overview)', () => {
     await expect(page.getByRole('button', { name: 'KYC', exact: true }).first()).toBeVisible();
 
     // The KYC Level column shows the seeded level (30) in the customer's row
-    await expect(page.getByRole('columnheader', { name: 'KYC Level', exact: true })).toBeVisible();
-    const customerRow = page
+    const customersTable = page.getByText('Customers', { exact: true }).locator('xpath=following::table[1]');
+    await expect(customersTable.getByRole('columnheader', { name: 'KYC Level', exact: true })).toBeVisible();
+    const customerRow = customersTable
       .getByRole('row')
       .filter({ hasText: String(customer.userDataId) })
       .first();
