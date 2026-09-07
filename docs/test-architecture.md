@@ -138,6 +138,11 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   `CollectionAccountInvoicePersonalIbanMissing` error token, so a green run proves that the screen
   displays that token, not that the API emits it for this request. A unit test against the message
   mapping pins the token contract instead.
+- **The staff ticket customer-note visual spec answers the issue payload itself.**
+  `e2e/support-ticket-note.spec.ts` fulfils `GET /v1/support/issue/:id/data`, the message thread
+  for that uid, clerks, clerk mapping and activity with synthetic fixtures. A green run proves
+  that the Kundennotiz composer renders those fixtures. It does not prove that the API returns
+  that issue or that `createSupportNote` persists a note.
 - **The support-issue receiver-IBAN spec pins KYC level and account mail on GET /v2/user.**
   `e2e/support-issue-receiver-iban.spec.ts` rewrites that response so `kyc.level` is high enough for
   the screen guard and `mail` is present if the cached wallet session has none. A green visual run
