@@ -33,6 +33,8 @@ jest.mock('../hooks/navigation.hook', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
 }));
 
+jest.mock('react-router-dom', () => ({ useLocation: () => ({ pathname: '/' }) }));
+
 jest.mock('../util/utils', () => ({
   openPdfFromString: (...args: unknown[]) => mockOpenPdf(...args),
 }));
