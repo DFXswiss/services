@@ -6,7 +6,7 @@ jest.mock('@dfx.swiss/react', () => ({
 }));
 
 import { KycStatus } from '@dfx.swiss/react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ComplianceReviewHeader } from 'src/components/compliance/compliance-review-header';
 import { KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 
@@ -202,9 +202,12 @@ describe('ComplianceReviewHeader', () => {
     );
 
     const button = screen.getByRole('button', { name: 'Auf Check setzen' });
-    fireEvent.click(button);
-    fireEvent.click(button);
+    act(() => {
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    });
 
+    expect(window.confirm).toHaveBeenCalledTimes(1);
     expect(onSetKycStatusCheck).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Wird gesetzt...' })).toBeDisabled();
 

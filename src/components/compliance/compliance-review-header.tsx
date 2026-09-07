@@ -38,7 +38,7 @@ export function ComplianceReviewHeader({
   const isOrganization = accountType === 'Organization' || accountType === 'SoleProprietorship';
 
   async function setKycStatusCheck(): Promise<void> {
-    if (kycStatusActionPending.current || isSaving) return;
+    if (kycStatusActionPending.current) return;
     if (
       !window.confirm(
         `KYC-Status für UserData ${userData.id} wirklich von ${display(
