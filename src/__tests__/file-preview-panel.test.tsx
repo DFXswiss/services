@@ -95,4 +95,33 @@ describe('FilePreviewPanel', () => {
     expect(jpegImg).toHaveAttribute('src', 'blob:jpeg');
     expect(screen.queryByText('No preview for this format, download it instead.')).not.toBeInTheDocument();
   });
+
+  it('renders an image when contentType uses mixed case', () => {
+    const { container } = render(
+      <FilePreviewPanel
+        preview={{ url: 'blob:img-mixed', contentType: 'Image/jpeg', name: 'ausweis.jpg' }}
+        label="Dateien"
+        onClose={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('img', { name: 'ausweis.jpg' })).toHaveAttribute('src', 'blob:img-mixed');
+    const link = screen.getByRole('link', { name: 'Download' });
+    expect(link).toHaveAttribute('href', 'blob:img-mixed');
+    expect(link).toHaveAttribute('download', 'ausweis.jpg');
+    expect(screen.queryByText('No preview for this format, download it instead.')).not.toBeInTheDocument();
+    expect(container.querySelector('embed')).not.toBeInTheDocument();
+  });
+
+  it('embeds a PDF when contentType uses mixed case', () => {
+    const { container } = render(
+      <FilePreviewPanel
+        preview={{ url: 'blob:pdf-mixed', contentType: 'Application/PDF', name: 'vertrag.pdf' }}
+        label="Dateien"
+        onClose={jest.fn()}
+      />,
+    );
+    expect(container.querySelector('embed')).toHaveAttribute('src', 'blob:pdf-mixed#navpanes=0');
+    expect(screen.queryByRole('link', { name: 'Download' })).not.toBeInTheDocument();
+  });
 });

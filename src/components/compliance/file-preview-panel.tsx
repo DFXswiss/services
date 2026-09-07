@@ -11,12 +11,17 @@ interface FilePreviewPanelProps {
 // original name (the preview holds the object URL of the loaded blob, so no second request). An
 // image the browser cannot decode (e.g. HEIC outside Safari) falls back to the hint instead of a
 // broken image.
+function normalizeContentType(contentType: string): string {
+  return contentType.split(';')[0].trim().toLowerCase();
+}
+
 function isPdf(contentType: string): boolean {
-  return contentType.includes('pdf');
+  return normalizeContentType(contentType) === 'application/pdf';
 }
 
 function canPreview(contentType: string): boolean {
-  return contentType.startsWith('image/') || isPdf(contentType);
+  const normalized = normalizeContentType(contentType);
+  return normalized.startsWith('image/') || isPdf(contentType);
 }
 
 export function FilePreviewPanel({ preview, label, onClose }: FilePreviewPanelProps): JSX.Element {
