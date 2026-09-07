@@ -1,5 +1,5 @@
 import { KycStatus } from '@dfx.swiss/react';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 import { KycStepInfo, UserDataDetail } from 'src/hooks/compliance.hook';
 import { buildAddress, display, extractLegalEntity, formatBirthday, refName } from 'src/util/compliance-helpers';
 import { formatSwissDate } from 'src/util/utils';
@@ -32,11 +32,13 @@ export function ComplianceReviewHeader({
   onSetKycStatusCheck,
 }: Readonly<ComplianceReviewHeaderProps>): JSX.Element {
   const [isSettingKycStatus, setIsSettingKycStatus] = useState(false);
+  const kycStatusActionPending = useRef(false);
   const contactName = [userData.firstname, userData.surname].filter(Boolean).join(' ') || '-';
   const accountType = display(userData.accountType);
   const isOrganization = accountType === 'Organization' || accountType === 'SoleProprietorship';
 
   async function setKycStatusCheck(): Promise<void> {
+    if (kycStatusActionPending.current || isSaving) return;
     if (
       !window.confirm(
         `KYC-Status für UserData ${userData.id} wirklich von ${display(
@@ -46,10 +48,12 @@ export function ComplianceReviewHeader({
     )
       return;
 
+    kycStatusActionPending.current = true;
     setIsSettingKycStatus(true);
     try {
       await onSetKycStatusCheck();
     } finally {
+      kycStatusActionPending.current = false;
       setIsSettingKycStatus(false);
     }
   }
