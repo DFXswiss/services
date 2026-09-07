@@ -270,6 +270,17 @@ describe('RealunitSupportScreen', () => {
 
   it('surfaces a paged-tab failure and clears its loading state', async () => {
     mockGetIssueList.mockImplementation((params: { states: string }) =>
+      params.states === 'Canceled' ? Promise.reject(new Error('paged down')) : Promise.resolve({ data: [], total: 0 }),
+    );
+    const { unmount } = render(<RealunitSupportScreen />);
+    await flushDebounce();
+
+    fireEvent.click(tab(/^Canceled \(/));
+    await flushDebounce();
+    expect(screen.getByTestId('error-hint')).toHaveTextContent('paged down');
+    unmount();
+
+    mockGetIssueList.mockImplementation((params: { states: string }) =>
       params.states === 'Canceled' ? Promise.reject({}) : Promise.resolve({ data: [], total: 0 }),
     );
     render(<RealunitSupportScreen />);
