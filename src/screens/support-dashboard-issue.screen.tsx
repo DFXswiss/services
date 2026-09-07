@@ -137,6 +137,13 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     loadMessages();
   }, [loadMessages]);
 
+  // Clear send UI state when navigating to a different ticket
+  useEffect(() => {
+    setIsSending(false);
+    setSelectedFiles([]);
+    setActionError(undefined);
+  }, [id]);
+
   // Reset cached UserData when the issue (and thus the account) changes
   useEffect(() => {
     setUserDataDetail(undefined);
@@ -573,6 +580,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
               className="px-2 py-2 text-dfxGray-700 hover:text-dfxBlue-800 transition-colors"
               onClick={() => fileInputRef.current?.click()}
               title="Attach file"
+              disabled={isSending}
             >
               &#128206;
             </button>

@@ -116,6 +116,13 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
     loadMessages();
   }, [loadMessages]);
 
+  // Clear send UI state when navigating to a different ticket
+  useEffect(() => {
+    setIsSending(false);
+    setSelectedFiles([]);
+    setActionError(undefined);
+  }, [id]);
+
   useEffect(() => {
     visibleIdsRef.current = new Set(messages.map((m) => m.id));
   }, [messages]);
@@ -389,6 +396,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
               className="px-2 py-2 text-dfxGray-700 hover:text-dfxBlue-800 transition-colors"
               onClick={() => fileInputRef.current?.click()}
               title="Attach file"
+              disabled={isSending}
             >
               &#128206;
             </button>
