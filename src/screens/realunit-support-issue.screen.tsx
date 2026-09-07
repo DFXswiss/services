@@ -189,15 +189,19 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
         await createMessage(+sendIssueId, { author, message: text });
       }
 
-      setSelectedFiles([]);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      loadMessages();
+      if (idRef.current === sendIssueId) {
+        setSelectedFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        loadMessages();
+      }
     } catch (e: unknown) {
       writeDraft(sendIssueId, draft);
-      if (idRef.current === sendIssueId) setMessageText(draft);
-      setActionError(e instanceof Error ? e.message : 'Send failed');
+      if (idRef.current === sendIssueId) {
+        setMessageText(draft);
+        setActionError(e instanceof Error ? e.message : 'Send failed');
+      }
     } finally {
-      setIsSending(false);
+      if (idRef.current === sendIssueId) setIsSending(false);
     }
   }
 
