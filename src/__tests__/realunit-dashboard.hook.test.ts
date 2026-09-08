@@ -75,7 +75,16 @@ describe('useRealunitSupport', () => {
     });
 
     await result.current.getFile(42, 7);
-    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/support/42/message/7/file', method: 'GET' });
+    expect(mockCall).toHaveBeenCalledWith({
+      url: 'realunit/support/42/message/7/file?access=view',
+      method: 'GET',
+    });
+
+    await result.current.getFile(42, 7, 'download');
+    expect(mockCall).toHaveBeenCalledWith({
+      url: 'realunit/support/42/message/7/file?access=download',
+      method: 'GET',
+    });
   });
 
   it('reads the message thread from the scoped, membership-enforced endpoint by numeric issue id', async () => {

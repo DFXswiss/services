@@ -1,4 +1,4 @@
-import { useAuthContext, UserRole, useKyc } from '@dfx.swiss/react';
+import { useAuthContext, UserRole } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -29,6 +29,7 @@ import { ComplianceUserData, KycFile, useCompliance } from 'src/hooks/compliance
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSplitPane } from 'src/hooks/split-pane.hook';
+import { saveBufferedFile } from 'src/util/utils';
 
 type TabType =
   | 'transactions'
@@ -57,13 +58,12 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   const { translate } = useSettingsContext();
   const { id: userDataId } = useParams();
-  const { getUserData } = useCompliance();
-  const { getFile } = useKyc();
+  const { getUserData, getKycFile } = useCompliance();
   const navigate = useNavigate();
 
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ComplianceUserData>();
-  const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
+  const [preview, setPreview] = useState<{ url: string; contentType: string; name: string; uid: string }>();
   const [activeTab, setActiveTab] = useState<TabType>('transactions');
   const [expandedBankTxId, setExpandedBankTxId] = useState<number>();
   const [expandedCryptoInputId, setExpandedCryptoInputId] = useState<number>();
@@ -114,7 +114,7 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   async function openFile(file: KycFile): Promise<void> {
     try {
-      const { content, contentType } = await getFile(file.uid);
+      const { content, contentType } = await getKycFile(file.uid, 'view');
       if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
         setError('Invalid file type');
         return;
@@ -123,9 +123,23 @@ export default function ComplianceUserScreen(): JSX.Element {
       const blob = new Blob([new Uint8Array(content.data)], { type: contentType });
       const url = URL.createObjectURL(blob);
 
-      setPreview({ url, contentType, name: file.name });
+      setPreview({ url, contentType, name: file.name, uid: file.uid });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error loading file');
+    }
+  }
+
+  async function downloadPreview(): Promise<void> {
+    if (!preview) return;
+    try {
+      const { content, contentType } = await getKycFile(preview.uid, 'download');
+      if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
+        setError('Invalid file type');
+        return;
+      }
+      saveBufferedFile(content, contentType, preview.name);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error downloading file');
     }
   }
 
@@ -243,6 +257,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                   preview={preview}
                   label={translate('screens/compliance', 'File Preview')}
                   onClose={() => setPreview(undefined)}
+                  onDownload={downloadPreview}
                 />
               )}
             </div>

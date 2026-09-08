@@ -27,7 +27,7 @@ import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
 import { writeDraft } from 'src/util/support-draft';
 import { detectPlaceholders, requiresArraySelection, resolvePlaceholders } from 'src/util/template-placeholders';
-import { toBase64 } from 'src/util/utils';
+import { saveBufferedFile, toBase64 } from 'src/util/utils';
 
 export default function SupportDashboardIssueScreen(): JSX.Element {
   useSupportDashboardGuard();
@@ -75,7 +75,12 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   const [pendingTemplateContent, setPendingTemplateContent] = useState<string>();
 
   // File preview state
-  const [filePreview, setFilePreview] = useState<{ url: string; contentType: string; name: string }>();
+  const [filePreview, setFilePreview] = useState<{
+    url: string;
+    contentType: string;
+    name: string;
+    messageId: number;
+  }>();
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   const isComplianceDept = issueData?.department === Department.COMPLIANCE;
@@ -282,7 +287,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   async function openFile(msg: SupportMessageInfo): Promise<void> {
     if (!issueData?.uid || !msg.fileName) return;
     try {
-      const { data, contentType } = await getMessageFile(issueData.uid, msg.id);
+      const { data, contentType } = await getMessageFile(issueData.uid, msg.id, 'view');
       if (!data || data.type !== 'Buffer' || !Array.isArray(data.data)) {
         setActionError('Invalid file type');
         return;
@@ -290,9 +295,23 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
       if (filePreview) URL.revokeObjectURL(filePreview.url);
       const blob = new Blob([new Uint8Array(data.data)], { type: contentType });
       const url = URL.createObjectURL(blob);
-      setFilePreview({ url, contentType, name: msg.fileName });
+      setFilePreview({ url, contentType, name: msg.fileName, messageId: msg.id });
     } catch (e: unknown) {
       setActionError(e instanceof Error ? e.message : 'Error loading file');
+    }
+  }
+
+  async function downloadPreview(): Promise<void> {
+    if (!issueData?.uid || !filePreview) return;
+    try {
+      const { data, contentType } = await getMessageFile(issueData.uid, filePreview.messageId, 'download');
+      if (!data || data.type !== 'Buffer' || !Array.isArray(data.data)) {
+        setActionError('Invalid file type');
+        return;
+      }
+      saveBufferedFile(data, contentType, filePreview.name);
+    } catch (e: unknown) {
+      setActionError(e instanceof Error ? e.message : 'Error downloading file');
     }
   }
 
@@ -678,6 +697,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             if (filePreview) URL.revokeObjectURL(filePreview.url);
             setFilePreview(undefined);
           }}
+          onDownload={downloadPreview}
         />
       </div>
 

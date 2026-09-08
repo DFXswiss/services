@@ -254,9 +254,10 @@ export function useSupportDashboard() {
   async function getMessageFile(
     issueId: string,
     messageId: number,
+    access: 'view' | 'download' = 'view',
   ): Promise<{ data: { type: string; data: number[] }; contentType: string }> {
     return guardedCall<{ data: { type: string; data: number[] }; contentType: string }>({
-      url: `support/issue/${issueId}/message/${messageId}/file`,
+      url: `support/issue/${issueId}/message/${messageId}/file?access=${access}`,
       method: 'GET',
     });
   }

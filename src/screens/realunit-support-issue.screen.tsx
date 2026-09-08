@@ -18,7 +18,7 @@ import { useSupportDraft } from 'src/hooks/support-draft.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
 import { writeDraft } from 'src/util/support-draft';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
-import { toBase64 } from 'src/util/utils';
+import { saveBufferedFile, toBase64 } from 'src/util/utils';
 
 export default function RealunitSupportIssueScreen(): JSX.Element {
   useRealunitGuard();
@@ -56,7 +56,12 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // File preview state
-  const [filePreview, setFilePreview] = useState<{ url: string; contentType: string; name: string }>();
+  const [filePreview, setFilePreview] = useState<{
+    url: string;
+    contentType: string;
+    name: string;
+    messageId: number;
+  }>();
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   useLayoutOptions({
@@ -208,7 +213,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
   async function openFile(msg: SupportMessageInfo): Promise<void> {
     if (!issueData || !msg.fileName) return;
     try {
-      const { data, contentType } = await getFile(issueData.id, msg.id);
+      const { data, contentType } = await getFile(issueData.id, msg.id, 'view');
       if (!data || data.type !== 'Buffer' || !Array.isArray(data.data)) {
         setActionError('Invalid file type');
         return;
@@ -216,9 +221,23 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
       if (filePreview) URL.revokeObjectURL(filePreview.url);
       const blob = new Blob([new Uint8Array(data.data)], { type: contentType });
       const url = URL.createObjectURL(blob);
-      setFilePreview({ url, contentType, name: msg.fileName });
+      setFilePreview({ url, contentType, name: msg.fileName, messageId: msg.id });
     } catch (e: unknown) {
       setActionError(e instanceof Error ? e.message : 'Error loading file');
+    }
+  }
+
+  async function downloadPreview(): Promise<void> {
+    if (!issueData || !filePreview) return;
+    try {
+      const { data, contentType } = await getFile(issueData.id, filePreview.messageId, 'download');
+      if (!data || data.type !== 'Buffer' || !Array.isArray(data.data)) {
+        setActionError('Invalid file type');
+        return;
+      }
+      saveBufferedFile(data, contentType, filePreview.name);
+    } catch (e: unknown) {
+      setActionError(e instanceof Error ? e.message : 'Error downloading file');
     }
   }
 
@@ -454,6 +473,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
             if (filePreview) URL.revokeObjectURL(filePreview.url);
             setFilePreview(undefined);
           }}
+          onDownload={downloadPreview}
         />
       </div>
     </div>
