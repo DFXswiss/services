@@ -166,6 +166,7 @@ test.describe('RealUnit dashboard - Visual Regression Tests', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
+    await expect(page.getByRole('heading', { name: 'Bonus and Referral' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Pending Transactions' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Buy Volume' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Holders over time' })).toBeVisible();
@@ -176,6 +177,13 @@ test.describe('RealUnit dashboard - Visual Regression Tests', () => {
 
     const screenshotOpts = { maxDiffPixels: 5000 };
     const section = (heading: string) => page.getByRole('heading', { name: heading }).locator('xpath=..');
+
+    const bonusSection = section('Bonus and Referral');
+    await bonusSection.scrollIntoViewIfNeeded();
+    await expect(bonusSection.getByText(/ETH:/)).toBeVisible();
+    await expect(bonusSection.getByText(/REALU:/)).toBeVisible();
+    await expect(bonusSection.locator('svg').first()).toBeVisible();
+    await expect(bonusSection).toHaveScreenshot('realunit-dashboard-06-bonus-referral.png', screenshotOpts);
 
     const pendingSection = section('Pending Transactions');
     await pendingSection.scrollIntoViewIfNeeded();
