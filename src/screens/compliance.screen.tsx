@@ -129,6 +129,11 @@ export default function ComplianceScreen(): JSX.Element {
       render: (u: UserSearchResult) => u.accountType ?? '-',
     },
     {
+      key: 'kycLevel',
+      label: translate('screens/compliance', 'KYC Level'),
+      render: (u: UserSearchResult) => u.kycLevel ?? '-',
+    },
+    {
       key: 'name',
       label: translate('screens/kyc', 'Name'),
       render: (u: UserSearchResult) => u.name ?? '-',
