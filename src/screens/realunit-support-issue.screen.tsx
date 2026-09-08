@@ -16,6 +16,7 @@ import { useSplitPane } from 'src/hooks/split-pane.hook';
 import { ASSIGNABLE_DEPARTMENTS, SupportIssueInternalData, SupportMessageInfo } from 'src/hooks/support-dashboard.hook';
 import { useSupportDraft } from 'src/hooks/support-draft.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
+import { isSendShortcut } from 'src/util/message-composer';
 import { writeDraft } from 'src/util/support-draft';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
 import { saveBufferedFile, toBase64 } from 'src/util/utils';
@@ -52,6 +53,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
   const { name: messageAuthor, isLoading: isLoadingAuthor, error: authorError } = useStaffVerifiedName();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const sendInFlight = useRef(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -123,6 +125,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
 
   // Clear send UI state when navigating to a different ticket
   useEffect(() => {
+    sendInFlight.current = false;
     setIsSending(false);
     setSelectedFiles([]);
     setActionError(undefined);
@@ -161,12 +164,14 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
   }
 
   async function handleSendMessage(): Promise<void> {
+    if (isSending || sendInFlight.current) return;
     if (!id || (!messageText.trim() && selectedFiles.length === 0)) return;
     if (isLoadingAuthor) return;
     if (!messageAuthor) {
       setActionError(authorError ? staffNameLoadError(authorError) : STAFF_NAME_MISSING);
       return;
     }
+    sendInFlight.current = true;
     setIsSending(true);
     setActionError(undefined);
     // The draft is dropped before the request, so a detour during the send cannot bring back text
@@ -206,6 +211,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
         setActionError(e instanceof Error ? e.message : 'Send failed');
       }
     } finally {
+      sendInFlight.current = false;
       if (idRef.current === sendIssueId) setIsSending(false);
     }
   }
@@ -431,7 +437,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
               placeholder={translate('screens/support', 'Type a message...')}
               disabled={isSending}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (isSendShortcut(e)) {
                   e.preventDefault();
                   handleSendMessage();
                 }

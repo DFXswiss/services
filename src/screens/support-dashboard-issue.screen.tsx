@@ -6,6 +6,7 @@ import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
 import { LimitRequestDecisionForm } from 'src/components/compliance/limit-request-decision-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { InfoPanel, InfoRow, SupportMessageList } from 'src/components/support/info-panel';
+import { TicketNotePanel } from 'src/components/support/ticket-note-panel';
 import { TemplateArrayPickerModal } from 'src/components/support-templates/template-array-picker-modal';
 import { TemplatePickerModal } from 'src/components/support-templates/template-picker-modal';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -24,6 +25,7 @@ import { useSupportDraft } from 'src/hooks/support-draft.hook';
 import { STAFF_NAME_MISSING, staffNameLoadError } from 'src/components/compliance/staff-identity';
 import { useStaffVerifiedName } from 'src/hooks/staff-verified-name.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
+import { isSendShortcut } from 'src/util/message-composer';
 import { reasonLabel, typeLabel } from 'src/util/support-helpers';
 import { writeDraft } from 'src/util/support-draft';
 import { detectPlaceholders, requiresArraySelection, resolvePlaceholders } from 'src/util/template-placeholders';
@@ -64,6 +66,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   const { name: messageAuthor, isLoading: isLoadingAuthor, error: authorError } = useStaffVerifiedName();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const sendInFlight = useRef(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,6 +84,12 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     name: string;
     messageId: number;
   }>();
+  // Internal customer note in progress (undefined = composer closed). Screen-level so it survives the
+  // reload spinner after Update. noteGenRef invalidates an in-flight create after a ticket change
+  // (including A→B→A) without blocking onCreated for a same-ticket reload spinner.
+  const [noteDraft, setNoteDraft] = useState<{ text: string }>();
+  const noteGenRef = useRef(0);
+  const noteGenAtRender = noteGenRef.current;
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   const isComplianceDept = issueData?.department === Department.COMPLIANCE;
@@ -142,11 +151,14 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     loadMessages();
   }, [loadMessages]);
 
-  // Clear send UI state when navigating to a different ticket
+  // Clear send UI and an in-progress note draft when navigating to a different ticket.
   useEffect(() => {
+    sendInFlight.current = false;
     setIsSending(false);
     setSelectedFiles([]);
     setActionError(undefined);
+    setNoteDraft(undefined);
+    noteGenRef.current += 1;
   }, [id]);
 
   // Reset cached UserData when the issue (and thus the account) changes
@@ -211,6 +223,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   }
 
   async function handleSendMessage(): Promise<void> {
+    if (isSending || sendInFlight.current) return;
     if (!id || (!messageText.trim() && selectedFiles.length === 0)) return;
     const remainingPlaceholders = detectPlaceholders(messageText);
     if (remainingPlaceholders.length > 0) {
@@ -225,6 +238,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
       setActionError(authorError ? staffNameLoadError(authorError) : STAFF_NAME_MISSING);
       return;
     }
+    sendInFlight.current = true;
     setIsSending(true);
     setActionError(undefined);
     // The draft is dropped before the request, so a detour during the send cannot bring back text
@@ -264,6 +278,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
         setActionError(e instanceof Error ? e.message : 'Send failed');
       }
     } finally {
+      sendInFlight.current = false;
       if (idRef.current === sendIssueId) setIsSending(false);
     }
   }
@@ -543,6 +558,19 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             >
               {isUpdating ? 'Updating...' : 'Update'}
             </button>
+            {id && issueData.id === +id && (
+              <TicketNotePanel
+                key={id}
+                userDataId={issueData.account.id}
+                issueId={+id}
+                draft={noteDraft}
+                onDraftChange={(next) => {
+                  // Stale onCreated from another ticket (or an A→B→A round-trip) must not wipe a newer draft.
+                  if (next === undefined && noteGenRef.current !== noteGenAtRender) return;
+                  setNoteDraft(next);
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -634,10 +662,10 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
               value={messageText}
               rows={Math.min(8, Math.max(1, messageText.split('\n').length))}
               onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Type a message... (Shift+Enter = neue Zeile, Enter = senden)"
+              placeholder="Type a message... (Enter = neue Zeile, Cmd/Ctrl+Enter = senden)"
               disabled={isSending}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (isSendShortcut(e)) {
                   e.preventDefault();
                   handleSendMessage();
                 }
