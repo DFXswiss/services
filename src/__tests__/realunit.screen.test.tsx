@@ -492,8 +492,8 @@ describe('RealunitScreen', () => {
     await waitFor(() => expect(screen.getByTestId('prize-qr')).toHaveTextContent('0xprizewallet'));
     expect(screen.getByText('Bonus and Referral')).toBeInTheDocument();
     expect(screen.getAllByText('0xprizewallet').length).toBeGreaterThan(0);
-    expect(screen.getByText(/ETH/)).toBeInTheDocument();
-    expect(screen.getByText(/REALU/)).toBeInTheDocument();
+    expect(screen.getByText(/ETH:/)).toBeInTheDocument();
+    expect(screen.getByText(/REALU:/)).toBeInTheDocument();
   });
 
   it('shows a not-configured hint when the prize wallet is missing', async () => {
