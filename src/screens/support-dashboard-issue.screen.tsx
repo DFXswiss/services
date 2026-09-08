@@ -554,7 +554,11 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                 userDataId={issueData.account.id}
                 issueId={+id}
                 draft={noteDraft}
-                onDraftChange={setNoteDraft}
+                onDraftChange={(next) => {
+                  // A note create that finishes after a ticket switch must not wipe the new ticket's draft.
+                  if (next === undefined && idRef.current !== id) return;
+                  setNoteDraft(next);
+                }}
               />
             )}
           </div>
