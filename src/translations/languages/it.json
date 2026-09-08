@@ -1200,6 +1200,10 @@
     "Reject": "Rifiuta",
     "Award manual prize": "Assegna premio manuale",
     "Enter a reason": "Inserisci un motivo",
-    "Enter a reason for this action.": "Inserisci un motivo per questa azione."
+    "Enter a reason for this action.": "Inserisci un motivo per questa azione.",
+    "Bonus and Referral": "Bonus e referral",
+    "ETH": "ETH",
+    "REALU": "REALU",
+    "Prize wallet is not configured": "Il wallet premi non è configurato"
   }
 }

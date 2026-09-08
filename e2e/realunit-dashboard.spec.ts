@@ -102,6 +102,13 @@ async function installDashboardRoutes(page: Page): Promise<void> {
         { timestamp: '2026-02-02T00:00:00.000Z', holders: 12 },
       ]);
     }
+    if (path === '/v1/realunit/referral/admin/prize-wallet') {
+      return json(route, {
+        address: '0xabc0000000000000000000000000000000008001',
+        eth: 0.5,
+        realu: 80,
+      });
+    }
     if (path === '/v1/realunit/admin/stats/registration') {
       return json(route, {
         snapshot: {

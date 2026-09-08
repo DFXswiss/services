@@ -55,6 +55,17 @@ jest.mock('src/hooks/guard.hook', () => ({
   useRealunitGuard: (...args: unknown[]) => mockUseRealunitGuard(...args),
 }));
 
+const mockGetPrizeWallet = jest.fn();
+jest.mock('src/hooks/realunit-referral.hook', () => ({
+  useRealunitReferral: () => ({
+    getPrizeWallet: (...args: unknown[]) => mockGetPrizeWallet(...args),
+  }),
+}));
+
+jest.mock('src/components/payment/qr-code', () => ({
+  QrCopy: ({ data }: { data: string }) => <div data-testid="prize-qr">{data}</div>,
+}));
+
 jest.mock('src/contexts/settings.context', () => ({
   useSettingsContext: () => ({ translate: (_ns: string, key: string) => key }),
 }));
@@ -81,7 +92,7 @@ jest.mock('src/util/utils', () => ({
 }));
 
 import { StrictMode } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import RealunitScreen from 'src/screens/realunit.screen';
 
 const HOLDER = {
@@ -159,6 +170,7 @@ function setContext(overrides: Record<string, unknown> = {}) {
 describe('RealunitScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetPrizeWallet.mockResolvedValue({ address: '0xprizewallet', eth: 0.5, realu: 80 });
     setContext();
   });
 
@@ -465,5 +477,26 @@ describe('RealunitScreen', () => {
     setContext({ tokenInfo: undefined, holders: [HOLDER], isLoading: false });
     render(<RealunitScreen />);
     expect(mockFetchTokenInfo).toHaveBeenCalled();
+  });
+
+  it('shows the prize wallet address, QR, ETH and REALU', async () => {
+    render(<RealunitScreen />);
+    await waitFor(() => expect(screen.getByText('Bonus and Referral')).toBeInTheDocument());
+    expect(screen.getByTestId('prize-qr')).toHaveTextContent('0xprizewallet');
+    expect(screen.getByText('0xprizewallet')).toBeInTheDocument();
+    expect(screen.getByText(/ETH/)).toBeInTheDocument();
+    expect(screen.getByText(/REALU/)).toBeInTheDocument();
+  });
+
+  it('shows a not-configured hint when the prize wallet is missing', async () => {
+    mockGetPrizeWallet.mockRejectedValue(new Error('Prize wallet is not configured'));
+    render(<RealunitScreen />);
+    await waitFor(() => expect(screen.getByText('Prize wallet is not configured')).toBeInTheDocument());
+  });
+
+  it('shows an error hint when the prize wallet request fails', async () => {
+    mockGetPrizeWallet.mockRejectedValue(new Error('boom'));
+    render(<RealunitScreen />);
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('boom'));
   });
 });
