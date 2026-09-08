@@ -1201,6 +1201,10 @@
     "Reject": "Ablehnen",
     "Award manual prize": "Manuelle Prämie auszahlen",
     "Enter a reason": "Begründung eingeben",
-    "Enter a reason for this action.": "Begründung für diese Aktion eingeben."
+    "Enter a reason for this action.": "Begründung für diese Aktion eingeben.",
+    "Bonus and Referral": "Bonus und Empfehlungen",
+    "ETH": "ETH",
+    "REALU": "REALU",
+    "Prize wallet is not configured": "Prize-Wallet ist nicht konfiguriert"
   }
 }

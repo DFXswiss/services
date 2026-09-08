@@ -1,4 +1,4 @@
-// Hook test for useRealunitReferral: the four operator endpoints build the right URL/method/body
+// Hook test for useRealunitReferral: the operator endpoints build the right URL/method/body
 // and go through useGuardedApi (→ useApi). react-router's useNavigation is stubbed so renderHook
 // works without a <Router> wrapper.
 import { renderHook } from '@testing-library/react';
@@ -64,5 +64,13 @@ describe('useRealunitReferral', () => {
       method: 'POST',
       data: { reason: 'approved earlier' },
     });
+  });
+
+  it('loads the prize wallet', async () => {
+    mockCall.mockResolvedValue({ address: '0xprize', eth: 1.5, realu: 20 });
+    const { result } = renderHook(() => useRealunitReferral());
+
+    await expect(result.current.getPrizeWallet()).resolves.toEqual({ address: '0xprize', eth: 1.5, realu: 20 });
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/admin/prize-wallet', method: 'GET' });
   });
 });

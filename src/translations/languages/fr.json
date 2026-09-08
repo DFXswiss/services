@@ -1200,6 +1200,10 @@
     "Reject": "Rejeter",
     "Award manual prize": "Attribuer une prime manuelle",
     "Enter a reason": "Saisir un motif",
-    "Enter a reason for this action.": "Saisir un motif pour cette action."
+    "Enter a reason for this action.": "Saisir un motif pour cette action.",
+    "Bonus and Referral": "Bonus et parrainage",
+    "ETH": "ETH",
+    "REALU": "REALU",
+    "Prize wallet is not configured": "Le portefeuille de primes n'est pas configuré"
   }
 }
