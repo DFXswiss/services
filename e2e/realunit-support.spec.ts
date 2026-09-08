@@ -334,6 +334,14 @@ test.describe('RealUnit Support dashboards - Visual Regression Tests', () => {
     await expect(page.getByText('RU-7001-UID')).toBeVisible();
     await expect(page.getByText('The reference of the transfer is TX-12345.')).toBeVisible();
 
+    // The viewport is 1280x720; the composer sits below the thread. A handbook baseline of
+    // draft persistence has to show the restored text, not only the detail panels.
+    await page.setViewportSize({ width: 1280, height: 1400 });
+    const composer = page.locator('textarea');
+    await composer.scrollIntoViewIfNeeded();
+    await composer.fill('Kept draft: customer said the funds never arrived.');
+    await expect(composer).toHaveValue('Kept draft: customer said the funds never arrived.');
+
     await expect(page).toHaveScreenshot('realunit-support-02-issue.png', {
       fullPage: true,
       maxDiffPixels: 5000,
