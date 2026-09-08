@@ -146,6 +146,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
 
   // Clear send UI state when navigating to a different ticket
   useEffect(() => {
+    sendInFlight.current = false;
     setIsSending(false);
     setSelectedFiles([]);
     setActionError(undefined);

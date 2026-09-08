@@ -7,10 +7,16 @@ export function isSendShortcut(e: {
   metaKey: boolean;
   ctrlKey: boolean;
   shiftKey?: boolean;
+  altKey?: boolean;
   repeat?: boolean;
   isComposing?: boolean;
 }): boolean {
   return (
-    e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.shiftKey && !e.repeat && !e.isComposing
+    e.key === 'Enter' &&
+    (e.metaKey || e.ctrlKey) &&
+    !e.shiftKey &&
+    !e.altKey &&
+    !e.repeat &&
+    !e.isComposing
   );
 }

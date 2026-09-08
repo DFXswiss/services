@@ -8,6 +8,7 @@ function key(
     metaKey: boolean;
     ctrlKey: boolean;
     shiftKey: boolean;
+    altKey: boolean;
     repeat: boolean;
     isComposing: boolean;
   }> = {},
@@ -41,6 +42,11 @@ describe('isSendShortcut', () => {
   it('ignores Cmd/Ctrl+Enter while an IME composition is active', () => {
     expect(isSendShortcut(key('Enter', { metaKey: true, isComposing: true }))).toBe(false);
     expect(isSendShortcut(key('Enter', { ctrlKey: true, isComposing: true }))).toBe(false);
+  });
+
+  it('ignores Alt+Cmd/Ctrl+Enter and Ctrl+Alt+Enter (AltGraph)', () => {
+    expect(isSendShortcut(key('Enter', { metaKey: true, altKey: true }))).toBe(false);
+    expect(isSendShortcut(key('Enter', { ctrlKey: true, altKey: true }))).toBe(false);
   });
 
   it('still sends when optional flags are explicitly false', () => {
