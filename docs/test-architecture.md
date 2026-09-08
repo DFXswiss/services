@@ -117,13 +117,14 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
 - **The RealUnit quotes and dashboard visual specs answer the admin list themselves.**
   `e2e/realunit-quotes.spec.ts` and `e2e/realunit-dashboard.spec.ts` fulfil
   `GET /v1/realunit/admin/quotes` (and, on the dashboard, holders, token info, price history,
-  transactions, and the three admin stats paths buy-volume, holders and registration) with
-  synthetic fixtures that include `userId`, `userName` and `deactivatedAt`.
+  transactions, the three admin stats paths buy-volume, holders and registration, and
+  `GET /v1/realunit/referral/admin/prize-wallet`) with synthetic fixtures that include
+  `userId`, `userName` and `deactivatedAt`.
   They also fulfil staff/bootstrap GETs (`/v1/language`, `/v1/fiat`, `/v1/asset`, `/v1/bankAccount`,
   `/v1/country`, `/v1/setting/infoBanner`, `/v2/user`) so a synthetic unsigned JWT does not 401.
-  A green run proves the quote list, pending-table and stats-chart fixtures render. It does not
-  prove that the API returns those payloads, that login or token verification works, or that those
-  staff/settings or stats endpoints return real data.
+  A green run proves the quote list, pending-table, stats-chart and prize-wallet-card fixtures
+  render. It does not prove that the API returns those payloads, that login or token verification
+  works, or that those staff/settings, stats or prize-wallet endpoints return real data.
 - **The RealUnit compliance visual spec answers the customer list and dossier itself.**
   `e2e/realunit-compliance.spec.ts` fulfils `GET /v1/realunit/compliance/customers` and
   `GET /v1/realunit/compliance/customers/:id` with synthetic fixtures (including `addresses`).
