@@ -2,11 +2,12 @@ import { test, expect, Page, Route } from '@playwright/test';
 
 /**
  * Visual regression: RealUnit dashboard home (`/realunit`) pending-quotes table
- * and monitoring charts (buy volume, holders over time, registration).
+ * and monitoring charts (buy volume, holders over time, registration), plus the
+ * Bonus and Referral prize-wallet card.
  *
  * Auth is a synthetic Admin JWT. Holders, token info, price history, quotes,
- * transactions and admin stats are mocked. A green run does not prove the live
- * API returns these fields.
+ * transactions, admin stats and GET /v1/realunit/referral/admin/prize-wallet
+ * are mocked. A green run does not prove the live API returns these fields.
  */
 
 function jwt(): string {

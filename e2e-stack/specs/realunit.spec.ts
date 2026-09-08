@@ -162,6 +162,8 @@ test.describe('RealUnit area', () => {
 
       await expect(page.getByRole('button', { name: 'RealUnit Support' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'RealUnit Compliance' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'RealUnit Referral' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Bonus and Referral' })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Price History' })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Top Holders' })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Pending Transactions' })).toBeVisible();

@@ -316,6 +316,8 @@ describe('RealunitScreen', () => {
   it('shows token overview, totalCount fallback, price-history error, and support/compliance links', async () => {
     setContext({ totalCount: undefined, priceHistoryError: true });
     await renderScreen();
+    fireEvent.click(screen.getByRole('button', { name: 'RealUnit Referral' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/realunit/referral');
     expect(screen.getByText('Holders')).toBeInTheDocument();
     expect(screen.getByText('0')).toBeInTheDocument();
     expect(screen.getByText('1,000')).toBeInTheDocument();
@@ -500,6 +502,13 @@ describe('RealunitScreen', () => {
     mockGetPrizeWallet.mockRejectedValue(new Error('Prize wallet is not configured'));
     await renderScreen();
     await waitFor(() => expect(screen.getByText('Prize wallet is not configured')).toBeInTheDocument());
+    expect(screen.queryByTestId('error-hint')).not.toBeInTheDocument();
+  });
+
+  it('shows an error hint when the prize wallet resolve is empty', async () => {
+    mockGetPrizeWallet.mockResolvedValue(undefined);
+    await renderScreen();
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('Unknown error'));
   });
 
   it('shows an error hint when the prize wallet request fails', async () => {

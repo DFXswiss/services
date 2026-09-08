@@ -177,12 +177,12 @@ export default function RealunitScreen(): JSX.Element {
                   </div>
                 </div>
               </div>
-            ) : prizeWalletError?.includes('not configured') || !prizeWalletError ? (
+            ) : prizeWalletError?.includes('not configured') ? (
               <p className="text-sm text-dfxGray-700">
                 {translate('screens/referral', 'Prize wallet is not configured')}
               </p>
             ) : (
-              <ErrorHint message={prizeWalletError} />
+              <ErrorHint message={prizeWalletError ?? 'Unknown error'} />
             )}
           </div>
           <div className="mb-4">
