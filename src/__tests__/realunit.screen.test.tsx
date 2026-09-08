@@ -130,6 +130,12 @@ const TX = {
   userAddress: '0x1234567890abcdef1234567890abcdef12345678',
 };
 
+async function renderScreen() {
+  const view = await renderScreen();
+  await waitFor(() => expect(mockGetPrizeWallet).toHaveBeenCalled());
+  return view;
+}
+
 function setContext(overrides: Record<string, unknown> = {}) {
   mockContext = {
     holders: [HOLDER],
@@ -174,18 +180,18 @@ describe('RealunitScreen', () => {
     setContext();
   });
 
-  it('calls the realunit guard on render', () => {
-    render(<RealunitScreen />);
+  it('calls the realunit guard on render', async () => {
+    await renderScreen();
     expect(mockUseRealunitGuard).toHaveBeenCalledWith();
   });
 
-  it('shows a large spinner when holders and tokenInfo are empty', () => {
+  it('shows a large spinner when holders and tokenInfo are empty', async () => {
     setContext({ holders: [], tokenInfo: undefined });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByTestId('loading-spinner')).toHaveAttribute('data-size', 'lg');
   });
 
-  it('fetches empty collections on mount and skips fetches when data already exists', () => {
+  it('fetches empty collections on mount and skips fetches when data already exists', async () => {
     setContext({
       holders: [],
       tokenInfo: TOKEN_INFO,
@@ -193,7 +199,7 @@ describe('RealunitScreen', () => {
       quotes: [],
       transactions: [],
     });
-    const { unmount } = render(<RealunitScreen />);
+    const { unmount } = await renderScreen();
     expect(mockFetchHolders).toHaveBeenCalled();
     expect(mockFetchTokenInfo).not.toHaveBeenCalled();
     expect(mockFetchPriceHistory).toHaveBeenCalled();
@@ -205,8 +211,9 @@ describe('RealunitScreen', () => {
     unmount();
 
     jest.clearAllMocks();
+    mockGetPrizeWallet.mockResolvedValue({ address: '0xprizewallet', eth: 0.5, realu: 80 });
     setContext();
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(mockFetchHolders).not.toHaveBeenCalled();
     expect(mockFetchTokenInfo).not.toHaveBeenCalled();
     expect(mockFetchQuotes).not.toHaveBeenCalled();
@@ -216,7 +223,7 @@ describe('RealunitScreen', () => {
     expect(mockFetchRegistrationStats).toHaveBeenCalledWith('All');
   });
 
-  it('bootstraps lists and stats only once when StrictMode re-invokes effects', () => {
+  it('bootstraps lists and stats only once when StrictMode re-invokes effects', async () => {
     setContext({
       holders: [],
       tokenInfo: undefined,
@@ -229,6 +236,7 @@ describe('RealunitScreen', () => {
         <RealunitScreen />
       </StrictMode>,
     );
+    await waitFor(() => expect(mockGetPrizeWallet).toHaveBeenCalled());
     expect(mockFetchHolders).toHaveBeenCalledTimes(1);
     expect(mockFetchTokenInfo).toHaveBeenCalledTimes(1);
     expect(mockFetchPriceHistory).toHaveBeenCalledTimes(1);
@@ -239,19 +247,19 @@ describe('RealunitScreen', () => {
     expect(mockFetchRegistrationStats).toHaveBeenCalledTimes(1);
   });
 
-  it('shows stats error hints and loading spinners', () => {
+  it('shows stats error hints and loading spinners', async () => {
     setContext({
       buyVolumeError: true,
       holderCountError: true,
       registrationError: true,
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByText('Failed to load buy volume.')).toBeInTheDocument();
     expect(screen.getByText('Failed to load holder count.')).toBeInTheDocument();
     expect(screen.getByText('Failed to load registration stats.')).toBeInTheDocument();
   });
 
-  it('shows medium spinners while stats are loading without data', () => {
+  it('shows medium spinners while stats are loading without data', async () => {
     setContext({
       buyVolumeLoading: true,
       buyVolume: [],
@@ -260,14 +268,14 @@ describe('RealunitScreen', () => {
       registrationLoading: true,
       registrationStats: undefined,
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getAllByTestId('loading-spinner').some((el) => el.getAttribute('data-size') === 'md')).toBe(true);
     expect(screen.queryByTestId('buy-volume-chart')).not.toBeInTheDocument();
     expect(screen.queryByTestId('holder-count-chart')).not.toBeInTheDocument();
     expect(screen.queryByTestId('registration-funnel')).not.toBeInTheDocument();
   });
 
-  it('keeps stats charts visible while a timeframe refetch is loading', () => {
+  it('keeps stats charts visible while a timeframe refetch is loading', async () => {
     setContext({
       buyVolumeLoading: true,
       buyVolume: [{ timestamp: '2026-08-01T00:00:00.000Z', chf: 10, shares: 5, priceChf: 2 }],
@@ -287,27 +295,27 @@ describe('RealunitScreen', () => {
         series: [{ timestamp: '2026-08-01T00:00:00.000Z', registered: 1, confirmed: 1 }],
       },
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByTestId('buy-volume-chart')).toBeInTheDocument();
     expect(screen.getByTestId('holder-count-chart')).toBeInTheDocument();
     expect(screen.getByTestId('registration-funnel')).toBeInTheDocument();
     expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
   });
 
-  it('does not render the registration funnel when stats failed without a snapshot', () => {
+  it('does not render the registration funnel when stats failed without a snapshot', async () => {
     setContext({
       registrationError: true,
       registrationStats: undefined,
       registrationLoading: false,
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.queryByTestId('registration-funnel')).not.toBeInTheDocument();
     expect(screen.getByText('Failed to load registration stats.')).toBeInTheDocument();
   });
 
-  it('shows token overview, totalCount fallback, price-history error, and support/compliance links', () => {
+  it('shows token overview, totalCount fallback, price-history error, and support/compliance links', async () => {
     setContext({ totalCount: undefined, priceHistoryError: true });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByText('Holders')).toBeInTheDocument();
     expect(screen.getByText('0')).toBeInTheDocument();
     expect(screen.getByText('1,000')).toBeInTheDocument();
@@ -321,14 +329,14 @@ describe('RealunitScreen', () => {
     expect(mockFetchPriceHistory).toHaveBeenCalled();
   });
 
-  it('shows the medium spinner while token info is loading', () => {
+  it('shows the medium spinner while token info is loading', async () => {
     setContext({ isLoading: true, tokenInfo: undefined, holders: [HOLDER] });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByTestId('loading-spinner')).toHaveAttribute('data-size', 'md');
     expect(screen.queryByText('Overview')).not.toBeInTheDocument();
   });
 
-  it('navigates from a holder address and copies it, and shows More holders', () => {
+  it('navigates from a holder address and copies it, and shows More holders', async () => {
     setContext({
       holders: [
         HOLDER,
@@ -337,7 +345,7 @@ describe('RealunitScreen', () => {
         { address: '0xdddddddddddddddddddddddddddddddddddddddd', balance: '4', percentage: 0.4 },
       ],
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     const holderButton = screen.getAllByRole('button').find((b) => b.textContent?.includes('0xabcd'));
     if (!holderButton) {
       throw new Error('holder address button missing');
@@ -350,7 +358,7 @@ describe('RealunitScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/realunit/holders');
   });
 
-  it('shows address and userName on pending quotes and hides deactivated ones', () => {
+  it('shows address and userName on pending quotes and hides deactivated ones', async () => {
     setContext({
       quotes: [
         QUOTE,
@@ -364,7 +372,7 @@ describe('RealunitScreen', () => {
         },
       ],
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getAllByText('Address').length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText('User')).not.toBeInTheDocument();
     expect(screen.getByText('Name')).toBeInTheDocument();
@@ -380,28 +388,28 @@ describe('RealunitScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/realunit/quotes/42');
   });
 
-  it('shows dashes when pending quote userAddress and userName are missing', () => {
+  it('shows dashes when pending quote userAddress and userName are missing', async () => {
     setContext({ quotes: [{ ...QUOTE, userAddress: undefined, userName: undefined, amount: undefined }] });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('shows empty pending copy and a small spinner while quotes load', () => {
+  it('shows empty pending copy and a small spinner while quotes load', async () => {
     setContext({ quotes: [], quotesLoading: true });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByTestId('loading-spinner')).toHaveAttribute('data-size', 'sm');
   });
 
-  it('shows empty pending copy when only deactivated quotes exist', () => {
+  it('shows empty pending copy when only deactivated quotes exist', async () => {
     setContext({
       quotes: [{ ...QUOTE, deactivatedAt: '2026-02-02T12:00:00.000Z' }],
       quotesLoading: false,
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByText('No pending transactions found')).toBeInTheDocument();
   });
 
-  it('navigates to the full quotes list when more than three pending quotes exist', () => {
+  it('navigates to the full quotes list when more than three pending quotes exist', async () => {
     setContext({
       quotes: [
         { ...QUOTE, id: 1, userId: 1, userName: 'A' },
@@ -410,12 +418,12 @@ describe('RealunitScreen', () => {
         { ...QUOTE, id: 4, userId: 4, userName: 'D' },
       ],
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     fireEvent.click(screen.getByRole('button', { name: 'More' }));
     expect(mockNavigate).toHaveBeenCalledWith('/realunit/quotes');
   });
 
-  it('maps received transaction types, falls back to created date, and navigates to detail', () => {
+  it('maps received transaction types, falls back to created date, and navigates to detail', async () => {
     setContext({
       quotes: [],
       transactions: [
@@ -423,7 +431,7 @@ describe('RealunitScreen', () => {
         { ...TX, id: 2, type: 'Other' },
       ],
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByText('Sell')).toBeInTheDocument();
     expect(screen.getByText('Other')).toBeInTheDocument();
     expect(screen.getByText('-')).toBeInTheDocument();
@@ -431,19 +439,19 @@ describe('RealunitScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/realunit/transactions/2');
   });
 
-  it('shows empty received copy and a small spinner while transactions load', () => {
+  it('shows empty received copy and a small spinner while transactions load', async () => {
     setContext({ transactions: [], transactionsLoading: true, quotes: [QUOTE] });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByTestId('loading-spinner')).toHaveAttribute('data-size', 'sm');
   });
 
-  it('shows empty received copy when there are no transactions', () => {
+  it('shows empty received copy when there are no transactions', async () => {
     setContext({ transactions: [], transactionsLoading: false });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByText('No received transactions found')).toBeInTheDocument();
   });
 
-  it('navigates to the full transactions list when more than three exist', () => {
+  it('navigates to the full transactions list when more than three exist', async () => {
     setContext({
       quotes: [],
       transactions: [
@@ -453,12 +461,12 @@ describe('RealunitScreen', () => {
         { ...TX, id: 4 },
       ],
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     fireEvent.click(screen.getByRole('button', { name: 'More' }));
     expect(mockNavigate).toHaveBeenCalledWith('/realunit/transactions');
   });
 
-  it('maps pending quote displayType BuyCrypto, BuyFiat and passthrough', () => {
+  it('maps pending quote displayType BuyCrypto, BuyFiat and passthrough', async () => {
     setContext({
       quotes: [
         { ...QUOTE, id: 1, type: 'BuyCrypto', userId: 1, userName: 'One' },
@@ -467,22 +475,22 @@ describe('RealunitScreen', () => {
       ],
       transactions: [],
     });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(screen.getByText('Buy')).toBeInTheDocument();
     expect(screen.getByText('Sell')).toBeInTheDocument();
     expect(screen.getByText('Swap')).toBeInTheDocument();
   });
 
-  it('fetches tokenInfo on mount when it is missing and holders already exist', () => {
+  it('fetches tokenInfo on mount when it is missing and holders already exist', async () => {
     setContext({ tokenInfo: undefined, holders: [HOLDER], isLoading: false });
-    render(<RealunitScreen />);
+    await renderScreen();
     expect(mockFetchTokenInfo).toHaveBeenCalled();
   });
 
   it('shows the prize wallet address, QR, ETH and REALU', async () => {
-    render(<RealunitScreen />);
-    await waitFor(() => expect(screen.getByText('Bonus and Referral')).toBeInTheDocument());
-    expect(screen.getByTestId('prize-qr')).toHaveTextContent('0xprizewallet');
+    await renderScreen();
+    await waitFor(() => expect(screen.getByTestId('prize-qr')).toHaveTextContent('0xprizewallet'));
+    expect(screen.getByText('Bonus and Referral')).toBeInTheDocument();
     expect(screen.getByText('0xprizewallet')).toBeInTheDocument();
     expect(screen.getByText(/ETH/)).toBeInTheDocument();
     expect(screen.getByText(/REALU/)).toBeInTheDocument();
@@ -490,13 +498,13 @@ describe('RealunitScreen', () => {
 
   it('shows a not-configured hint when the prize wallet is missing', async () => {
     mockGetPrizeWallet.mockRejectedValue(new Error('Prize wallet is not configured'));
-    render(<RealunitScreen />);
+    await renderScreen();
     await waitFor(() => expect(screen.getByText('Prize wallet is not configured')).toBeInTheDocument());
   });
 
   it('shows an error hint when the prize wallet request fails', async () => {
     mockGetPrizeWallet.mockRejectedValue(new Error('boom'));
-    render(<RealunitScreen />);
+    await renderScreen();
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('boom'));
   });
 });

@@ -159,9 +159,7 @@ export default function RealunitScreen(): JSX.Element {
           </div>
           <div className="mb-6">
             <h2 className="text-dfxGray-700 mb-2">{translate('screens/referral', 'Bonus and Referral')}</h2>
-            {prizeWalletLoading ? (
-              <StyledLoadingSpinner size={SpinnerSize.MD} />
-            ) : prizeWallet ? (
+            {prizeWalletLoading ? null : prizeWallet ? (
               <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col md:flex-row gap-4 items-start">
                 <QrCopy data={prizeWallet.address} />
                 <div className="flex flex-col gap-2 text-left text-sm text-dfxBlue-800">
