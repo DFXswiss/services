@@ -37,6 +37,67 @@ describe('FilePreviewPanel', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('ignores a second Download click while the first request is still in flight', async () => {
+    let resolveDownload: () => void = () => undefined;
+    const onDownload = jest.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveDownload = resolve;
+        }),
+    );
+    render(
+      <FilePreviewPanel
+        preview={{ url: 'blob:img', contentType: 'image/jpeg', name: 'ausweis.jpg' }}
+        label="Dateien"
+        onClose={jest.fn()}
+        onDownload={onDownload}
+      />,
+    );
+
+    const button = screen.getByRole('button', { name: 'Download' });
+    fireEvent.click(button);
+    // React may disable the button after the first click; the busy ref must still drop a
+    // second click if the control is re-enabled before the request finishes.
+    button.removeAttribute('disabled');
+    fireEvent.click(button);
+    expect(onDownload).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      resolveDownload();
+    });
+  });
+
+  it('does not clear busy state of a new preview when a stale download finishes', async () => {
+    let resolveFirst: () => void = () => undefined;
+    const onDownload = jest.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveFirst = resolve;
+        }),
+    );
+    const { rerender } = render(
+      <FilePreviewPanel
+        preview={{ url: 'blob:a', contentType: 'image/jpeg', name: 'a.jpg' }}
+        label="Dateien"
+        onClose={jest.fn()}
+        onDownload={onDownload}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+    rerender(
+      <FilePreviewPanel
+        preview={{ url: 'blob:b', contentType: 'image/jpeg', name: 'b.jpg' }}
+        label="Dateien"
+        onClose={jest.fn()}
+        onDownload={onDownload}
+      />,
+    );
+    await act(async () => {
+      resolveFirst();
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+    expect(onDownload).toHaveBeenCalledTimes(2);
+  });
+
   it('embeds a PDF and does not show a Download button even when onDownload is passed', () => {
     const onDownload = jest.fn();
     const { container } = render(

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface FilePreviewPanelProps {
   preview?: { url: string; contentType: string; name: string };
@@ -29,9 +29,13 @@ function canPreview(contentType: string): boolean {
 export function FilePreviewPanel({ preview, label, onClose, onDownload }: FilePreviewPanelProps): JSX.Element {
   const [undecodableUrl, setUndecodableUrl] = useState<string>();
   const [isDownloading, setIsDownloading] = useState(false);
+  const downloadBusyRef = useRef(false);
+  const downloadGenRef = useRef(0);
   const showHint = preview && (!canPreview(preview.contentType) || undecodableUrl === preview.url);
 
   useEffect(() => {
+    downloadGenRef.current += 1;
+    downloadBusyRef.current = false;
     setIsDownloading(false);
   }, [preview?.url]);
 
@@ -47,8 +51,15 @@ export function FilePreviewPanel({ preview, label, onClose, onDownload }: FilePr
                 disabled={isDownloading}
                 className="px-3 py-1 text-xs font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors disabled:opacity-50"
                 onClick={() => {
+                  if (downloadBusyRef.current) return;
+                  downloadBusyRef.current = true;
                   setIsDownloading(true);
-                  Promise.resolve(onDownload()).finally(() => setIsDownloading(false));
+                  const gen = downloadGenRef.current;
+                  Promise.resolve(onDownload()).finally(() => {
+                    if (downloadGenRef.current !== gen) return;
+                    downloadBusyRef.current = false;
+                    setIsDownloading(false);
+                  });
                 }}
               >
                 {isDownloading ? 'Downloading...' : 'Download'}
