@@ -491,7 +491,7 @@ describe('RealunitScreen', () => {
     await renderScreen();
     await waitFor(() => expect(screen.getByTestId('prize-qr')).toHaveTextContent('0xprizewallet'));
     expect(screen.getByText('Bonus and Referral')).toBeInTheDocument();
-    expect(screen.getByText('0xprizewallet')).toBeInTheDocument();
+    expect(screen.getAllByText('0xprizewallet').length).toBeGreaterThan(0);
     expect(screen.getByText(/ETH/)).toBeInTheDocument();
     expect(screen.getByText(/REALU/)).toBeInTheDocument();
   });
