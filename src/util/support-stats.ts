@@ -2,8 +2,10 @@
 // so it is cheap to unit-test in isolation.
 import type { SupportIssueListItem } from 'src/hooks/support-dashboard.hook';
 
-// Author marker the backend stamps on customer messages (mirrors `CustomerAuthor` in DFXswiss/backend).
+// Author markers the backend stamps on customer and bot messages (mirror `CustomerAuthor` and
+// `AutoResponder` in DFXswiss/backend).
 export const CustomerAuthor = 'Customer';
+export const AutoResponderAuthor = 'AutoResponder';
 
 // --- Customer waiting & escalation ---
 
@@ -36,8 +38,10 @@ export function daysSince(date: string | Date, now: Date = new Date()): number {
 // Hours the customer has been waiting for a reply, or null if the ball is on our side
 // (we answered last, or there are no messages yet). The clock restarts on every
 // customer message because `lastMessageDate` always points at the latest message.
+// A bot auto-response keeps the ticket waiting; its timestamp is then used as a close
+// approximation of the customer's message (the bot answers within minutes).
 export function customerWaitingHours(issue: SupportIssueListItem, now: Date = new Date()): number | null {
-  if (issue.lastMessageAuthor !== CustomerAuthor || !issue.lastMessageDate) return null;
+  if (!needsReply(issue) || !issue.lastMessageDate) return null;
   return hoursSince(issue.lastMessageDate, now);
 }
 
@@ -52,39 +56,52 @@ export function formatElapsed(hours: number): string {
 
 // --- Open-ticket grouping ---
 
-// Mirrors SupportIssueInternalState.CREATED / PENDING (kept as literals: this module has no
-// @dfx.swiss/react dependency).
-export const OpenIssueState = { created: 'Created', pending: 'Pending' } as const;
-
 export interface OpenIssueGroups {
-  customerWaiting: SupportIssueListItem[];
-  created: SupportIssueListItem[];
-  pending: SupportIssueListItem[];
+  needsReply: SupportIssueListItem[]; // the customer (or only the bot) wrote last: our turn
+  answered: SupportIssueListItem[]; // a staff member wrote last: the customer's turn
 }
 
-// Splits an open-ticket list into the three dashboard sections: tickets whose last message came
-// from the customer first (newest customer message on top), then the remaining Created and
-// Pending tickets (newest created on top). An optional state filter narrows the list beforehand.
+// A ticket needs a human reply while the last message came from the customer or from the bot,
+// or while it has no message at all (a ticket a clerk opened, or an automatically filed limit
+// request). A fresh customer ticket starts with a customer message, so new tickets land here as
+// well; a bot auto-response does not count as an answer.
+export function needsReply(issue: SupportIssueListItem): boolean {
+  return (
+    !issue.lastMessageAuthor ||
+    issue.lastMessageAuthor === CustomerAuthor ||
+    issue.lastMessageAuthor === AutoResponderAuthor
+  );
+}
+
+// A ticket nobody has picked up yet: no clerk, or only the bot (the backend stamps the bot as
+// clerk after an auto-response and clears it again on the next customer message).
+export function isUnassigned(issue: SupportIssueListItem): boolean {
+  return !issue.clerk || issue.clerk === AutoResponderAuthor;
+}
+
+// Timestamp of the latest activity on a ticket: its last message, or its creation while it has none.
+export function lastActivity(issue: SupportIssueListItem): number {
+  return new Date(issue.lastMessageDate ?? issue.created).getTime();
+}
+
+// Splits an open-ticket list into the two dashboard sections by who wrote last: tickets that need
+// our reply first, then the ones we answered. Both are sorted by latest activity (newest on top),
+// so the order matches the "Last Msg" column the clerk sees. The ticket state (Created/Pending) is
+// deliberately not part of the grouping: it is a manual flag and says nothing about whose turn it
+// is. An optional state filter narrows the list beforehand.
 export function groupOpenIssues(issues: SupportIssueListItem[], stateFilter = ''): OpenIssueGroups {
   const filtered = stateFilter ? issues.filter((i) => i.state === stateFilter) : issues;
-
-  const customerWaiting = filtered
-    .filter((i) => i.lastMessageAuthor === CustomerAuthor)
-    .sort((a, b) => new Date(b.lastMessageDate ?? 0).getTime() - new Date(a.lastMessageDate ?? 0).getTime());
-
-  const rest = filtered.filter((i) => i.lastMessageAuthor !== CustomerAuthor);
-  const byCreated = (a: SupportIssueListItem, b: SupportIssueListItem): number =>
-    new Date(b.created).getTime() - new Date(a.created).getTime();
+  const byLastActivity = (a: SupportIssueListItem, b: SupportIssueListItem): number =>
+    lastActivity(b) - lastActivity(a);
 
   return {
-    customerWaiting,
-    created: rest.filter((i) => i.state === OpenIssueState.created).sort(byCreated),
-    pending: rest.filter((i) => i.state === OpenIssueState.pending).sort(byCreated),
+    needsReply: filtered.filter(needsReply).sort(byLastActivity),
+    answered: filtered.filter((i) => !needsReply(i)).sort(byLastActivity),
   };
 }
 
 export function countOpenIssueGroups(groups: OpenIssueGroups): number {
-  return groups.customerWaiting.length + groups.created.length + groups.pending.length;
+  return groups.needsReply.length + groups.answered.length;
 }
 
 // --- Statistics ---
@@ -181,7 +198,8 @@ export function computeStatistics(
   for (const issue of inPeriod) {
     const d = new Date(issue.created);
     const key = granularity === 'day' ? dayKey(d) : monthKey(d);
-    if (buckets.has(key)) buckets.set(key, (buckets.get(key) as number) + 1);
+    // Every in-period ticket has a bucket: the window above was derived from the bucket keys.
+    buckets.set(key, (buckets.get(key) as number) + 1);
   }
 
   // resolution time per type for tickets completed within the period (same window as above)

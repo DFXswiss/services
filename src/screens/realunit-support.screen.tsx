@@ -8,8 +8,8 @@ import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useRealunitSupport } from 'src/hooks/realunit-support.hook';
-import { CustomerAuthor, SupportIssueListItem } from 'src/hooks/support-dashboard.hook';
-import { typeLabel } from 'src/util/support-helpers';
+import { SupportIssueListItem } from 'src/hooks/support-dashboard.hook';
+import { countOpenIssueGroups, groupOpenIssues, typeLabel } from 'src/util/support-helpers';
 
 type PagedTab = 'OnHold' | 'Canceled' | 'Completed';
 type Tab = 'open' | PagedTab;
@@ -119,9 +119,7 @@ export default function RealunitSupportScreen(): JSX.Element {
       else loadPaged(activeTab, 0, searchQuery, false);
     }, 300);
 
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    return () => clearTimeout(debounceRef.current);
   }, [searchQuery, activeTab, loadPaged, loadOpenIssues]);
 
   useEffect(() => {
@@ -134,16 +132,12 @@ export default function RealunitSupportScreen(): JSX.Element {
     return () => clearInterval(id);
   }, [getIssueActivity]);
 
+  // The "new messages" badge only renders on the Open tab, so a reload always targets the open list.
   const reloadAfterActivity = useCallback((): void => {
     baselineRef.current = new Date();
     setNewMessageCount(0);
-    if (activeTab === 'open') {
-      loadOpenIssues(searchQuery);
-    } else {
-      setTabs((prev) => ({ ...prev, [activeTab]: { ...prev[activeTab], loaded: false } }));
-      loadPaged(activeTab, 0, searchQuery, false);
-    }
-  }, [activeTab, searchQuery, loadOpenIssues, loadPaged]);
+    loadOpenIssues(searchQuery);
+  }, [searchQuery, loadOpenIssues]);
 
   useLayoutOptions({
     title: translate('screens/support', 'RealUnit Support'),
@@ -152,37 +146,14 @@ export default function RealunitSupportScreen(): JSX.Element {
     noPadding: true,
   });
 
-  const openIssueGroups = useMemo(() => {
-    const filtered = stateFilter ? openIssues.filter((i) => i.state === stateFilter) : openIssues;
-
-    const customerWaiting = filtered
-      .filter((i) => i.lastMessageAuthor === CustomerAuthor)
-      .sort((a, b) => new Date(b.lastMessageDate ?? 0).getTime() - new Date(a.lastMessageDate ?? 0).getTime());
-
-    const rest = filtered.filter((i) => i.lastMessageAuthor !== CustomerAuthor);
-    const byCreated = (a: SupportIssueListItem, b: SupportIssueListItem): number =>
-      new Date(b.created).getTime() - new Date(a.created).getTime();
-
-    return {
-      customerWaiting,
-      created: rest.filter((i) => i.state === SupportIssueInternalState.CREATED).sort(byCreated),
-      pending: rest.filter((i) => i.state === SupportIssueInternalState.PENDING).sort(byCreated),
-    };
-  }, [openIssues, stateFilter]);
-
-  const openIssueCount =
-    openIssueGroups.customerWaiting.length + openIssueGroups.created.length + openIssueGroups.pending.length;
+  const openIssueGroups = useMemo(() => groupOpenIssues(openIssues, stateFilter), [openIssues, stateFilter]);
+  const openIssueCount = countOpenIssueGroups(openIssueGroups);
 
   const currentTab = activeTab === 'open' ? null : tabs[activeTab];
   const displayedIssues = currentTab?.issues ?? [];
   const displayedTotal = currentTab?.total ?? 0;
-  const isTabLoading = activeTab === 'open' ? isLoading : (currentTab?.loading ?? false);
+  const isTabLoading = activeTab === 'open' ? isLoading : tabs[activeTab].loading;
   const hasMore = currentTab != null && displayedIssues.length < displayedTotal;
-
-  function handleLoadMore(): void {
-    if (activeTab === 'open') return;
-    loadPaged(activeTab, displayedIssues.length, searchQuery, true);
-  }
 
   return (
     <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-3 flex-1 min-h-0 p-4 md:p-6 text-left">
@@ -196,7 +167,11 @@ export default function RealunitSupportScreen(): JSX.Element {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-dfxGray-400">
-        <TabButton label={`Open (${openIssueCount})`} active={activeTab === 'open'} onClick={() => setActiveTab('open')} />
+        <TabButton
+          label={`Open (${openIssueCount})`}
+          active={activeTab === 'open'}
+          onClick={() => setActiveTab('open')}
+        />
         {PAGED_TABS.map((tab) => (
           <TabButton
             key={tab}
@@ -275,7 +250,7 @@ export default function RealunitSupportScreen(): JSX.Element {
           {hasMore && (
             <button
               className="px-4 py-2 text-sm text-dfxBlue-400 hover:text-dfxBlue-800 transition-colors self-center disabled:opacity-50"
-              onClick={handleLoadMore}
+              onClick={() => loadPaged(activeTab as PagedTab, displayedIssues.length, searchQuery, true)}
               disabled={isTabLoading}
             >
               {isTabLoading ? 'Loading...' : `Load more (${displayedIssues.length} / ${displayedTotal})`}

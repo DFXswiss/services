@@ -21,6 +21,9 @@ jest.mock('@dfx.swiss/react', () => ({
     CANCELED: 'Canceled',
     COMPLETED: 'Completed',
   },
+  SupportIssueReason: {
+    OTHER: 'Other',
+  },
   SupportIssueType: {
     GENERIC_ISSUE: 'GenericIssue',
     TRANSACTION_ISSUE: 'TransactionIssue',
@@ -117,10 +120,7 @@ jest.mock('src/contexts/settings.context', () => ({
   useSettingsContext: () => ({
     translate: (_ns: string, key: string, params?: Record<string, string | number>) => {
       if (!params) return key;
-      return Object.entries(params).reduce(
-        (text, [name, value]) => text.replace(`{{${name}}}`, String(value)),
-        key,
-      );
+      return Object.entries(params).reduce((text, [name, value]) => text.replace(`{{${name}}}`, String(value)), key);
     },
   }),
 }));
@@ -132,6 +132,7 @@ jest.mock('src/config/labels', () => ({
 
 jest.mock('src/util/compliance-helpers', () => ({
   formatDateTime: (value: string) => `dt:${value}`,
+  formatDateTimeShort: (value: string) => `short:${value}`,
   statusBadge: (status: string) => <span data-testid={`status-${status}`}>{status}</span>,
 }));
 
@@ -782,9 +783,7 @@ describe('SupportDashboardScreen', () => {
     ).not.toBeInTheDocument();
   });
 
-  it(
-    'opens the template picker, handles failures, disables siblings while loading, and stops row navigation',
-    async () => {
+  it('opens the template picker, handles failures, disables siblings while loading, and stops row navigation', async () => {
     const userDataDeferred = createDeferred<{ userData: { id: number }; transactions?: unknown[] }>();
     mockGetUserData.mockReturnValueOnce(userDataDeferred.promise);
     mockSearchCustomers.mockResolvedValue({
@@ -797,10 +796,9 @@ describe('SupportDashboardScreen', () => {
     render(<SupportDashboardScreen />);
     await flushDebounce();
     fireEvent.click(screen.getByRole('button', { name: /^\+ Customer Search$/ }));
-    fireEvent.change(
-      screen.getByPlaceholderText('Search by ID, email, phone, name, KYC hash, blockchain address...'),
-      { target: { value: 'user' } },
-    );
+    fireEvent.change(screen.getByPlaceholderText('Search by ID, email, phone, name, KYC hash, blockchain address...'), {
+      target: { value: 'user' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await waitFor(() => expect(screen.getByText('User One')).toBeInTheDocument());
 
@@ -848,8 +846,7 @@ describe('SupportDashboardScreen', () => {
     await waitFor(() => expect(screen.getByTestId('template-picker-modal')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('template-close'));
     expect(screen.queryByTestId('template-picker-modal')).not.toBeInTheDocument();
-  },
-  );
+  });
 
   it('navigates action buttons and hides Unassigned Bank Transactions for Marketing', async () => {
     const { unmount } = render(<SupportDashboardScreen />);

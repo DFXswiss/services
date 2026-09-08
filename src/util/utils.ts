@@ -323,6 +323,14 @@ export function extractFilename(contentDisposition?: string): string | undefined
   return undefined;
 }
 
+export function saveBufferedFile(
+  content: { type: string; data: number[] },
+  contentType: string,
+  filename: string,
+): void {
+  downloadFile(new Blob([new Uint8Array(content.data)], { type: contentType }), {}, filename);
+}
+
 export function downloadFile(blob: Blob, headers: Record<string, string>, fallbackFilename: string): void {
   const extractedFilename = extractFilename(headers['content-disposition']);
   const filename = extractedFilename || fallbackFilename;

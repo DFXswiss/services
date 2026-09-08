@@ -1,4 +1,4 @@
-import { AmlReason, CheckStatus, KycStatus, useKyc } from '@dfx.swiss/react';
+import { AmlReason, CheckStatus, KycStatus } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -20,6 +20,7 @@ import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSplitPane } from 'src/hooks/split-pane.hook';
 import { buildKycLogMessage, KycLogResult } from 'src/util/compliance-helpers';
+import { saveBufferedFile } from 'src/util/utils';
 
 function findLatestStep(kycSteps: KycStepInfo[], stepName: string): KycStepInfo | undefined {
   return kycSteps.filter((s) => s.name === stepName).sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
@@ -51,15 +52,15 @@ export default function ComplianceReviewScreen(): JSX.Element {
     resetBuyFiatAml,
     generateOnboardingPdf,
     createKycLog,
+    getKycFile,
   } = useCompliance();
-  const { getFile } = useKyc();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ComplianceUserData>();
   const [activeTab, setActiveTab] = useState<ReviewCheckTab | undefined>(initialTabParam ?? undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
+  const [preview, setPreview] = useState<{ url: string; contentType: string; name: string; uid?: string }>();
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   const loadData = useCallback(
@@ -96,16 +97,30 @@ export default function ComplianceReviewScreen(): JSX.Element {
 
   async function openFile(file: KycFile): Promise<void> {
     try {
-      const { content, contentType } = await getFile(file.uid);
+      const { content, contentType } = await getKycFile(file.uid, 'View');
       if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
         setError('Invalid file type');
         return;
       }
       const blob = new Blob([new Uint8Array(content.data)], { type: contentType });
       const url = URL.createObjectURL(blob);
-      setPreview({ url, contentType, name: file.name });
+      setPreview({ url, contentType, name: file.name, uid: file.uid });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error loading file');
+    }
+  }
+
+  async function downloadPreview(): Promise<void> {
+    if (!preview?.uid) return;
+    try {
+      const { content, contentType } = await getKycFile(preview.uid, 'Download');
+      if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
+        setError('Invalid file type');
+        return;
+      }
+      saveBufferedFile(content, contentType, preview.name);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error downloading file');
     }
   }
 
@@ -605,7 +620,12 @@ export default function ComplianceReviewScreen(): JSX.Element {
 
         {/* Right: File Preview */}
         <div style={{ width: `${100 - splitPercent}%` }} className="min-w-0 sticky top-4 self-start pl-2">
-          <FilePreviewPanel preview={preview} label="File Preview" onClose={() => setPreview(undefined)} />
+          <FilePreviewPanel
+            preview={preview}
+            label="File Preview"
+            onClose={() => setPreview(undefined)}
+            onDownload={downloadPreview}
+          />
         </div>
       </div>
     </div>

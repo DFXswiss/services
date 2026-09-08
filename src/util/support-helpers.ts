@@ -1,4 +1,4 @@
-import { Department, SupportIssueType, UserRole } from '@dfx.swiss/react';
+import { Department, SupportIssueReason, SupportIssueType, UserRole } from '@dfx.swiss/react';
 import { IssueReasonLabels, IssueTypeLabels } from 'src/config/labels';
 
 // Pure aging/escalation/statistics logic lives in a dependency-free module; re-exported
@@ -11,6 +11,19 @@ export function typeLabel(type: string): string {
 
 export function reasonLabel(reason: string): string {
   return IssueReasonLabels[reason as keyof typeof IssueReasonLabels] ?? reason;
+}
+
+// Reason label for list views: the catch-all "Other" is left blank so only specific reasons stand out.
+export function listReasonLabel(reason: string): string {
+  return reason === SupportIssueReason.OTHER ? '' : reasonLabel(reason);
+}
+
+// Badge classes for a customer-waiting tier (see waitTier): red once escalated, yellow from 12h,
+// neutral below that.
+export function waitTierBadgeClasses(tier: 0 | 1 | 2 | 3): string {
+  if (tier === 3) return 'bg-dfxRed-100 text-white';
+  if (tier === 2) return 'bg-dfxYellow-500/20 text-dfxYellow-700';
+  return 'bg-dfxGray-300 text-dfxGray-800';
 }
 
 // Departments a staff role may view and handle in the support dashboard. Mirrors the

@@ -94,9 +94,10 @@ export function useRealunitSupport() {
   async function getFile(
     issueId: number,
     messageId: number,
+    access: 'View' | 'Download' = 'View',
   ): Promise<{ data: { type: string; data: number[] }; contentType: string }> {
     return call<{ data: { type: string; data: number[] }; contentType: string }>({
-      url: `realunit/support/${issueId}/message/${messageId}/file`,
+      url: `realunit/support/${issueId}/message/${messageId}/file?access=${access}`,
       method: 'GET',
     });
   }

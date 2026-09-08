@@ -165,6 +165,16 @@ test.describe('Compliance area (overview)', () => {
     await expect(page.getByText(String(customer.userDataId), { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'Details', exact: true }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'KYC', exact: true }).first()).toBeVisible();
+
+    // The KYC Level column shows the seeded level (30) in the customer's row
+    const customersTable = page.getByText('Customers', { exact: true }).locator('xpath=following::table[1]');
+    // thead <th> cells map to ARIA role "cell" in this app, not "columnheader".
+    await expect(customersTable.locator('thead').getByText('KYC Level', { exact: true })).toBeVisible();
+    const customerRow = customersTable
+      .getByRole('row')
+      .filter({ hasText: String(customer.userDataId) })
+      .first();
+    await expect(customerRow.getByRole('cell', { name: '30', exact: true })).toBeVisible();
   });
 
   // -------------------------------------------------------------------------
