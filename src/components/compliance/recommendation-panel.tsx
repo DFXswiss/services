@@ -1,7 +1,10 @@
+import { useAuthContext } from '@dfx.swiss/react';
+import { useEffect, useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import { KycStepInfo, UserInfo } from 'src/hooks/compliance.hook';
 import { formatDate, statusBadge } from 'src/util/compliance-helpers';
-import { distinctReferrers } from 'src/util/recommendation-graph.util';
+import { canEditUsedRef } from 'src/util/used-ref.util';
+import { UsedRefEditor } from './used-ref-editor';
 
 interface RecommendationPanelProps {
   kycSteps: KycStepInfo[];
@@ -12,9 +15,17 @@ interface RecommendationPanelProps {
 
 export function RecommendationPanel({ kycSteps, users, userDataId, navigate }: RecommendationPanelProps): JSX.Element {
   const recommendations = kycSteps?.filter((s) => s.name === 'Recommendation') || [];
+  const { session } = useAuthContext();
+  const canEditRef = canEditUsedRef(session?.role);
 
-  // classic ref-code referrers (user.usedRef), deduplicated by code (shared helper)
-  const referrers = distinctReferrers(users);
+  // The wallets as loaded, replaced one by one when a ref code is saved, so the row shows the new
+  // referrer without a reload of the whole account.
+  const [wallets, setWallets] = useState(users);
+  useEffect(() => setWallets(users), [users]);
+
+  function replaceWallet(updated: UserInfo): void {
+    setWallets((current) => current.map((u) => (u.id === updated.id ? updated : u)));
+  }
 
   return (
     <div>
@@ -27,18 +38,11 @@ export function RecommendationPanel({ kycSteps, users, userDataId, navigate }: R
           View Network
         </button>
       </div>
-      {referrers.length > 0 && (
+      {wallets?.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
           <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
-          {referrers.map((u) => (
-            <button
-              key={u.usedRef}
-              className="block text-dfxBlue-800 hover:underline disabled:cursor-default disabled:no-underline"
-              disabled={!u.refUserDataId}
-              onClick={() => u.refUserDataId && navigate(`/compliance/user/${u.refUserDataId}`)}
-            >
-              {u.refUserName ?? '-'} {u.refUserDataId ? `#${u.refUserDataId}` : ''} ({u.usedRef})
-            </button>
+          {wallets.map((u) => (
+            <UsedRefEditor key={u.id} user={u} canEdit={canEditRef} navigate={navigate} onSaved={replaceWallet} />
           ))}
         </div>
       )}
