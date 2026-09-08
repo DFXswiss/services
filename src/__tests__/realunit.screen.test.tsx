@@ -236,7 +236,7 @@ describe('RealunitScreen', () => {
         <RealunitScreen />
       </StrictMode>,
     );
-    await waitFor(() => expect(mockGetPrizeWallet).toHaveBeenCalled());
+    await waitFor(() => expect(mockGetPrizeWallet).toHaveBeenCalledTimes(1));
     expect(mockFetchHolders).toHaveBeenCalledTimes(1);
     expect(mockFetchTokenInfo).toHaveBeenCalledTimes(1);
     expect(mockFetchPriceHistory).toHaveBeenCalledTimes(1);
