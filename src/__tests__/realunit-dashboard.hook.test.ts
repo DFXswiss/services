@@ -76,13 +76,13 @@ describe('useRealunitSupport', () => {
 
     await result.current.getFile(42, 7);
     expect(mockCall).toHaveBeenCalledWith({
-      url: 'realunit/support/42/message/7/file?access=view',
+      url: 'realunit/support/42/message/7/file?access=View',
       method: 'GET',
     });
 
-    await result.current.getFile(42, 7, 'download');
+    await result.current.getFile(42, 7, 'Download');
     expect(mockCall).toHaveBeenCalledWith({
-      url: 'realunit/support/42/message/7/file?access=download',
+      url: 'realunit/support/42/message/7/file?access=Download',
       method: 'GET',
     });
   });

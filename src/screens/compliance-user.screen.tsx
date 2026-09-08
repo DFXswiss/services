@@ -63,7 +63,7 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ComplianceUserData>();
-  const [preview, setPreview] = useState<{ url: string; contentType: string; name: string; uid: string }>();
+  const [preview, setPreview] = useState<{ url: string; contentType: string; name: string; uid?: string }>();
   const [activeTab, setActiveTab] = useState<TabType>('transactions');
   const [expandedBankTxId, setExpandedBankTxId] = useState<number>();
   const [expandedCryptoInputId, setExpandedCryptoInputId] = useState<number>();
@@ -114,7 +114,7 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   async function openFile(file: KycFile): Promise<void> {
     try {
-      const { content, contentType } = await getKycFile(file.uid, 'view');
+      const { content, contentType } = await getKycFile(file.uid, 'View');
       if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
         setError('Invalid file type');
         return;
@@ -130,9 +130,9 @@ export default function ComplianceUserScreen(): JSX.Element {
   }
 
   async function downloadPreview(): Promise<void> {
-    if (!preview) return;
+    if (!preview?.uid) return;
     try {
-      const { content, contentType } = await getKycFile(preview.uid, 'download');
+      const { content, contentType } = await getKycFile(preview.uid, 'Download');
       if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
         setError('Invalid file type');
         return;

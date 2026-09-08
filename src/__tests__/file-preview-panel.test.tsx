@@ -136,4 +136,22 @@ describe('FilePreviewPanel', () => {
     expect(screen.queryByRole('button', { name: 'Download' })).not.toBeInTheDocument();
     expect(onDownload).not.toHaveBeenCalled();
   });
+
+  it('ignores a stale image error whose src no longer matches preview.url', () => {
+    const { container } = render(
+      <FilePreviewPanel
+        preview={{ url: 'blob:img', contentType: 'image/jpeg', name: 'ausweis.jpg' }}
+        label="Dateien"
+        onClose={jest.fn()}
+      />,
+    );
+
+    const img = container.querySelector('img') as HTMLImageElement;
+    expect(img).toBeInTheDocument();
+    img.src = 'blob:other';
+    fireEvent.error(img);
+
+    expect(screen.queryByText('No preview for this format, download it instead.')).not.toBeInTheDocument();
+    expect(container.querySelector('img')).toBeInTheDocument();
+  });
 });

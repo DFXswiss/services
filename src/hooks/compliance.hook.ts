@@ -1582,7 +1582,7 @@ export function useCompliance() {
 
   async function getKycFile(
     uid: string,
-    access: 'view' | 'download',
+    access: 'View' | 'Download',
   ): Promise<{ content: { type: string; data: number[] }; contentType: string }> {
     return call<{ content: { type: string; data: number[] }; contentType: string }>({
       url: `kyc/file/${encodeURIComponent(uid)}?access=${access}`,

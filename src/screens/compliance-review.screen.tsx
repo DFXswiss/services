@@ -60,7 +60,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
   const [data, setData] = useState<ComplianceUserData>();
   const [activeTab, setActiveTab] = useState<ReviewCheckTab | undefined>(initialTabParam ?? undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [preview, setPreview] = useState<{ url: string; contentType: string; name: string; uid: string }>();
+  const [preview, setPreview] = useState<{ url: string; contentType: string; name: string; uid?: string }>();
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   const loadData = useCallback(
@@ -97,7 +97,7 @@ export default function ComplianceReviewScreen(): JSX.Element {
 
   async function openFile(file: KycFile): Promise<void> {
     try {
-      const { content, contentType } = await getKycFile(file.uid, 'view');
+      const { content, contentType } = await getKycFile(file.uid, 'View');
       if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
         setError('Invalid file type');
         return;
@@ -111,9 +111,9 @@ export default function ComplianceReviewScreen(): JSX.Element {
   }
 
   async function downloadPreview(): Promise<void> {
-    if (!preview) return;
+    if (!preview?.uid) return;
     try {
-      const { content, contentType } = await getKycFile(preview.uid, 'download');
+      const { content, contentType } = await getKycFile(preview.uid, 'Download');
       if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
         setError('Invalid file type');
         return;

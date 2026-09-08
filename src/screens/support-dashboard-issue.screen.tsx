@@ -287,7 +287,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   async function openFile(msg: SupportMessageInfo): Promise<void> {
     if (!issueData?.uid || !msg.fileName) return;
     try {
-      const { data, contentType } = await getMessageFile(issueData.uid, msg.id, 'view');
+      const { data, contentType } = await getMessageFile(issueData.uid, msg.id, 'View');
       if (!data || data.type !== 'Buffer' || !Array.isArray(data.data)) {
         setActionError('Invalid file type');
         return;
@@ -304,7 +304,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
   async function downloadPreview(): Promise<void> {
     if (!issueData?.uid || !filePreview) return;
     try {
-      const { data, contentType } = await getMessageFile(issueData.uid, filePreview.messageId, 'download');
+      const { data, contentType } = await getMessageFile(issueData.uid, filePreview.messageId, 'Download');
       if (!data || data.type !== 'Buffer' || !Array.isArray(data.data)) {
         setActionError('Invalid file type');
         return;

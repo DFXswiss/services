@@ -213,7 +213,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
   async function openFile(msg: SupportMessageInfo): Promise<void> {
     if (!issueData || !msg.fileName) return;
     try {
-      const { data, contentType } = await getFile(issueData.id, msg.id, 'view');
+      const { data, contentType } = await getFile(issueData.id, msg.id, 'View');
       if (!data || data.type !== 'Buffer' || !Array.isArray(data.data)) {
         setActionError('Invalid file type');
         return;
@@ -230,7 +230,7 @@ export default function RealunitSupportIssueScreen(): JSX.Element {
   async function downloadPreview(): Promise<void> {
     if (!issueData || !filePreview) return;
     try {
-      const { data, contentType } = await getFile(issueData.id, filePreview.messageId, 'download');
+      const { data, contentType } = await getFile(issueData.id, filePreview.messageId, 'Download');
       if (!data || data.type !== 'Buffer' || !Array.isArray(data.data)) {
         setActionError('Invalid file type');
         return;

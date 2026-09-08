@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface FilePreviewPanelProps {
   preview?: { url: string; contentType: string; name: string };
@@ -30,6 +30,10 @@ export function FilePreviewPanel({ preview, label, onClose, onDownload }: FilePr
   const [undecodableUrl, setUndecodableUrl] = useState<string>();
   const [isDownloading, setIsDownloading] = useState(false);
   const showHint = preview && (!canPreview(preview.contentType) || undecodableUrl === preview.url);
+
+  useEffect(() => {
+    setIsDownloading(false);
+  }, [preview?.url]);
 
   return (
     <div className="flex-1 min-w-[400px]">
