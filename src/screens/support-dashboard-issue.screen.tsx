@@ -6,6 +6,7 @@ import { FilePreviewPanel } from 'src/components/compliance/file-preview-panel';
 import { LimitRequestDecisionForm } from 'src/components/compliance/limit-request-decision-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { InfoPanel, InfoRow, SupportMessageList } from 'src/components/support/info-panel';
+import { TicketNotePanel } from 'src/components/support/ticket-note-panel';
 import { TemplateArrayPickerModal } from 'src/components/support-templates/template-array-picker-modal';
 import { TemplatePickerModal } from 'src/components/support-templates/template-picker-modal';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -83,6 +84,12 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     name: string;
     messageId: number;
   }>();
+  // Internal customer note in progress (undefined = composer closed). Screen-level so it survives the
+  // reload spinner after Update. noteGenRef invalidates an in-flight create after a ticket change
+  // (including A→B→A) without blocking onCreated for a same-ticket reload spinner.
+  const [noteDraft, setNoteDraft] = useState<{ text: string }>();
+  const noteGenRef = useRef(0);
+  const noteGenAtRender = noteGenRef.current;
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   const isComplianceDept = issueData?.department === Department.COMPLIANCE;
@@ -144,12 +151,14 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     loadMessages();
   }, [loadMessages]);
 
-  // Clear send UI state when navigating to a different ticket
+  // Clear send UI and an in-progress note draft when navigating to a different ticket.
   useEffect(() => {
     sendInFlight.current = false;
     setIsSending(false);
     setSelectedFiles([]);
     setActionError(undefined);
+    setNoteDraft(undefined);
+    noteGenRef.current += 1;
   }, [id]);
 
   // Reset cached UserData when the issue (and thus the account) changes
@@ -549,6 +558,19 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
             >
               {isUpdating ? 'Updating...' : 'Update'}
             </button>
+            {id && issueData.id === +id && (
+              <TicketNotePanel
+                key={id}
+                userDataId={issueData.account.id}
+                issueId={+id}
+                draft={noteDraft}
+                onDraftChange={(next) => {
+                  // Stale onCreated from another ticket (or an A→B→A round-trip) must not wipe a newer draft.
+                  if (next === undefined && noteGenRef.current !== noteGenAtRender) return;
+                  setNoteDraft(next);
+                }}
+              />
+            )}
           </div>
         </div>
 
