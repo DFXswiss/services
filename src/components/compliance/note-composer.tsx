@@ -98,12 +98,11 @@ export function NoteComposer({
         subject: subject.trim() || undefined,
         department: department || undefined,
       });
-      if (mountedRef.current) {
-        setSubject('');
-        setContent('');
-        setDepartment('');
-        setUserDataIdInput('');
-      }
+      if (!mountedRef.current) return;
+      setSubject('');
+      setContent('');
+      setDepartment('');
+      setUserDataIdInput('');
       onCreated();
     } catch (e: unknown) {
       if (!mountedRef.current) return;
