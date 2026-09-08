@@ -131,7 +131,7 @@ const TX = {
 };
 
 async function renderScreen() {
-  const view = await renderScreen();
+  const view = render(<RealunitScreen />);
   await waitFor(() => expect(mockGetPrizeWallet).toHaveBeenCalled());
   return view;
 }
