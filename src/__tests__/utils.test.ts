@@ -42,6 +42,7 @@ import {
   formatLocationAddress,
   apiUrl,
   relativeUrl,
+  saveBufferedFile,
 } from '../util/utils';
 
 describe('utils', () => {
@@ -434,6 +435,42 @@ describe('utils', () => {
       });
       const query = new URLSearchParams(result.slice(result.indexOf('?') + 1));
       expect(query.get('issue-type')).toBe('LimitRequest');
+    });
+  });
+
+  describe('saveBufferedFile', () => {
+    const created: HTMLAnchorElement[] = [];
+    let createElementSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      created.length = 0;
+      const orig = document.createElement.bind(document);
+      createElementSpy = jest.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+        const el = orig(tag);
+        if (tag === 'a') created.push(el as HTMLAnchorElement);
+        return el;
+      });
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        writable: true,
+        value: jest.fn(() => 'blob:saved'),
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        writable: true,
+        value: jest.fn(),
+      });
+    });
+
+    afterEach(() => {
+      createElementSpy.mockRestore();
+    });
+
+    it('creates an anchor with the original filename and does not throw', () => {
+      expect(() =>
+        saveBufferedFile({ type: 'Buffer', data: [1, 2, 3] }, 'image/jpeg', 'selfie.jpg'),
+      ).not.toThrow();
+      expect(created[0].download).toBe('selfie.jpg');
     });
   });
 });

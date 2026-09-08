@@ -302,6 +302,24 @@ describe('useCompliance API wrappers', () => {
     expect(lastCall()).toEqual({ url: 'support/7/transaction-pdf', method: 'GET' });
     expect(mockDownloadPdfFromString).toHaveBeenCalledWith('AA==', 'DFX_Transactions_7_20260907.pdf');
   });
+
+  it('getKycFile requests the v2 file endpoint with access=View', async () => {
+    await api().getKycFile('uid-1', 'View');
+    expect(mockCall).toHaveBeenCalledWith({
+      url: 'kyc/file/uid-1?access=View',
+      method: 'GET',
+      version: 'v2',
+    });
+  });
+
+  it('getKycFile requests the v2 file endpoint with access=Download and encodes the uid', async () => {
+    await api().getKycFile('uid/with space', 'Download');
+    expect(mockCall).toHaveBeenCalledWith({
+      url: `kyc/file/${encodeURIComponent('uid/with space')}?access=Download`,
+      method: 'GET',
+      version: 'v2',
+    });
+  });
 });
 
 describe('useCompliance().saveCallOutcome branches', () => {

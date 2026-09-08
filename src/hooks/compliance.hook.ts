@@ -1580,6 +1580,17 @@ export function useCompliance() {
     });
   }
 
+  async function getKycFile(
+    uid: string,
+    access: 'View' | 'Download',
+  ): Promise<{ content: { type: string; data: number[] }; contentType: string }> {
+    return call<{ content: { type: string; data: number[] }; contentType: string }>({
+      url: `kyc/file/${encodeURIComponent(uid)}?access=${access}`,
+      method: 'GET',
+      version: 'v2',
+    });
+  }
+
   return useMemo(
     () => ({
       search,
@@ -1631,6 +1642,7 @@ export function useCompliance() {
       createSupportNote,
       updateSupportNote,
       deleteSupportNote,
+      getKycFile,
     }),
     [call],
   );
