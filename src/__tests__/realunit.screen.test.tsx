@@ -516,4 +516,10 @@ describe('RealunitScreen', () => {
     await renderScreen();
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('boom'));
   });
+
+  it('falls back to Unknown error when the rejection has no message', async () => {
+    mockGetPrizeWallet.mockRejectedValue({ message: undefined });
+    await renderScreen();
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('Unknown error'));
+  });
 });
