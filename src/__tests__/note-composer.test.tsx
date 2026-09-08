@@ -213,7 +213,7 @@ describe('NoteComposer', () => {
     expect(onSubmittingChange.mock.calls.map((c) => c[0])).toEqual([true, false]);
   });
 
-  it('does not call onCreated after unmount during submit, and skips local UI callbacks', async () => {
+  it('still calls onCreated after unmount during submit, but skips local UI callbacks', async () => {
     const onCreated = jest.fn();
     const onContentChange = jest.fn();
     const onSubmittingChange = jest.fn();
@@ -239,7 +239,7 @@ describe('NoteComposer', () => {
       await Promise.resolve();
     });
 
-    expect(onCreated).not.toHaveBeenCalled();
+    expect(onCreated).toHaveBeenCalledTimes(1);
     expect(onContentChange).not.toHaveBeenCalledWith('');
     expect(onSubmittingChange).not.toHaveBeenCalledWith(false);
   });

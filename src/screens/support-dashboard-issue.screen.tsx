@@ -83,8 +83,11 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     messageId: number;
   }>();
   // Internal customer note in progress (undefined = composer closed). Screen-level so it survives the
-  // reload spinner after Update.
+  // reload spinner after Update. noteGenRef invalidates an in-flight create after a ticket change
+  // (including A→B→A) without blocking onCreated for a same-ticket reload spinner.
   const [noteDraft, setNoteDraft] = useState<{ text: string }>();
+  const noteGenRef = useRef(0);
+  const noteGenAtRender = noteGenRef.current;
   const { containerRef, splitPercent, handleSplitDrag } = useSplitPane();
 
   const isComplianceDept = issueData?.department === Department.COMPLIANCE;
@@ -152,6 +155,7 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
     setSelectedFiles([]);
     setActionError(undefined);
     setNoteDraft(undefined);
+    noteGenRef.current += 1;
   }, [id]);
 
   // Reset cached UserData when the issue (and thus the account) changes
@@ -555,8 +559,8 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                 issueId={+id}
                 draft={noteDraft}
                 onDraftChange={(next) => {
-                  // A note create that finishes after a ticket switch must not wipe the new ticket's draft.
-                  if (next === undefined && idRef.current !== id) return;
+                  // Stale onCreated from another ticket (or an A→B→A round-trip) must not wipe a newer draft.
+                  if (next === undefined && noteGenRef.current !== noteGenAtRender) return;
                   setNoteDraft(next);
                 }}
               />
