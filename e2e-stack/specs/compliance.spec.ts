@@ -168,7 +168,8 @@ test.describe('Compliance area (overview)', () => {
 
     // The KYC Level column shows the seeded level (30) in the customer's row
     const customersTable = page.getByText('Customers', { exact: true }).locator('xpath=following::table[1]');
-    await expect(customersTable.getByRole('columnheader', { name: 'KYC Level', exact: true })).toBeVisible();
+    // thead <th> cells map to ARIA role "cell" in this app, not "columnheader".
+    await expect(customersTable.locator('thead').getByText('KYC Level', { exact: true })).toBeVisible();
     const customerRow = customersTable
       .getByRole('row')
       .filter({ hasText: String(customer.userDataId) })
