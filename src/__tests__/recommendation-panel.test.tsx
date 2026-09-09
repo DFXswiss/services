@@ -203,6 +203,10 @@ describe('RecommendationPanel', () => {
     );
     expect(screen.queryByText('Referrer (Ref-Code)')).not.toBeInTheDocument();
     rerender(
+      <RecommendationPanel kycSteps={[]} users={users} userDataId="204824" navigate={mockNavigate as unknown as NavigateFunction} />,
+    );
+    expect(screen.queryByText('Referrer (Ref-Code)')).not.toBeInTheDocument();
+    rerender(
       <RecommendationPanel kycSteps={[]} users={[wallet({ id: 9, address: '0x999' })]} userDataId="204824" navigate={mockNavigate as unknown as NavigateFunction} />,
     );
     expect(screen.getByText('No Ref-Code')).toBeInTheDocument();

@@ -25,15 +25,18 @@ export function RecommendationPanel({
 
   const prevIdRef = useRef(userDataId);
   const usersSeenRef = useRef(users);
+  const staleRef = useRef(false);
   const idChanged = prevIdRef.current !== userDataId;
   const usersChanged = usersSeenRef.current !== users;
-  const usersStale = idChanged && !usersChanged;
+  if (idChanged && !usersChanged) staleRef.current = true;
+  if (usersChanged) staleRef.current = false;
+  const usersStale = staleRef.current;
   prevIdRef.current = userDataId;
   usersSeenRef.current = users;
 
   const [savedWallets, setSavedWallets] = useState<UserInfo[] | undefined>(undefined);
   const displayWallets = usersStale ? [] : usersChanged ? users : (savedWallets ?? users);
-  if (usersChanged && savedWallets) setSavedWallets(undefined);
+  if ((usersChanged || idChanged) && savedWallets) setSavedWallets(undefined);
 
   return (
     <div>
