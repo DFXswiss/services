@@ -1,7 +1,7 @@
 import { useAuthContext } from '@dfx.swiss/react';
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
-import { KycStepInfo, UserInfo } from 'src/hooks/compliance.hook';
+import { KycStepInfo, useCompliance, UserInfo } from 'src/hooks/compliance.hook';
 import { formatDate, statusBadge } from 'src/util/compliance-helpers';
 import { canEditUsedRef } from 'src/util/used-ref.util';
 import { UsedRefEditor } from './used-ref-editor';
@@ -15,28 +15,34 @@ interface RecommendationPanelProps {
 
 export function RecommendationPanel({
   kycSteps,
-  users,
   userDataId,
   navigate,
 }: RecommendationPanelProps): JSX.Element {
   const recommendations = kycSteps?.filter((s) => s.name === 'Recommendation') || [];
   const { session } = useAuthContext();
   const canEditRef = canEditUsedRef(session?.role);
+  const { getUserData } = useCompliance();
 
-  const prevIdRef = useRef(userDataId);
-  const usersSeenRef = useRef(users);
-  const staleRef = useRef(false);
-  const idChanged = prevIdRef.current !== userDataId;
-  const usersChanged = usersSeenRef.current !== users;
-  if (idChanged && !usersChanged) staleRef.current = true;
-  if (usersChanged) staleRef.current = false;
-  const usersStale = staleRef.current;
-  prevIdRef.current = userDataId;
-  usersSeenRef.current = users;
+  const [fetched, setFetched] = useState<{ id: string; users: UserInfo[] } | undefined>(undefined);
+  const [saved, setSaved] = useState<{ id: string; users: UserInfo[] } | undefined>(undefined);
+  const displayWallets =
+    saved?.id === userDataId ? saved.users : fetched?.id === userDataId ? fetched.users : undefined;
 
-  const [savedWallets, setSavedWallets] = useState<UserInfo[] | undefined>(undefined);
-  const displayWallets = usersStale ? [] : usersChanged ? users : (savedWallets ?? users);
-  if ((usersChanged || idChanged) && savedWallets) setSavedWallets(undefined);
+  useEffect(() => {
+    let live = true;
+    getUserData(+userDataId)
+      .then((data) => {
+        if (!live) return;
+        setFetched({ id: userDataId, users: data.users });
+      })
+      .catch(() => {
+        if (!live) return;
+        setFetched({ id: userDataId, users: [] });
+      });
+    return () => {
+      live = false;
+    };
+  }, [userDataId, getUserData]);
 
   return (
     <div>
@@ -49,7 +55,7 @@ export function RecommendationPanel({
           View Network
         </button>
       </div>
-      {displayWallets?.length > 0 && !usersStale && (
+      {displayWallets?.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
           <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
           <UsedRefEditor
@@ -58,7 +64,7 @@ export function RecommendationPanel({
             users={displayWallets}
             canEdit={canEditRef}
             navigate={navigate}
-            onSaved={setSavedWallets}
+            onSaved={(users) => setSaved({ id: userDataId, users })}
           />
         </div>
       )}
