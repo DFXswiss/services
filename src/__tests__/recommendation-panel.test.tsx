@@ -1,8 +1,9 @@
-// Component tests for RecommendationPanel: the recommendation steps, the referrer list, the per-wallet
-// referral-code editors, and that a saved code updates both lists without a reload.
+// Component tests for RecommendationPanel: the recommendation steps, the referrer box of the account,
+// and that a saved code asks the screen to reload the account.
 
 const mockNavigate = jest.fn();
 const mockUpdateUsedRef = jest.fn();
+const mockOnChange = jest.fn();
 
 // recommendation-graph.util imports compliance.hook, which loads a few @dfx.swiss/react enum values at
 // module scope (ESM this Jest setup cannot parse), so the mock must provide them.
@@ -70,6 +71,7 @@ function renderPanel(props: Partial<{ kycSteps: KycStepInfo[]; users: UserInfo[]
       users={props.users ?? []}
       userDataId="408808"
       navigate={mockNavigate as unknown as NavigateFunction}
+      onChange={mockOnChange}
     />,
   );
 }
@@ -78,6 +80,7 @@ describe('RecommendationPanel', () => {
   beforeEach(() => {
     mockNavigate.mockReset();
     mockUpdateUsedRef.mockReset();
+    mockOnChange.mockReset();
     mockSession.role = 'Compliance';
   });
 
@@ -112,29 +115,36 @@ describe('RecommendationPanel', () => {
         users={[]}
         userDataId="408808"
         navigate={mockNavigate as unknown as NavigateFunction}
+        onChange={mockOnChange}
       />,
     );
     expect(screen.getByText('Recommendation (0)')).toBeInTheDocument();
   });
 
-  it('lists every wallet with its referrer, linking to the referrer account where known', () => {
+  it('shows the referrer of the account once, linking to the referrer account where known', () => {
     renderPanel({
       users: [
         wallet({ id: 1, usedRef: '172-134', refUserName: 'Samuel Kullmann', refUserDataId: 328304 }),
-        wallet({ id: 2, address: '0xdef', usedRef: '555-555' }),
-        wallet({ id: 3, address: '0x123' }),
+        wallet({ id: 2, address: '0xdef', usedRef: '172-134', refUserName: 'Samuel Kullmann', refUserDataId: 328304 }),
+        wallet({ id: 3, address: '0x123', usedRef: '555-555' }),
       ],
     });
 
     expect(screen.getByText('Referrer (Ref-Code)')).toBeInTheDocument();
     const known = screen.getByRole('button', { name: 'Samuel Kullmann #328304 (172-134)' });
     expect(screen.getByRole('button', { name: '- (555-555)' })).toBeDisabled();
-    expect(screen.getByText('No Ref-Code')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Change' })).toHaveLength(2);
-    expect(screen.getByRole('button', { name: 'Set' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Change' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Set' })).not.toBeInTheDocument();
 
     fireEvent.click(known);
     expect(mockNavigate).toHaveBeenCalledWith('/compliance/user/328304');
+  });
+
+  it('shows one line and one Set for an account with many wallets and no code', () => {
+    renderPanel({ users: Array.from({ length: 42 }, (_, i) => wallet({ id: i + 1, address: `0x${i}` })) });
+
+    expect(screen.getAllByText('No Ref-Code')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Set' })).toHaveLength(1);
   });
 
   it('hides the referrer box when the account has no wallet', () => {
@@ -142,26 +152,22 @@ describe('RecommendationPanel', () => {
     expect(screen.queryByText('Referrer (Ref-Code)')).not.toBeInTheDocument();
   });
 
-  it('shows the saved code and referrer on the wallet row without a reload', async () => {
+  it('asks the screen to reload the account after a saved code', async () => {
     renderPanel({ users: [wallet({ id: 1 }), wallet({ id: 2, address: '0xdef' })] });
-    expect(screen.getAllByRole('button', { name: 'Set' })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Set' })).toHaveLength(1);
 
-    mockUpdateUsedRef.mockResolvedValue(
-      wallet({ id: 2, address: '0xdef', usedRef: '194-687', refUserName: 'Joshua Kruger', refUserDataId: 317206 }),
-    );
-    fireEvent.click(screen.getAllByRole('button', { name: 'Set' })[1]);
+    mockUpdateUsedRef.mockResolvedValue([wallet({ id: 1, usedRef: '194-687' }), wallet({ id: 2, usedRef: '194-687' })]);
+    fireEvent.click(screen.getByRole('button', { name: 'Set' }));
     fireEvent.change(screen.getByLabelText('Ref-Code'), { target: { value: '194-687' } });
     fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'confirmed' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Joshua Kruger #317206 (194-687)' })).toBeInTheDocument(),
-    );
-    expect(screen.getByRole('button', { name: 'Set' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Change' })).toBeInTheDocument();
+    await waitFor(() => expect(mockOnChange).toHaveBeenCalledTimes(1));
+    expect(mockUpdateUsedRef).toHaveBeenCalledWith('408808', { usedRef: '194-687', reason: 'confirmed' });
+    expect(screen.queryByLabelText('Ref-Code')).not.toBeInTheDocument();
   });
 
-  it('lists the wallets read-only for a support session', () => {
+  it('shows the referrer read-only for a support session', () => {
     mockSession.role = 'Support';
     renderPanel({
       users: [wallet({ id: 1, usedRef: '172-134', refUserName: 'Samuel Kullmann', refUserDataId: 328304 })],
@@ -174,16 +180,18 @@ describe('RecommendationPanel', () => {
 
   it('follows a reload of the account with the wallets it delivers', () => {
     const { rerender } = renderPanel({ users: [wallet({ id: 1 })] });
-    expect(screen.getAllByRole('button', { name: 'Set' })).toHaveLength(1);
+    expect(screen.getByText('No Ref-Code')).toBeInTheDocument();
 
     rerender(
       <RecommendationPanel
         kycSteps={[]}
-        users={[wallet({ id: 1 }), wallet({ id: 2, address: '0xdef' })]}
+        users={[wallet({ id: 1, usedRef: '172-134', refUserName: 'Samuel Kullmann', refUserDataId: 328304 })]}
         userDataId="408808"
         navigate={mockNavigate as unknown as NavigateFunction}
+        onChange={mockOnChange}
       />,
     );
-    expect(screen.getAllByRole('button', { name: 'Set' })).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Samuel Kullmann #328304 (172-134)' })).toBeInTheDocument();
+    expect(screen.queryByText('No Ref-Code')).not.toBeInTheDocument();
   });
 });

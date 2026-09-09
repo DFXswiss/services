@@ -1,5 +1,4 @@
 import { useAuthContext } from '@dfx.swiss/react';
-import { useEffect, useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import { KycStepInfo, UserInfo } from 'src/hooks/compliance.hook';
 import { formatDate, statusBadge } from 'src/util/compliance-helpers';
@@ -11,21 +10,20 @@ interface RecommendationPanelProps {
   users: UserInfo[];
   userDataId: string;
   navigate: NavigateFunction;
+  // Reloads the account after the referral code changed (the users of the answer carry the code).
+  onChange: () => void;
 }
 
-export function RecommendationPanel({ kycSteps, users, userDataId, navigate }: RecommendationPanelProps): JSX.Element {
+export function RecommendationPanel({
+  kycSteps,
+  users,
+  userDataId,
+  navigate,
+  onChange,
+}: RecommendationPanelProps): JSX.Element {
   const recommendations = kycSteps?.filter((s) => s.name === 'Recommendation') || [];
   const { session } = useAuthContext();
   const canEditRef = canEditUsedRef(session?.role);
-
-  // The wallets as loaded, replaced one by one when a ref code is saved, so the row shows the new
-  // referrer without a reload of the whole account.
-  const [wallets, setWallets] = useState(users);
-  useEffect(() => setWallets(users), [users]);
-
-  function replaceWallet(updated: UserInfo): void {
-    setWallets((current) => current.map((u) => (u.id === updated.id ? updated : u)));
-  }
 
   return (
     <div>
@@ -38,12 +36,16 @@ export function RecommendationPanel({ kycSteps, users, userDataId, navigate }: R
           View Network
         </button>
       </div>
-      {wallets?.length > 0 && (
+      {users?.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
           <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
-          {wallets.map((u) => (
-            <UsedRefEditor key={u.id} user={u} canEdit={canEditRef} navigate={navigate} onSaved={replaceWallet} />
-          ))}
+          <UsedRefEditor
+            userDataId={userDataId}
+            users={users}
+            canEdit={canEditRef}
+            navigate={navigate}
+            onSaved={onChange}
+          />
         </div>
       )}
       <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto scroll-shadow">
