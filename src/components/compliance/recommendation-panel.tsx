@@ -30,6 +30,7 @@ export function RecommendationPanel({
 
   useEffect(() => {
     let live = true;
+    setSaved(undefined);
     getUserData(+userDataId)
       .then((data) => {
         if (!live) return;
