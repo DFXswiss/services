@@ -47,8 +47,8 @@ export function UsedRefEditor({ userDataId, users, canEdit, navigate, onSaved }:
   // The form belongs to the account it was opened for: it closes on the switch, and an answer that
   // arrives for the previous account is not reported as a change of the current one.
   const userDataIdRef = useRef(userDataId);
+  userDataIdRef.current = userDataId;
   useEffect(() => {
-    userDataIdRef.current = userDataId;
     savingRef.current = false;
     setIsSaving(false);
     setIsEditing(false);

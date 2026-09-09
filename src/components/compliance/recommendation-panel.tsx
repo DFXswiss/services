@@ -1,5 +1,5 @@
 import { useAuthContext } from '@dfx.swiss/react';
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import { KycStepInfo, UserInfo } from 'src/hooks/compliance.hook';
 import { formatDate, statusBadge } from 'src/util/compliance-helpers';
@@ -23,17 +23,17 @@ export function RecommendationPanel({
   const { session } = useAuthContext();
   const canEditRef = canEditUsedRef(session?.role);
 
-  const [wallets, setWallets] = useState(users);
-  const [usersStale, setUsersStale] = useState(false);
+  const prevIdRef = useRef(userDataId);
+  const usersSeenRef = useRef(users);
+  const idChanged = prevIdRef.current !== userDataId;
+  const usersChanged = usersSeenRef.current !== users;
+  const usersStale = idChanged && !usersChanged;
+  prevIdRef.current = userDataId;
+  usersSeenRef.current = users;
 
-  useEffect(() => {
-    setUsersStale(true);
-  }, [userDataId]);
-
-  useEffect(() => {
-    setWallets(users);
-    setUsersStale(false);
-  }, [users]);
+  const [savedWallets, setSavedWallets] = useState<UserInfo[] | undefined>(undefined);
+  const displayWallets = usersStale ? [] : usersChanged ? users : (savedWallets ?? users);
+  if (usersChanged && savedWallets) setSavedWallets(undefined);
 
   return (
     <div>
@@ -46,15 +46,16 @@ export function RecommendationPanel({
           View Network
         </button>
       </div>
-      {wallets?.length > 0 && !usersStale && (
+      {displayWallets?.length > 0 && !usersStale && (
         <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
           <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
           <UsedRefEditor
+            key={userDataId}
             userDataId={userDataId}
-            users={wallets}
+            users={displayWallets}
             canEdit={canEditRef}
             navigate={navigate}
-            onSaved={setWallets}
+            onSaved={setSavedWallets}
           />
         </div>
       )}

@@ -193,4 +193,18 @@ describe('RecommendationPanel', () => {
     expect(screen.getByRole('button', { name: 'Samuel Kullmann #328304 (172-134)' })).toBeInTheDocument();
     expect(screen.queryByText('No Ref-Code')).not.toBeInTheDocument();
   });
+
+  it('hides the referrer box when the account id changes but the wallets array has not', () => {
+    const users = [wallet({ id: 1 })];
+    const { rerender } = renderPanel({ users });
+    expect(screen.getByText('No Ref-Code')).toBeInTheDocument();
+    rerender(
+      <RecommendationPanel kycSteps={[]} users={users} userDataId="204824" navigate={mockNavigate as unknown as NavigateFunction} />,
+    );
+    expect(screen.queryByText('Referrer (Ref-Code)')).not.toBeInTheDocument();
+    rerender(
+      <RecommendationPanel kycSteps={[]} users={[wallet({ id: 9, address: '0x999' })]} userDataId="204824" navigate={mockNavigate as unknown as NavigateFunction} />,
+    );
+    expect(screen.getByText('No Ref-Code')).toBeInTheDocument();
+  });
 });
