@@ -61,6 +61,14 @@ const APPROVED = {
   created: '2026-09-02T10:00:00Z',
   reviewStatus: RealUnitManualReviewStatus.APPROVED,
 };
+const NO_STATUS = {
+  id: 3,
+  kind: RealUnitCodeKind.INVITE,
+  userId: 12,
+  code: 'NOSTAT',
+  credited: false,
+  created: '2026-09-03T10:00:00Z',
+};
 
 describe('RealunitReferralScreen held-for-review filter', () => {
   beforeEach(() => {
@@ -87,6 +95,20 @@ describe('RealunitReferralScreen held-for-review filter', () => {
     fireEvent.click(screen.getByRole('checkbox'));
 
     expect(screen.getByText('PROMO9')).toBeInTheDocument();
+  });
+
+  it('shows a dash when reviewStatus is omitted after the filter is turned off', async () => {
+    mockGetRelations.mockResolvedValue([PENDING, NO_STATUS]);
+    render(<RealunitReferralScreen />);
+    await waitFor(() => expect(screen.getByText('AB12CD')).toBeInTheDocument());
+
+    expect(screen.queryByText('NOSTAT')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('checkbox'));
+
+    expect(screen.getByText('NOSTAT')).toBeInTheDocument();
+    const row = screen.getByText('NOSTAT').closest('tr');
+    expect(row).toHaveTextContent('-');
   });
 
   it('navigates to the detail on row click', async () => {
