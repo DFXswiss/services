@@ -13,7 +13,9 @@ jest.mock('@dfx.swiss/react-components', () => ({
     </button>
   ),
 }));
-jest.mock('src/components/error-hint', () => ({ ErrorHint: () => null }));
+jest.mock('src/components/error-hint', () => ({
+  ErrorHint: ({ message }: { message: string }) => <div data-testid="error-hint">{message}</div>,
+}));
 jest.mock('src/hooks/guard.hook', () => ({ useRealunitGuard: () => undefined }));
 jest.mock('src/contexts/settings.context', () => ({
   useSettingsContext: () => ({ translate: (_ns: string, key: string) => key }),
@@ -109,5 +111,12 @@ describe('RealunitReferralScreen held-for-review filter', () => {
 
     await waitFor(() => expect(mockGetRelations).toHaveBeenCalled());
     expect(screen.queryByText('AB12CD')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('boom'));
+  });
+
+  it('falls back to Unknown error when relations reject without a message', async () => {
+    mockGetRelations.mockRejectedValue({ message: undefined });
+    render(<RealunitReferralScreen />);
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('Unknown error'));
   });
 });

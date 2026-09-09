@@ -80,6 +80,24 @@ describe('RealunitPromoPanel', () => {
     await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
   });
 
+  it('does not create on form submit when the form is incomplete', async () => {
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+    fireEvent.submit(screen.getByRole('button', { name: 'Start' }).closest('form') as HTMLFormElement);
+    expect(mockCreatePromoCode).not.toHaveBeenCalled();
+  });
+
+  it('creates on form submit when the form is complete', async () => {
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'FORM1' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+    fireEvent.submit(screen.getByRole('button', { name: 'Start' }).closest('form') as HTMLFormElement);
+    await waitFor(() => expect(mockCreatePromoCode).toHaveBeenCalled());
+  });
+
   it('keeps Start disabled until the form is complete', async () => {
     render(<RealunitPromoPanel translate={translate} />);
     await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
