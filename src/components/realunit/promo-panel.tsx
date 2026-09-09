@@ -14,6 +14,7 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
   const [codes, setCodes] = useState<RealUnitPromoCode[]>();
   const [listError, setListError] = useState<string>();
   const [formError, setFormError] = useState<string>();
+  const [actionError, setActionError] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deactivatingId, setDeactivatingId] = useState<number>();
@@ -82,14 +83,14 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
 
   function onDeactivate(id: number): void {
     setDeactivatingId(id);
-    setListError(undefined);
+    setActionError(undefined);
     deactivatePromoCode(id)
       .then(() =>
         setCodes((prev = []) =>
           prev.map((row) => (row.id === id ? { ...row, deactivatedAt: new Date().toISOString() } : row)),
         ),
       )
-      .catch((e: Error) => setListError(e.message ?? 'Unknown error'))
+      .catch((e: Error) => setActionError(e.message ?? 'Unknown error'))
       .finally(() => setDeactivatingId(undefined));
   }
 
@@ -160,6 +161,7 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
       <h3 className="text-dfxGray-700 text-sm font-semibold">{translate('screens/referral', 'Promo codes')}</h3>
       {isLoading && <StyledLoadingSpinner size={SpinnerSize.SM} />}
       {listError && <ErrorHint message={listError} />}
+      {actionError && <ErrorHint message={actionError} />}
       {codes && !isLoading && codes.length === 0 && (
         <p className="text-sm text-dfxGray-700">{translate('screens/referral', 'No promo codes yet')}</p>
       )}

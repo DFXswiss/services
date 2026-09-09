@@ -230,6 +230,12 @@ describe('RealunitPromoPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Deactivate' }));
 
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('nope'));
+
+    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+    expect(screen.getByRole('button', { name: 'Start' })).not.toBeDisabled();
   });
 
   it('falls back to Unknown error when deactivate rejects without a message', async () => {
