@@ -73,4 +73,36 @@ describe('useRealunitReferral', () => {
     await expect(result.current.getPrizeWallet()).resolves.toEqual({ address: '0xprize', eth: 1.5, realu: 20 });
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/admin/prize-wallet', method: 'GET' });
   });
+
+  it('lists promo codes', async () => {
+    mockCall.mockResolvedValue([]);
+    const { result } = renderHook(() => useRealunitReferral());
+
+    await result.current.getPromoCodes();
+
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/promo', method: 'GET' });
+  });
+
+  it('creates a promo code', async () => {
+    const { result } = renderHook(() => useRealunitReferral());
+    const dto = {
+      code: 'START2026',
+      redemptionCap: 10,
+      minBuyRealu: 200,
+      validFrom: '2026-09-09T00:00:00.000Z',
+      validUntil: '2026-12-31T23:59:59.000Z',
+    };
+
+    await result.current.createPromoCode(dto);
+
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/promo', method: 'POST', data: dto });
+  });
+
+  it('deactivates a promo code', async () => {
+    const { result } = renderHook(() => useRealunitReferral());
+
+    await result.current.deactivatePromoCode(3);
+
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/promo/3/deactivate', method: 'PUT' });
+  });
 });

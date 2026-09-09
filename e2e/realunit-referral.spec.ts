@@ -18,9 +18,11 @@ import { createTestCredentials } from './test-wallet';
  * AND contain NO real production data. Only the RealUnit-scoped referral-admin endpoint is intercepted;
  * everything else (auth/role/user/settings) is passed through via route.continue().
  *
- * Intercepted endpoint (base `/v1/` is prepended by useApi):
+ * Intercepted endpoints (base `/v1/` is prepended by useApi):
  *   - GET realunit/referral/admin/relations → RealUnitReferralRelation[]
+ *   - GET realunit/referral/promo → RealUnitPromoCode[] (empty fixture)
  * The detail screen sources a single relation from that same list (there is no single-relation GET).
+ * A green run does not prove the live promo API creates codes.
  *
  * Synthetic fixtures: fake ids (8100+), fixed ISO dates, fake codes/accounts — no production data.
  */
@@ -105,6 +107,7 @@ const RELATIONS = [
 ];
 
 const LIST_RE = /\/v1\/realunit\/referral\/admin\/relations(\?|$)/;
+const PROMO_RE = /\/v1\/realunit\/referral\/promo(\?|$)/;
 
 async function json(route: Route, body: unknown): Promise<void> {
   await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
@@ -114,6 +117,7 @@ async function mockReferralApi(page: Page): Promise<void> {
   await page.route('**/v1/**', async (route: Route) => {
     const url = route.request().url();
     if (LIST_RE.test(url)) return json(route, RELATIONS);
+    if (PROMO_RE.test(url) && route.request().method() === 'GET') return json(route, []);
     await route.continue();
   });
 }
@@ -127,6 +131,7 @@ test.describe('RealUnit Referral admin', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
+    await expect(page.getByRole('heading', { name: 'Start promo code' })).toBeVisible();
     await expect(page.getByText('AB12CD')).toBeVisible();
     await expect(page.getByText('PROMO24')).toBeVisible();
     // held-for-review filter is on by default → the credited/Approved relation is filtered out

@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
-import { RealUnitPrizeWallet, RealUnitReferralRelation } from 'src/dto/realunit-referral.dto';
+import {
+  CreateRealUnitPromoCode,
+  RealUnitPrizeWallet,
+  RealUnitPromoCode,
+  RealUnitReferralRelation,
+} from 'src/dto/realunit-referral.dto';
 import { useGuardedApi } from './guarded-api.hook';
 
 // RealUnit tenant referral-admin hook. Operator-scoped `/v1/realunit/referral/admin/*` endpoints
@@ -46,6 +51,28 @@ export function useRealunitReferral() {
     });
   }
 
+  async function getPromoCodes(): Promise<RealUnitPromoCode[]> {
+    return call<RealUnitPromoCode[]>({
+      url: 'realunit/referral/promo',
+      method: 'GET',
+    });
+  }
+
+  async function createPromoCode(dto: CreateRealUnitPromoCode): Promise<RealUnitPromoCode> {
+    return call<RealUnitPromoCode>({
+      url: 'realunit/referral/promo',
+      method: 'POST',
+      data: dto,
+    });
+  }
+
+  async function deactivatePromoCode(id: number): Promise<void> {
+    return call<void>({
+      url: `realunit/referral/promo/${id}/deactivate`,
+      method: 'PUT',
+    });
+  }
+
   return useMemo(
     () => ({
       getRelations,
@@ -53,6 +80,9 @@ export function useRealunitReferral() {
       rejectRelation,
       createManualPrize,
       getPrizeWallet,
+      getPromoCodes,
+      createPromoCode,
+      deactivatePromoCode,
     }),
     [call],
   );

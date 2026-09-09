@@ -5,7 +5,13 @@
 jest.mock('@dfx.swiss/react', () => ({}));
 jest.mock('@dfx.swiss/react-components', () => ({
   SpinnerSize: { SM: 'sm', LG: 'lg' },
+  StyledButtonWidth: { MIN: 'min' },
   StyledLoadingSpinner: () => null,
+  StyledButton: ({ label, onClick, disabled }: { label: string; onClick: () => void; disabled?: boolean }) => (
+    <button type="button" disabled={disabled} onClick={onClick}>
+      {label}
+    </button>
+  ),
 }));
 jest.mock('src/components/error-hint', () => ({ ErrorHint: () => null }));
 jest.mock('src/hooks/guard.hook', () => ({ useRealunitGuard: () => undefined }));
@@ -18,8 +24,14 @@ const mockNavigate = jest.fn();
 jest.mock('src/hooks/navigation.hook', () => ({ useNavigation: () => ({ navigate: mockNavigate }) }));
 
 const mockGetRelations = jest.fn();
+const mockGetPromoCodes = jest.fn();
 jest.mock('src/hooks/realunit-referral.hook', () => ({
-  useRealunitReferral: () => ({ getRelations: mockGetRelations }),
+  useRealunitReferral: () => ({
+    getRelations: mockGetRelations,
+    getPromoCodes: mockGetPromoCodes,
+    createPromoCode: jest.fn(),
+    deactivatePromoCode: jest.fn(),
+  }),
 }));
 
 jest.mock('src/util/utils', () => ({ formatSwissDateTimeWithSeconds: (v: string) => v }));
@@ -48,7 +60,10 @@ const APPROVED = {
 };
 
 describe('RealunitReferralScreen held-for-review filter', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetPromoCodes.mockResolvedValue([]);
+  });
 
   it('shows only pending relations by default and the pending count', async () => {
     mockGetRelations.mockResolvedValue([PENDING, APPROVED]);
