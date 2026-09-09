@@ -147,6 +147,7 @@ describe('UsedRefEditor', () => {
     expect(screen.getByText('JR')).toBeInTheDocument();
 
     fill(' 194-687 ', '  Referral confirmed by mail  ');
+    expect(screen.getByLabelText('Ref-Code')).toHaveValue('194-687');
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(updated));

@@ -144,7 +144,7 @@ export function UsedRefEditor({ userDataId, users, canEdit, navigate, onSaved }:
                 type="text"
                 className="px-2 py-1.5 text-xs border border-dfxGray-400 rounded bg-white text-dfxBlue-800 font-mono w-[110px]"
                 value={usedRef}
-                onChange={(e) => setUsedRef(e.target.value)}
+                onChange={(e) => setUsedRef(e.target.value.trim())}
                 placeholder="123-456"
                 maxLength={7}
                 disabled={isSaving}
