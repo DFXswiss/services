@@ -80,6 +80,25 @@ const RELATIONS = [
 
 const LIST_RE = /\/v1\/realunit\/referral\/admin\/relations(\?|$)/;
 const PROMO_RE = /\/v1\/realunit\/referral\/promo(\?|$)/;
+const PROMOS = [
+  {
+    id: 9101,
+    code: 'LIVE1',
+    minBuyRealu: 200,
+    redemptionCap: 10,
+    validFrom: '2026-09-01T00:00:00.000Z',
+    validUntil: '2026-12-31T23:59:59.999Z',
+  },
+  {
+    id: 9102,
+    code: 'OLD1',
+    minBuyRealu: 200,
+    redemptionCap: 5,
+    validFrom: '2026-01-01T00:00:00.000Z',
+    validUntil: '2026-06-30T23:59:59.999Z',
+    deactivatedAt: '2026-06-01T00:00:00.000Z',
+  },
+];
 
 async function json(route: Route, body: unknown): Promise<void> {
   await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
@@ -91,7 +110,7 @@ async function mockReferralApi(page: Page): Promise<void> {
     const url = request.url();
     const path = new URL(url).pathname;
     if (LIST_RE.test(url)) return json(route, RELATIONS);
-    if (PROMO_RE.test(url) && request.method() === 'GET') return json(route, []);
+    if (PROMO_RE.test(url) && request.method() === 'GET') return json(route, PROMOS);
     if (
       request.method() === 'GET' &&
       ['/v1/language', '/v1/fiat', '/v1/asset', '/v1/bankAccount', '/v1/country'].includes(path)
@@ -126,6 +145,10 @@ test.describe('RealUnit Referral admin', () => {
     await page.waitForTimeout(1000);
 
     await expect(page.getByRole('heading', { name: 'Start promo code' })).toBeVisible();
+    await expect(page.getByText('LIVE1')).toBeVisible();
+    await expect(page.getByText('OLD1')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Deactivate' })).toBeVisible();
+    await expect(page.getByText('Deactivated')).toBeVisible();
     await expect(page.getByText('AB12CD')).toBeVisible();
     await expect(page.getByText('PROMO24')).toBeVisible();
     // held-for-review filter is on by default → the credited/Approved relation is filtered out

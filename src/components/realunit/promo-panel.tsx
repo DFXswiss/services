@@ -70,7 +70,7 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
     })
       .then((created) => {
         setListError(undefined);
-        setCodes((prev) => (prev ? [created, ...prev] : [created]));
+        setCodes((prev = []) => [created, ...prev]);
         setCode('');
         setRedemptionCap('');
         setMinBuyRealu('200');

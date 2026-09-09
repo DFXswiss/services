@@ -127,7 +127,7 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   works, or that those staff/settings, stats or prize-wallet endpoints return real data.
 - **The RealUnit referral visual spec answers the relation list and promo list itself.**
   `e2e/realunit-referral.spec.ts` fulfils `GET /v1/realunit/referral/admin/relations` and
-  `GET /v1/realunit/referral/promo` (empty promo fixture) with synthetic fixtures, plus a
+  `GET /v1/realunit/referral/promo` (one active and one deactivated promo) with synthetic fixtures, plus a
   synthetic unsigned Admin JWT and staff/bootstrap GETs (`/v1/language`, `/v1/fiat`, `/v1/asset`,
   `/v1/bankAccount`, `/v1/country`, `/v1/setting/infoBanner`, `/v2/user`). A green run proves the
   start-promo form, empty promo list, held-for-review relation table and detail fixtures render.
