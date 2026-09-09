@@ -7,8 +7,9 @@ import {
   StyledButtonWidth,
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
+import { QrCopy } from 'src/components/payment/qr-code';
 import { BuyVolumeChart } from 'src/components/realunit/buy-volume-chart';
 import { CopyableAddress } from 'src/components/realunit/copyable-address';
 import { HolderCountChart } from 'src/components/realunit/holder-count-chart';
@@ -16,11 +17,13 @@ import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
 import { RegistrationFunnel } from 'src/components/realunit/registration-funnel';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { RealUnitPrizeWallet } from 'src/dto/realunit-referral.dto';
 import { quoteIsDeactivated } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useRealunitReferral } from 'src/hooks/realunit-referral.hook';
 import { Timeframe } from 'src/util/chart';
 import { blankedAddress, formatSwissDateTimeWithSeconds } from 'src/util/utils';
 
@@ -30,6 +33,10 @@ export default function RealunitScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { copy } = useClipboard();
+  const { getPrizeWallet } = useRealunitReferral();
+  const [prizeWallet, setPrizeWallet] = useState<RealUnitPrizeWallet>();
+  const [prizeWalletError, setPrizeWalletError] = useState<string>();
+  const [prizeWalletLoading, setPrizeWalletLoading] = useState(true);
 
   const {
     holders,
@@ -65,6 +72,23 @@ export default function RealunitScreen(): JSX.Element {
   } = useRealunitContext();
 
   useLayoutOptions({ backButton: true });
+
+  const didLoadPrizeWallet = useRef(false);
+  useEffect(() => {
+    if (didLoadPrizeWallet.current) return;
+    didLoadPrizeWallet.current = true;
+    setPrizeWalletLoading(true);
+    getPrizeWallet()
+      .then((wallet) => {
+        setPrizeWallet(wallet);
+        setPrizeWalletError(undefined);
+      })
+      .catch((e: Error) => {
+        setPrizeWallet(undefined);
+        setPrizeWalletError(e.message ?? 'Unknown error');
+      })
+      .finally(() => setPrizeWalletLoading(false));
+  }, [getPrizeWallet]);
 
   const didBootstrapLists = useRef(false);
   useEffect(() => {
@@ -132,6 +156,34 @@ export default function RealunitScreen(): JSX.Element {
               width={StyledButtonWidth.MIN}
               color={StyledButtonColor.STURDY_WHITE}
             />
+          </div>
+          <div className="mb-6">
+            <h2 className="text-dfxGray-700 mb-2">{translate('screens/referral', 'Bonus and Referral')}</h2>
+            {prizeWalletLoading ? null : prizeWallet ? (
+              <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col md:flex-row gap-4 items-start">
+                <QrCopy data={prizeWallet.address} />
+                <div className="flex flex-col gap-2 text-left text-sm text-dfxBlue-800">
+                  <div>
+                    <div className="text-dfxGray-700 mb-1">{translate('screens/realunit', 'Address')}</div>
+                    <CopyableAddress address={prizeWallet.address} displayLength={20} />
+                  </div>
+                  <div>
+                    {translate('screens/referral', 'ETH')}:{' '}
+                    {prizeWallet.eth.toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                  </div>
+                  <div>
+                    {translate('screens/referral', 'REALU')}:{' '}
+                    {prizeWallet.realu.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+              </div>
+            ) : prizeWalletError?.includes('not configured') ? (
+              <p className="text-sm text-dfxGray-700">
+                {translate('screens/referral', 'Prize wallet is not configured')}
+              </p>
+            ) : (
+              <ErrorHint message={prizeWalletError ?? 'Unknown error'} />
+            )}
           </div>
           <div className="mb-4">
             <h2 className="text-dfxGray-700 justify-center  mb-2">{translate('screens/realunit', 'Price History')}</h2>

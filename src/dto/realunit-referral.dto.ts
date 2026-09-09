@@ -29,3 +29,9 @@ export interface RealUnitReferralRelation {
   manualRewardedBy?: string;
   manualRewardReason?: string;
 }
+
+export interface RealUnitPrizeWallet {
+  address: string;
+  eth: number;
+  realu: number;
+}

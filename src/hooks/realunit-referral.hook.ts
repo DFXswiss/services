@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { RealUnitReferralRelation } from 'src/dto/realunit-referral.dto';
+import { RealUnitPrizeWallet, RealUnitReferralRelation } from 'src/dto/realunit-referral.dto';
 import { useGuardedApi } from './guarded-api.hook';
 
 // RealUnit tenant referral-admin hook. Operator-scoped `/v1/realunit/referral/admin/*` endpoints
@@ -39,12 +39,20 @@ export function useRealunitReferral() {
     });
   }
 
+  async function getPrizeWallet(): Promise<RealUnitPrizeWallet> {
+    return call<RealUnitPrizeWallet>({
+      url: 'realunit/referral/admin/prize-wallet',
+      method: 'GET',
+    });
+  }
+
   return useMemo(
     () => ({
       getRelations,
       approveRelation,
       rejectRelation,
       createManualPrize,
+      getPrizeWallet,
     }),
     [call],
   );
