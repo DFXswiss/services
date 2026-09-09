@@ -44,6 +44,7 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
   const minBuy = Number(minBuyRealu);
   const canSubmit =
     !isLoading &&
+    !listError &&
     code.trim().length > 0 &&
     Number.isInteger(cap) &&
     cap >= 1 &&
@@ -67,7 +68,8 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
       validUntil: new Date(`${validUntil}T23:59:59.999Z`).toISOString(),
     })
       .then((created) => {
-        setCodes((prev) => [created, ...(prev ?? [])]);
+        setListError(undefined);
+        setCodes((prev) => (prev ? [created, ...prev] : [created]));
         setCode('');
         setRedemptionCap('');
         setMinBuyRealu('200');

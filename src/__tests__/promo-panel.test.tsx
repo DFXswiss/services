@@ -142,6 +142,18 @@ describe('RealunitPromoPanel', () => {
     expect(screen.queryByRole('button', { name: 'Deactivate' })).not.toBeInTheDocument();
   });
 
+  it('keeps Start disabled after the promo list fails to load', async () => {
+    mockGetPromoCodes.mockRejectedValue(new Error('list-fail'));
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('list-fail'));
+
+    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+  });
+
   it('shows a list error when promo codes fail to load', async () => {
     mockGetPromoCodes.mockRejectedValue(new Error('list-fail'));
     render(<RealunitPromoPanel translate={translate} />);
