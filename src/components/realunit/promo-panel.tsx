@@ -82,9 +82,10 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
     setListError(undefined);
     deactivatePromoCode(id)
       .then(() =>
-        setCodes((prev) =>
-          (prev ?? []).map((row) => (row.id === id ? { ...row, deactivatedAt: new Date().toISOString() } : row)),
-        ),
+        setCodes((prev) => {
+          if (!prev) return prev;
+          return prev.map((row) => (row.id === id ? { ...row, deactivatedAt: new Date().toISOString() } : row));
+        }),
       )
       .catch((e: Error) => setListError(e.message ?? 'Unknown error'))
       .finally(() => setDeactivatingId(undefined));

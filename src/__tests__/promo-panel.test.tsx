@@ -46,6 +46,12 @@ describe('RealunitPromoPanel', () => {
     mockDeactivatePromoCode.mockResolvedValue(undefined);
   });
 
+  it('shows a loading spinner while promo codes load', () => {
+    mockGetPromoCodes.mockImplementation(() => new Promise(() => undefined));
+    render(<RealunitPromoPanel translate={translate} />);
+    expect(screen.getByText('Promo codes')).toBeInTheDocument();
+  });
+
   it('shows the empty promo list', async () => {
     render(<RealunitPromoPanel translate={translate} />);
     await waitFor(() => expect(screen.getByText('No promo codes yet')).toBeInTheDocument());
@@ -71,7 +77,7 @@ describe('RealunitPromoPanel', () => {
       validFrom: '2026-09-09T00:00:00.000Z',
       validUntil: '2026-12-31T23:59:59.000Z',
     });
-    expect(screen.getByText('START2026')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
   });
 
   it('keeps Start disabled until the form is complete', async () => {
@@ -121,7 +127,7 @@ describe('RealunitPromoPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Deactivate' }));
 
     await waitFor(() => expect(mockDeactivatePromoCode).toHaveBeenCalledWith(3));
-    expect(screen.getByText('Deactivated')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Deactivated')).toBeInTheDocument());
   });
 
   it('keeps Start disabled when until is before from', async () => {
