@@ -13,8 +13,8 @@ interface Props {
   // Whether the session may change the code (see canEditUsedRef); without it the box is read-only.
   canEdit: boolean;
   navigate: NavigateFunction;
-  // Called after the API accepted the change; the screen reloads the account (its users carry the code).
-  onSaved: () => void;
+  // Called with the PUT response after the API accepted the change (caller applies it locally).
+  onSaved: (users: UserInfo[]) => void;
 }
 
 // The referrer of the account in the "Name #id (code)" form the panel always used, and a small form to
@@ -49,6 +49,8 @@ export function UsedRefEditor({ userDataId, users, canEdit, navigate, onSaved }:
   const userDataIdRef = useRef(userDataId);
   useEffect(() => {
     userDataIdRef.current = userDataId;
+    savingRef.current = false;
+    setIsSaving(false);
     setIsEditing(false);
     setError(undefined);
   }, [userDataId]);
@@ -82,16 +84,18 @@ export function UsedRefEditor({ userDataId, users, canEdit, navigate, onSaved }:
     setError(undefined);
     const requestedId = userDataId;
     try {
-      await updateUsedRef(requestedId, { usedRef: code, reason: reason.trim() });
+      const updated = await updateUsedRef(requestedId, { usedRef: code, reason: reason.trim() });
       if (!mountedRef.current || userDataIdRef.current !== requestedId) return;
       setIsEditing(false);
-      onSaved();
+      onSaved(updated);
     } catch (e: unknown) {
       if (mountedRef.current && userDataIdRef.current === requestedId)
         setError(e instanceof Error ? e.message : 'Failed to save the Ref-Code');
     } finally {
-      savingRef.current = false;
-      if (mountedRef.current) setIsSaving(false);
+      if (userDataIdRef.current === requestedId) {
+        savingRef.current = false;
+        if (mountedRef.current) setIsSaving(false);
+      }
     }
   }
 

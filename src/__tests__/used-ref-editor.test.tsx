@@ -138,7 +138,8 @@ describe('UsedRefEditor', () => {
 
   it('prefills the current code when changing, saves code and reason and reports the change', async () => {
     const onSaved = jest.fn();
-    mockUpdateUsedRef.mockResolvedValue([wallet({ usedRef: '194-687' })]);
+    const updated = [wallet({ usedRef: '194-687' })];
+    mockUpdateUsedRef.mockResolvedValue(updated);
     renderEditor([wallet({ usedRef: '123-456' })], { onSaved });
 
     openForm('Change');
@@ -148,7 +149,7 @@ describe('UsedRefEditor', () => {
     fill(' 194-687 ', '  Referral confirmed by mail  ');
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(updated));
     expect(mockUpdateUsedRef).toHaveBeenCalledWith('408808', {
       usedRef: '194-687',
       reason: 'Referral confirmed by mail',
@@ -231,16 +232,9 @@ describe('UsedRefEditor', () => {
     expect(onSaved).not.toHaveBeenCalled();
   });
 
-  it('closes the form when the clerk moves to another account and drops the answer for the previous one', async () => {
+  it('closes the form on account switch, resets the save lock, and drops a late success for the previous account', async () => {
     let finish: (value: UserInfo[]) => void = () => undefined;
-    let fail: (reason: Error) => void = () => undefined;
-    mockUpdateUsedRef.mockImplementation(
-      () =>
-        new Promise<UserInfo[]>((resolve, reject) => {
-          finish = resolve;
-          fail = reject;
-        }),
-    );
+    mockUpdateUsedRef.mockImplementation(() => new Promise<UserInfo[]>((resolve) => (finish = resolve)));
     const onSaved = jest.fn();
     const { rerender } = renderEditor([wallet()], { onSaved });
 
@@ -252,17 +246,32 @@ describe('UsedRefEditor', () => {
     rerender(editor([wallet({ id: 9, address: '0x999' })], { onSaved, userDataId: '204824' }));
     expect(screen.queryByLabelText('Ref-Code')).not.toBeInTheDocument();
 
-    finish([wallet({ usedRef: '194-687' })]);
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Set' })).toBeEnabled());
-    expect(onSaved).not.toHaveBeenCalled();
+    openForm('Set');
+    fill('194-687', 'reason');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
 
-    // A refusal for the previous account is not shown on the current one either.
+    finish([wallet({ usedRef: '194-687' })]);
+    await Promise.resolve();
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Ref-Code')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+  });
+
+  it('does not show a late error from the previous account after the form is open on the new one', async () => {
+    let fail: (reason: Error) => void = () => undefined;
+    mockUpdateUsedRef.mockImplementation(() => new Promise<UserInfo[]>((_resolve, reject) => (fail = reject)));
+    const onSaved = jest.fn();
+    const { rerender } = renderEditor([wallet()], { onSaved });
+
     openForm('Set');
     fill('194-687', 'reason');
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    rerender(editor([wallet({ id: 10, address: '0x1010' })], { onSaved, userDataId: '300000' }));
+
+    rerender(editor([wallet({ id: 9, address: '0x999' })], { onSaved, userDataId: '204824' }));
+    openForm('Set');
+
     fail(new Error('Referral code not found'));
-    await waitFor(() => expect(mockUpdateUsedRef).toHaveBeenCalledTimes(2));
+    await Promise.resolve();
     expect(screen.queryByText('Referral code not found')).not.toBeInTheDocument();
     expect(onSaved).not.toHaveBeenCalled();
   });

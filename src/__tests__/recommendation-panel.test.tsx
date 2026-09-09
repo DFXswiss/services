@@ -1,9 +1,8 @@
 // Component tests for RecommendationPanel: the recommendation steps, the referrer box of the account,
-// and that a saved code asks the screen to reload the account.
+// and that a saved code updates the box from the PUT response.
 
 const mockNavigate = jest.fn();
 const mockUpdateUsedRef = jest.fn();
-const mockOnChange = jest.fn();
 
 // recommendation-graph.util imports compliance.hook, which loads a few @dfx.swiss/react enum values at
 // module scope (ESM this Jest setup cannot parse), so the mock must provide them.
@@ -71,7 +70,6 @@ function renderPanel(props: Partial<{ kycSteps: KycStepInfo[]; users: UserInfo[]
       users={props.users ?? []}
       userDataId="408808"
       navigate={mockNavigate as unknown as NavigateFunction}
-      onChange={mockOnChange}
     />,
   );
 }
@@ -80,7 +78,6 @@ describe('RecommendationPanel', () => {
   beforeEach(() => {
     mockNavigate.mockReset();
     mockUpdateUsedRef.mockReset();
-    mockOnChange.mockReset();
     mockSession.role = 'Compliance';
   });
 
@@ -115,7 +112,6 @@ describe('RecommendationPanel', () => {
         users={[]}
         userDataId="408808"
         navigate={mockNavigate as unknown as NavigateFunction}
-        onChange={mockOnChange}
       />,
     );
     expect(screen.getByText('Recommendation (0)')).toBeInTheDocument();
@@ -152,17 +148,21 @@ describe('RecommendationPanel', () => {
     expect(screen.queryByText('Referrer (Ref-Code)')).not.toBeInTheDocument();
   });
 
-  it('asks the screen to reload the account after a saved code', async () => {
+  it('applies the PUT response wallets after a saved code', async () => {
     renderPanel({ users: [wallet({ id: 1 }), wallet({ id: 2, address: '0xdef' })] });
     expect(screen.getAllByRole('button', { name: 'Set' })).toHaveLength(1);
 
-    mockUpdateUsedRef.mockResolvedValue([wallet({ id: 1, usedRef: '194-687' }), wallet({ id: 2, usedRef: '194-687' })]);
+    mockUpdateUsedRef.mockResolvedValue([
+      wallet({ id: 1, usedRef: '194-687' }),
+      wallet({ id: 2, address: '0xdef', usedRef: '194-687' }),
+    ]);
     fireEvent.click(screen.getByRole('button', { name: 'Set' }));
     fireEvent.change(screen.getByLabelText('Ref-Code'), { target: { value: '194-687' } });
     fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'confirmed' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(mockOnChange).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByRole('button', { name: '- (194-687)' })).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Change' })).toBeInTheDocument();
     expect(mockUpdateUsedRef).toHaveBeenCalledWith('408808', { usedRef: '194-687', reason: 'confirmed' });
     expect(screen.queryByLabelText('Ref-Code')).not.toBeInTheDocument();
   });
@@ -188,7 +188,6 @@ describe('RecommendationPanel', () => {
         users={[wallet({ id: 1, usedRef: '172-134', refUserName: 'Samuel Kullmann', refUserDataId: 328304 })]}
         userDataId="408808"
         navigate={mockNavigate as unknown as NavigateFunction}
-        onChange={mockOnChange}
       />,
     );
     expect(screen.getByRole('button', { name: 'Samuel Kullmann #328304 (172-134)' })).toBeInTheDocument();

@@ -220,7 +220,6 @@ export default function ComplianceUserScreen(): JSX.Element {
                   users={data.users}
                   userDataId={userDataId}
                   navigate={navigate}
-                  onChange={loadData}
                 />
               )}
               {data.permissions.viewKycFiles && (

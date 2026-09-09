@@ -1,4 +1,5 @@
 import { useAuthContext } from '@dfx.swiss/react';
+import { useEffect, useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import { KycStepInfo, UserInfo } from 'src/hooks/compliance.hook';
 import { formatDate, statusBadge } from 'src/util/compliance-helpers';
@@ -10,8 +11,6 @@ interface RecommendationPanelProps {
   users: UserInfo[];
   userDataId: string;
   navigate: NavigateFunction;
-  // Reloads the account after the referral code changed (the users of the answer carry the code).
-  onChange: () => void;
 }
 
 export function RecommendationPanel({
@@ -19,11 +18,22 @@ export function RecommendationPanel({
   users,
   userDataId,
   navigate,
-  onChange,
 }: RecommendationPanelProps): JSX.Element {
   const recommendations = kycSteps?.filter((s) => s.name === 'Recommendation') || [];
   const { session } = useAuthContext();
   const canEditRef = canEditUsedRef(session?.role);
+
+  const [wallets, setWallets] = useState(users);
+  const [usersStale, setUsersStale] = useState(false);
+
+  useEffect(() => {
+    setUsersStale(true);
+  }, [userDataId]);
+
+  useEffect(() => {
+    setWallets(users);
+    setUsersStale(false);
+  }, [users]);
 
   return (
     <div>
@@ -36,15 +46,15 @@ export function RecommendationPanel({
           View Network
         </button>
       </div>
-      {users?.length > 0 && (
+      {wallets?.length > 0 && !usersStale && (
         <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
           <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
           <UsedRefEditor
             userDataId={userDataId}
-            users={users}
+            users={wallets}
             canEdit={canEditRef}
             navigate={navigate}
-            onSaved={onChange}
+            onSaved={setWallets}
           />
         </div>
       )}
