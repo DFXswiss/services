@@ -144,6 +144,7 @@ describe('UsedRefEditor', () => {
 
     openForm('Change');
     expect(screen.getByLabelText('Ref-Code')).toHaveValue('123-456');
+    expect(screen.getByLabelText('Ref-Code')).not.toHaveAttribute('maxLength');
     expect(screen.getByText('JR')).toBeInTheDocument();
 
     fill(' 194-687 ', '  Referral confirmed by mail  ');
@@ -156,6 +157,23 @@ describe('UsedRefEditor', () => {
       reason: 'Referral confirmed by mail',
     });
     expect(screen.queryByLabelText('Ref-Code')).not.toBeInTheDocument();
+  });
+
+  it('trims and slices a pasted Ref-Code longer than 7 characters after trim', async () => {
+    const onSaved = jest.fn();
+    const updated = [wallet({ usedRef: '194-687' })];
+    mockUpdateUsedRef.mockResolvedValue(updated);
+    renderEditor([wallet()], { onSaved });
+
+    openForm('Set');
+    expect(screen.getByLabelText('Ref-Code')).not.toHaveAttribute('maxLength');
+    fireEvent.change(screen.getByLabelText('Ref-Code'), { target: { value: ' 194-687x' } });
+    expect(screen.getByLabelText('Ref-Code')).toHaveValue('194-687');
+    fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'confirmed' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(updated));
+    expect(mockUpdateUsedRef).toHaveBeenCalledWith('408808', { usedRef: '194-687', reason: 'confirmed' });
   });
 
   it('starts with an empty code when none is set and disables Save until code and reason are valid', () => {

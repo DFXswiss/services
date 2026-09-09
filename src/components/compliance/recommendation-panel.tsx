@@ -17,11 +17,7 @@ export function RecommendationPanel(props: RecommendationPanelProps): JSX.Elemen
   return <RecommendationPanelBody key={props.userDataId} {...props} />;
 }
 
-function RecommendationPanelBody({
-  kycSteps,
-  userDataId,
-  navigate,
-}: RecommendationPanelProps): JSX.Element {
+function RecommendationPanelBody({ kycSteps, userDataId, navigate }: RecommendationPanelProps): JSX.Element {
   const recommendations = kycSteps?.filter((s) => s.name === 'Recommendation') || [];
   const { session } = useAuthContext();
   const canEditRef = canEditUsedRef(session?.role);
@@ -29,6 +25,7 @@ function RecommendationPanelBody({
 
   const [fetched, setFetched] = useState<{ id: string; users: UserInfo[] } | undefined>(undefined);
   const [saved, setSaved] = useState<{ id: string; users: UserInfo[] } | undefined>(undefined);
+  const [loadError, setLoadError] = useState(false);
   const displayWallets =
     saved?.id === userDataId ? saved.users : fetched?.id === userDataId ? fetched.users : undefined;
   const wallets = displayWallets ?? [];
@@ -37,14 +34,16 @@ function RecommendationPanelBody({
     let live = true;
     setSaved(undefined);
     setFetched(undefined);
+    setLoadError(false);
     getUserData(+userDataId)
       .then((data) => {
         if (!live) return;
+        setLoadError(false);
         setFetched({ id: userDataId, users: data.users });
       })
       .catch(() => {
         if (!live) return;
-        setFetched({ id: userDataId, users: [] });
+        setLoadError(true);
       });
     return () => {
       live = false;
@@ -62,7 +61,13 @@ function RecommendationPanelBody({
           View Network
         </button>
       </div>
-      {wallets.length > 0 && (
+      {loadError && (
+        <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
+          <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
+          <p className="text-xs text-dfxRed-100">Could not load the referrer.</p>
+        </div>
+      )}
+      {!loadError && wallets.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
           <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
           <UsedRefEditor

@@ -79,9 +79,7 @@ function wallet(overrides: Partial<UserInfo> = {}): UserInfo {
   };
 }
 
-function renderPanel(
-  props: Partial<{ kycSteps: KycStepInfo[]; users: UserInfo[]; userDataId: string }> = {},
-) {
+function renderPanel(props: Partial<{ kycSteps: KycStepInfo[]; users: UserInfo[]; userDataId: string }> = {}) {
   if (props.users !== undefined) {
     mockGetUserData.mockResolvedValue({ users: props.users });
   }
@@ -156,9 +154,7 @@ describe('RecommendationPanel', () => {
 
     await act(async () => {
       deferred.resolve({
-        users: [
-          wallet({ id: 1, usedRef: '172-134', refUserName: 'Samuel Kullmann', refUserDataId: 328304 }),
-        ],
+        users: [wallet({ id: 1, usedRef: '172-134', refUserName: 'Samuel Kullmann', refUserDataId: 328304 })],
       });
       await deferred.promise;
     });
@@ -193,11 +189,14 @@ describe('RecommendationPanel', () => {
     expect(screen.getAllByRole('button', { name: 'Set' })).toHaveLength(1);
   });
 
-  it('hides the referrer box when the fetch for the account fails', async () => {
+  it('shows a load error when the fetch for the account fails', async () => {
     mockGetUserData.mockRejectedValue(new Error('network'));
     renderPanel();
-    await waitFor(() => expect(mockGetUserData).toHaveBeenCalledWith(408808));
-    expect(screen.queryByText('Referrer (Ref-Code)')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Could not load the referrer.')).toBeInTheDocument());
+    expect(screen.getByText('Referrer (Ref-Code)')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Set' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Change' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Ref-Code')).not.toBeInTheDocument();
   });
 
   it('hides the referrer box when the account has no wallet', async () => {
@@ -344,6 +343,7 @@ describe('RecommendationPanel', () => {
       await deferredA.promise.catch(() => undefined);
     });
 
+    expect(screen.queryByText('Could not load the referrer.')).not.toBeInTheDocument();
     expect(screen.queryByText('Referrer (Ref-Code)')).not.toBeInTheDocument();
   });
 
