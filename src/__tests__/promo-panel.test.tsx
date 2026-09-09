@@ -75,7 +75,7 @@ describe('RealunitPromoPanel', () => {
       redemptionCap: 50,
       minBuyRealu: 200,
       validFrom: '2026-09-09T00:00:00.000Z',
-      validUntil: '2026-12-31T23:59:59.000Z',
+      validUntil: '2026-12-31T23:59:59.999Z',
     });
     await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
   });
@@ -83,6 +83,41 @@ describe('RealunitPromoPanel', () => {
   it('keeps Start disabled until the form is complete', async () => {
     render(<RealunitPromoPanel translate={translate} />);
     await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+  });
+
+  it('keeps Start disabled for a fractional or zero cap and an empty minimum buy', async () => {
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1.5' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '0' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Minimum buy (REALU)'), { target: { value: '' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Minimum buy (REALU)'), { target: { value: '0' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Minimum buy (REALU)'), { target: { value: '1.5' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+  });
+
+  it('keeps Start disabled while promo codes are still loading', () => {
+    mockGetPromoCodes.mockImplementation(() => new Promise(() => undefined));
+    render(<RealunitPromoPanel translate={translate} />);
+    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
     expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
   });
 
