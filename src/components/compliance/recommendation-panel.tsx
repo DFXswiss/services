@@ -61,7 +61,7 @@ function RecommendationPanelBody({
           View Network
         </button>
       </div>
-      {displayWallets?.length > 0 && (
+      {(displayWallets ?? []).length > 0 && (
         <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
           <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
           <UsedRefEditor
