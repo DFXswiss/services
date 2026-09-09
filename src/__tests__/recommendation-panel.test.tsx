@@ -260,9 +260,8 @@ describe('RecommendationPanel', () => {
     expect(screen.queryByRole('button', { name: '- (194-687)' })).not.toBeInTheDocument();
     await waitFor(() => expect(mockGetUserData).toHaveBeenCalledWith(204824));
 
-    mockGetUserData.mockResolvedValue({
-      users: [wallet({ id: 1, usedRef: '111-111', refUserName: 'Fresh A', refUserDataId: 1 })],
-    });
+    const deferredA = createDeferred<{ users: UserInfo[] }>();
+    mockGetUserData.mockReturnValue(deferredA.promise);
     rerender(
       <RecommendationPanel
         kycSteps={[]}
@@ -271,6 +270,15 @@ describe('RecommendationPanel', () => {
         navigate={mockNavigate as unknown as NavigateFunction}
       />,
     );
+    expect(screen.queryByText('Referrer (Ref-Code)')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '- (194-687)' })).not.toBeInTheDocument();
+
+    await act(async () => {
+      deferredA.resolve({
+        users: [wallet({ id: 1, usedRef: '111-111', refUserName: 'Fresh A', refUserDataId: 1 })],
+      });
+      await deferredA.promise;
+    });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Fresh A #1 (111-111)' })).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: '- (194-687)' })).not.toBeInTheDocument();
   });

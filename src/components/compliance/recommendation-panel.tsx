@@ -13,7 +13,11 @@ interface RecommendationPanelProps {
   navigate: NavigateFunction;
 }
 
-export function RecommendationPanel({
+export function RecommendationPanel(props: RecommendationPanelProps): JSX.Element {
+  return <RecommendationPanelBody key={props.userDataId} {...props} />;
+}
+
+function RecommendationPanelBody({
   kycSteps,
   userDataId,
   navigate,
@@ -31,6 +35,7 @@ export function RecommendationPanel({
   useEffect(() => {
     let live = true;
     setSaved(undefined);
+    setFetched(undefined);
     getUserData(+userDataId)
       .then((data) => {
         if (!live) return;
