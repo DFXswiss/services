@@ -31,6 +31,7 @@ function RecommendationPanelBody({
   const [saved, setSaved] = useState<{ id: string; users: UserInfo[] } | undefined>(undefined);
   const displayWallets =
     saved?.id === userDataId ? saved.users : fetched?.id === userDataId ? fetched.users : undefined;
+  const wallets = displayWallets ?? [];
 
   useEffect(() => {
     let live = true;
@@ -61,13 +62,13 @@ function RecommendationPanelBody({
           View Network
         </button>
       </div>
-      {(displayWallets ?? []).length > 0 && (
+      {wallets.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
           <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
           <UsedRefEditor
             key={userDataId}
             userDataId={userDataId}
-            users={displayWallets}
+            users={wallets}
             canEdit={canEditRef}
             navigate={navigate}
             onSaved={(users) => setSaved({ id: userDataId, users })}
