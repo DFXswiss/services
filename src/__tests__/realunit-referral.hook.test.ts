@@ -98,6 +98,22 @@ describe('useRealunitReferral', () => {
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/promo', method: 'POST', data: dto });
   });
 
+  it('creates a promo-code batch', async () => {
+    const { result } = renderHook(() => useRealunitReferral());
+    const dto = {
+      count: 300,
+      prefix: 'MESSE',
+      redemptionCap: 1,
+      minBuyRealu: 200,
+      validFrom: '2026-09-09T00:00:00.000Z',
+      validUntil: '2026-12-31T23:59:59.999Z',
+    };
+
+    await result.current.createPromoCodes(dto);
+
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/promo/batch', method: 'POST', data: dto });
+  });
+
   it('deactivates a promo code', async () => {
     const { result } = renderHook(() => useRealunitReferral());
 

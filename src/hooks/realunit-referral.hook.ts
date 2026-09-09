@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import {
+  CreateRealUnitPromoBatch,
   CreateRealUnitPromoCode,
   RealUnitPrizeWallet,
   RealUnitPromoCode,
@@ -66,6 +67,14 @@ export function useRealunitReferral() {
     });
   }
 
+  async function createPromoCodes(dto: CreateRealUnitPromoBatch): Promise<RealUnitPromoCode[]> {
+    return call<RealUnitPromoCode[]>({
+      url: 'realunit/referral/promo/batch',
+      method: 'POST',
+      data: dto,
+    });
+  }
+
   async function deactivatePromoCode(id: number): Promise<void> {
     return call<void>({
       url: `realunit/referral/promo/${id}/deactivate`,
@@ -82,6 +91,7 @@ export function useRealunitReferral() {
       getPrizeWallet,
       getPromoCodes,
       createPromoCode,
+      createPromoCodes,
       deactivatePromoCode,
     }),
     [call],

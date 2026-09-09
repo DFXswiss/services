@@ -32,6 +32,7 @@ jest.mock('src/hooks/realunit-referral.hook', () => ({
     getRelations: mockGetRelations,
     getPromoCodes: mockGetPromoCodes,
     createPromoCode: jest.fn(),
+    createPromoCodes: jest.fn(),
     deactivatePromoCode: jest.fn(),
   }),
 }));

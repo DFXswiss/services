@@ -9,9 +9,9 @@ interface PromoPanelProps {
 }
 
 export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element {
-  const { getPromoCodes, createPromoCode, deactivatePromoCode } = useRealunitReferral();
+  const { getPromoCodes, createPromoCode, createPromoCodes, deactivatePromoCode } = useRealunitReferral();
 
-  const [codes, setCodes] = useState<RealUnitPromoCode[]>();
+  const [codes, setCodes] = useState<RealUnitPromoCode[]>([]);
   const [listError, setListError] = useState<string>();
   const [formError, setFormError] = useState<string>();
   const [actionError, setActionError] = useState<string>();
@@ -20,6 +20,7 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
   const [deactivatingId, setDeactivatingId] = useState<number>();
 
   const [code, setCode] = useState('');
+  const [quantity, setQuantity] = useState('1');
   const [redemptionCap, setRedemptionCap] = useState('');
   const [minBuyRealu, setMinBuyRealu] = useState('200');
   const [validFrom, setValidFrom] = useState('');
@@ -35,7 +36,7 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
     getPromoCodes()
       .then(setCodes)
       .catch((e: Error) => {
-        setCodes(undefined);
+        setCodes([]);
         setListError(e.message ?? 'Unknown error');
       })
       .finally(() => setIsLoading(false));
@@ -43,10 +44,15 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
 
   const cap = Number(redemptionCap);
   const minBuy = Number(minBuyRealu);
+  const qty = Number(quantity);
+  const isBatch = Number.isInteger(qty) && qty > 1;
   const canSubmit =
     !isLoading &&
     !listError &&
-    code.trim().length > 0 &&
+    Number.isInteger(qty) &&
+    qty >= 1 &&
+    qty <= 500 &&
+    (isBatch || code.trim().length > 0) &&
     Number.isInteger(cap) &&
     cap >= 1 &&
     Number.isInteger(minBuy) &&
@@ -61,17 +67,25 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
     if (!canSubmit) return;
     setIsSubmitting(true);
     setFormError(undefined);
-    createPromoCode({
-      code: code.trim(),
+    const dates = {
       redemptionCap: cap,
       minBuyRealu: minBuy,
       validFrom: new Date(`${validFrom}T00:00:00.000Z`).toISOString(),
       validUntil: new Date(`${validUntil}T23:59:59.999Z`).toISOString(),
-    })
+    };
+    const request = isBatch
+      ? createPromoCodes({
+          count: qty,
+          prefix: code.trim() || undefined,
+          ...dates,
+        })
+      : createPromoCode({ code: code.trim(), ...dates }).then((created) => [created]);
+    request
       .then((created) => {
         setListError(undefined);
-        setCodes((prev = []) => [created, ...prev]);
+        setCodes((prev) => [...created, ...prev]);
         setCode('');
+        setQuantity('1');
         setRedemptionCap('');
         setMinBuyRealu('200');
         setValidFrom('');
@@ -86,7 +100,7 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
     setActionError(undefined);
     deactivatePromoCode(id)
       .then(() =>
-        setCodes((prev = []) =>
+        setCodes((prev) =>
           prev.map((row) => (row.id === id ? { ...row, deactivatedAt: new Date().toISOString() } : row)),
         ),
       )
@@ -99,12 +113,24 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
       <h2 className="text-dfxGray-700">{translate('screens/referral', 'Start promo code')}</h2>
       <form className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end" onSubmit={onSubmit}>
         <label className="flex flex-col gap-1 text-sm text-dfxBlue-800">
-          {translate('screens/referral', 'Code')}
+          {translate('screens/referral', 'Quantity')}
+          <input
+            className="border border-dfxGray-400 rounded px-2 py-1"
+            type="number"
+            min={1}
+            max={500}
+            step={1}
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-dfxBlue-800">
+          {isBatch ? translate('screens/referral', 'Prefix (optional)') : translate('screens/referral', 'Code')}
           <input
             className="border border-dfxGray-400 rounded px-2 py-1"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            maxLength={256}
+            maxLength={isBatch ? 64 : 256}
             autoComplete="off"
           />
         </label>
@@ -162,10 +188,10 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
       {isLoading && <StyledLoadingSpinner size={SpinnerSize.SM} />}
       {listError && <ErrorHint message={listError} />}
       {actionError && <ErrorHint message={actionError} />}
-      {codes && !isLoading && codes.length === 0 && (
+      {!listError && !isLoading && codes.length === 0 && (
         <p className="text-sm text-dfxGray-700">{translate('screens/referral', 'No promo codes yet')}</p>
       )}
-      {codes && codes.length > 0 && (
+      {codes.length > 0 && (
         <div className="overflow-auto">
           <table className="w-full border-collapse text-sm">
             <thead className="bg-dfxGray-300">

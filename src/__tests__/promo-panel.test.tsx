@@ -15,16 +15,18 @@ jest.mock('src/components/error-hint', () => ({
 
 const mockGetPromoCodes = jest.fn();
 const mockCreatePromoCode = jest.fn();
+const mockCreatePromoCodes = jest.fn();
 const mockDeactivatePromoCode = jest.fn();
 jest.mock('src/hooks/realunit-referral.hook', () => ({
   useRealunitReferral: () => ({
     getPromoCodes: (...args: unknown[]) => mockGetPromoCodes(...args),
     createPromoCode: (...args: unknown[]) => mockCreatePromoCode(...args),
+    createPromoCodes: (...args: unknown[]) => mockCreatePromoCodes(...args),
     deactivatePromoCode: (...args: unknown[]) => mockDeactivatePromoCode(...args),
   }),
 }));
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { RealunitPromoPanel } from 'src/components/realunit/promo-panel';
 
 const translate = (_ns: string, key: string) => key;
@@ -43,6 +45,7 @@ describe('RealunitPromoPanel', () => {
     jest.clearAllMocks();
     mockGetPromoCodes.mockResolvedValue([]);
     mockCreatePromoCode.mockResolvedValue(ACTIVE);
+    mockCreatePromoCodes.mockResolvedValue([ACTIVE]);
     mockDeactivatePromoCode.mockResolvedValue(undefined);
   });
 
@@ -81,11 +84,116 @@ describe('RealunitPromoPanel', () => {
     await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
   });
 
+  it('starts a batch of promo codes with a prefix', async () => {
+    const batch = [
+      { ...ACTIVE, id: 11, code: 'MESSE-AAAA1111' },
+      { ...ACTIVE, id: 12, code: 'MESSE-BBBB2222' },
+    ];
+    mockCreatePromoCodes.mockResolvedValue(batch);
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Prefix (optional)'), { target: { value: 'MESSE' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-12-31' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start' })).not.toBeDisabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+
+    await waitFor(() => expect(mockCreatePromoCodes).toHaveBeenCalled());
+    expect(mockCreatePromoCodes).toHaveBeenCalledWith({
+      count: 2,
+      prefix: 'MESSE',
+      redemptionCap: 1,
+      minBuyRealu: 200,
+      validFrom: '2026-09-09T00:00:00.000Z',
+      validUntil: '2026-12-31T23:59:59.999Z',
+    });
+    expect(mockCreatePromoCode).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByText('MESSE-AAAA1111')).toBeInTheDocument());
+  });
+
+  it('starts a batch of promo codes without a prefix', async () => {
+    const batch = [
+      { ...ACTIVE, id: 21, code: 'BATCH-CCCC3333' },
+      { ...ACTIVE, id: 22, code: 'BATCH-DDDD4444' },
+    ];
+    mockCreatePromoCodes.mockResolvedValue(batch);
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Prefix (optional)'), { target: { value: '   ' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '3' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-12-31' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start' })).not.toBeDisabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+
+    await waitFor(() => expect(mockCreatePromoCodes).toHaveBeenCalled());
+    expect(mockCreatePromoCodes).toHaveBeenCalledWith({
+      count: 2,
+      prefix: undefined,
+      redemptionCap: 3,
+      minBuyRealu: 200,
+      validFrom: '2026-09-09T00:00:00.000Z',
+      validUntil: '2026-12-31T23:59:59.999Z',
+    });
+    expect(mockCreatePromoCode).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByText('BATCH-CCCC3333')).toBeInTheDocument());
+    expect(screen.getByText('BATCH-DDDD4444')).toBeInTheDocument();
+    expect(screen.getByLabelText('Quantity')).toHaveValue(1);
+    expect(screen.getByLabelText('Code')).toBeInTheDocument();
+  });
+
+  it('keeps Start disabled when quantity is above 500', async () => {
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '501' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+  });
+
+  it('keeps Start disabled for quantity 0, empty, or fractional', async () => {
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '0' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '1.5' } });
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+  });
+
+  it('keeps Start disabled when quantity is 1 and Code is empty', async () => {
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+
+    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+  });
+
   it('does not create on form submit when the form is incomplete', async () => {
     render(<RealunitPromoPanel translate={translate} />);
     await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
     fireEvent.submit(screen.getByRole('button', { name: 'Start' }).closest('form') as HTMLFormElement);
     expect(mockCreatePromoCode).not.toHaveBeenCalled();
+    expect(mockCreatePromoCodes).not.toHaveBeenCalled();
   });
 
   it('creates on form submit when the form is complete', async () => {
@@ -188,14 +296,23 @@ describe('RealunitPromoPanel', () => {
   });
 
   it('deactivates an active promo code', async () => {
-    mockGetPromoCodes.mockResolvedValue([ACTIVE]);
+    const other = { ...ACTIVE, id: 4, code: 'KEEP2026' };
+    mockGetPromoCodes.mockResolvedValue([ACTIVE, other]);
     render(<RealunitPromoPanel translate={translate} />);
     await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
+    expect(screen.getByText('KEEP2026')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Deactivate' }));
+    const startRow = screen.getByText('START2026').closest('tr') as HTMLElement;
+    fireEvent.click(within(startRow).getByRole('button', { name: 'Deactivate' }));
 
     await waitFor(() => expect(mockDeactivatePromoCode).toHaveBeenCalledWith(3));
-    await waitFor(() => expect(screen.getByText('Deactivated')).toBeInTheDocument());
+    await waitFor(() => {
+      const row = screen.getByText('START2026').closest('tr') as HTMLElement;
+      expect(within(row).getByText('Deactivated')).toBeInTheDocument();
+    });
+    const keepRow = screen.getByText('KEEP2026').closest('tr') as HTMLElement;
+    expect(within(keepRow).getByRole('button', { name: 'Deactivate' })).toBeInTheDocument();
+    expect(within(keepRow).queryByText('Deactivated')).not.toBeInTheDocument();
   });
 
   it('keeps Start disabled when until is before from', async () => {

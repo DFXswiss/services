@@ -53,3 +53,12 @@ export interface CreateRealUnitPromoCode {
   validFrom: string;
   validUntil: string;
 }
+
+export interface CreateRealUnitPromoBatch {
+  count: number;
+  prefix?: string;
+  redemptionCap: number;
+  minBuyRealu?: number;
+  validFrom: string;
+  validUntil: string;
+}
