@@ -67,6 +67,7 @@ describe('RealunitPromoPanel', () => {
     fireEvent.change(screen.getByLabelText('Minimum buy (REALU)'), { target: { value: '200' } });
     fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
     fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-12-31' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start' })).not.toBeDisabled());
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
 
     await waitFor(() => expect(mockCreatePromoCode).toHaveBeenCalled());
@@ -94,6 +95,7 @@ describe('RealunitPromoPanel', () => {
     fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
     fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start' })).not.toBeDisabled());
     fireEvent.submit(screen.getByRole('button', { name: 'Start' }).closest('form') as HTMLFormElement);
     await waitFor(() => expect(mockCreatePromoCode).toHaveBeenCalled());
   });
@@ -148,6 +150,7 @@ describe('RealunitPromoPanel', () => {
     fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
     fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start' })).not.toBeDisabled());
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
 
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('taken'));
@@ -216,6 +219,7 @@ describe('RealunitPromoPanel', () => {
     fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
     fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-09-10' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start' })).not.toBeDisabled());
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
 
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('Unknown error'));
