@@ -1,3 +1,5 @@
+jest.mock('../util/client-error', () => ({ reportClientError: jest.fn() }));
+
 import { renderHook, act } from '@testing-library/react';
 import { useSessionStore } from '../hooks/session-store.hook';
 
@@ -18,10 +20,11 @@ const sessionStorageMock = (() => {
   };
 })();
 
-Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
+Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock, configurable: true });
 
 describe('useSessionStore', () => {
   beforeEach(() => {
+    Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock, configurable: true });
     sessionStorageMock.clear();
   });
 
@@ -148,6 +151,33 @@ describe('useSessionStore', () => {
       expect(result2.current.supportIssueUid.get()).toBe('persisted-uid');
       expect(result2.current.paymentLinkApiUrlStore.get()).toBe('https://persisted.example.com');
       expect(result2.current.editMailReturn.get()).toBe('/persisted-path');
+    });
+  });
+
+  describe('blocked sessionStorage', () => {
+    it('get/set/remove do not throw when storage operations fail', () => {
+      Object.defineProperty(window, 'sessionStorage', {
+        value: {
+          getItem: () => {
+            throw new DOMException('Denied', 'SecurityError');
+          },
+          setItem: () => {
+            throw new DOMException('Denied', 'SecurityError');
+          },
+          removeItem: () => {
+            throw new DOMException('Denied', 'SecurityError');
+          },
+          clear: () => undefined,
+        },
+        configurable: true,
+      });
+
+      const { result } = renderHook(() => useSessionStore());
+      expect(result.current.supportIssueUid.get()).toBeUndefined();
+      expect(() => result.current.supportIssueUid.set('x')).not.toThrow();
+      expect(() => result.current.supportIssueUid.remove()).not.toThrow();
+      expect(() => result.current.paymentLinkApiUrlStore.set('y')).not.toThrow();
+      expect(() => result.current.editMailReturn.set('z')).not.toThrow();
     });
   });
 });

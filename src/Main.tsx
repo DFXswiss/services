@@ -1,8 +1,14 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from './App';
+import { StorageBlockedBanner } from './components/boot-error-boundary';
 
 function Main() {
-  return <App routerFactory={createBrowserRouter} />;
+  return (
+    <>
+      <StorageBlockedBanner />
+      <App routerFactory={createBrowserRouter} />
+    </>
+  );
 }
 
 export default Main;

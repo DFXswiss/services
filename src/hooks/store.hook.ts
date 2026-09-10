@@ -1,6 +1,7 @@
 import { InfoBanner } from '@dfx.swiss/react';
 import { AppParams } from '../contexts/app-handling.context';
 import { WalletType } from '../contexts/wallet.context';
+import { storageGet, storageGetJson, storageRemove, storageSet, storageSetJson } from '../util/safe-storage';
 
 export interface StoreItem<T> {
   get: () => T | undefined;
@@ -28,27 +29,24 @@ enum StoreKey {
 }
 
 export function useStore(): StoreInterface {
-  const { localStorage } = window;
-
   function set(key: StoreKey, value: string) {
-    localStorage.setItem(key, value);
+    storageSet('localStorage', key, value);
   }
 
   function get(key: StoreKey): string | undefined {
-    return localStorage.getItem(key) ?? undefined;
+    return storageGet('localStorage', key);
   }
 
   function remove(key: StoreKey) {
-    localStorage.removeItem(key);
+    storageRemove('localStorage', key);
   }
 
   function getJson<T>(key: StoreKey): T | undefined {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : undefined;
+    return storageGetJson<T>('localStorage', key);
   }
 
   function setJson<T>(key: StoreKey, value: T) {
-    localStorage.setItem(key, JSON.stringify(value));
+    storageSetJson('localStorage', key, value);
   }
 
   return {
