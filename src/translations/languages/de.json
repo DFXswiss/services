@@ -1223,6 +1223,11 @@
     "View QR code": "QR-Code anzeigen",
     "Download SVG": "SVG herunterladen",
     "Download PNG": "PNG herunterladen",
-    "Download JPG": "JPG herunterladen"
+    "Download JPG": "JPG herunterladen",
+    "Prize payouts": "Prämien-Buchungen",
+    "Export CSV": "CSV exportieren",
+    "No prize payouts found": "Keine Prämien-Buchungen gefunden",
+    "Referral premium": "Empfehlungsprämie",
+    "Promo grant": "Promo-Zugabe"
   }
 }

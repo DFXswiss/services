@@ -1222,6 +1222,11 @@
     "View QR code": "Afficher le QR code",
     "Download SVG": "Télécharger SVG",
     "Download PNG": "Télécharger PNG",
-    "Download JPG": "Télécharger JPG"
+    "Download JPG": "Télécharger JPG",
+    "Prize payouts": "Paiements de primes",
+    "Export CSV": "Exporter CSV",
+    "No prize payouts found": "Aucun paiement de prime",
+    "Referral premium": "Prime de parrainage",
+    "Promo grant": "Bonus promo"
   }
 }
