@@ -1,4 +1,5 @@
 import { reportClientError } from './client-error';
+import { setStorageBlockedFlag } from './storage-block-flag';
 
 type StorageName = 'localStorage' | 'sessionStorage';
 
@@ -134,24 +135,28 @@ export function installStorageFallback(): void {
   if (localOk && sessionOk) {
     storageBlocked = false;
     storageHardBlocked = false;
+    setStorageBlockedFlag(false);
     return;
   }
 
   storageBlocked = true;
+  setStorageBlockedFlag(true);
   reportStorageFailure('Storage blocked');
 
+  const localUsable = localOk || shimStorage('localStorage');
+  const sessionUsable = sessionOk || shimStorage('sessionStorage');
+  storageHardBlocked = !localUsable && !sessionUsable;
+}
+
+function shimStorage(name: StorageName): boolean {
   try {
-    Object.defineProperty(window, 'localStorage', {
+    Object.defineProperty(window, name, {
       value: createMemoryStorage(),
       configurable: true,
     });
-    Object.defineProperty(window, 'sessionStorage', {
-      value: createMemoryStorage(),
-      configurable: true,
-    });
-    storageHardBlocked = false;
+    return true;
   } catch {
-    storageHardBlocked = true;
+    return false;
   }
 }
 

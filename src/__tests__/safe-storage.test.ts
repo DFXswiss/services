@@ -272,6 +272,38 @@ describe('safe-storage', () => {
     expect(setItemSpy).not.toHaveBeenCalledWith('__dfx.probe', expect.anything());
   });
 
+  it('shims only sessionStorage when localStorage still works', () => {
+    const { local } = installWorkingStorage();
+    local.setItem('dfx.srv.language', 'de');
+    Object.defineProperty(window, 'sessionStorage', {
+      get() {
+        throw new DOMException('Denied', 'SecurityError');
+      },
+      configurable: true,
+    });
+    const mod = loadSafeStorage();
+    mod.installStorageFallback();
+    expect(mod.isStorageBlocked()).toBe(true);
+    expect(mod.isStorageHardBlocked()).toBe(false);
+    expect(local.getItem('dfx.srv.language')).toBe('de');
+  });
+
+  it('shims only localStorage when sessionStorage still works', () => {
+    const { session } = installWorkingStorage();
+    session.setItem('keep', '1');
+    Object.defineProperty(window, 'localStorage', {
+      get() {
+        throw new DOMException('Denied', 'SecurityError');
+      },
+      configurable: true,
+    });
+    const mod = loadSafeStorage();
+    mod.installStorageFallback();
+    expect(mod.isStorageBlocked()).toBe(true);
+    expect(mod.isStorageHardBlocked()).toBe(false);
+    expect(session.getItem('keep')).toBe('1');
+  });
+
   it('blocked storage with successful shim uses memory storage', () => {
     installThrowingStorage();
     const mod = loadSafeStorage();

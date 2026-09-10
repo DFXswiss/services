@@ -1,6 +1,7 @@
 import { isRouteErrorResponse } from 'react-router-dom';
 import { Api } from 'src/config/api';
 import { REACT_APP_BUILD_ID } from 'src/version';
+import { getStorageBlockedFlag } from './storage-block-flag';
 import { url } from './utils';
 
 // Must match the field limits of the ingest endpoint, so a long message is trimmed here instead of
@@ -152,6 +153,8 @@ export function isEmbedded(): boolean {
 // wrapped because embedded/iframe contexts can block it.
 export function reloadOnceForChunkError(error?: unknown): void {
   if (embedded) return;
+  // A memory shim does not survive reload, so the localStorage guard cannot stop a loop.
+  if (getStorageBlockedFlag()) return;
 
   try {
     const last = Number(localStorage.getItem(CHUNK_RELOAD_KEY) ?? 0);
