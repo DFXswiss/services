@@ -41,6 +41,7 @@ const ALERT = {
 const NOTIFY = 'Bei niedrigem Bestand benachrichtigen';
 
 async function openForm() {
+  await waitFor(() => expect(screen.getByRole('button', { name: NOTIFY })).not.toBeDisabled());
   fireEvent.click(screen.getByRole('button', { name: NOTIFY }));
   await waitFor(() => expect(screen.getByLabelText('Asset')).toBeInTheDocument());
 }
@@ -65,6 +66,12 @@ describe('RealunitPrizeWalletAlertPanel', () => {
     expect(screen.getByRole('button', { name: NOTIFY })).toBeInTheDocument();
     expect(screen.getByTestId('prize-wallet-alert-loading')).toHaveTextContent('Loading');
     expect(screen.queryByLabelText('Asset')).not.toBeInTheDocument();
+  });
+
+  it('keeps Notify disabled while alerts are still loading', () => {
+    mockListPrizeWalletAlerts.mockImplementation(() => new Promise(() => undefined));
+    render(<RealunitPrizeWalletAlertPanel translate={translate} />);
+    expect(screen.getByRole('button', { name: NOTIFY })).toBeDisabled();
   });
 
   it('toggles the form open and closed', async () => {
@@ -119,6 +126,37 @@ describe('RealunitPrizeWalletAlertPanel', () => {
 
     fireEvent.change(screen.getByLabelText('Threshold'), { target: { value: '0' } });
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  });
+
+  it('rejects comma-separated and whitespace-separated mail', async () => {
+    render(<RealunitPrizeWalletAlertPanel translate={translate} />);
+    await waitFor(() => expect(mockListPrizeWalletAlerts).toHaveBeenCalled());
+    await openForm();
+
+    fireEvent.change(screen.getByLabelText('Threshold'), { target: { value: '0.05' } });
+    const form = screen.getByRole('button', { name: 'Submit' }).closest('form') as HTMLFormElement;
+
+    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'a@b,c@d' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    fireEvent.submit(form);
+    expect(mockCreatePrizeWalletAlert).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'a@b c@d' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    fireEvent.submit(form);
+    expect(mockCreatePrizeWalletAlert).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'a@@b' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: '@b' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'a@' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'a@b' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled());
   });
 
   it('does not create on form submit when the form is incomplete', async () => {
@@ -209,6 +247,39 @@ describe('RealunitPrizeWalletAlertPanel', () => {
     mockListPrizeWalletAlerts.mockRejectedValue(new Error('list-fail'));
     render(<RealunitPrizeWalletAlertPanel translate={translate} />);
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('list-fail'));
+  });
+
+  it('keeps Submit disabled after the alert list fails to load', async () => {
+    mockListPrizeWalletAlerts.mockRejectedValue(new Error('list-fail'));
+    render(<RealunitPrizeWalletAlertPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('list-fail'));
+    await openForm();
+    fireEvent.change(screen.getByLabelText('Threshold'), { target: { value: '0.05' } });
+    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'ops@example.com' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  });
+
+  it('clears listError after a successful create', async () => {
+    mockListPrizeWalletAlerts.mockRejectedValue(new Error('list-fail'));
+    mockCreatePrizeWalletAlert.mockResolvedValue(ALERT);
+    render(<RealunitPrizeWalletAlertPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('list-fail'));
+    await openForm();
+    fireEvent.change(screen.getByLabelText('Threshold'), { target: { value: '0.05' } });
+    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'ops@example.com' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+
+    fireEvent.submit(screen.getByRole('button', { name: 'Submit' }).closest('form') as HTMLFormElement);
+
+    await waitFor(() =>
+      expect(mockCreatePrizeWalletAlert).toHaveBeenCalledWith({
+        asset: RealUnitPrizeWalletAlertAsset.ETH,
+        threshold: 0.05,
+        mail: 'ops@example.com',
+      }),
+    );
+    await waitFor(() => expect(screen.queryByText('list-fail')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('ops@example.com')).toBeInTheDocument());
   });
 
   it('falls back to Unknown error when the alert list rejects without a message', async () => {

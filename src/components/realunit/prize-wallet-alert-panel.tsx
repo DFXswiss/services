@@ -16,6 +16,14 @@ function isThresholdValid(asset: RealUnitPrizeWalletAlertAsset, raw: string): bo
   return Number.isInteger(value) && value >= 1;
 }
 
+/** One address only: no commas/whitespace lists; exactly one @; non-empty local and domain (a@b min). */
+function isMailValid(value: string): boolean {
+  if (!value || value.includes(',') || /\s/.test(value)) return false;
+  const at = value.indexOf('@');
+  if (at <= 0 || at !== value.lastIndexOf('@') || at === value.length - 1) return false;
+  return true;
+}
+
 export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPanelProps): JSX.Element {
   const { listPrizeWalletAlerts, createPrizeWalletAlert, deletePrizeWalletAlert } = useRealunitReferral();
 
@@ -47,7 +55,8 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
   }, []);
 
   const trimmedMail = mail.trim();
-  const canSubmit = isThresholdValid(asset, threshold) && trimmedMail.length > 0 && trimmedMail.includes('@');
+  const canSubmit =
+    !isLoading && !listError && isThresholdValid(asset, threshold) && isMailValid(trimmedMail);
 
   function resetForm(): void {
     setAsset(RealUnitPrizeWalletAlertAsset.ETH);
@@ -58,7 +67,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
   function onSubmit(event?: FormEvent): void {
     event?.preventDefault();
     if (isSubmittingRef.current) return;
-    if (!canSubmit) return;
+    if (isLoading || !isThresholdValid(asset, threshold) || !isMailValid(trimmedMail)) return;
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     setFormError(undefined);
@@ -68,6 +77,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
       mail: trimmedMail,
     })
       .then((created) => {
+        setListError(undefined);
         setAlerts((prev) => [created, ...prev]);
         resetForm();
         setShowForm(false);
@@ -101,6 +111,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
         label={translate('screens/referral', 'Bei niedrigem Bestand benachrichtigen')}
         onClick={() => setShowForm((open) => !open)}
         width={StyledButtonWidth.MIN}
+        disabled={isLoading}
       />
 
       {showForm && (
