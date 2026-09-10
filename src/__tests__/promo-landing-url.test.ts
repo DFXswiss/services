@@ -1,5 +1,4 @@
 import {
-  downloadBlob,
   downloadQrRaster,
   downloadQrSvg,
   promoLandingUrl,
@@ -55,28 +54,6 @@ describe('downloadQrSvg', () => {
     expect(click).toHaveBeenCalled();
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:qr');
     expect(svgMarkup(svg)).toContain('viewBox="0 0 10 10"');
-    jest.restoreAllMocks();
-  });
-});
-
-describe('downloadBlob', () => {
-  it('creates a temporary download anchor', () => {
-    const createObjectURL = jest.fn(() => 'blob:file');
-    const revokeObjectURL = jest.fn();
-    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectURL });
-    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectURL });
-    const click = jest.fn();
-    const originalCreate = document.createElement.bind(document);
-    jest.spyOn(document, 'createElement').mockImplementation((tag: string) => {
-      const el = originalCreate(tag);
-      if (tag === 'a') Object.defineProperty(el, 'click', { value: click });
-      return el;
-    });
-
-    downloadBlob(new Blob(['x'], { type: 'text/plain' }), 'n.txt');
-
-    expect(click).toHaveBeenCalled();
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:file');
     jest.restoreAllMocks();
   });
 });

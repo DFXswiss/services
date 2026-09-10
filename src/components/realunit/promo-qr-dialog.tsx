@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import { downloadQrRaster, downloadQrSvg, promoQrFilename } from 'src/util/promo-landing-url';
 
@@ -11,6 +11,14 @@ interface PromoQrDialogProps {
 
 export function PromoQrDialog({ code, url, translate, onClose }: PromoQrDialogProps): JSX.Element {
   const frameRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   function svg(): SVGSVGElement | undefined {
     return frameRef.current?.querySelector('svg') ?? undefined;

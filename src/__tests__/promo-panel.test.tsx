@@ -513,6 +513,16 @@ describe('RealunitPromoPanel', () => {
     expect(mockDownloadQrRaster).not.toHaveBeenCalled();
   });
 
+  it('closes the QR dialog on Escape', async () => {
+    mockGetPromoCodes.mockResolvedValue([ACTIVE]);
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'View QR code' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('closes the QR dialog when the backdrop is clicked', async () => {
     mockGetPromoCodes.mockResolvedValue([ACTIVE]);
     render(<RealunitPromoPanel translate={translate} />);
