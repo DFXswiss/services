@@ -16,9 +16,9 @@ function isThresholdValid(asset: RealUnitPrizeWalletAlertAsset, raw: string): bo
   return Number.isInteger(value) && value >= 1;
 }
 
-/** One address only: no commas/whitespace lists; exactly one @; non-empty local and domain (a@b min). */
+/** One address only: no commas/semicolons/whitespace lists; exactly one @; non-empty local and domain (a@b min). */
 function isMailValid(value: string): boolean {
-  if (!value || value.includes(',') || /\s/.test(value)) return false;
+  if (!value || value.includes(',') || value.includes(';') || /\s/.test(value)) return false;
   const at = value.indexOf('@');
   if (at <= 0 || at !== value.lastIndexOf('@') || at === value.length - 1) return false;
   return true;
@@ -43,6 +43,10 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
   const [mail, setMail] = useState('');
 
   useEffect(() => {
+    loadAlerts();
+  }, []);
+
+  function loadAlerts(): void {
     setIsLoading(true);
     setListError(undefined);
     listPrizeWalletAlerts()
@@ -52,11 +56,10 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
         setListError(e.message ?? 'Unknown error');
       })
       .finally(() => setIsLoading(false));
-  }, []);
+  }
 
   const trimmedMail = mail.trim();
-  const canSubmit =
-    !isLoading && !listError && isThresholdValid(asset, threshold) && isMailValid(trimmedMail);
+  const canSubmit = !isLoading && isThresholdValid(asset, threshold) && isMailValid(trimmedMail);
 
   function resetForm(): void {
     setAsset(RealUnitPrizeWalletAlertAsset.ETH);
@@ -71,6 +74,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     setFormError(undefined);
+    setActionError(undefined);
     createPrizeWalletAlert({
       asset,
       threshold: Number(threshold),
@@ -78,6 +82,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
     })
       .then((created) => {
         setListError(undefined);
+        setActionError(undefined);
         setAlerts((prev) => [created, ...prev]);
         resetForm();
         setShowForm(false);
@@ -159,10 +164,17 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
       )}
       {formError && <ErrorHint message={formError} />}
 
-      {isLoading && (
-        <div data-testid="prize-wallet-alert-loading">{translate('screens/referral', 'Loading')}</div>
+      {isLoading && <div data-testid="prize-wallet-alert-loading">{translate('screens/referral', 'Loading')}</div>}
+      {listError && !isLoading && (
+        <>
+          <ErrorHint message={listError} />
+          <StyledButton
+            label={translate('general/actions', 'Retry')}
+            onClick={loadAlerts}
+            width={StyledButtonWidth.MIN}
+          />
+        </>
       )}
-      {listError && <ErrorHint message={listError} />}
       {actionError && <ErrorHint message={actionError} />}
       {alerts.length > 0 && (
         <div className="overflow-auto">

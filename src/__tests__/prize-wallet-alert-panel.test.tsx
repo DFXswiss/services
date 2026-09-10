@@ -128,7 +128,7 @@ describe('RealunitPrizeWalletAlertPanel', () => {
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   });
 
-  it('rejects comma-separated and whitespace-separated mail', async () => {
+  it('rejects comma-separated, semicolon-separated, and whitespace-separated mail', async () => {
     render(<RealunitPrizeWalletAlertPanel translate={translate} />);
     await waitFor(() => expect(mockListPrizeWalletAlerts).toHaveBeenCalled());
     await openForm();
@@ -137,6 +137,11 @@ describe('RealunitPrizeWalletAlertPanel', () => {
     const form = screen.getByRole('button', { name: 'Submit' }).closest('form') as HTMLFormElement;
 
     fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'a@b,c@d' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    fireEvent.submit(form);
+    expect(mockCreatePrizeWalletAlert).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'a@b;c@d' } });
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     fireEvent.submit(form);
     expect(mockCreatePrizeWalletAlert).not.toHaveBeenCalled();
@@ -174,11 +179,13 @@ describe('RealunitPrizeWalletAlertPanel', () => {
     await fillValidEthForm();
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
-    await waitFor(() => expect(mockCreatePrizeWalletAlert).toHaveBeenCalledWith({
-      asset: RealUnitPrizeWalletAlertAsset.ETH,
-      threshold: 0.05,
-      mail: 'ops@example.com',
-    }));
+    await waitFor(() =>
+      expect(mockCreatePrizeWalletAlert).toHaveBeenCalledWith({
+        asset: RealUnitPrizeWalletAlertAsset.ETH,
+        threshold: 0.05,
+        mail: 'ops@example.com',
+      }),
+    );
     await waitFor(() => expect(screen.getByText('ops@example.com')).toBeInTheDocument());
     expect(screen.queryByLabelText('Asset')).not.toBeInTheDocument();
   });
@@ -247,29 +254,19 @@ describe('RealunitPrizeWalletAlertPanel', () => {
     mockListPrizeWalletAlerts.mockRejectedValue(new Error('list-fail'));
     render(<RealunitPrizeWalletAlertPanel translate={translate} />);
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('list-fail'));
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 
-  it('keeps Submit disabled after the alert list fails to load', async () => {
-    mockListPrizeWalletAlerts.mockRejectedValue(new Error('list-fail'));
-    render(<RealunitPrizeWalletAlertPanel translate={translate} />);
-    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('list-fail'));
-    await openForm();
-    fireEvent.change(screen.getByLabelText('Threshold'), { target: { value: '0.05' } });
-    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'ops@example.com' } });
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
-  });
-
-  it('clears listError after a successful create', async () => {
+  it('keeps Submit enabled after the alert list fails and clears listError on successful create', async () => {
     mockListPrizeWalletAlerts.mockRejectedValue(new Error('list-fail'));
     mockCreatePrizeWalletAlert.mockResolvedValue(ALERT);
     render(<RealunitPrizeWalletAlertPanel translate={translate} />);
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('list-fail'));
     await openForm();
-    fireEvent.change(screen.getByLabelText('Threshold'), { target: { value: '0.05' } });
-    fireEvent.change(screen.getByLabelText('Mail'), { target: { value: 'ops@example.com' } });
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    await fillValidEthForm();
+    expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled();
 
-    fireEvent.submit(screen.getByRole('button', { name: 'Submit' }).closest('form') as HTMLFormElement);
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
     await waitFor(() =>
       expect(mockCreatePrizeWalletAlert).toHaveBeenCalledWith({
@@ -280,6 +277,20 @@ describe('RealunitPrizeWalletAlertPanel', () => {
     );
     await waitFor(() => expect(screen.queryByText('list-fail')).not.toBeInTheDocument());
     await waitFor(() => expect(screen.getByText('ops@example.com')).toBeInTheDocument());
+  });
+
+  it('retries the alert list after a load failure', async () => {
+    mockListPrizeWalletAlerts.mockRejectedValueOnce(new Error('list-fail')).mockResolvedValueOnce([ALERT]);
+    render(<RealunitPrizeWalletAlertPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('list-fail'));
+    expect(mockListPrizeWalletAlerts).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+    await waitFor(() => expect(mockListPrizeWalletAlerts).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByText('list-fail')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('ops@example.com')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
   it('falls back to Unknown error when the alert list rejects without a message', async () => {
@@ -312,6 +323,26 @@ describe('RealunitPrizeWalletAlertPanel', () => {
 
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('nope'));
     expect(screen.getByText('ops@example.com')).toBeInTheDocument();
+  });
+
+  it('clears a leftover delete error after a successful create', async () => {
+    const created = { ...ALERT, id: 11, mail: 'new@example.com' };
+    mockListPrizeWalletAlerts.mockResolvedValue([ALERT]);
+    mockDeletePrizeWalletAlert.mockRejectedValue(new Error('nope'));
+    mockCreatePrizeWalletAlert.mockResolvedValue(created);
+    render(<RealunitPrizeWalletAlertPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByText('ops@example.com')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('nope'));
+
+    await openForm();
+    await fillValidEthForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => expect(mockCreatePrizeWalletAlert).toHaveBeenCalled());
+    await waitFor(() => expect(screen.queryByText('nope')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('new@example.com')).toBeInTheDocument());
   });
 
   it('falls back to Unknown error when delete rejects without a message', async () => {
