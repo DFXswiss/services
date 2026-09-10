@@ -18,6 +18,16 @@ jest.mock('react-qr-code', () => ({
     <svg data-testid="qr-svg" data-value={value} viewBox="0 0 1 1" />
   ),
 }));
+const mockDownloadQrRaster = jest.fn();
+const mockDownloadQrSvg = jest.fn();
+jest.mock('src/util/promo-landing-url', () => {
+  const actual = jest.requireActual('src/util/promo-landing-url') as typeof import('src/util/promo-landing-url');
+  return {
+    ...actual,
+    downloadQrRaster: (...args: unknown[]) => mockDownloadQrRaster(...args),
+    downloadQrSvg: (...args: unknown[]) => mockDownloadQrSvg(...args),
+  };
+});
 
 const mockGetPromoCodes = jest.fn();
 const mockCreatePromoCode = jest.fn();
@@ -477,15 +487,39 @@ describe('RealunitPromoPanel', () => {
       'data-value',
       'https://realunit.app/promo/START2026',
     );
-    expect(within(dialog).getByRole('button', { name: 'Download SVG' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Download PNG' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Download JPG' })).toBeInTheDocument();
-
-    const createObjectURL = jest.fn(() => 'blob:qr');
-    const revokeObjectURL = jest.fn();
-    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectURL });
-    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectURL });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Download SVG' }));
-    expect(createObjectURL).toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Download PNG' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Download JPG' }));
+    expect(mockDownloadQrSvg).toHaveBeenCalledTimes(1);
+    expect(mockDownloadQrRaster).toHaveBeenCalledTimes(2);
+    expect(mockDownloadQrRaster.mock.calls[0][2]).toBe('image/png');
+    expect(mockDownloadQrRaster.mock.calls[1][2]).toBe('image/jpeg');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('does not download when the QR svg is missing', async () => {
+    mockGetPromoCodes.mockResolvedValue([ACTIVE]);
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'View QR code' }));
+    screen.getByTestId('promo-qr').replaceChildren();
+    mockDownloadQrSvg.mockClear();
+    mockDownloadQrRaster.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: 'Download SVG' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Download PNG' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Download JPG' }));
+    expect(mockDownloadQrSvg).not.toHaveBeenCalled();
+    expect(mockDownloadQrRaster).not.toHaveBeenCalled();
+  });
+
+  it('closes the QR dialog when the backdrop is clicked', async () => {
+    mockGetPromoCodes.mockResolvedValue([ACTIVE]);
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'View QR code' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('dialog').parentElement as HTMLElement);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

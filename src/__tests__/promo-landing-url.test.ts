@@ -1,5 +1,6 @@
 import {
   downloadBlob,
+  downloadQrRaster,
   downloadQrSvg,
   promoLandingUrl,
   promoQrFilename,
@@ -23,6 +24,10 @@ describe('promoQrFilename', () => {
 
   it('strips characters that are not a filename', () => {
     expect(promoQrFilename('VOW 2026/x', 'jpg')).toBe('realunit-promo-VOW_2026_x.jpg');
+  });
+
+  it('falls back when the code has no filename-safe characters', () => {
+    expect(promoQrFilename('///', 'svg')).toBe('realunit-promo-code.svg');
   });
 });
 
@@ -73,5 +78,172 @@ describe('downloadBlob', () => {
     expect(click).toHaveBeenCalled();
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:file');
     jest.restoreAllMocks();
+  });
+});
+
+describe('downloadQrRaster', () => {
+  const svg = () => {
+    const node = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    node.setAttribute('viewBox', '0 0 10 10');
+    return node;
+  };
+
+  function mockUrl() {
+    const createObjectURL = jest.fn(() => 'blob:qr');
+    const revokeObjectURL = jest.fn();
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectURL });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectURL });
+    return { createObjectURL, revokeObjectURL };
+  }
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('fills white then draws and downloads a JPEG', async () => {
+    mockUrl();
+    const fillRect = jest.fn();
+    const drawImage = jest.fn();
+    const click = jest.fn();
+    class FakeImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) {
+        queueMicrotask(() => this.onload?.());
+      }
+    }
+    Object.defineProperty(window, 'Image', { configurable: true, value: FakeImage });
+    const originalCreate = document.createElement.bind(document);
+    jest.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = originalCreate(tag);
+      if (tag === 'canvas') {
+        Object.defineProperty(el, 'getContext', {
+          value: () => ({ fillStyle: '', fillRect, drawImage }),
+        });
+        Object.defineProperty(el, 'toBlob', {
+          value: (cb: (blob: Blob | null) => void, type: string) => cb(new Blob(['jpg'], { type })),
+        });
+      }
+      if (tag === 'a') Object.defineProperty(el, 'click', { value: click });
+      return el;
+    });
+
+    downloadQrRaster(svg(), 'realunit-promo-XYZ.jpg', 'image/jpeg', 64);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fillRect).toHaveBeenCalledWith(0, 0, 64, 64);
+    expect(drawImage).toHaveBeenCalled();
+    expect(click).toHaveBeenCalled();
+  });
+
+  it('downloads a PNG without a white fill', async () => {
+    mockUrl();
+    const fillRect = jest.fn();
+    const click = jest.fn();
+    class FakeImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) {
+        queueMicrotask(() => this.onload?.());
+      }
+    }
+    Object.defineProperty(window, 'Image', { configurable: true, value: FakeImage });
+    const originalCreate = document.createElement.bind(document);
+    jest.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = originalCreate(tag);
+      if (tag === 'canvas') {
+        Object.defineProperty(el, 'getContext', {
+          value: () => ({ fillStyle: '', fillRect, drawImage: jest.fn() }),
+        });
+        Object.defineProperty(el, 'toBlob', {
+          value: (cb: (blob: Blob | null) => void, type: string) => cb(new Blob(['png'], { type })),
+        });
+      }
+      if (tag === 'a') Object.defineProperty(el, 'click', { value: click });
+      return el;
+    });
+
+    downloadQrRaster(svg(), 'realunit-promo-XYZ.png', 'image/png');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fillRect).not.toHaveBeenCalled();
+    expect(click).toHaveBeenCalled();
+  });
+
+  it('revokes the object URL when the canvas has no 2d context', async () => {
+    const { revokeObjectURL } = mockUrl();
+    class FakeImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) {
+        queueMicrotask(() => this.onload?.());
+      }
+    }
+    Object.defineProperty(window, 'Image', { configurable: true, value: FakeImage });
+    const originalCreate = document.createElement.bind(document);
+    jest.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = originalCreate(tag);
+      if (tag === 'canvas') {
+        Object.defineProperty(el, 'getContext', { value: () => null });
+      }
+      return el;
+    });
+
+    downloadQrRaster(svg(), 'x.png', 'image/png');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:qr');
+  });
+
+  it('revokes the object URL when the image fails to load', () => {
+    const { revokeObjectURL } = mockUrl();
+    class FakeImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) {
+        this.onerror?.();
+      }
+    }
+    Object.defineProperty(window, 'Image', { configurable: true, value: FakeImage });
+
+    downloadQrRaster(svg(), 'x.png', 'image/png');
+
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:qr');
+  });
+
+  it('does not download when toBlob returns null', async () => {
+    mockUrl();
+    const click = jest.fn();
+    class FakeImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) {
+        queueMicrotask(() => this.onload?.());
+      }
+    }
+    Object.defineProperty(window, 'Image', { configurable: true, value: FakeImage });
+    const originalCreate = document.createElement.bind(document);
+    jest.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = originalCreate(tag);
+      if (tag === 'canvas') {
+        Object.defineProperty(el, 'getContext', {
+          value: () => ({ fillStyle: '', fillRect: jest.fn(), drawImage: jest.fn() }),
+        });
+        Object.defineProperty(el, 'toBlob', {
+          value: (cb: (blob: Blob | null) => void) => cb(null),
+        });
+      }
+      if (tag === 'a') Object.defineProperty(el, 'click', { value: click });
+      return el;
+    });
+
+    downloadQrRaster(svg(), 'x.png', 'image/png');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(click).not.toHaveBeenCalled();
   });
 });
