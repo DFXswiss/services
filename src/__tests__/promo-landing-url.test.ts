@@ -1,3 +1,5 @@
+jest.mock('@dfx.swiss/react', () => ({}));
+
 import {
   downloadQrRaster,
   downloadQrSvg,
