@@ -12,16 +12,17 @@ export interface UpdateUsedRefDto {
 // code from leaving the form.
 export const USED_REF_PATTERN = /^\w{1,3}-\w{1,3}$/;
 
-// Sets the referral code a wallet trades under (PUT support/user/:id/usedRef, Compliance role). The
-// API logs clerk, previous and new code and answers with the updated wallet row.
+// Sets the referral code an account trades under (PUT support/:id/usedRef, Compliance role). The API
+// writes the code to every wallet of the account, logs clerk, previous and new code, and answers with
+// the updated wallet rows.
 export function useUsedRef(): {
-  updateUsedRef: (userId: number, dto: UpdateUsedRefDto) => Promise<UserInfo>;
+  updateUsedRef: (userDataId: string, dto: UpdateUsedRefDto) => Promise<UserInfo[]>;
 } {
   const { call } = useGuardedApi();
 
-  async function updateUsedRef(userId: number, dto: UpdateUsedRefDto): Promise<UserInfo> {
-    return call<UserInfo>({
-      url: `support/user/${userId}/usedRef`,
+  async function updateUsedRef(userDataId: string, dto: UpdateUsedRefDto): Promise<UserInfo[]> {
+    return call<UserInfo[]>({
+      url: `support/${userDataId}/usedRef`,
       method: 'PUT',
       data: dto,
     });

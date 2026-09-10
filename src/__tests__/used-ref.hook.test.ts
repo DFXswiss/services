@@ -16,20 +16,20 @@ describe('useUsedRef', () => {
     mockCall.mockReset();
   });
 
-  it('updateUsedRef calls PUT support/user/:id/usedRef with the dto and returns the updated wallet', async () => {
-    const updated = { id: 422258, address: '0x6ce9', usedRef: '194-687', role: 'User', status: 'Active' };
+  it('updateUsedRef calls PUT support/:id/usedRef with the dto and returns the updated wallets', async () => {
+    const updated = [{ id: 422258, address: '0x6ce9', usedRef: '194-687', role: 'User', status: 'Active' }];
     mockCall.mockResolvedValue(updated);
 
     const { result } = renderHook(() => useUsedRef());
-    const wallet = await result.current.updateUsedRef(422258, { usedRef: '194-687', reason: 'confirmed' });
+    const wallets = await result.current.updateUsedRef('408808', { usedRef: '194-687', reason: 'confirmed' });
 
     expect(mockCall).toHaveBeenCalledTimes(1);
     expect(mockCall).toHaveBeenCalledWith({
-      url: 'support/user/422258/usedRef',
+      url: 'support/408808/usedRef',
       method: 'PUT',
       data: { usedRef: '194-687', reason: 'confirmed' },
     });
-    expect(wallet).toBe(updated);
+    expect(wallets).toBe(updated);
   });
 
   it('keeps the same function identity across re-renders while the api call is stable', () => {
