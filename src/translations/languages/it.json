@@ -1222,6 +1222,20 @@
     "View QR code": "Mostra QR code",
     "Download SVG": "Scarica SVG",
     "Download PNG": "Scarica PNG",
-    "Download JPG": "Scarica JPG"
+    "Download JPG": "Scarica JPG",
+    "Prize payouts": "Pagamenti premi",
+    "Export CSV": "Esporta CSV",
+    "No prize payouts found": "Nessun pagamento premio trovato",
+    "Referral premium": "Premio di invito",
+    "Promo grant": "Bonus promo",
+    "Date": "Data",
+    "Legal basis": "Base giuridica",
+    "Status": "Stato",
+    "Customer ID": "ID cliente",
+    "Wallet": "Wallet",
+    "Amount": "Quantità",
+    "CHF": "CHF",
+    "Tx hash": "Hash tx",
+    "Qualifying buy": "Acquisto qualificante"
   }
 }

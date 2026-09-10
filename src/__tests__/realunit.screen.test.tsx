@@ -51,6 +51,10 @@ jest.mock('src/components/realunit/registration-funnel', () => ({
   RegistrationFunnel: () => <div data-testid="registration-funnel" />,
 }));
 
+jest.mock('src/components/realunit/payouts-panel', () => ({
+  PayoutsPanel: () => <div data-testid="payouts-panel" />,
+}));
+
 jest.mock('src/hooks/guard.hook', () => ({
   useRealunitGuard: (...args: unknown[]) => mockUseRealunitGuard(...args),
 }));
@@ -496,6 +500,11 @@ describe('RealunitScreen', () => {
     expect(screen.getAllByText('0xprizewallet').length).toBeGreaterThan(0);
     expect(screen.getByText(/ETH:/)).toBeInTheDocument();
     expect(screen.getByText(/REALU:/)).toBeInTheDocument();
+  });
+
+  it('shows the payouts panel with dashboard content', async () => {
+    await renderScreen();
+    expect(screen.getByTestId('payouts-panel')).toBeInTheDocument();
   });
 
   it('shows a not-configured hint when the prize wallet is missing', async () => {

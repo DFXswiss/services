@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import {
   CreateRealUnitPromoBatch,
   CreateRealUnitPromoCode,
+  RealUnitAdminPayout,
   RealUnitPrizeWallet,
   RealUnitPromoCode,
   RealUnitReferralRelation,
@@ -82,6 +83,13 @@ export function useRealunitReferral() {
     });
   }
 
+  async function getAdminPayouts(): Promise<RealUnitAdminPayout[]> {
+    return call<RealUnitAdminPayout[]>({
+      url: 'realunit/referral/admin/payouts',
+      method: 'GET',
+    });
+  }
+
   return useMemo(
     () => ({
       getRelations,
@@ -93,6 +101,7 @@ export function useRealunitReferral() {
       createPromoCode,
       createPromoCodes,
       deactivatePromoCode,
+      getAdminPayouts,
     }),
     [call],
   );
