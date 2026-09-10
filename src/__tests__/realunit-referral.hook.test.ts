@@ -121,4 +121,13 @@ describe('useRealunitReferral', () => {
 
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/promo/3/deactivate', method: 'PUT' });
   });
+
+  it('lists admin payouts', async () => {
+    mockCall.mockResolvedValue([]);
+    const { result } = renderHook(() => useRealunitReferral());
+
+    await result.current.getAdminPayouts();
+
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/admin/payouts', method: 'GET' });
+  });
 });

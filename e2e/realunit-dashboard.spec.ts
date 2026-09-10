@@ -3,11 +3,12 @@ import { test, expect, Page, Route } from '@playwright/test';
 /**
  * Visual regression: RealUnit dashboard home (`/realunit`) pending-quotes table
  * and monitoring charts (buy volume, holders over time, registration), plus the
- * Bonus and Referral prize-wallet card.
+ * Bonus and Referral prize-wallet card and Prize payouts table.
  *
  * Auth is a synthetic Admin JWT. Holders, token info, price history, quotes,
- * transactions, admin stats and GET /v1/realunit/referral/admin/prize-wallet
- * are mocked. A green run does not prove the live API returns these fields.
+ * transactions, admin stats, GET /v1/realunit/referral/admin/prize-wallet and
+ * GET /v1/realunit/referral/admin/payouts are mocked. A green run does not prove
+ * the live API returns these fields.
  */
 
 function jwt(): string {
@@ -110,6 +111,28 @@ async function installDashboardRoutes(page: Page): Promise<void> {
         realu: 80,
       });
     }
+    if (path === '/v1/realunit/referral/admin/payouts') {
+      return json(route, [
+        {
+          id: 9002,
+          created: '2026-02-01T12:00:00.000Z',
+          kind: 'Invite',
+          legalBasis: 'ReferralPremium',
+          status: 'Complete',
+          amount: 10,
+          chfValue: 12.5,
+          txHash: '0xabc0000000000000000000000000000000009002',
+          customerId: 8001,
+          customerWallet: '0xabc0000000000000000000000000000000008001',
+          referrerAccountId: 8003,
+          referrerWallet: '0xabc0000000000000000000000000000000008003',
+          guestAccountId: 8004,
+          guestWallet: '0xabc0000000000000000000000000000000008004',
+          code: 'AB-CD',
+          qualifyingBuy: { id: 9003, created: '2026-01-15T10:00:00.000Z', amount: 50 },
+        },
+      ]);
+    }
     if (path === '/v1/realunit/admin/stats/registration') {
       return json(route, {
         snapshot: {
@@ -185,6 +208,11 @@ test.describe('RealUnit dashboard - Visual Regression Tests', () => {
     await expect(bonusSection.getByText(/REALU:/)).toBeVisible();
     await expect(bonusSection.locator('svg').first()).toBeVisible();
     await expect(bonusSection).toHaveScreenshot('realunit-dashboard-06-bonus-referral.png', screenshotOpts);
+
+    await expect(page.getByRole('heading', { name: 'Prize payouts' })).toBeVisible();
+    const payoutsSection = page.getByTestId('payouts-panel');
+    await payoutsSection.scrollIntoViewIfNeeded();
+    await expect(payoutsSection).toHaveScreenshot('realunit-dashboard-07-prize-payouts.png', screenshotOpts);
 
     const pendingSection = section('Pending Transactions');
     await pendingSection.scrollIntoViewIfNeeded();

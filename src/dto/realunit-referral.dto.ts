@@ -11,6 +11,43 @@ export enum RealUnitManualReviewStatus {
   REJECTED = 'Rejected',
 }
 
+export enum RealUnitPrizePayoutStatus {
+  PENDING = 'Pending',
+  PROCESSING = 'Processing',
+  COMPLETE = 'Complete',
+  FAILED = 'Failed',
+}
+
+export enum RealUnitLegalBasis {
+  REFERRAL_PREMIUM = 'ReferralPremium',
+  PROMO_GRANT = 'PromoGrant',
+}
+
+export interface RealUnitQualifyingBuy {
+  id: number;
+  created: string;
+  amount: number;
+}
+
+export interface RealUnitAdminPayout {
+  id: number;
+  created: string;
+  kind: RealUnitCodeKind;
+  legalBasis: RealUnitLegalBasis;
+  status: RealUnitPrizePayoutStatus;
+  amount: number;
+  chfValue: number;
+  txHash?: string;
+  customerId: number;
+  customerWallet: string;
+  guestAccountId?: number;
+  guestWallet?: string;
+  referrerAccountId?: number;
+  referrerWallet?: string;
+  code?: string;
+  qualifyingBuy?: RealUnitQualifyingBuy;
+}
+
 export interface RealUnitReferralRelation {
   id: number;
   kind: RealUnitCodeKind;

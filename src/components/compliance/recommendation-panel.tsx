@@ -1,7 +1,7 @@
 import { useAuthContext } from '@dfx.swiss/react';
 import { useEffect, useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
-import { KycStepInfo, UserInfo } from 'src/hooks/compliance.hook';
+import { KycStepInfo, useCompliance, UserInfo } from 'src/hooks/compliance.hook';
 import { formatDate, statusBadge } from 'src/util/compliance-helpers';
 import { canEditUsedRef } from 'src/util/used-ref.util';
 import { UsedRefEditor } from './used-ref-editor';
@@ -13,19 +13,42 @@ interface RecommendationPanelProps {
   navigate: NavigateFunction;
 }
 
-export function RecommendationPanel({ kycSteps, users, userDataId, navigate }: RecommendationPanelProps): JSX.Element {
+export function RecommendationPanel(props: RecommendationPanelProps): JSX.Element {
+  return <RecommendationPanelBody key={props.userDataId} {...props} />;
+}
+
+function RecommendationPanelBody({ kycSteps, userDataId, navigate }: RecommendationPanelProps): JSX.Element {
   const recommendations = kycSteps?.filter((s) => s.name === 'Recommendation') || [];
   const { session } = useAuthContext();
   const canEditRef = canEditUsedRef(session?.role);
+  const { getUserData } = useCompliance();
 
-  // The wallets as loaded, replaced one by one when a ref code is saved, so the row shows the new
-  // referrer without a reload of the whole account.
-  const [wallets, setWallets] = useState(users);
-  useEffect(() => setWallets(users), [users]);
+  const [fetched, setFetched] = useState<{ id: string; users: UserInfo[] } | undefined>(undefined);
+  const [saved, setSaved] = useState<{ id: string; users: UserInfo[] } | undefined>(undefined);
+  const [loadError, setLoadError] = useState(false);
+  const displayWallets =
+    saved?.id === userDataId ? saved.users : fetched?.id === userDataId ? fetched.users : undefined;
+  const wallets = displayWallets ?? [];
 
-  function replaceWallet(updated: UserInfo): void {
-    setWallets((current) => current.map((u) => (u.id === updated.id ? updated : u)));
-  }
+  useEffect(() => {
+    let live = true;
+    setSaved(undefined);
+    setFetched(undefined);
+    setLoadError(false);
+    getUserData(+userDataId)
+      .then((data) => {
+        if (!live) return;
+        setLoadError(false);
+        setFetched({ id: userDataId, users: data.users });
+      })
+      .catch(() => {
+        if (!live) return;
+        setLoadError(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [userDataId, getUserData]);
 
   return (
     <div>
@@ -38,12 +61,23 @@ export function RecommendationPanel({ kycSteps, users, userDataId, navigate }: R
           View Network
         </button>
       </div>
-      {wallets?.length > 0 && (
+      {loadError && (
         <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
           <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
-          {wallets.map((u) => (
-            <UsedRefEditor key={u.id} user={u} canEdit={canEditRef} navigate={navigate} onSaved={replaceWallet} />
-          ))}
+          <p className="text-xs text-dfxRed-100">Could not load the referrer.</p>
+        </div>
+      )}
+      {!loadError && wallets.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm mb-2 p-3 text-sm">
+          <div className="text-dfxGray-700 mb-1">Referrer (Ref-Code)</div>
+          <UsedRefEditor
+            key={userDataId}
+            userDataId={userDataId}
+            users={wallets}
+            canEdit={canEditRef}
+            navigate={navigate}
+            onSaved={(users) => setSaved({ id: userDataId, users })}
+          />
         </div>
       )}
       <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto scroll-shadow">

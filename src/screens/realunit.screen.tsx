@@ -13,6 +13,7 @@ import { QrCopy } from 'src/components/payment/qr-code';
 import { BuyVolumeChart } from 'src/components/realunit/buy-volume-chart';
 import { CopyableAddress } from 'src/components/realunit/copyable-address';
 import { HolderCountChart } from 'src/components/realunit/holder-count-chart';
+import { PayoutsPanel } from 'src/components/realunit/payouts-panel';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
 import { RegistrationFunnel } from 'src/components/realunit/registration-funnel';
 import { useRealunitContext } from 'src/contexts/realunit.context';
@@ -185,6 +186,7 @@ export default function RealunitScreen(): JSX.Element {
               <ErrorHint message={prizeWalletError ?? 'Unknown error'} />
             )}
           </div>
+          <PayoutsPanel />
           <div className="mb-4">
             <h2 className="text-dfxGray-700 justify-center  mb-2">{translate('screens/realunit', 'Price History')}</h2>
             <PriceHistoryChart
