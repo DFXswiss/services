@@ -369,4 +369,81 @@ describe('RealunitPromoPanel', () => {
 
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('Unknown error'));
   });
+
+  it('ignores a second Start click while create is in flight', async () => {
+    let resolveCreate: (value: typeof ACTIVE) => void;
+    mockCreatePromoCode.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveCreate = resolve;
+        }),
+    );
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(mockGetPromoCodes).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'START2026' } });
+    fireEvent.change(screen.getByLabelText('Redemption cap'), { target: { value: '50' } });
+    fireEvent.change(screen.getByLabelText('Minimum buy (REALU)'), { target: { value: '200' } });
+    fireEvent.change(screen.getByLabelText('Valid from'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-12-31' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start' })).not.toBeDisabled());
+    const startBtn = screen.getByRole('button', { name: 'Start' });
+    fireEvent.click(startBtn);
+    fireEvent.click(startBtn);
+    expect(mockCreatePromoCode).toHaveBeenCalledTimes(1);
+
+    resolveCreate!(ACTIVE);
+    await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
+  });
+
+  it('allows deactivating two rows in parallel', async () => {
+    const other = { ...ACTIVE, id: 4, code: 'KEEP2026' };
+    mockGetPromoCodes.mockResolvedValue([ACTIVE, other]);
+    const resolvers: Record<number, (value?: unknown) => void> = {};
+    mockDeactivatePromoCode.mockImplementation(
+      (id: number) =>
+        new Promise((resolve) => {
+          resolvers[id] = resolve;
+        }),
+    );
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
+
+    const startRow = screen.getByText('START2026').closest('tr') as HTMLElement;
+    const keepRow = screen.getByText('KEEP2026').closest('tr') as HTMLElement;
+    fireEvent.click(within(startRow).getByRole('button', { name: 'Deactivate' }));
+
+    expect(within(startRow).getByRole('button', { name: 'Deactivate' })).toHaveAttribute('aria-disabled', 'true');
+    expect(within(keepRow).getByRole('button', { name: 'Deactivate' })).toHaveAttribute('aria-disabled', 'false');
+
+    fireEvent.click(within(keepRow).getByRole('button', { name: 'Deactivate' }));
+
+    expect(mockDeactivatePromoCode).toHaveBeenCalledTimes(2);
+    expect(mockDeactivatePromoCode).toHaveBeenCalledWith(3);
+    expect(mockDeactivatePromoCode).toHaveBeenCalledWith(4);
+
+    resolvers[3]();
+    await waitFor(() => {
+      const row = screen.getByText('START2026').closest('tr') as HTMLElement;
+      expect(within(row).getByText('Deactivated')).toBeInTheDocument();
+    });
+    const keepRowAfter = screen.getByText('KEEP2026').closest('tr') as HTMLElement;
+    expect(within(keepRowAfter).getByRole('button', { name: 'Deactivate' })).toHaveAttribute('aria-disabled', 'true');
+    expect(within(keepRowAfter).queryByText('Deactivated')).not.toBeInTheDocument();
+  });
+
+  it('ignores a second Deactivate click on the same row while in flight', async () => {
+    mockGetPromoCodes.mockResolvedValue([ACTIVE]);
+    mockDeactivatePromoCode.mockImplementation(() => new Promise(() => undefined));
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
+
+    const startRow = screen.getByText('START2026').closest('tr') as HTMLElement;
+    const deactivate = within(startRow).getByRole('button', { name: 'Deactivate' });
+    fireEvent.click(deactivate);
+    fireEvent.click(deactivate);
+
+    expect(mockDeactivatePromoCode).toHaveBeenCalledTimes(1);
+    expect(mockDeactivatePromoCode).toHaveBeenCalledWith(3);
+  });
 });

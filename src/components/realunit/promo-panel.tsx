@@ -1,5 +1,5 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { RealUnitPromoCode } from 'src/dto/realunit-referral.dto';
 import { useRealunitReferral } from 'src/hooks/realunit-referral.hook';
@@ -17,7 +17,9 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
   const [actionError, setActionError] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deactivatingId, setDeactivatingId] = useState<number>();
+  const [deactivatingIds, setDeactivatingIds] = useState<Set<number>>(new Set());
+  const isSubmittingRef = useRef(false);
+  const deactivatingIdsRef = useRef<Set<number>>(new Set());
 
   const [code, setCode] = useState('');
   const [quantity, setQuantity] = useState('1');
@@ -59,12 +61,13 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
     minBuy >= 1 &&
     validFrom.length > 0 &&
     validUntil.length > 0 &&
-    validUntil >= validFrom &&
-    !isSubmitting;
+    validUntil >= validFrom;
 
   function onSubmit(event?: FormEvent): void {
     event?.preventDefault();
+    if (isSubmittingRef.current) return;
     if (!canSubmit) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     setFormError(undefined);
     const dates = {
@@ -92,11 +95,16 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
         setValidUntil('');
       })
       .catch((e: Error) => setFormError(e.message ?? 'Unknown error'))
-      .finally(() => setIsSubmitting(false));
+      .finally(() => {
+        isSubmittingRef.current = false;
+        setIsSubmitting(false);
+      });
   }
 
   function onDeactivate(id: number): void {
-    setDeactivatingId(id);
+    if (deactivatingIdsRef.current.has(id)) return;
+    deactivatingIdsRef.current.add(id);
+    setDeactivatingIds(new Set(deactivatingIdsRef.current));
     setActionError(undefined);
     deactivatePromoCode(id)
       .then(() =>
@@ -105,7 +113,10 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
         ),
       )
       .catch((e: Error) => setActionError(e.message ?? 'Unknown error'))
-      .finally(() => setDeactivatingId(undefined));
+      .finally(() => {
+        deactivatingIdsRef.current.delete(id);
+        setDeactivatingIds(new Set(deactivatingIdsRef.current));
+      });
   }
 
   return (
@@ -228,8 +239,8 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
                     ) : (
                       <button
                         type="button"
-                        className="text-dfxRed-100 underline text-sm"
-                        disabled={deactivatingId === row.id}
+                        className={`text-dfxRed-100 underline text-sm${deactivatingIds.has(row.id) ? ' opacity-50' : ''}`}
+                        aria-disabled={deactivatingIds.has(row.id)}
                         onClick={() => onDeactivate(row.id)}
                       >
                         {translate('screens/referral', 'Deactivate')}
