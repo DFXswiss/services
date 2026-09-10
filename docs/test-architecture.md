@@ -127,12 +127,15 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   works, or that those staff/settings, stats or prize-wallet endpoints return real data.
 - **The RealUnit referral visual spec answers the relation list and promo list itself.**
   `e2e/realunit-referral.spec.ts` fulfils `GET /v1/realunit/referral/admin/relations` and
-  `GET /v1/realunit/referral/promo` (empty promo fixture) with synthetic fixtures, plus a
-  synthetic unsigned Admin JWT and staff/bootstrap GETs (`/v1/language`, `/v1/fiat`, `/v1/asset`,
-  `/v1/bankAccount`, `/v1/country`, `/v1/setting/infoBanner`, `/v2/user`). A green run proves the
-  start-promo form, empty promo list, held-for-review relation table and detail fixtures render.
-  It does not prove that the live promo or relations API returns those payloads, that login or
-  token verification works, or that create/deactivate succeed against the server.
+  `GET /v1/realunit/referral/promo` with synthetic fixtures: an empty promo list on the
+  original list screenshot, and one shareable campaign code on the landing-link and QR-dialog
+  variants, plus a synthetic unsigned Admin JWT and staff/bootstrap GETs (`/v1/language`,
+  `/v1/fiat`, `/v1/asset`, `/v1/bankAccount`, `/v1/country`, `/v1/setting/infoBanner`,
+  `/v2/user`). A green run proves the start-promo form, empty promo list, filled promo row
+  with `realunit.app/promo/{code}` and QR overlay, held-for-review relation table and detail
+  fixtures render. It does not prove that the live promo or relations API returns those
+  payloads, that login or token verification works, or that create/deactivate succeed against
+  the server.
 - **The RealUnit compliance visual spec answers the customer list and dossier itself.**
   `e2e/realunit-compliance.spec.ts` fulfils `GET /v1/realunit/compliance/customers` and
   `GET /v1/realunit/compliance/customers/:id` with synthetic fixtures (including `addresses`).

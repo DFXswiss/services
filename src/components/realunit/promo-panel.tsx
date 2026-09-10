@@ -1,8 +1,10 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
+import { PromoQrDialog } from 'src/components/realunit/promo-qr-dialog';
 import { RealUnitPromoCode } from 'src/dto/realunit-referral.dto';
 import { useRealunitReferral } from 'src/hooks/realunit-referral.hook';
+import { promoLandingUrl } from 'src/util/promo-landing-url';
 
 interface PromoPanelProps {
   translate: (ns: string, key: string) => string;
@@ -27,6 +29,7 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
   const [minBuyRealu, setMinBuyRealu] = useState('200');
   const [validFrom, setValidFrom] = useState('');
   const [validUntil, setValidUntil] = useState('');
+  const [qrCode, setQrCode] = useState<string>();
 
   useEffect(() => {
     loadCodes();
@@ -222,6 +225,12 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
                 <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
                   {translate('screens/referral', 'Valid until')}
                 </th>
+                <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
+                  {translate('screens/referral', 'Landing link')}
+                </th>
+                <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
+                  {translate('screens/referral', 'QR code')}
+                </th>
                 <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800" />
               </tr>
             </thead>
@@ -233,6 +242,25 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
                   <td className="px-3 py-2 text-dfxBlue-800">{row.minBuyRealu}</td>
                   <td className="px-3 py-2 text-dfxBlue-800">{row.validFrom.slice(0, 10)}</td>
                   <td className="px-3 py-2 text-dfxBlue-800">{row.validUntil.slice(0, 10)}</td>
+                  <td className="px-3 py-2">
+                    <a
+                      className="text-dfxBlue-800 underline break-all"
+                      href={promoLandingUrl(row.code)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {promoLandingUrl(row.code)}
+                    </a>
+                  </td>
+                  <td className="px-3 py-2">
+                    <button
+                      type="button"
+                      className="text-dfxBlue-800 underline text-sm"
+                      onClick={() => setQrCode(row.code)}
+                    >
+                      {translate('screens/referral', 'View QR code')}
+                    </button>
+                  </td>
                   <td className="px-3 py-2">
                     {row.deactivatedAt ? (
                       <span className="text-dfxGray-700">{translate('screens/referral', 'Deactivated')}</span>
@@ -252,6 +280,14 @@ export function RealunitPromoPanel({ translate }: PromoPanelProps): JSX.Element 
             </tbody>
           </table>
         </div>
+      )}
+      {qrCode && (
+        <PromoQrDialog
+          code={qrCode}
+          url={promoLandingUrl(qrCode)}
+          translate={translate}
+          onClose={() => setQrCode(undefined)}
+        />
       )}
     </div>
   );

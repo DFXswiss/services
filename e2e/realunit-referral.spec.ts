@@ -12,7 +12,8 @@ import { expect, Page, Route, test } from '@playwright/test';
  *
  * Intercepted endpoints:
  *   - GET realunit/referral/admin/relations → RealUnitReferralRelation[]
- *   - GET realunit/referral/promo → RealUnitPromoCode[] (empty fixture)
+ *   - GET realunit/referral/promo → RealUnitPromoCode[] (empty on the list
+ *     screenshot; one shareable campaign code on the landing/QR variants)
  * The detail screen sources a single relation from that same list (there is no single-relation GET).
  *
  * Synthetic fixtures: fake ids (8100+), fixed ISO dates, fake codes/accounts — no production data.
@@ -85,13 +86,24 @@ async function json(route: Route, body: unknown): Promise<void> {
   await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
 }
 
-async function mockReferralApi(page: Page): Promise<void> {
+const PROMO_CODES = [
+  {
+    id: 1,
+    code: 'XYZ',
+    minBuyRealu: 200,
+    redemptionCap: 50,
+    validFrom: '2026-09-01T00:00:00.000Z',
+    validUntil: '2026-12-31T23:59:59.000Z',
+  },
+];
+
+async function mockReferralApi(page: Page, promo: unknown[] = []): Promise<void> {
   await page.route('**/v1/**', async (route: Route) => {
     const request = route.request();
     const url = request.url();
     const path = new URL(url).pathname;
     if (LIST_RE.test(url)) return json(route, RELATIONS);
-    if (PROMO_RE.test(url) && request.method() === 'GET') return json(route, []);
+    if (PROMO_RE.test(url) && request.method() === 'GET') return json(route, promo);
     if (
       request.method() === 'GET' &&
       ['/v1/language', '/v1/fiat', '/v1/asset', '/v1/bankAccount', '/v1/country'].includes(path)
@@ -134,6 +146,30 @@ test.describe('RealUnit Referral admin', () => {
     await page.waitForTimeout(500);
 
     await expect(page).toHaveScreenshot('realunit-referral-01-list.png', {
+      fullPage: true,
+      maxDiffPixelRatio: 0.01,
+    });
+  });
+
+  test('promo list shows a shareable landing link and QR dialog', async ({ page }) => {
+    await mockReferralApi(page, PROMO_CODES);
+
+    await page.goto(`/realunit/referral?session=${encodeURIComponent(jwt())}&lang=en`);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+
+    await expect(page.getByRole('link', { name: 'https://realunit.app/promo/XYZ' })).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(page).toHaveScreenshot('realunit-referral-03-promo-link.png', {
+      fullPage: true,
+      maxDiffPixelRatio: 0.01,
+    });
+
+    await page.getByRole('button', { name: 'View QR code' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Download PNG' })).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(page).toHaveScreenshot('realunit-referral-04-promo-qr.png', {
       fullPage: true,
       maxDiffPixelRatio: 0.01,
     });
