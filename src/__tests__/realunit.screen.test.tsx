@@ -60,9 +60,15 @@ jest.mock('src/hooks/guard.hook', () => ({
 }));
 
 const mockGetPrizeWallet = jest.fn();
+const mockListPrizeWalletAlerts = jest.fn();
+const mockCreatePrizeWalletAlert = jest.fn();
+const mockDeletePrizeWalletAlert = jest.fn();
 jest.mock('src/hooks/realunit-referral.hook', () => ({
   useRealunitReferral: () => ({
     getPrizeWallet: (...args: unknown[]) => mockGetPrizeWallet(...args),
+    listPrizeWalletAlerts: (...args: unknown[]) => mockListPrizeWalletAlerts(...args),
+    createPrizeWalletAlert: (...args: unknown[]) => mockCreatePrizeWalletAlert(...args),
+    deletePrizeWalletAlert: (...args: unknown[]) => mockDeletePrizeWalletAlert(...args),
   }),
 }));
 
@@ -96,7 +102,7 @@ jest.mock('src/util/utils', () => ({
 }));
 
 import { StrictMode } from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import RealunitScreen from 'src/screens/realunit.screen';
 
 const HOLDER = {
@@ -137,6 +143,26 @@ const TX = {
 async function renderScreen() {
   const view = render(<RealunitScreen />);
   await waitFor(() => expect(mockGetPrizeWallet).toHaveBeenCalled());
+  let wallet: unknown;
+  try {
+    wallet = await mockGetPrizeWallet.mock.results[0].value;
+  } catch {
+    wallet = undefined;
+  }
+  if (wallet) {
+    // Alert panel mounts only on the main dashboard branch once the wallet card is shown.
+    await waitFor(() => {
+      if (!screen.queryByText('Bonus and Referral')) return;
+      expect(mockListPrizeWalletAlerts).toHaveBeenCalled();
+    });
+  } else {
+    await waitFor(() => {
+      if (!screen.queryByText('Bonus and Referral')) return;
+      expect(
+        screen.queryByText('Prize wallet is not configured') || screen.queryByTestId('error-hint'),
+      ).toBeTruthy();
+    });
+  }
   return view;
 }
 
@@ -181,6 +207,15 @@ describe('RealunitScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetPrizeWallet.mockResolvedValue({ address: '0xprizewallet', eth: 0.5, realu: 80 });
+    mockListPrizeWalletAlerts.mockResolvedValue([]);
+    mockCreatePrizeWalletAlert.mockResolvedValue({
+      id: 1,
+      asset: 'ETH',
+      threshold: 0.1,
+      mail: 'ops@example.com',
+      created: '2026-09-10T00:00:00.000Z',
+    });
+    mockDeletePrizeWalletAlert.mockResolvedValue(undefined);
     setContext();
   });
 
@@ -358,7 +393,11 @@ describe('RealunitScreen', () => {
     }
     fireEvent.click(holderButton);
     expect(mockNavigate).toHaveBeenCalledWith(`/realunit/user/${encodeURIComponent(HOLDER.address)}`);
-    fireEvent.click(screen.getAllByTestId('copy-button')[0]);
+    const holderRow = holderButton.closest('tr');
+    if (!holderRow) {
+      throw new Error('holder row missing');
+    }
+    fireEvent.click(within(holderRow).getByTestId('copy-button'));
     expect(mockCopy).toHaveBeenCalledWith(HOLDER.address);
     fireEvent.click(screen.getByRole('button', { name: 'More' }));
     expect(mockNavigate).toHaveBeenCalledWith('/realunit/holders');
@@ -505,6 +544,14 @@ describe('RealunitScreen', () => {
   it('shows the payouts panel with dashboard content', async () => {
     await renderScreen();
     expect(screen.getByTestId('payouts-panel')).toBeInTheDocument();
+  });
+
+  it('shows the low-balance notify button when the prize wallet loaded', async () => {
+    await renderScreen();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Bei niedrigem Bestand benachrichtigen' })).toBeInTheDocument(),
+    );
+    expect(mockListPrizeWalletAlerts).toHaveBeenCalled();
   });
 
   it('shows a not-configured hint when the prize wallet is missing', async () => {
