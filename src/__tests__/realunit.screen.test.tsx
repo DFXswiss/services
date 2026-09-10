@@ -158,9 +158,7 @@ async function renderScreen() {
   } else {
     await waitFor(() => {
       if (!screen.queryByText('Bonus and Referral')) return;
-      expect(
-        screen.queryByText('Prize wallet is not configured') || screen.queryByTestId('error-hint'),
-      ).toBeTruthy();
+      expect(screen.queryByText('Prize wallet is not configured') || screen.queryByTestId('error-hint')).toBeTruthy();
     });
   }
   return view;
@@ -548,9 +546,7 @@ describe('RealunitScreen', () => {
 
   it('shows the low-balance notify button when the prize wallet loaded', async () => {
     await renderScreen();
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Bei niedrigem Bestand benachrichtigen' })).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Notify on low balance' })).toBeInTheDocument());
     expect(mockListPrizeWalletAlerts).toHaveBeenCalled();
   });
 

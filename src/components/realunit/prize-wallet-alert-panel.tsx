@@ -37,6 +37,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
   const isSubmittingRef = useRef(false);
   const deactivatingIdsRef = useRef<Set<number>>(new Set());
+  const loadGenRef = useRef(0);
 
   const [asset, setAsset] = useState<RealUnitPrizeWalletAlertAsset>(RealUnitPrizeWalletAlertAsset.ETH);
   const [threshold, setThreshold] = useState('');
@@ -47,15 +48,23 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
   }, []);
 
   function loadAlerts(): void {
+    const gen = ++loadGenRef.current;
     setIsLoading(true);
     setListError(undefined);
     listPrizeWalletAlerts()
-      .then(setAlerts)
+      .then((rows) => {
+        if (gen !== loadGenRef.current) return;
+        setAlerts(rows);
+      })
       .catch((e: Error) => {
+        if (gen !== loadGenRef.current) return;
         setAlerts([]);
         setListError(e.message ?? 'Unknown error');
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (gen !== loadGenRef.current) return;
+        setIsLoading(false);
+      });
   }
 
   const trimmedMail = mail.trim();
@@ -81,6 +90,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
       mail: trimmedMail,
     })
       .then((created) => {
+        loadGenRef.current += 1;
         setListError(undefined);
         setActionError(undefined);
         setAlerts((prev) => [created, ...prev]);
@@ -113,7 +123,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col gap-4 text-left w-full">
       <StyledButton
-        label={translate('screens/referral', 'Bei niedrigem Bestand benachrichtigen')}
+        label={translate('screens/referral', 'Notify on low balance')}
         onClick={() => setShowForm((open) => !open)}
         width={StyledButtonWidth.MIN}
         disabled={isLoading}
@@ -172,6 +182,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
             label={translate('general/actions', 'Retry')}
             onClick={loadAlerts}
             width={StyledButtonWidth.MIN}
+            disabled={isSubmitting}
           />
         </>
       )}
@@ -206,7 +217,7 @@ export function RealunitPrizeWalletAlertPanel({ translate }: PrizeWalletAlertPan
                       aria-disabled={deletingIds.has(row.id)}
                       onClick={() => onDelete(row.id)}
                     >
-                      {translate('screens/referral', 'Delete')}
+                      {translate('general/actions', 'Delete')}
                     </button>
                   </td>
                 </tr>

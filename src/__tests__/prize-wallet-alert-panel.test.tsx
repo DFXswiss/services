@@ -38,7 +38,7 @@ const ALERT = {
   created: '2026-09-10T00:00:00.000Z',
 };
 
-const NOTIFY = 'Bei niedrigem Bestand benachrichtigen';
+const NOTIFY = 'Notify on low balance';
 
 async function openForm() {
   await waitFor(() => expect(screen.getByRole('button', { name: NOTIFY })).not.toBeDisabled());
@@ -356,6 +356,12 @@ describe('RealunitPrizeWalletAlertPanel', () => {
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('Unknown error'));
   });
 
+  it('exposes Notify on low balance as the notify button accessible name', async () => {
+    render(<RealunitPrizeWalletAlertPanel translate={translate} />);
+    await waitFor(() => expect(mockListPrizeWalletAlerts).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: 'Notify on low balance' })).toBeInTheDocument();
+  });
+
   it('ignores a second Submit click while create is in flight', async () => {
     const deferred: { resolve: (value: typeof ALERT) => void } = { resolve: () => undefined };
     mockCreatePrizeWalletAlert.mockImplementation(
@@ -373,6 +379,28 @@ describe('RealunitPrizeWalletAlertPanel', () => {
     fireEvent.click(submit);
     fireEvent.click(submit);
     expect(mockCreatePrizeWalletAlert).toHaveBeenCalledTimes(1);
+
+    deferred.resolve(ALERT);
+    await waitFor(() => expect(screen.getByText('ops@example.com')).toBeInTheDocument());
+  });
+
+  it('disables Retry while create is in flight', async () => {
+    mockListPrizeWalletAlerts.mockRejectedValueOnce(new Error('list-fail'));
+    const deferred: { resolve: (value: typeof ALERT) => void } = { resolve: () => undefined };
+    mockCreatePrizeWalletAlert.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          deferred.resolve = resolve;
+        }),
+    );
+    render(<RealunitPrizeWalletAlertPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('list-fail'));
+    await openForm();
+    await fillValidEthForm();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(mockCreatePrizeWalletAlert).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeDisabled();
 
     deferred.resolve(ALERT);
     await waitFor(() => expect(screen.getByText('ops@example.com')).toBeInTheDocument());

@@ -1236,6 +1236,12 @@
     "Amount": "Quantité",
     "CHF": "CHF",
     "Tx hash": "Hash tx",
-    "Qualifying buy": "Achat qualifiant"
+    "Qualifying buy": "Achat qualifiant",
+    "Notify on low balance": "Notifier en cas de stock faible",
+    "Asset": "Actif",
+    "Threshold": "Seuil",
+    "Mail": "E-mail",
+    "Submit": "Envoyer",
+    "Loading": "Chargement"
   }
 }
