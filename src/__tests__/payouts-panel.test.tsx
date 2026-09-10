@@ -107,7 +107,7 @@ describe('PayoutsPanel', () => {
 
   it('exports CSV with German headers and mapped rows', async () => {
     render(<PayoutsPanel />);
-    await waitFor(() => expect(screen.getByText('Prize payouts')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('fmt:2026-03-01T12:00:00.000Z')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
 
     expect(mockToSemicolonCsv).toHaveBeenCalledTimes(1);
