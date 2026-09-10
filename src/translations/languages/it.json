@@ -1216,6 +1216,12 @@
     "Start": "Avvia",
     "Deactivate": "Disattiva",
     "Deactivated": "Disattivato",
-    "No promo codes yet": "Nessun codice promo"
+    "No promo codes yet": "Nessun codice promo",
+    "Landing link": "Link diretto",
+    "QR code": "QR code",
+    "View QR code": "Mostra QR code",
+    "Download SVG": "Scarica SVG",
+    "Download PNG": "Scarica PNG",
+    "Download JPG": "Scarica JPG"
   }
 }

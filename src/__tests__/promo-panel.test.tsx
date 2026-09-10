@@ -12,6 +12,12 @@ jest.mock('@dfx.swiss/react-components', () => ({
 jest.mock('src/components/error-hint', () => ({
   ErrorHint: ({ message }: { message: string }) => <div data-testid="error-hint">{message}</div>,
 }));
+jest.mock('react-qr-code', () => ({
+  __esModule: true,
+  default: ({ value }: { value: string }) => (
+    <svg data-testid="qr-svg" data-value={value} viewBox="0 0 1 1" />
+  ),
+}));
 
 const mockGetPromoCodes = jest.fn();
 const mockCreatePromoCode = jest.fn();
@@ -445,5 +451,41 @@ describe('RealunitPromoPanel', () => {
 
     expect(mockDeactivatePromoCode).toHaveBeenCalledTimes(1);
     expect(mockDeactivatePromoCode).toHaveBeenCalledWith(3);
+  });
+
+  it('lists a shareable realunit.app landing link for each promo code', async () => {
+    mockGetPromoCodes.mockResolvedValue([ACTIVE]);
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
+
+    const startRow = screen.getByText('START2026').closest('tr') as HTMLElement;
+    const link = within(startRow).getByRole('link', { name: 'https://realunit.app/promo/START2026' });
+    expect(link).toHaveAttribute('href', 'https://realunit.app/promo/START2026');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  it('opens the QR dialog with PNG SVG and JPG downloads for that landing URL', async () => {
+    mockGetPromoCodes.mockResolvedValue([ACTIVE]);
+    render(<RealunitPromoPanel translate={translate} />);
+    await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
+
+    const startRow = screen.getByText('START2026').closest('tr') as HTMLElement;
+    fireEvent.click(within(startRow).getByRole('button', { name: 'View QR code' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByTestId('qr-svg')).toHaveAttribute(
+      'data-value',
+      'https://realunit.app/promo/START2026',
+    );
+    expect(within(dialog).getByRole('button', { name: 'Download SVG' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Download PNG' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Download JPG' })).toBeInTheDocument();
+
+    const createObjectURL = jest.fn(() => 'blob:qr');
+    const revokeObjectURL = jest.fn();
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectURL });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectURL });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Download SVG' }));
+    expect(createObjectURL).toHaveBeenCalled();
   });
 });
