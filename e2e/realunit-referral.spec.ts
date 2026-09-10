@@ -1,7 +1,4 @@
-import { APIRequestContext, expect, Page, Route, test } from '@playwright/test';
-import * as fs from 'fs';
-import * as path from 'path';
-import { createTestCredentials } from './test-wallet';
+import { expect, Page, Route, test } from '@playwright/test';
 
 /**
  * E2E Visual Regression Tests: RealUnit staff Referral-admin dashboard
@@ -10,51 +7,28 @@ import { createTestCredentials } from './test-wallet';
  *   - /realunit/referral        (relation list — held-for-review filter on by default)
  *   - /realunit/referral/:id    (relation detail — review/reward history + approve/reject/manual-prize)
  *
- * Auth is REAL (same admin-token flow as realunit-compliance.spec.ts): the api must be reachable for
- * `/v1/auth` and the frontend's own user/role fetch. The admin user has the ADMIN role, which
- * `useRealunitGuard` accepts (ADMIN | REALUNIT | COMPLIANCE).
+ * Auth is a synthetic Admin JWT. Feature data is MOCKED: relations, promo codes, and staff
+ * bootstrap GETs. A green run does not prove the live promo or relations API returns these payloads.
  *
- * Feature data is MOCKED with synthetic fixtures via page.route(...), so the baselines are deterministic
- * AND contain NO real production data. Only the RealUnit-scoped referral-admin endpoint is intercepted;
- * everything else (auth/role/user/settings) is passed through via route.continue().
- *
- * Intercepted endpoint (base `/v1/` is prepended by useApi):
+ * Intercepted endpoints:
  *   - GET realunit/referral/admin/relations → RealUnitReferralRelation[]
+ *   - GET realunit/referral/promo → RealUnitPromoCode[] (empty fixture)
  * The detail screen sources a single relation from that same list (there is no single-relation GET).
  *
  * Synthetic fixtures: fake ids (8100+), fixed ISO dates, fake codes/accounts — no production data.
  */
 
-const API_URL = process.env.REACT_APP_API_URL! + '/v1';
+function jwt(): string {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
+    account: 1,
+    user: 1,
+    role: 'Admin',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  })}.synthetic`;
+}
 
-// The Pending relation whose detail is screenshotted.
 const RELATION_ID = 8101;
-
-function getAdminSeed(): string {
-  const apiEnvPath = path.join(__dirname, '../../api/.env');
-  if (!fs.existsSync(apiEnvPath)) {
-    throw new Error(`API .env file not found at ${apiEnvPath}. Run 'npm run setup' in the API directory first.`);
-  }
-  const content = fs.readFileSync(apiEnvPath, 'utf8');
-  const match = content.match(/^ADMIN_SEED=(.*)$/m);
-  if (!match || !match[1]) {
-    throw new Error('ADMIN_SEED not found in API .env file. Run "npm run setup" in the API directory first.');
-  }
-  return match[1];
-}
-
-async function getAdminAuth(request: APIRequestContext): Promise<string> {
-  const adminSeed = getAdminSeed();
-  const credentials = await createTestCredentials(adminSeed);
-
-  const response = await request.post(`${API_URL}/auth`, { data: credentials });
-  if (!response.ok()) {
-    const body = await response.text().catch(() => 'unknown');
-    throw new Error(`Admin auth failed: ${response.status()} - ${body}`);
-  }
-  const data = await response.json();
-  return data.accessToken;
-}
 
 // ---------------------------------------------------------------------------
 // Synthetic fixtures (mirror src/dto/realunit-referral.dto.ts RealUnitReferralRelation). Date fields are
@@ -105,6 +79,7 @@ const RELATIONS = [
 ];
 
 const LIST_RE = /\/v1\/realunit\/referral\/admin\/relations(\?|$)/;
+const PROMO_RE = /\/v1\/realunit\/referral\/promo(\?|$)/;
 
 async function json(route: Route, body: unknown): Promise<void> {
   await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
@@ -112,21 +87,46 @@ async function json(route: Route, body: unknown): Promise<void> {
 
 async function mockReferralApi(page: Page): Promise<void> {
   await page.route('**/v1/**', async (route: Route) => {
-    const url = route.request().url();
+    const request = route.request();
+    const url = request.url();
+    const path = new URL(url).pathname;
     if (LIST_RE.test(url)) return json(route, RELATIONS);
+    if (PROMO_RE.test(url) && request.method() === 'GET') return json(route, []);
+    if (
+      request.method() === 'GET' &&
+      ['/v1/language', '/v1/fiat', '/v1/asset', '/v1/bankAccount', '/v1/country'].includes(path)
+    ) {
+      return json(route, []);
+    }
+    if (request.method() === 'GET' && path === '/v1/setting/infoBanner') return json(route, null);
+    await route.continue();
+  });
+  await page.route('**/v2/**', async (route: Route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (request.method() === 'GET' && path === '/v2/user') {
+      return json(route, {
+        id: 1,
+        activeAddress: { address: '0x0000000000000000000000000000000000000001', wallet: 'DFX' },
+        addresses: [],
+        kyc: { level: 50, status: 'Completed' },
+        language: { id: 1, name: 'English', symbol: 'EN' },
+      });
+    }
     await route.continue();
   });
 }
 
 test.describe('RealUnit Referral admin', () => {
-  test('relation list renders held-for-review relations', async ({ page, request }) => {
-    const token = await getAdminAuth(request);
+  test('relation list renders held-for-review relations', async ({ page }) => {
     await mockReferralApi(page);
 
-    await page.goto(`/realunit/referral?session=${token}`);
+    await page.goto(`/realunit/referral?session=${encodeURIComponent(jwt())}&lang=en`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
+    await expect(page.getByRole('heading', { name: 'Start promo code' })).toBeVisible();
+    await expect(page.getByText('No promo codes yet')).toBeVisible();
     await expect(page.getByText('AB12CD')).toBeVisible();
     await expect(page.getByText('PROMO24')).toBeVisible();
     // held-for-review filter is on by default → the credited/Approved relation is filtered out
@@ -139,11 +139,10 @@ test.describe('RealUnit Referral admin', () => {
     });
   });
 
-  test('relation detail renders history and review actions', async ({ page, request }) => {
-    const token = await getAdminAuth(request);
+  test('relation detail renders history and review actions', async ({ page }) => {
     await mockReferralApi(page);
 
-    await page.goto(`/realunit/referral/${RELATION_ID}?session=${token}`);
+    await page.goto(`/realunit/referral/${RELATION_ID}?session=${encodeURIComponent(jwt())}&lang=en`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 

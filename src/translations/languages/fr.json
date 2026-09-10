@@ -1204,6 +1204,18 @@
     "Bonus and Referral": "Bonus et parrainage",
     "ETH": "ETH",
     "REALU": "REALU",
-    "Prize wallet is not configured": "Le portefeuille de primes n'est pas configuré"
+    "Prize wallet is not configured": "Le portefeuille de primes n'est pas configuré",
+    "Start promo code": "Lancer un code promo",
+    "Quantity": "Quantité",
+    "Prefix (optional)": "Préfixe (optionnel)",
+    "Promo codes": "Codes promo",
+    "Redemption cap": "Plafond d'utilisation",
+    "Minimum buy (REALU)": "Achat minimum (REALU)",
+    "Valid from": "Valable du",
+    "Valid until": "Valable jusqu'au",
+    "Start": "Lancer",
+    "Deactivate": "Désactiver",
+    "Deactivated": "Désactivé",
+    "No promo codes yet": "Pas encore de codes promo"
   }
 }

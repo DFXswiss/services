@@ -101,7 +101,7 @@
   },
   "realunit-referral": {
     "title": "RealUnit Referral",
-    "description": "RealUnit-Referral-Admin: Beziehungsliste mit Filter „nur zu prüfende\", Detail mit Prüf-/Auszahlungsverlauf und Aktionen Genehmigen/Ablehnen/Manuelle Prämie (jeweils mit Pflicht-Begründung)."
+    "description": "RealUnit-Referral-Admin: Maske zum Starten eines Promo-Codes (Code, Einlösungslimit, Mindestkauf, Gültigkeit) und leere Promo-Liste; Beziehungsliste mit Filter „nur zu prüfende\", Detail mit Prüf-/Auszahlungsverlauf und Aktionen Genehmigen/Ablehnen/Manuelle Prämie (jeweils mit Pflicht-Begründung). Aktive/deaktivierte Promo-Zeilen sind in den Unit-Tests abgedeckt."
   },
   "realunit-dashboard": {
     "title": "RealUnit Dashboard",

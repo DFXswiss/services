@@ -1,6 +1,7 @@
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
+import { RealunitPromoPanel } from 'src/components/realunit/promo-panel';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { RealUnitManualReviewStatus, RealUnitReferralRelation } from 'src/dto/realunit-referral.dto';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
@@ -53,6 +54,7 @@ export default function RealunitReferralScreen(): JSX.Element {
 
   return (
     <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-3 p-4 md:p-6 text-left">
+      <RealunitPromoPanel translate={translate} />
       <div className="bg-white rounded-lg shadow-sm p-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-dfxBlue-800">
         <span className="font-semibold">
           {translate('screens/referral', 'Relations')}: {relations ? relations.length : '…'}

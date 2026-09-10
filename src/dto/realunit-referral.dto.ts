@@ -35,3 +35,30 @@ export interface RealUnitPrizeWallet {
   eth: number;
   realu: number;
 }
+
+export interface RealUnitPromoCode {
+  id: number;
+  code: string;
+  minBuyRealu: number;
+  redemptionCap: number;
+  validFrom: string;
+  validUntil: string;
+  deactivatedAt?: string;
+}
+
+export interface CreateRealUnitPromoCode {
+  code: string;
+  redemptionCap: number;
+  minBuyRealu?: number;
+  validFrom: string;
+  validUntil: string;
+}
+
+export interface CreateRealUnitPromoBatch {
+  count: number;
+  prefix?: string;
+  redemptionCap: number;
+  minBuyRealu?: number;
+  validFrom: string;
+  validUntil: string;
+}
