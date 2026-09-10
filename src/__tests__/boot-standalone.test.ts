@@ -1,6 +1,7 @@
 const mockCreateRoot = jest.fn();
 const mockRender = jest.fn();
 const mockInstallStorageFallback = jest.fn();
+const mockIsStorageBlocked = jest.fn();
 const mockIsStorageHardBlocked = jest.fn();
 const mockClearLoginSessionStorage = jest.fn();
 const mockInstallChunkErrorHandling = jest.fn();
@@ -27,6 +28,7 @@ jest.mock('../components/boot-error-boundary', () => ({
 
 jest.mock('../util/safe-storage', () => ({
   installStorageFallback: (...args: unknown[]) => mockInstallStorageFallback(...args),
+  isStorageBlocked: (...args: unknown[]) => mockIsStorageBlocked(...args),
   isStorageHardBlocked: (...args: unknown[]) => mockIsStorageHardBlocked(...args),
   clearLoginSessionStorage: (...args: unknown[]) => mockClearLoginSessionStorage(...args),
 }));
@@ -36,6 +38,7 @@ jest.mock('../util/client-error', () => ({
   reportClientError: (...args: unknown[]) => mockReportClientError(...args),
 }));
 
+import Main from '../Main';
 import { BootErrorBoundary } from '../components/boot-error-boundary';
 import { startStandaloneApp } from '../util/boot-standalone';
 
@@ -45,6 +48,7 @@ describe('startStandaloneApp', () => {
     mockCreateRoot.mockReset().mockReturnValue({ render: mockRender });
     mockRender.mockReset();
     mockInstallStorageFallback.mockReset();
+    mockIsStorageBlocked.mockReset().mockReturnValue(false);
     mockIsStorageHardBlocked.mockReset().mockReturnValue(false);
     mockClearLoginSessionStorage.mockReset();
     mockInstallChunkErrorHandling.mockReset();
@@ -69,6 +73,20 @@ describe('startStandaloneApp', () => {
     expect(mockReportClientError).toHaveBeenCalledWith(expect.any(Error), '/');
   });
 
+  it('does nothing when #root is missing', () => {
+    document.body.innerHTML = '';
+    startStandaloneApp();
+    expect(mockCreateRoot).not.toHaveBeenCalled();
+    expect(mockRenderHardBlockedPage).not.toHaveBeenCalled();
+  });
+
+  it('skips chunk-error reloads when storage is blocked (shim would not survive reload)', () => {
+    mockIsStorageBlocked.mockReturnValue(true);
+    startStandaloneApp();
+    expect(mockInstallChunkErrorHandling).not.toHaveBeenCalled();
+    expect(mockCreateRoot).toHaveBeenCalled();
+  });
+
   it('not hard-blocked: installs fallback, chunk handling, and renders Main in BootErrorBoundary', () => {
     startStandaloneApp();
 
@@ -76,8 +94,9 @@ describe('startStandaloneApp', () => {
     expect(mockInstallChunkErrorHandling).toHaveBeenCalledTimes(1);
     expect(mockCreateRoot).toHaveBeenCalledWith(document.getElementById('root'));
     expect(mockRender).toHaveBeenCalledTimes(1);
-    const element = mockRender.mock.calls[0][0] as { type: unknown };
+    const element = mockRender.mock.calls[0][0] as { type: unknown; props: { children: { type: unknown } } };
     expect(element.type).toBe(BootErrorBoundary);
+    expect(element.props.children.type).toBe(Main);
   });
 
   it('clears login session when URL has address and signature', () => {

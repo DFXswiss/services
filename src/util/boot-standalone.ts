@@ -3,14 +3,21 @@ import ReactDOM from 'react-dom/client';
 import Main from '../Main';
 import { BootErrorBoundary, renderHardBlockedPage } from '../components/boot-error-boundary';
 import { installChunkErrorHandling, reportClientError } from './client-error';
-import { clearLoginSessionStorage, installStorageFallback, isStorageHardBlocked } from './safe-storage';
+import {
+  clearLoginSessionStorage,
+  installStorageFallback,
+  isStorageBlocked,
+  isStorageHardBlocked,
+} from './safe-storage';
 
 export function startStandaloneApp(): void {
   installStorageFallback();
 
+  const rootEl = document.getElementById('root');
+  if (!rootEl) return;
+
   if (isStorageHardBlocked()) {
-    const root = document.getElementById('root') as HTMLElement;
-    renderHardBlockedPage(root);
+    renderHardBlockedPage(rootEl);
     reportClientError(new Error('Storage blocked'), window.location.pathname);
     return;
   }
@@ -24,8 +31,11 @@ export function startStandaloneApp(): void {
     clearLoginSessionStorage();
   }
 
-  installChunkErrorHandling();
+  // A memory shim makes the chunk-reload guard ephemeral: reload wipes it, so a
+  // leftover chunk error would loop. Report still happens via the error boundary.
+  if (!isStorageBlocked()) {
+    installChunkErrorHandling();
+  }
 
-  const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
-  root.render(createElement(BootErrorBoundary, null, createElement(Main)));
+  ReactDOM.createRoot(rootEl).render(createElement(BootErrorBoundary, null, createElement(Main)));
 }

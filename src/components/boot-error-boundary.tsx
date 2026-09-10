@@ -30,16 +30,37 @@ const STORAGE_COPY: Record<string, StorageCopy> = {
   },
 };
 
-function resolveStorageCopy(): StorageCopy {
-  const raw = (navigator.language || 'en').toLowerCase();
-  const prefix = raw.split('-')[0];
-  return STORAGE_COPY[prefix] ?? STORAGE_COPY.en;
+function languagePrefix(): string {
+  const raw = (navigator.language || navigator.languages?.[0] || 'en').toLowerCase();
+  return raw.split('-')[0];
 }
 
-function isGermanUi(): boolean {
-  const raw = navigator.language || navigator.languages?.[0] || 'en';
-  return raw.toLowerCase().startsWith('de');
+function resolveCopy<T>(table: Record<string, T>, fallback: T): T {
+  return table[languagePrefix()] ?? fallback;
 }
+
+function resolveStorageCopy(): StorageCopy {
+  return resolveCopy(STORAGE_COPY, STORAGE_COPY.en);
+}
+
+const BOOT_COPY: Record<string, StorageCopy> = {
+  en: {
+    message: 'Something went wrong while starting the app.',
+    button: 'Reset saved data and reload',
+  },
+  de: {
+    message: 'Beim Start der App ist ein Fehler aufgetreten.',
+    button: 'Gespeicherte Daten zurücksetzen und neu laden',
+  },
+  fr: {
+    message: "Une erreur s'est produite au démarrage de l'application.",
+    button: 'Réinitialiser les données enregistrées et recharger',
+  },
+  it: {
+    message: "Si è verificato un errore all'avvio dell'app.",
+    button: 'Reimposta i dati salvati e ricarica',
+  },
+};
 
 interface BootErrorBoundaryState {
   hasError: boolean;
@@ -58,18 +79,16 @@ export class BootErrorBoundary extends Component<PropsWithChildren, BootErrorBou
 
   render(): ReactNode {
     if (this.state.hasError) {
-      const german = isGermanUi();
+      const copy = resolveCopy(BOOT_COPY, BOOT_COPY.en);
       return (
         <div role="alert" className="p-8 text-center text-dfxBlue-800">
-          <p className="mb-4">
-            {german ? 'Beim Start der App ist ein Fehler aufgetreten.' : 'Something went wrong while starting the app.'}
-          </p>
+          <p className="mb-4">{copy.message}</p>
           <button
             type="button"
             className="rounded bg-dfxBlue-800 px-4 py-2 text-white"
             onClick={() => resetDfxStorageAndReload()}
           >
-            {german ? 'Gespeicherte Daten zurücksetzen und neu laden' : 'Reset saved data and reload'}
+            {copy.button}
           </button>
         </div>
       );

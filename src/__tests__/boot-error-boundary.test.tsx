@@ -113,6 +113,21 @@ describe('BootErrorBoundary', () => {
 
     expect(screen.getByRole('button')).toHaveTextContent('Reset saved data and reload');
   });
+
+  it.each([
+    ['fr', "Une erreur s'est produite au démarrage de l'application."],
+    ['it', "Si è verificato un errore all'avvio dell'app."],
+  ])('shows %s copy for the reset panel', (lang, message) => {
+    Object.defineProperty(navigator, 'language', { configurable: true, value: lang });
+
+    render(
+      <BootErrorBoundary>
+        <ThrowingChild />
+      </BootErrorBoundary>,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(message);
+  });
 });
 
 describe('StorageBlockedBanner', () => {
