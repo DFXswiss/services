@@ -105,6 +105,8 @@ describe('downloadQrRaster', () => {
     const fillRect = jest.fn();
     const drawImage = jest.fn();
     const click = jest.fn();
+    const context = { fillStyle: '', fillRect, drawImage };
+    let toBlobType: string | undefined;
     class FakeImage {
       onload: (() => void) | null = null;
       onerror: (() => void) | null = null;
@@ -118,10 +120,13 @@ describe('downloadQrRaster', () => {
       const el = originalCreate(tag);
       if (tag === 'canvas') {
         Object.defineProperty(el, 'getContext', {
-          value: () => ({ fillStyle: '', fillRect, drawImage }),
+          value: () => context,
         });
         Object.defineProperty(el, 'toBlob', {
-          value: (cb: (blob: Blob | null) => void, type: string) => cb(new Blob(['jpg'], { type })),
+          value: (cb: (blob: Blob | null) => void, type: string) => {
+            toBlobType = type;
+            cb(new Blob(['jpg'], { type }));
+          },
         });
       }
       if (tag === 'a') Object.defineProperty(el, 'click', { value: click });
@@ -132,8 +137,10 @@ describe('downloadQrRaster', () => {
     await Promise.resolve();
     await Promise.resolve();
 
+    expect(context.fillStyle).toBe('#ffffff');
     expect(fillRect).toHaveBeenCalledWith(0, 0, 64, 64);
     expect(drawImage).toHaveBeenCalled();
+    expect(toBlobType).toBe('image/jpeg');
     expect(click).toHaveBeenCalled();
   });
 
@@ -141,6 +148,7 @@ describe('downloadQrRaster', () => {
     mockUrl();
     const fillRect = jest.fn();
     const click = jest.fn();
+    let toBlobType: string | undefined;
     class FakeImage {
       onload: (() => void) | null = null;
       onerror: (() => void) | null = null;
@@ -157,7 +165,10 @@ describe('downloadQrRaster', () => {
           value: () => ({ fillStyle: '', fillRect, drawImage: jest.fn() }),
         });
         Object.defineProperty(el, 'toBlob', {
-          value: (cb: (blob: Blob | null) => void, type: string) => cb(new Blob(['png'], { type })),
+          value: (cb: (blob: Blob | null) => void, type: string) => {
+            toBlobType = type;
+            cb(new Blob(['png'], { type }));
+          },
         });
       }
       if (tag === 'a') Object.defineProperty(el, 'click', { value: click });
@@ -169,6 +180,7 @@ describe('downloadQrRaster', () => {
     await Promise.resolve();
 
     expect(fillRect).not.toHaveBeenCalled();
+    expect(toBlobType).toBe('image/png');
     expect(click).toHaveBeenCalled();
   });
 
