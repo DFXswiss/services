@@ -371,11 +371,11 @@ describe('RealunitPromoPanel', () => {
   });
 
   it('ignores a second Start click while create is in flight', async () => {
-    let resolveCreate: (value: typeof ACTIVE) => void;
+    const deferred: { resolve: (value: typeof ACTIVE) => void } = { resolve: () => undefined };
     mockCreatePromoCode.mockImplementation(
       () =>
         new Promise((resolve) => {
-          resolveCreate = resolve;
+          deferred.resolve = resolve;
         }),
     );
     render(<RealunitPromoPanel translate={translate} />);
@@ -392,7 +392,7 @@ describe('RealunitPromoPanel', () => {
     fireEvent.click(startBtn);
     expect(mockCreatePromoCode).toHaveBeenCalledTimes(1);
 
-    resolveCreate!(ACTIVE);
+    deferred.resolve(ACTIVE);
     await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
   });
 
