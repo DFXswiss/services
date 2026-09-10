@@ -519,6 +519,8 @@ describe('RealunitPromoPanel', () => {
     await waitFor(() => expect(screen.getByText('START2026')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'View QR code' }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: 'Enter' });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
