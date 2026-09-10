@@ -58,9 +58,9 @@ function installThrowingStorage(): void {
 function loadSafeStorage(): SafeStorageModule & { getStorageBlockedFlag: () => boolean } {
   let mod: (SafeStorageModule & { getStorageBlockedFlag: () => boolean }) | undefined;
   jest.isolateModules(() => {
-    const storage = require('../util/safe-storage') as SafeStorageModule;
-    const flag = require('../util/storage-block-flag') as { getStorageBlockedFlag: () => boolean };
-    mod = { ...storage, getStorageBlockedFlag: flag.getStorageBlockedFlag };
+    mod = Object.assign(require('../util/safe-storage'), {
+      getStorageBlockedFlag: require('../util/storage-block-flag').getStorageBlockedFlag,
+    });
   });
   if (!mod) throw new Error('failed to load safe-storage');
   return mod;
