@@ -1228,6 +1228,15 @@
     "Export CSV": "CSV exportieren",
     "No prize payouts found": "Keine Prämien-Buchungen gefunden",
     "Referral premium": "Empfehlungsprämie",
-    "Promo grant": "Promo-Zugabe"
+    "Promo grant": "Promo-Zugabe",
+    "Date": "Datum",
+    "Legal basis": "Rechtsgrund",
+    "Status": "Status",
+    "Customer ID": "Kunden-ID",
+    "Wallet": "Wallet",
+    "Amount": "Anzahl",
+    "CHF": "CHF",
+    "Tx hash": "Tx-Hash",
+    "Qualifying buy": "Qualifizierender Kauf"
   }
 }

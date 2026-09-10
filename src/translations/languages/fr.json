@@ -1227,6 +1227,15 @@
     "Export CSV": "Exporter CSV",
     "No prize payouts found": "Aucun paiement de prime",
     "Referral premium": "Prime de parrainage",
-    "Promo grant": "Bonus promo"
+    "Promo grant": "Bonus promo",
+    "Date": "Date",
+    "Legal basis": "Fondement juridique",
+    "Status": "Statut",
+    "Customer ID": "ID client",
+    "Wallet": "Portefeuille",
+    "Amount": "Quantité",
+    "CHF": "CHF",
+    "Tx hash": "Hash tx",
+    "Qualifying buy": "Achat qualifiant"
   }
 }

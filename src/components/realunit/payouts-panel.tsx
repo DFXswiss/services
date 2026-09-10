@@ -114,7 +114,7 @@ export function PayoutsPanel(): JSX.Element {
   };
 
   return (
-    <div className="mb-6">
+    <div className="mb-6" data-testid="payouts-panel">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
         <h2 className="text-dfxGray-700">{translate('screens/referral', 'Prize payouts')}</h2>
         <StyledButton

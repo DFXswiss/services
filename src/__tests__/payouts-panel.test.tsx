@@ -105,6 +105,26 @@ describe('PayoutsPanel', () => {
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('boom'));
   });
 
+  it('falls back to Unknown error when loading rejects without a message', async () => {
+    mockGetAdminPayouts.mockRejectedValue({});
+    render(<PayoutsPanel />);
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('Unknown error'));
+  });
+
+  it('shows an unknown legalBasis as-is in the table and CSV', async () => {
+    mockGetAdminPayouts.mockResolvedValue([
+      {
+        ...PAYOUT,
+        legalBasis: 'Other' as RealUnitLegalBasis,
+      },
+    ]);
+    render(<PayoutsPanel />);
+    await waitFor(() => expect(screen.getByText('Other')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
+    const rows = mockToSemicolonCsv.mock.calls[0][1] as Array<Array<string | number | undefined>>;
+    expect(rows[0][1]).toBe('Other');
+  });
+
   it('exports CSV with German headers and mapped rows', async () => {
     render(<PayoutsPanel />);
     await waitFor(() => expect(screen.getByText('fmt:2026-03-01T12:00:00.000Z')).toBeInTheDocument());
