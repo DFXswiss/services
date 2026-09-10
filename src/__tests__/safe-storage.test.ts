@@ -55,10 +55,12 @@ function installThrowingStorage(): void {
   });
 }
 
-function loadSafeStorage(): SafeStorageModule {
-  let mod: SafeStorageModule | undefined;
+function loadSafeStorage(): SafeStorageModule & { getStorageBlockedFlag: () => boolean } {
+  let mod: (SafeStorageModule & { getStorageBlockedFlag: () => boolean }) | undefined;
   jest.isolateModules(() => {
-    mod = require('../util/safe-storage');
+    const storage = require('../util/safe-storage') as SafeStorageModule;
+    const flag = require('../util/storage-block-flag') as { getStorageBlockedFlag: () => boolean };
+    mod = { ...storage, getStorageBlockedFlag: flag.getStorageBlockedFlag };
   });
   if (!mod) throw new Error('failed to load safe-storage');
   return mod;
@@ -264,6 +266,7 @@ describe('safe-storage', () => {
     mod.installStorageFallback();
     expect(mod.isStorageBlocked()).toBe(false);
     expect(mod.isStorageHardBlocked()).toBe(false);
+    expect(mod.getStorageBlockedFlag()).toBe(false);
     expect(local.getItem('__dfx.probe')).toBeNull();
     expect(session.getItem('__dfx.probe')).toBeNull();
 
@@ -285,6 +288,7 @@ describe('safe-storage', () => {
     mod.installStorageFallback();
     expect(mod.isStorageBlocked()).toBe(true);
     expect(mod.isStorageHardBlocked()).toBe(false);
+    expect(mod.getStorageBlockedFlag()).toBe(true);
     expect(local.getItem('dfx.srv.language')).toBe('de');
   });
 
@@ -301,6 +305,7 @@ describe('safe-storage', () => {
     mod.installStorageFallback();
     expect(mod.isStorageBlocked()).toBe(true);
     expect(mod.isStorageHardBlocked()).toBe(false);
+    expect(mod.getStorageBlockedFlag()).toBe(true);
     expect(session.getItem('keep')).toBe('1');
   });
 
@@ -311,6 +316,7 @@ describe('safe-storage', () => {
     mod.installStorageFallback();
     expect(mod.isStorageBlocked()).toBe(true);
     expect(mod.isStorageHardBlocked()).toBe(false);
+    expect(mod.getStorageBlockedFlag()).toBe(true);
 
     mod.storageSet('localStorage', 'k', 'v');
     expect(mod.storageGet('localStorage', 'k')).toBe('v');
@@ -342,6 +348,7 @@ describe('safe-storage', () => {
     mod.installStorageFallback();
     expect(mod.isStorageBlocked()).toBe(true);
     expect(mod.isStorageHardBlocked()).toBe(true);
+    expect(mod.getStorageBlockedFlag()).toBe(true);
     expect(() => mod.storageGet('localStorage', 'k')).not.toThrow();
     expect(() => mod.storageSet('localStorage', 'k', 'v')).not.toThrow();
     expect(() => mod.storageRemove('localStorage', 'k')).not.toThrow();
