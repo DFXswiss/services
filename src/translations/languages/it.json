@@ -1236,6 +1236,12 @@
     "Amount": "Quantità",
     "CHF": "CHF",
     "Tx hash": "Hash tx",
-    "Qualifying buy": "Acquisto qualificante"
+    "Qualifying buy": "Acquisto qualificante",
+    "Notify on low balance": "Notifica in caso di scorte basse",
+    "Asset": "Asset",
+    "Threshold": "Soglia",
+    "Mail": "E-mail",
+    "Submit": "Invia",
+    "Loading": "Caricamento"
   }
 }

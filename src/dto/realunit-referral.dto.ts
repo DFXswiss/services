@@ -73,6 +73,25 @@ export interface RealUnitPrizeWallet {
   realu: number;
 }
 
+export enum RealUnitPrizeWalletAlertAsset {
+  ETH = 'ETH',
+  REALU = 'REALU',
+}
+
+export interface RealUnitPrizeWalletAlert {
+  id: number;
+  asset: RealUnitPrizeWalletAlertAsset;
+  threshold: number;
+  mail: string;
+  created: string; // ISO
+}
+
+export interface CreateRealUnitPrizeWalletAlert {
+  asset: RealUnitPrizeWalletAlertAsset;
+  threshold: number;
+  mail: string;
+}
+
 export interface RealUnitPromoCode {
   id: number;
   code: string;
