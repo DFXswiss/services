@@ -1204,6 +1204,24 @@
     "Bonus and Referral": "Bonus e referral",
     "ETH": "ETH",
     "REALU": "REALU",
-    "Prize wallet is not configured": "Il wallet premi non è configurato"
+    "Prize wallet is not configured": "Il wallet premi non è configurato",
+    "Start promo code": "Avvia codice promo",
+    "Quantity": "Quantità",
+    "Prefix (optional)": "Prefisso (opzionale)",
+    "Promo codes": "Codici promo",
+    "Redemption cap": "Limite di utilizzo",
+    "Minimum buy (REALU)": "Acquisto minimo (REALU)",
+    "Valid from": "Valido dal",
+    "Valid until": "Valido fino al",
+    "Start": "Avvia",
+    "Deactivate": "Disattiva",
+    "Deactivated": "Disattivato",
+    "No promo codes yet": "Nessun codice promo",
+    "Landing link": "Link diretto",
+    "QR code": "QR code",
+    "View QR code": "Mostra QR code",
+    "Download SVG": "Scarica SVG",
+    "Download PNG": "Scarica PNG",
+    "Download JPG": "Scarica JPG"
   }
 }
