@@ -5,10 +5,12 @@ jest.mock('src/dto/safe.dto', () => ({}));
 import {
   forgetReportedErrors,
   isChunkLoadError,
+  isEmbedded,
   reloadOnceForChunkError,
   reportClientError,
   toErrorFacts,
 } from '../util/client-error';
+import { setStorageBlockedFlag } from '../util/storage-block-flag';
 
 jest.mock('src/config/api', () => ({ Api: { url: 'https://api.example.com', version: 'v1' } }));
 jest.mock('src/version', () => ({ REACT_APP_BUILD_ID: '42-99' }));
@@ -303,6 +305,7 @@ describe('reloadOnceForChunkError', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    setStorageBlockedFlag(false);
     reload = jest.fn();
     Object.defineProperty(window, 'location', { value: { ...window.location, reload }, writable: true });
   });
@@ -337,6 +340,23 @@ describe('reloadOnceForChunkError', () => {
     reloadOnceForChunkError();
 
     expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('skips the reload when the boot shim marked storage as blocked', () => {
+    setStorageBlockedFlag(true);
+    reloadOnceForChunkError();
+    expect(reload).not.toHaveBeenCalled();
+    setStorageBlockedFlag(false);
+  });
+
+  it('exposes the embedded flag after markEmbedded', () => {
+    expect(isEmbedded()).toBe(false);
+    jest.isolateModules(() => {
+      const clientError = jest.requireActual('../util/client-error');
+      expect(clientError.isEmbedded()).toBe(false);
+      clientError.markEmbedded();
+      expect(clientError.isEmbedded()).toBe(true);
+    });
   });
 
   // The widget and library builds run on a third party's page, where window is theirs. Reloading
