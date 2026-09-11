@@ -3,6 +3,8 @@ import { isInMobileBrowser } from '@tronweb3/tronwallet-abstract-adapter';
 import { TronLinkAdapter, isInTronLinkApp, supportTronLink } from '@tronweb3/tronwallet-adapter-tronlink';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
+import { AbortError } from '../../util/abort-error';
+import { delay } from '../../util/utils';
 import { useTron } from '../tron.hook';
 
 export interface TronLinkInterface {
@@ -21,9 +23,13 @@ export function useTronLinkTrx(): TronLinkInterface {
     return wallet;
   }
 
+  function opensTronLinkApp(): boolean {
+    return !supportTronLink() && Boolean(isInMobileBrowser()) && !isInTronLinkApp();
+  }
+
   function isInstalled(): boolean {
-    // on a mobile browser outside the TronLink app, connect opens the page in the TronLink app instead
-    return supportTronLink() || (Boolean(isInMobileBrowser()) && !isInTronLinkApp());
+    // inside the TronLink app the adapter waits for a late injected wallet, outside it on mobile it opens the app
+    return supportTronLink() || isInTronLinkApp() || opensTronLinkApp();
   }
 
   async function connect(): Promise<string> {
@@ -31,11 +37,18 @@ export function useTronLinkTrx(): TronLinkInterface {
 
     try {
       await provider.connect();
-      if (provider.address) return provider.address;
-      throw new Error('No address found');
     } catch (error) {
+      // the adapter opened the page in the TronLink app instead of connecting
+      if (opensTronLinkApp()) {
+        await delay(5);
+        throw new AbortError('Forwarded to TronLink app');
+      }
+
       handleError(error);
     }
+
+    if (provider.address) return provider.address;
+    throw new Error('No address found');
   }
 
   async function signMessage(address: string, message: string): Promise<string> {

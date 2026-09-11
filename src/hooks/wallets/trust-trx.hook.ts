@@ -3,6 +3,8 @@ import { isInMobileBrowser } from '@tronweb3/tronwallet-abstract-adapter';
 import { TrustAdapter, isTrustApp, supportTrust } from '@tronweb3/tronwallet-adapter-trust';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
+import { AbortError } from '../../util/abort-error';
+import { delay } from '../../util/utils';
 import { useTron } from '../tron.hook';
 
 export interface TrustInterface {
@@ -21,9 +23,13 @@ export function useTrustTrx(): TrustInterface {
     return wallet;
   }
 
+  function opensTrustApp(): boolean {
+    return Boolean(isInMobileBrowser()) && !isTrustApp();
+  }
+
   function isInstalled(): boolean {
-    // on a mobile browser outside the Trust app, connect opens the page in the Trust app instead
-    return supportTrust() || (Boolean(isInMobileBrowser()) && !isTrustApp());
+    // inside the Trust app the adapter waits for a late injected wallet, outside it on mobile it opens the app
+    return supportTrust() || isTrustApp() || opensTrustApp();
   }
 
   async function connect(): Promise<string> {
@@ -31,11 +37,18 @@ export function useTrustTrx(): TrustInterface {
 
     try {
       await provider.connect();
-      if (provider.address) return provider.address;
-      throw new Error('No address found');
     } catch (error) {
+      // the adapter opened the page in the Trust app instead of connecting
+      if (opensTrustApp()) {
+        await delay(5);
+        throw new AbortError('Forwarded to Trust app');
+      }
+
       handleError(error);
     }
+
+    if (provider.address) return provider.address;
+    throw new Error('No address found');
   }
 
   async function signMessage(address: string, message: string): Promise<string> {

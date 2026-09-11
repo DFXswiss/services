@@ -23,6 +23,7 @@ const mockIsInTronLinkApp = jest.fn();
 const mockCreateCoinTransaction = jest.fn();
 const mockCreateTokenTransaction = jest.fn();
 const mockBroadcastTransaction = jest.fn();
+const mockDelay = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({ AssetType: { COIN: 'Coin', TOKEN: 'Token' } }));
 
@@ -55,9 +56,12 @@ jest.mock('../../tron.hook', () => ({
   }),
 }));
 
+jest.mock('../../../util/utils', () => ({ delay: (...args: unknown[]) => mockDelay(...args) }));
+
 import { Asset, AssetType } from '@dfx.swiss/react';
 import { renderHook } from '@testing-library/react';
 import BigNumber from 'bignumber.js';
+import { AbortError } from '../../../util/abort-error';
 import { useTronLinkTrx } from '../tronlink-trx.hook';
 import { useTrustTrx } from '../trust-trx.hook';
 
@@ -65,6 +69,7 @@ const mobileMatch = ['iPhone'];
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockDelay.mockResolvedValue(undefined);
 
   for (const adapter of [mockTrustAdapter, mockTronLinkAdapter]) {
     adapter.address = null;
@@ -93,7 +98,8 @@ describe.each([
   it.each([
     [`${walletName} is injected into the page`, true, null, false, true],
     [`a mobile browser outside the ${walletName} app, where connect opens that app`, false, mobileMatch, false, true],
-    [`the ${walletName} app without an injected wallet`, false, mobileMatch, true, false],
+    [`the ${walletName} app without an injected wallet`, false, mobileMatch, true, true],
+    [`the ${walletName} app on desktop without an injected wallet`, false, null, true, true],
     [`a desktop browser without ${walletName}`, false, null, false, false],
     ['no browser at all', false, false, false, false],
   ])('for %s', (_case, isSupported, mobileBrowser, isInWalletApp, expected) => {
@@ -106,9 +112,25 @@ describe.each([
 });
 
 describe.each([
-  { name: 'useTrustTrx', useHook: useTrustTrx, walletName: 'Trust', adapter: mockTrustAdapter },
-  { name: 'useTronLinkTrx', useHook: useTronLinkTrx, walletName: 'TronLink', adapter: mockTronLinkAdapter },
-])('$name', ({ useHook, walletName, adapter }) => {
+  {
+    name: 'useTrustTrx',
+    useHook: useTrustTrx,
+    walletName: 'Trust',
+    adapter: mockTrustAdapter,
+    mockSupport: mockSupportTrust,
+    mockInWalletApp: mockIsTrustApp,
+    abortMessage: 'Forwarded to Trust app',
+  },
+  {
+    name: 'useTronLinkTrx',
+    useHook: useTronLinkTrx,
+    walletName: 'TronLink',
+    adapter: mockTronLinkAdapter,
+    mockSupport: mockSupportTronLink,
+    mockInWalletApp: mockIsInTronLinkApp,
+    abortMessage: 'Forwarded to TronLink app',
+  },
+])('$name', ({ useHook, walletName, adapter, mockSupport, mockInWalletApp, abortMessage }) => {
   function setup() {
     return renderHook(() => useHook()).result.current;
   }
@@ -137,15 +159,43 @@ describe.each([
     });
 
     it('rethrows the wallet error message', async () => {
+      mockSupport.mockReturnValue(true);
+      mockIsInMobileBrowser.mockReturnValue(false);
+      mockInWalletApp.mockReturnValue(false);
       adapter.connect.mockRejectedValue(new Error('The user rejected connection.'));
 
       await expect(setup().connect()).rejects.toThrow('The user rejected connection.');
     });
 
     it('uses a generic message when the wallet error has none', async () => {
+      mockSupport.mockReturnValue(true);
+      mockIsInMobileBrowser.mockReturnValue(false);
+      mockInWalletApp.mockReturnValue(false);
       adapter.connect.mockRejectedValue({});
 
       await expect(setup().connect()).rejects.toThrow('An unexpected error occurred.');
+    });
+
+    it(`aborts after forwarding to the ${walletName} app on mobile`, async () => {
+      mockSupport.mockReturnValue(false);
+      mockIsInMobileBrowser.mockReturnValue(mobileMatch);
+      mockInWalletApp.mockReturnValue(false);
+      adapter.connect.mockRejectedValue(new Error('Wallet not found'));
+
+      const connectPromise = setup().connect();
+      await expect(connectPromise).rejects.toBeInstanceOf(AbortError);
+      await expect(connectPromise).rejects.toHaveProperty('message', abortMessage);
+      expect(mockDelay).toHaveBeenCalledWith(5);
+    });
+
+    it(`rethrows when already inside the ${walletName} app on mobile`, async () => {
+      mockSupport.mockReturnValue(false);
+      mockIsInMobileBrowser.mockReturnValue(mobileMatch);
+      mockInWalletApp.mockReturnValue(true);
+      adapter.connect.mockRejectedValue(new Error('The user rejected connection.'));
+
+      await expect(setup().connect()).rejects.toThrow('The user rejected connection.');
+      expect(mockDelay).not.toHaveBeenCalled();
     });
   });
 

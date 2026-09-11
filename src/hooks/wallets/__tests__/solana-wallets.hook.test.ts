@@ -21,6 +21,7 @@ const mockAdapterCreated = jest.fn();
 const mockCreateCoinTransaction = jest.fn();
 const mockCreateTokenTransaction = jest.fn();
 const mockBroadcastTransaction = jest.fn();
+const mockDelay = jest.fn();
 
 jest.mock('@dfx.swiss/react', () => ({ AssetType: { COIN: 'Coin', TOKEN: 'Token' } }));
 
@@ -49,10 +50,13 @@ jest.mock('../../solana.hook', () => ({
   }),
 }));
 
+jest.mock('../../../util/utils', () => ({ delay: (...args: unknown[]) => mockDelay(...args) }));
+
 import { Asset, AssetType } from '@dfx.swiss/react';
 import { WalletReadyState } from '@solana/wallet-adapter-base';
 import { renderHook } from '@testing-library/react';
 import BigNumber from 'bignumber.js';
+import { AbortError } from '../../../util/abort-error';
 import { usePhantom } from '../phantom.hook';
 import { useTrustSol } from '../trust-sol.hook';
 
@@ -60,6 +64,7 @@ import { useTrustSol } from '../trust-sol.hook';
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockDelay.mockResolvedValue(undefined);
 
   for (const adapter of [mockPhantomAdapter, mockTrustAdapter]) {
     adapter.readyState = WalletReadyState.NotDetected;
@@ -93,6 +98,28 @@ describe('useTrustSol isInstalled', () => {
     mockTrustAdapter.readyState = readyState;
 
     expect(renderHook(() => useTrustSol()).result.current.isInstalled()).toBe(expected);
+  });
+});
+
+describe('usePhantom connect redirect', () => {
+  it('aborts after forwarding to the Phantom app when Loadable and no public key', async () => {
+    mockPhantomAdapter.readyState = WalletReadyState.Loadable;
+    mockPhantomAdapter.connect.mockResolvedValue(undefined);
+
+    const connectPromise = renderHook(() => usePhantom()).result.current.connect();
+    await expect(connectPromise).rejects.toBeInstanceOf(AbortError);
+    await expect(connectPromise).rejects.toHaveProperty('message', 'Forwarded to Phantom app');
+    expect(mockDelay).toHaveBeenCalledWith(5);
+  });
+});
+
+describe('useTrustSol connect with Loadable', () => {
+  it('still fails with no public key when Loadable', async () => {
+    mockTrustAdapter.readyState = WalletReadyState.Loadable;
+    mockTrustAdapter.connect.mockResolvedValue(undefined);
+
+    await expect(renderHook(() => useTrustSol()).result.current.connect()).rejects.toThrow('No public key found');
+    expect(mockDelay).not.toHaveBeenCalled();
   });
 });
 

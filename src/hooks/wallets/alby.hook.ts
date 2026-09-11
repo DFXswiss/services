@@ -5,6 +5,7 @@ import { delay } from '../../util/utils';
 
 export interface AlbyInterface {
   isInstalled: () => boolean;
+  isAvailable: () => Promise<boolean>;
   isEnabled: boolean;
   enable: () => Promise<GetInfoResponse>;
   signMessage: (msg: string) => Promise<string>;
@@ -20,6 +21,14 @@ export function useAlby(): AlbyInterface {
 
   function isInstalled() {
     return Boolean(webln());
+  }
+
+  // the extension may inject window.webln shortly after the page loaded
+  async function isAvailable(): Promise<boolean> {
+    return waitForWebln().then(
+      () => true,
+      () => false,
+    );
   }
 
   async function enable(): Promise<GetInfoResponse> {
@@ -75,11 +84,12 @@ export function useAlby(): AlbyInterface {
   return useMemo(
     () => ({
       isInstalled,
+      isAvailable,
       isEnabled,
       enable,
       signMessage,
       sendPayment,
     }),
-    [],
+    [isEnabled],
   );
 }

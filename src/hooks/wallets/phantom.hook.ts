@@ -4,6 +4,8 @@ import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
 import BigNumber from 'bignumber.js';
 import { encodeBase58 } from 'ethers';
 import { useMemo } from 'react';
+import { AbortError } from '../../util/abort-error';
+import { delay } from '../../util/utils';
 import { useSolana } from '../solana.hook';
 
 export interface PhantomInterface {
@@ -32,11 +34,19 @@ export function usePhantom(): PhantomInterface {
 
     try {
       await provider.connect();
-      if (provider.publicKey) return provider.publicKey.toBase58();
-      throw new Error('No public key found');
     } catch (error) {
       handleError(error);
     }
+
+    if (provider.publicKey) return provider.publicKey.toBase58();
+
+    // on iOS Safari the adapter opens the page in the Phantom app instead of connecting
+    if (provider.readyState === WalletReadyState.Loadable) {
+      await delay(5);
+      throw new AbortError('Forwarded to Phantom app');
+    }
+
+    throw new Error('No public key found');
   }
 
   async function signMessage(_address: string, message: string): Promise<string> {
