@@ -14,6 +14,7 @@ jest.mock('../hooks/navigation.hook', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
 }));
 
+import { RealUnitPrizeWalletAlertAsset } from '../dto/realunit-referral.dto';
 import { useRealunitReferral } from '../hooks/realunit-referral.hook';
 
 describe('useRealunitReferral', () => {
@@ -72,6 +73,43 @@ describe('useRealunitReferral', () => {
 
     await expect(result.current.getPrizeWallet()).resolves.toEqual({ address: '0xprize', eth: 1.5, realu: 20 });
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/admin/prize-wallet', method: 'GET' });
+  });
+
+  it('lists prize-wallet alerts', async () => {
+    mockCall.mockResolvedValue([]);
+    const { result } = renderHook(() => useRealunitReferral());
+
+    await result.current.listPrizeWalletAlerts();
+
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/referral/admin/prize-wallet/alerts', method: 'GET' });
+  });
+
+  it('creates a prize-wallet alert', async () => {
+    const { result } = renderHook(() => useRealunitReferral());
+    const body = {
+      asset: RealUnitPrizeWalletAlertAsset.ETH,
+      threshold: 0.05,
+      mail: 'ops@example.com',
+    };
+
+    await result.current.createPrizeWalletAlert(body);
+
+    expect(mockCall).toHaveBeenCalledWith({
+      url: 'realunit/referral/admin/prize-wallet/alerts',
+      method: 'POST',
+      data: body,
+    });
+  });
+
+  it('soft-deletes a prize-wallet alert', async () => {
+    const { result } = renderHook(() => useRealunitReferral());
+
+    await result.current.deletePrizeWalletAlert(4);
+
+    expect(mockCall).toHaveBeenCalledWith({
+      url: 'realunit/referral/admin/prize-wallet/alerts/4/delete',
+      method: 'PUT',
+    });
   });
 
   it('lists promo codes', async () => {

@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import {
+  CreateRealUnitPrizeWalletAlert,
   CreateRealUnitPromoBatch,
   CreateRealUnitPromoCode,
   RealUnitAdminPayout,
   RealUnitPrizeWallet,
+  RealUnitPrizeWalletAlert,
   RealUnitPromoCode,
   RealUnitReferralRelation,
 } from 'src/dto/realunit-referral.dto';
@@ -53,6 +55,28 @@ export function useRealunitReferral() {
     });
   }
 
+  async function listPrizeWalletAlerts(): Promise<RealUnitPrizeWalletAlert[]> {
+    return call<RealUnitPrizeWalletAlert[]>({
+      url: 'realunit/referral/admin/prize-wallet/alerts',
+      method: 'GET',
+    });
+  }
+
+  async function createPrizeWalletAlert(body: CreateRealUnitPrizeWalletAlert): Promise<RealUnitPrizeWalletAlert> {
+    return call<RealUnitPrizeWalletAlert>({
+      url: 'realunit/referral/admin/prize-wallet/alerts',
+      method: 'POST',
+      data: body,
+    });
+  }
+
+  async function deletePrizeWalletAlert(id: number): Promise<void> {
+    return call<void>({
+      url: `realunit/referral/admin/prize-wallet/alerts/${id}/delete`,
+      method: 'PUT',
+    });
+  }
+
   async function getPromoCodes(): Promise<RealUnitPromoCode[]> {
     return call<RealUnitPromoCode[]>({
       url: 'realunit/referral/promo',
@@ -97,6 +121,9 @@ export function useRealunitReferral() {
       rejectRelation,
       createManualPrize,
       getPrizeWallet,
+      listPrizeWalletAlerts,
+      createPrizeWalletAlert,
+      deletePrizeWalletAlert,
       getPromoCodes,
       createPromoCode,
       createPromoCodes,
