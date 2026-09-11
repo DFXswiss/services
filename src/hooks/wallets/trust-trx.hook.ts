@@ -1,5 +1,6 @@
 import { Asset, AssetType } from '@dfx.swiss/react';
-import { TrustAdapter } from '@tronweb3/tronwallet-adapter-trust';
+import { isInMobileBrowser } from '@tronweb3/tronwallet-abstract-adapter';
+import { TrustAdapter, isTrustApp, supportTrust } from '@tronweb3/tronwallet-adapter-trust';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 import { useTron } from '../tron.hook';
@@ -21,7 +22,8 @@ export function useTrustTrx(): TrustInterface {
   }
 
   function isInstalled(): boolean {
-    return (window as any).ethereum?.isTrustWallet;
+    // on a mobile browser outside the Trust app, connect opens the page in the Trust app instead
+    return supportTrust() || (Boolean(isInMobileBrowser()) && !isTrustApp());
   }
 
   async function connect(): Promise<string> {

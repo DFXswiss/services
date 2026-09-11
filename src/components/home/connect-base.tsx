@@ -61,7 +61,7 @@ export function ConnectBase({
     setShowInstallHint(!supported);
     setIsLoading(false);
 
-    if (autoConnect) connect();
+    if (autoConnect && supported) connect();
   }
 
   async function connect(chain?: Blockchain) {

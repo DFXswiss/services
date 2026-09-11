@@ -1,0 +1,205 @@
+// Hooks for the Tron browser wallets (Trust, TronLink): wallet detection, which must match what the
+// adapter's connect can actually reach, and the connect, sign and transaction calls around the adapter.
+
+interface MockTronAdapter {
+  address: string | null;
+  connect: jest.Mock;
+  signMessage: jest.Mock;
+  signTransaction: jest.Mock;
+}
+
+function createMockAdapter(): MockTronAdapter {
+  return { address: null, connect: jest.fn(), signMessage: jest.fn(), signTransaction: jest.fn() };
+}
+
+const mockTrustAdapter = createMockAdapter();
+const mockTronLinkAdapter = createMockAdapter();
+const mockAdapterCreated = jest.fn();
+const mockIsInMobileBrowser = jest.fn();
+const mockSupportTrust = jest.fn();
+const mockIsTrustApp = jest.fn();
+const mockSupportTronLink = jest.fn();
+const mockIsInTronLinkApp = jest.fn();
+const mockCreateCoinTransaction = jest.fn();
+const mockCreateTokenTransaction = jest.fn();
+const mockBroadcastTransaction = jest.fn();
+
+jest.mock('@dfx.swiss/react', () => ({ AssetType: { COIN: 'Coin', TOKEN: 'Token' } }));
+
+jest.mock('@tronweb3/tronwallet-abstract-adapter', () => ({ isInMobileBrowser: () => mockIsInMobileBrowser() }));
+
+// plain constructor functions: CRA resets jest.fn implementations before every test
+jest.mock('@tronweb3/tronwallet-adapter-trust', () => ({
+  TrustAdapter: function TrustAdapter() {
+    mockAdapterCreated('Trust');
+    return mockTrustAdapter;
+  },
+  supportTrust: () => mockSupportTrust(),
+  isTrustApp: () => mockIsTrustApp(),
+}));
+
+jest.mock('@tronweb3/tronwallet-adapter-tronlink', () => ({
+  TronLinkAdapter: function TronLinkAdapter() {
+    mockAdapterCreated('TronLink');
+    return mockTronLinkAdapter;
+  },
+  supportTronLink: () => mockSupportTronLink(),
+  isInTronLinkApp: () => mockIsInTronLinkApp(),
+}));
+
+jest.mock('../../tron.hook', () => ({
+  useTron: () => ({
+    createCoinTransaction: mockCreateCoinTransaction,
+    createTokenTransaction: mockCreateTokenTransaction,
+    broadcastTransaction: mockBroadcastTransaction,
+  }),
+}));
+
+import { Asset, AssetType } from '@dfx.swiss/react';
+import { renderHook } from '@testing-library/react';
+import BigNumber from 'bignumber.js';
+import { useTronLinkTrx } from '../tronlink-trx.hook';
+import { useTrustTrx } from '../trust-trx.hook';
+
+const mobileMatch = ['iPhone'];
+
+beforeEach(() => {
+  jest.clearAllMocks();
+
+  for (const adapter of [mockTrustAdapter, mockTronLinkAdapter]) {
+    adapter.address = null;
+    adapter.connect.mockReset();
+    adapter.signMessage.mockReset();
+    adapter.signTransaction.mockReset();
+  }
+});
+
+describe.each([
+  {
+    name: 'useTrustTrx',
+    useHook: useTrustTrx,
+    walletName: 'Trust',
+    mockSupport: mockSupportTrust,
+    mockInWalletApp: mockIsTrustApp,
+  },
+  {
+    name: 'useTronLinkTrx',
+    useHook: useTronLinkTrx,
+    walletName: 'TronLink',
+    mockSupport: mockSupportTronLink,
+    mockInWalletApp: mockIsInTronLinkApp,
+  },
+])('$name isInstalled', ({ useHook, walletName, mockSupport, mockInWalletApp }) => {
+  it.each([
+    [`${walletName} is injected into the page`, true, null, false, true],
+    [`a mobile browser outside the ${walletName} app, where connect opens that app`, false, mobileMatch, false, true],
+    [`the ${walletName} app without an injected wallet`, false, mobileMatch, true, false],
+    [`a desktop browser without ${walletName}`, false, null, false, false],
+    ['no browser at all', false, false, false, false],
+  ])('for %s', (_case, isSupported, mobileBrowser, isInWalletApp, expected) => {
+    mockSupport.mockReturnValue(isSupported);
+    mockIsInMobileBrowser.mockReturnValue(mobileBrowser);
+    mockInWalletApp.mockReturnValue(isInWalletApp);
+
+    expect(renderHook(() => useHook()).result.current.isInstalled()).toBe(expected);
+  });
+});
+
+describe.each([
+  { name: 'useTrustTrx', useHook: useTrustTrx, walletName: 'Trust', adapter: mockTrustAdapter },
+  { name: 'useTronLinkTrx', useHook: useTronLinkTrx, walletName: 'TronLink', adapter: mockTronLinkAdapter },
+])('$name', ({ useHook, walletName, adapter }) => {
+  function setup() {
+    return renderHook(() => useHook()).result.current;
+  }
+
+  it('creates its adapter once', () => {
+    const { rerender } = renderHook(() => useHook());
+    rerender();
+
+    expect(mockAdapterCreated).toHaveBeenCalledTimes(1);
+    expect(mockAdapterCreated).toHaveBeenCalledWith(walletName);
+  });
+
+  describe('connect', () => {
+    it('returns the address of the connected wallet', async () => {
+      adapter.connect.mockImplementation(async () => {
+        adapter.address = 'TronAddress';
+      });
+
+      await expect(setup().connect()).resolves.toBe('TronAddress');
+    });
+
+    it('fails when the wallet provides no address', async () => {
+      adapter.connect.mockResolvedValue(undefined);
+
+      await expect(setup().connect()).rejects.toThrow('No address found');
+    });
+
+    it('rethrows the wallet error message', async () => {
+      adapter.connect.mockRejectedValue(new Error('The user rejected connection.'));
+
+      await expect(setup().connect()).rejects.toThrow('The user rejected connection.');
+    });
+
+    it('uses a generic message when the wallet error has none', async () => {
+      adapter.connect.mockRejectedValue({});
+
+      await expect(setup().connect()).rejects.toThrow('An unexpected error occurred.');
+    });
+  });
+
+  describe('signMessage', () => {
+    it('returns the signature of the message', async () => {
+      adapter.signMessage.mockResolvedValue('signature');
+
+      await expect(setup().signMessage('TronAddress', 'message')).resolves.toBe('signature');
+      expect(adapter.signMessage).toHaveBeenCalledWith('message');
+    });
+
+    it('rethrows the signing error message', async () => {
+      adapter.signMessage.mockRejectedValue(new Error('Signing rejected'));
+
+      await expect(setup().signMessage('TronAddress', 'message')).rejects.toThrow('Signing rejected');
+    });
+  });
+
+  describe('createTransaction', () => {
+    const amount = new BigNumber(10);
+
+    beforeEach(() => {
+      mockCreateCoinTransaction.mockResolvedValue('coin-transaction');
+      mockCreateTokenTransaction.mockResolvedValue('token-transaction');
+      adapter.signTransaction.mockImplementation(async (transaction: string) => `signed-${transaction}`);
+      mockBroadcastTransaction.mockResolvedValue('transaction-id');
+    });
+
+    it('signs and broadcasts a coin transaction', async () => {
+      const asset = { type: AssetType.COIN } as Asset;
+
+      await expect(setup().createTransaction(amount, asset, 'from', 'to')).resolves.toBe('transaction-id');
+
+      expect(mockCreateCoinTransaction).toHaveBeenCalledWith('from', 'to', amount);
+      expect(mockCreateTokenTransaction).not.toHaveBeenCalled();
+      expect(mockBroadcastTransaction).toHaveBeenCalledWith('signed-coin-transaction');
+    });
+
+    it('signs and broadcasts a token transaction', async () => {
+      const asset = { type: AssetType.TOKEN } as Asset;
+
+      await expect(setup().createTransaction(amount, asset, 'from', 'to')).resolves.toBe('transaction-id');
+
+      expect(mockCreateTokenTransaction).toHaveBeenCalledWith('from', 'to', asset, amount);
+      expect(mockCreateCoinTransaction).not.toHaveBeenCalled();
+      expect(mockBroadcastTransaction).toHaveBeenCalledWith('signed-token-transaction');
+    });
+
+    it('rethrows the transaction error message', async () => {
+      mockBroadcastTransaction.mockRejectedValue(new Error('Transaction expired'));
+
+      await expect(setup().createTransaction(amount, { type: AssetType.COIN } as Asset, 'from', 'to')).rejects.toThrow(
+        'Transaction expired',
+      );
+    });
+  });
+});

@@ -1,5 +1,6 @@
 import { Asset, AssetType } from '@dfx.swiss/react';
-import { TronLinkAdapter } from '@tronweb3/tronwallet-adapter-tronlink';
+import { isInMobileBrowser } from '@tronweb3/tronwallet-abstract-adapter';
+import { TronLinkAdapter, isInTronLinkApp, supportTronLink } from '@tronweb3/tronwallet-adapter-tronlink';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 import { useTron } from '../tron.hook';
@@ -21,7 +22,8 @@ export function useTronLinkTrx(): TronLinkInterface {
   }
 
   function isInstalled(): boolean {
-    return Boolean((window as any).tronLink);
+    // on a mobile browser outside the TronLink app, connect opens the page in the TronLink app instead
+    return supportTronLink() || (Boolean(isInMobileBrowser()) && !isInTronLinkApp());
   }
 
   async function connect(): Promise<string> {

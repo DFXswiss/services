@@ -1,4 +1,5 @@
 import { Asset, AssetType } from '@dfx.swiss/react';
+import { WalletReadyState } from '@solana/wallet-adapter-base';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
 import BigNumber from 'bignumber.js';
 import { encodeBase58 } from 'ethers';
@@ -22,7 +23,8 @@ export function usePhantom(): PhantomInterface {
   }
 
   function isInstalled(): boolean {
-    return (window as any).phantom?.solana.isPhantom;
+    // Loadable on iOS Safari, where connect opens the page in the Phantom app instead
+    return [WalletReadyState.Installed, WalletReadyState.Loadable].includes(wallet.readyState);
   }
 
   async function connect(): Promise<string> {
