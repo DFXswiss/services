@@ -264,6 +264,26 @@ describe('ConnectBase connect', () => {
     expect(mockOnCancel).not.toHaveBeenCalled();
   });
 
+  it('does not log in when getAccount resolves after unmount', async () => {
+    let resolveAccount: (account: { address: string }) => void = () => undefined;
+    mockGetAccount.mockReturnValue(new Promise((resolve) => (resolveAccount = resolve)));
+    const { unmount } = await renderReady();
+
+    act(() => {
+      content().connect();
+    });
+
+    unmount();
+
+    await act(async () => resolveAccount({ address: '0xabc' }));
+
+    expect(mockLogout).not.toHaveBeenCalled();
+    expect(mockLogin).not.toHaveBeenCalled();
+    expect(mockSetSession).not.toHaveBeenCalled();
+    expect(mockSwitchBlockchain).not.toHaveBeenCalled();
+    expect(mockOnLogin).not.toHaveBeenCalled();
+  });
+
   it('switches the wallet and requests the account there on a wallet switch error', async () => {
     mockGetAccount
       .mockRejectedValueOnce(new WalletSwitchError(WalletType.ALBY))
@@ -413,5 +433,68 @@ describe('ConnectBase login', () => {
     expect(screen.queryByText('sign hint')).not.toBeInTheDocument();
     await expect(mockLogin.mock.results[0].value).resolves.toBe('wallet-signature');
     expect(mockOnLogin).toHaveBeenCalled();
+  });
+
+  it('does not update state when signMessage resolves after unmount', async () => {
+    let resolveSignature: (signature: string) => void = () => undefined;
+    mockSignMessage.mockReturnValue(new Promise<string>((resolve) => (resolveSignature = resolve)));
+    mockGetAccount.mockResolvedValue({ address: '0xabc' });
+    mockLogin.mockImplementation((_wallet, address, _chain, sign) => sign(address, 'message'));
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { unmount } = await renderReady();
+
+    act(() => {
+      content().connect();
+    });
+
+    expect(await screen.findByText('sign hint')).toBeInTheDocument();
+
+    unmount();
+
+    await act(async () => resolveSignature('wallet-signature'));
+
+    expect(screen.queryByText('sign hint')).not.toBeInTheDocument();
+    expect(
+      consoleError.mock.calls.some((args) => typeof args[0] === 'string' && args[0].includes('unmounted component')),
+    ).toBe(false);
+    consoleError.mockRestore();
+  });
+
+  it('does not show the sign hint when sign is requested after unmount', async () => {
+    let requestSign: (address: string, message: string) => Promise<string> = () => Promise.resolve('');
+    mockSignMessage.mockResolvedValue('wallet-signature');
+    mockGetAccount.mockResolvedValue({ address: '0xabc' });
+    mockLogin.mockImplementation((_wallet, _address, _chain, sign) => {
+      requestSign = sign;
+      return new Promise(() => undefined);
+    });
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { unmount } = await renderReady();
+
+    act(() => {
+      content().connect();
+    });
+
+    await waitFor(() => expect(mockLogin).toHaveBeenCalled());
+
+    unmount();
+
+    await act(async () => {
+      await requestSign('0xabc', 'message');
+    });
+
+    expect(screen.queryByText('sign hint')).not.toBeInTheDocument();
+    expect(mockSignMessage).toHaveBeenCalledWith(
+      'message',
+      '0xabc',
+      Blockchain.ETHEREUM,
+      undefined,
+      undefined,
+      undefined,
+    );
+    expect(
+      consoleError.mock.calls.some((args) => typeof args[0] === 'string' && args[0].includes('unmounted component')),
+    ).toBe(false);
+    consoleError.mockRestore();
   });
 });

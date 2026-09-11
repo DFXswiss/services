@@ -163,6 +163,22 @@ describe.each([
     expect(mockDelay).toHaveBeenCalledTimes(20);
     expect(mockDelay.mock.calls.every((call) => call[0] === 0.1)).toBe(true);
   });
+
+  it('resolves true when the wallet appears during the last delay', async () => {
+    let calls = 0;
+    mockDelay.mockImplementation(async () => {
+      calls += 1;
+      if (calls === 20) {
+        mockSupport.mockReturnValue(true);
+      }
+    });
+
+    const { result } = renderHook(() => useHook());
+
+    await expect(result.current.isAvailable()).resolves.toBe(true);
+    expect(mockDelay).toHaveBeenCalledTimes(20);
+    expect(mockDelay.mock.calls.every((call) => call[0] === 0.1)).toBe(true);
+  });
 });
 
 describe.each([
@@ -250,6 +266,22 @@ describe.each([
 
       await expect(setup().connect()).rejects.toThrow('The user rejected connection.');
       expect(mockDelay).not.toHaveBeenCalled();
+    });
+
+    it('rethrows the original error when the redirect predicate flips during connect', async () => {
+      mockSupport.mockReturnValue(true);
+      mockIsInMobileBrowser.mockReturnValue(false);
+      mockInWalletApp.mockReturnValue(false);
+
+      adapter.connect.mockImplementation(async () => {
+        mockSupport.mockReturnValue(false);
+        mockIsInMobileBrowser.mockReturnValue(mobileMatch);
+        mockInWalletApp.mockReturnValue(false);
+        throw new Error('The user rejected connection.');
+      });
+
+      await expect(setup().connect()).rejects.toThrow('The user rejected connection.');
+      expect(mockDelay).not.toHaveBeenCalledWith(5);
     });
   });
 

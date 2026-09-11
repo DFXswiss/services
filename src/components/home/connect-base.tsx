@@ -83,8 +83,10 @@ export function ConnectBase({
     if (!usedChain) throw new Error('No blockchain');
 
     await getAccount(wallet, usedChain, activeWallet === wallet)
-      .then((a) => doLogin({ ...a, blockchain: usedChain }))
-      .then(onLogin)
+      .then((a) => (isMounted.current ? doLogin({ ...a, blockchain: usedChain }) : undefined))
+      .then(() => {
+        if (isMounted.current) onLogin();
+      })
       .catch((e) => {
         if (!isMounted.current) return;
 
@@ -140,10 +142,11 @@ export function ConnectBase({
     index?: number,
     addressType?: BitcoinAddressType,
   ): Promise<string> {
-    setShowSignHint(true);
-    return signMessage(message, address, blockchain, accountIndex, index, addressType).finally(() =>
-      setShowSignHint(false),
-    );
+    if (isMounted.current) setShowSignHint(true);
+
+    return signMessage(message, address, blockchain, accountIndex, index, addressType).finally(() => {
+      if (isMounted.current) setShowSignHint(false);
+    });
   }
 
   const contentOverride = isLoading ? (

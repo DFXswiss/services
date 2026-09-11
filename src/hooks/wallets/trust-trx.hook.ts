@@ -41,17 +41,18 @@ export function useTrustTrx(): TrustInterface {
       await delay(0.1);
     }
 
-    return false;
+    return isInstalled();
   }
 
   async function connect(): Promise<string> {
     const provider = getProvider();
+    const opensApp = opensTrustApp();
 
     try {
       await provider.connect();
     } catch (error) {
       // the adapter opened the page in the Trust app instead of connecting
-      if (opensTrustApp()) {
+      if (opensApp) {
         await delay(5);
         throw new AbortError('Forwarded to Trust app');
       }

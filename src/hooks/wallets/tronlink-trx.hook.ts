@@ -41,17 +41,18 @@ export function useTronLinkTrx(): TronLinkInterface {
       await delay(0.1);
     }
 
-    return false;
+    return isInstalled();
   }
 
   async function connect(): Promise<string> {
     const provider = getProvider();
+    const opensApp = opensTronLinkApp();
 
     try {
       await provider.connect();
     } catch (error) {
       // the adapter opened the page in the TronLink app instead of connecting
-      if (opensTronLinkApp()) {
+      if (opensApp) {
         await delay(5);
         throw new AbortError('Forwarded to TronLink app');
       }
