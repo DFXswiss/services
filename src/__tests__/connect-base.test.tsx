@@ -135,6 +135,29 @@ describe('ConnectBase auto-connect', () => {
     expect(screen.getByText('content').parentElement).not.toHaveClass('hidden');
   });
 
+  it('does not update state when isSupported resolves after unmount', async () => {
+    let resolveSupported: (supported: boolean) => void = () => undefined;
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { unmount } = renderBase({
+      autoConnect: true,
+      isSupported: () => new Promise<boolean>((resolve) => (resolveSupported = resolve)),
+    });
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+
+    unmount();
+
+    await act(async () => resolveSupported(false));
+
+    expect(screen.queryByText('install MetaMask')).not.toBeInTheDocument();
+    expect(mockGetAccount).not.toHaveBeenCalled();
+    expect(mockOnSwitch).not.toHaveBeenCalled();
+    expect(
+      consoleError.mock.calls.some((args) => typeof args[0] === 'string' && args[0].includes('unmounted component')),
+    ).toBe(false);
+    consoleError.mockRestore();
+  });
+
   it('does not connect an unsupported wallet and shows the install hint', async () => {
     renderBase({ autoConnect: true, isSupported: () => false });
 
@@ -223,6 +246,22 @@ describe('ConnectBase connect', () => {
     expect(mockOnCancel).toHaveBeenCalled();
     expect(content().isConnecting).toBe(false);
     expect(content().error).toBeUndefined();
+  });
+
+  it('does not call onCancel when AbortError arrives after unmount', async () => {
+    let rejectAccount: (error: Error) => void = () => undefined;
+    mockGetAccount.mockReturnValue(new Promise<never>((_resolve, reject) => (rejectAccount = reject)));
+    const { unmount } = await renderReady();
+
+    act(() => {
+      content().connect();
+    });
+
+    unmount();
+
+    await act(async () => rejectAccount(new AbortError('Forwarded to Phantom app')));
+
+    expect(mockOnCancel).not.toHaveBeenCalled();
   });
 
   it('switches the wallet and requests the account there on a wallet switch error', async () => {

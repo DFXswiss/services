@@ -9,6 +9,7 @@ import { useTron } from '../tron.hook';
 
 export interface TrustInterface {
   isInstalled: () => boolean;
+  isAvailable: () => Promise<boolean>;
   connect: () => Promise<string>;
   signMessage: (address: string, message: string) => Promise<string>;
   createTransaction: (amount: BigNumber, asset: Asset, from: string, to: string) => Promise<string>;
@@ -30,6 +31,17 @@ export function useTrustTrx(): TrustInterface {
   function isInstalled(): boolean {
     // inside the Trust app the adapter waits for a late injected wallet, outside it on mobile it opens the app
     return supportTrust() || isTrustApp() || opensTrustApp();
+  }
+
+  // the extension may inject the wallet shortly after the page loaded; the adapter waits for it too
+  async function isAvailable(): Promise<boolean> {
+    for (let i = 0; i < 20; i++) {
+      if (isInstalled()) return true;
+
+      await delay(0.1);
+    }
+
+    return false;
   }
 
   async function connect(): Promise<string> {
@@ -86,6 +98,7 @@ export function useTrustTrx(): TrustInterface {
   return useMemo(
     () => ({
       isInstalled,
+      isAvailable,
       connect,
       signMessage,
       createTransaction,

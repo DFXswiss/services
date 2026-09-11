@@ -115,6 +115,60 @@ describe.each([
   {
     name: 'useTrustTrx',
     useHook: useTrustTrx,
+    mockSupport: mockSupportTrust,
+    mockInWalletApp: mockIsTrustApp,
+  },
+  {
+    name: 'useTronLinkTrx',
+    useHook: useTronLinkTrx,
+    mockSupport: mockSupportTronLink,
+    mockInWalletApp: mockIsInTronLinkApp,
+  },
+])('$name isAvailable', ({ useHook, mockSupport, mockInWalletApp }) => {
+  beforeEach(() => {
+    mockSupport.mockReturnValue(false);
+    mockIsInMobileBrowser.mockReturnValue(false);
+    mockInWalletApp.mockReturnValue(false);
+  });
+
+  it('resolves true immediately when the wallet is already detected', async () => {
+    mockSupport.mockReturnValue(true);
+
+    const { result } = renderHook(() => useHook());
+
+    await expect(result.current.isAvailable()).resolves.toBe(true);
+    expect(mockDelay).not.toHaveBeenCalled();
+  });
+
+  it('resolves true when the wallet appears after a few delay attempts', async () => {
+    let calls = 0;
+    mockDelay.mockImplementation(async () => {
+      calls += 1;
+      if (calls === 3) {
+        mockSupport.mockReturnValue(true);
+      }
+    });
+
+    const { result } = renderHook(() => useHook());
+
+    await expect(result.current.isAvailable()).resolves.toBe(true);
+    expect(mockDelay).toHaveBeenCalled();
+    expect(mockDelay.mock.calls.every((call) => call[0] === 0.1)).toBe(true);
+  });
+
+  it('resolves false after 20 attempts when the wallet never appears', async () => {
+    const { result } = renderHook(() => useHook());
+
+    await expect(result.current.isAvailable()).resolves.toBe(false);
+    expect(mockDelay).toHaveBeenCalledTimes(20);
+    expect(mockDelay.mock.calls.every((call) => call[0] === 0.1)).toBe(true);
+  });
+});
+
+describe.each([
+  {
+    name: 'useTrustTrx',
+    useHook: useTrustTrx,
     walletName: 'Trust',
     adapter: mockTrustAdapter,
     mockSupport: mockSupportTrust,
