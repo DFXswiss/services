@@ -1,3 +1,5 @@
+jest.mock('../util/client-error', () => ({ reportClientError: jest.fn() }));
+
 import { renderHook, act } from '@testing-library/react';
 import { useStore } from '../hooks/store.hook';
 
@@ -18,10 +20,11 @@ const localStorageMock = (() => {
   };
 })();
 
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 describe('useStore', () => {
   beforeEach(() => {
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
     localStorageMock.clear();
   });
 
@@ -63,6 +66,17 @@ describe('useStore', () => {
       
       expect(result.current.balances.get()).toBe('100.50');
     });
+
+    it('should remove balances', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.balances.set('100.50');
+        result.current.balances.remove();
+      });
+
+      expect(result.current.balances.get()).toBeUndefined();
+    });
   });
 
   describe('language', () => {
@@ -88,6 +102,17 @@ describe('useStore', () => {
         expect(result.current.language.get()).toBe(lang);
       });
     });
+
+    it('should remove language', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.language.set('de');
+        result.current.language.remove();
+      });
+
+      expect(result.current.language.get()).toBeUndefined();
+    });
   });
 
   describe('activeWallet', () => {
@@ -99,6 +124,17 @@ describe('useStore', () => {
       });
       
       expect(result.current.activeWallet.get()).toBe('MetaMask');
+    });
+
+    it('should remove activeWallet', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.activeWallet.set('MetaMask' as any);
+        result.current.activeWallet.remove();
+      });
+
+      expect(result.current.activeWallet.get()).toBeUndefined();
     });
   });
 
@@ -117,6 +153,17 @@ describe('useStore', () => {
 
     it('should return undefined when not set', () => {
       const { result } = renderHook(() => useStore());
+      expect(result.current.infoBanner.get()).toBeUndefined();
+    });
+
+    it('should remove infoBanner', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.infoBanner.set({ message: 'Test banner', type: 'info' } as any);
+        result.current.infoBanner.remove();
+      });
+
       expect(result.current.infoBanner.get()).toBeUndefined();
     });
   });
@@ -150,6 +197,17 @@ describe('useStore', () => {
       
       expect(result.current.queryParams.get()).toEqual(params);
     });
+
+    it('should remove queryParams', () => {
+      const { result } = renderHook(() => useStore());
+
+      act(() => {
+        result.current.queryParams.set({ mode: 'buy', blockchain: 'Bitcoin' } as any);
+        result.current.queryParams.remove();
+      });
+
+      expect(result.current.queryParams.get()).toBeUndefined();
+    });
   });
 
   describe('persistence', () => {
@@ -163,6 +221,72 @@ describe('useStore', () => {
       const { result: result2 } = renderHook(() => useStore());
       
       expect(result2.current.language.get()).toBe('de');
+    });
+  });
+
+  describe('blocked and invalid storage', () => {
+    it('useStore does not throw when window.localStorage getter throws', () => {
+      Object.defineProperty(window, 'localStorage', {
+        get() {
+          throw new DOMException('Denied', 'SecurityError');
+        },
+        configurable: true,
+      });
+
+      expect(() => renderHook(() => useStore())).not.toThrow();
+      const { result } = renderHook(() => useStore());
+      expect(result.current.redirectUri.get()).toBeUndefined();
+      expect(() => result.current.redirectUri.set('x')).not.toThrow();
+      expect(() => result.current.redirectUri.remove()).not.toThrow();
+    });
+
+    it.each(['undefined', '<!doctype html>', '{kaputt'])(
+      'queryParams.get on stored %j returns undefined and removes the key',
+      (raw) => {
+        localStorageMock.setItem('dfx.srv.queryParams', raw);
+        const { result } = renderHook(() => useStore());
+        expect(result.current.queryParams.get()).toBeUndefined();
+        expect(localStorageMock.getItem('dfx.srv.queryParams')).toBeNull();
+      },
+    );
+
+    it('set and setJson do not throw on QuotaExceededError by name', () => {
+      const quota = new Error('quota');
+      quota.name = 'QuotaExceededError';
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: () => null,
+          setItem: () => {
+            throw quota;
+          },
+          removeItem: () => undefined,
+          clear: () => undefined,
+        },
+        configurable: true,
+      });
+
+      const { result } = renderHook(() => useStore());
+      expect(() => result.current.redirectUri.set('x')).not.toThrow();
+      expect(() => result.current.queryParams.set({ mode: 'buy' } as any)).not.toThrow();
+    });
+
+    it('set does not throw on QuotaExceededError DOMException', () => {
+      const quota = new DOMException('Quota exceeded', 'QuotaExceededError');
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: () => null,
+          setItem: () => {
+            throw quota;
+          },
+          removeItem: () => undefined,
+          clear: () => undefined,
+        },
+        configurable: true,
+      });
+
+      const { result } = renderHook(() => useStore());
+      expect(() => result.current.language.set('de')).not.toThrow();
+      expect(() => result.current.infoBanner.set({ message: 'x' } as any)).not.toThrow();
     });
   });
 });

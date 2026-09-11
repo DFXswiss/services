@@ -1,3 +1,5 @@
+import { storageGet, storageRemove, storageSet } from '../util/safe-storage';
+
 export interface SessionStoreItem<T> {
   get: () => T | undefined;
   set: (item: T) => void;
@@ -18,15 +20,15 @@ enum SessionStoreKey {
 
 export function useSessionStore(): SessionStoreInterface {
   function set(key: SessionStoreKey, value: string) {
-    sessionStorage.setItem(key, value);
+    storageSet('sessionStorage', key, value);
   }
 
   function get(key: SessionStoreKey): string | undefined {
-    return sessionStorage.getItem(key) ?? undefined;
+    return storageGet('sessionStorage', key);
   }
 
   function remove(key: SessionStoreKey) {
-    sessionStorage.removeItem(key);
+    storageRemove('sessionStorage', key);
   }
 
   return {
