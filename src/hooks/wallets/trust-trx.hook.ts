@@ -18,7 +18,8 @@ export interface TrustInterface {
 export function useTrustTrx(): TrustInterface {
   const { createCoinTransaction, createTokenTransaction, broadcastTransaction } = useTron();
 
-  const wallet = useMemo(() => new TrustAdapter(), []);
+  // our own isAvailable() poll runs 2 s; the adapter caches its readiness verdict, so its check must outlive ours
+  const wallet = useMemo(() => new TrustAdapter({ checkTimeout: 3000 }), []);
 
   function getProvider() {
     return wallet;

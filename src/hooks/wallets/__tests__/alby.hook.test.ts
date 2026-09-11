@@ -64,6 +64,21 @@ describe('useAlby isAvailable', () => {
     expect(mockDelay).toHaveBeenCalledTimes(10);
     expect(mockDelay.mock.calls.every((call) => call[0] === 0.01)).toBe(true);
   });
+
+  it('resolves true when window.webln appears during the last delay', async () => {
+    let calls = 0;
+    mockDelay.mockImplementation(async () => {
+      calls += 1;
+      if (calls === 10) {
+        setWebln({});
+      }
+    });
+
+    const { result } = renderHook(() => useAlby());
+
+    await expect(result.current.isAvailable()).resolves.toBe(true);
+    expect(mockDelay).toHaveBeenCalledTimes(10);
+  });
 });
 
 describe('useAlby enable', () => {
@@ -94,6 +109,33 @@ describe('useAlby enable', () => {
     await expect(result.current.enable()).rejects.toMatchObject({ message: 'Timeout' });
     rerender();
     expect(result.current.isEnabled).toBe(false);
+  });
+
+  it('succeeds when window.webln appears during the last delay', async () => {
+    const info = { node: { alias: 'getalby.com' } };
+    const enable = jest.fn().mockResolvedValue(undefined);
+    const getInfo = jest.fn().mockResolvedValue(info);
+
+    let calls = 0;
+    mockDelay.mockImplementation(async () => {
+      calls += 1;
+      if (calls === 10) {
+        setWebln({ enable, getInfo });
+      }
+    });
+
+    const { result, rerender } = renderHook(() => useAlby());
+
+    let resolved: unknown;
+    await act(async () => {
+      resolved = await result.current.enable();
+    });
+
+    expect(resolved).toEqual(info);
+    expect(mockDelay).toHaveBeenCalledTimes(10);
+
+    rerender();
+    expect(result.current.isEnabled).toBe(true);
   });
 
   it('maps User rejected to AbortError', async () => {

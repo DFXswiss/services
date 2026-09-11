@@ -31,8 +31,8 @@ jest.mock('@tronweb3/tronwallet-abstract-adapter', () => ({ isInMobileBrowser: (
 
 // plain constructor functions: CRA resets jest.fn implementations before every test
 jest.mock('@tronweb3/tronwallet-adapter-trust', () => ({
-  TrustAdapter: function TrustAdapter() {
-    mockAdapterCreated('Trust');
+  TrustAdapter: function TrustAdapter(config?: unknown) {
+    mockAdapterCreated('Trust', config);
     return mockTrustAdapter;
   },
   supportTrust: () => mockSupportTrust(),
@@ -40,8 +40,8 @@ jest.mock('@tronweb3/tronwallet-adapter-trust', () => ({
 }));
 
 jest.mock('@tronweb3/tronwallet-adapter-tronlink', () => ({
-  TronLinkAdapter: function TronLinkAdapter() {
-    mockAdapterCreated('TronLink');
+  TronLinkAdapter: function TronLinkAdapter(config?: unknown) {
+    mockAdapterCreated('TronLink', config);
     return mockTronLinkAdapter;
   },
   supportTronLink: () => mockSupportTronLink(),
@@ -77,6 +77,16 @@ beforeEach(() => {
     adapter.signMessage.mockReset();
     adapter.signTransaction.mockReset();
   }
+});
+
+describe('adapter construction', () => {
+  it('gives Trust a checkTimeout that outlives isAvailable, and leaves TronLink on the package default', () => {
+    renderHook(() => useTrustTrx());
+    renderHook(() => useTronLinkTrx());
+
+    expect(mockAdapterCreated).toHaveBeenCalledWith('Trust', { checkTimeout: 3000 });
+    expect(mockAdapterCreated).toHaveBeenCalledWith('TronLink', undefined);
+  });
 });
 
 describe.each([
@@ -210,7 +220,7 @@ describe.each([
     rerender();
 
     expect(mockAdapterCreated).toHaveBeenCalledTimes(1);
-    expect(mockAdapterCreated).toHaveBeenCalledWith(walletName);
+    expect(mockAdapterCreated.mock.calls[0][0]).toBe(walletName);
   });
 
   describe('connect', () => {

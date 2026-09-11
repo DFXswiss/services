@@ -70,6 +70,8 @@ export function useAlby(): AlbyInterface {
       await delay(0.01);
     }
 
+    if (isInstalled()) return;
+
     throw new Error('Timeout');
   }
 

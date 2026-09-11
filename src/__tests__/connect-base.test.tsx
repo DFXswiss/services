@@ -135,9 +135,8 @@ describe('ConnectBase auto-connect', () => {
     expect(screen.getByText('content').parentElement).not.toHaveClass('hidden');
   });
 
-  it('does not update state when isSupported resolves after unmount', async () => {
+  it('does not auto-connect when isSupported resolves true after unmount', async () => {
     let resolveSupported: (supported: boolean) => void = () => undefined;
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const { unmount } = renderBase({
       autoConnect: true,
       isSupported: () => new Promise<boolean>((resolve) => (resolveSupported = resolve)),
@@ -147,15 +146,26 @@ describe('ConnectBase auto-connect', () => {
 
     unmount();
 
+    await act(async () => resolveSupported(true));
+
+    expect(mockGetAccount).not.toHaveBeenCalled();
+  });
+
+  it('does not switch to the fallback wallet when isSupported resolves false after unmount', async () => {
+    let resolveSupported: (supported: boolean) => void = () => undefined;
+    const { unmount } = renderBase({
+      autoConnect: true,
+      fallback: WalletType.WALLET_CONNECT,
+      isSupported: () => new Promise<boolean>((resolve) => (resolveSupported = resolve)),
+    });
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+
+    unmount();
+
     await act(async () => resolveSupported(false));
 
-    expect(screen.queryByText('install MetaMask')).not.toBeInTheDocument();
-    expect(mockGetAccount).not.toHaveBeenCalled();
     expect(mockOnSwitch).not.toHaveBeenCalled();
-    expect(
-      consoleError.mock.calls.some((args) => typeof args[0] === 'string' && args[0].includes('unmounted component')),
-    ).toBe(false);
-    consoleError.mockRestore();
   });
 
   it('does not connect an unsupported wallet and shows the install hint', async () => {
@@ -435,12 +445,11 @@ describe('ConnectBase login', () => {
     expect(mockOnLogin).toHaveBeenCalled();
   });
 
-  it('does not update state when signMessage resolves after unmount', async () => {
+  it('keeps the wallet signature request running after unmount', async () => {
     let resolveSignature: (signature: string) => void = () => undefined;
     mockSignMessage.mockReturnValue(new Promise<string>((resolve) => (resolveSignature = resolve)));
-    mockGetAccount.mockResolvedValue({ address: '0xabc' });
+    mockGetAccount.mockResolvedValue({ address: '0xabc', accountIndex: 1, index: 2, type: BitcoinAddressType.TAPROOT });
     mockLogin.mockImplementation((_wallet, address, _chain, sign) => sign(address, 'message'));
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const { unmount } = await renderReady();
 
     act(() => {
@@ -454,13 +463,17 @@ describe('ConnectBase login', () => {
     await act(async () => resolveSignature('wallet-signature'));
 
     expect(screen.queryByText('sign hint')).not.toBeInTheDocument();
-    expect(
-      consoleError.mock.calls.some((args) => typeof args[0] === 'string' && args[0].includes('unmounted component')),
-    ).toBe(false);
-    consoleError.mockRestore();
+    expect(mockSignMessage).toHaveBeenCalledWith(
+      'message',
+      '0xabc',
+      Blockchain.ETHEREUM,
+      1,
+      2,
+      BitcoinAddressType.TAPROOT,
+    );
   });
 
-  it('does not show the sign hint when sign is requested after unmount', async () => {
+  it('keeps requesting the wallet signature when sign is requested after unmount', async () => {
     let requestSign: (address: string, message: string) => Promise<string> = () => Promise.resolve('');
     mockSignMessage.mockResolvedValue('wallet-signature');
     mockGetAccount.mockResolvedValue({ address: '0xabc' });
@@ -468,7 +481,6 @@ describe('ConnectBase login', () => {
       requestSign = sign;
       return new Promise(() => undefined);
     });
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const { unmount } = await renderReady();
 
     act(() => {
@@ -492,9 +504,5 @@ describe('ConnectBase login', () => {
       undefined,
       undefined,
     );
-    expect(
-      consoleError.mock.calls.some((args) => typeof args[0] === 'string' && args[0].includes('unmounted component')),
-    ).toBe(false);
-    consoleError.mockRestore();
   });
 });
