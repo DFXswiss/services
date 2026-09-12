@@ -169,9 +169,10 @@ test.describe('Info banner layout', () => {
     const nav = page.getByText('Support tickets');
     const box = await banner.boundingBox();
     const navBox = await nav.boundingBox();
-    expect(box).toBeTruthy();
-    expect(navBox).toBeTruthy();
-    expect(box!.y).toBeGreaterThan(navBox!.y);
+    if (!box || !navBox) {
+      throw new Error('Expected banner and navigation bounding boxes');
+    }
+    expect(box.y).toBeGreaterThan(navBox.y);
 
     await page.waitForTimeout(500);
     await expect(page).toHaveScreenshot('info-banner-layout-02-tickets.png', {
