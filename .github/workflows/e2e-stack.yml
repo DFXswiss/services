@@ -80,8 +80,8 @@ jobs:
     timeout-minutes: 45
     steps:
       # Event-only: no checkout. Develop PRs without ci:full stop here.
-      # Draft skip is the job `if:` above (see header). Modes are only full
-      # and none; there is no selected/partial spec mapping in this repository.
+      # Modes are only full and none; there is no selected/partial spec
+      # mapping in this repository.
       - name: Determine e2e scope
         id: scope
         env:
@@ -267,8 +267,8 @@ jobs:
         # `if: always()` so artifact collection and teardown still run.
         # --env-file is not optional here: up.sh writes the values it resolved into that file, and
         # a compose run that resolves them differently recreates the API container mid-run.
-        # Draft skip is the job `if:` above. Inside a run, selection is this step
-        # rather than a `paths:` filter or a scope `if:` (see header comment).
+        # Inside a run, selection is this step rather than a `paths:` filter
+        # or a scope `if:` (see header comment).
         env:
           MODE: ${{ steps.scope.outputs.mode }}
           API_CRED: ${{ steps.api_cred.outputs.available }}
