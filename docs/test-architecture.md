@@ -217,6 +217,16 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   It does not prove that a live account has those kyc fields, that those bootstrap
   endpoints return real data, that `updateCallSettings` persists, or that
   Completed/Failed hide the section.
+- **The info-banner layout visual spec answers GET /v1/setting/infoBanner itself.**
+  `e2e/info-banner-layout.spec.ts` fulfils `/v1/setting/infoBanner` with synthetic
+  multilingual copy, fulfils `GET /v1/support/issue` with one fixture ticket, and
+  fulfils the Support bootstrap GETs (`/v1/language`, `/v1/fiat`, `/v1/asset`,
+  `/v1/bankAccount`, `/v1/country`, `/v2/user`). Unmatched `/v1/**` and `/v2/**`
+  calls get `501`. The session is a synthetic unsigned JWT, so a green run does not
+  prove login or token verification. A green run proves the banner renders below
+  the header on `/support` and `/support/tickets`. It does not prove that the API
+  returns that banner copy, that those bootstrap endpoints return real data, or
+  that a live account has that ticket.
 - **Full-stack screen-sync regressions hold delivery of real API responses.**
   `e2e-stack/specs/screen-sync.spec.ts` intercepts `GET /v2/kyc/file/:id` and
   `GET /v1/dashboard/financial/latest`, calls `route.fetch()` against the real API, then
