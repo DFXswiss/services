@@ -9,11 +9,11 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: PR number when kicked by ci-on-ready (empty = manual full run)
+        description: PR number for a manual run (empty = manual full run)
         required: false
         type: string
       base_ref:
-        description: PR base branch when kicked by ci-on-ready
+        description: PR base branch for a manual run
         required: false
         type: string
 

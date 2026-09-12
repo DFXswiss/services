@@ -2,7 +2,7 @@
 # enforce pass, `dfx pr guard` approves held fork runs. This workflow must
 # not dispatch suites, add labels, or convert the pull request back to draft.
 
-name: Request CI on ready
+name: Ready is not a CI switch
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   ensure-ci-label:
-    name: Ensure CI label
+    name: Ready notice
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

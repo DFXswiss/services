@@ -3,17 +3,16 @@
 # Drafts run these jobs. GitHub may hold fork runs as `action_required`.
 # Ready does not start CI. After a fresh A38 enforce pass, `dfx pr guard`
 # approves those waiting initial runs. The merger does not click Approve
-# and run workflows. Never listen to `ready_for_review` here. A
-# human-applied `ci` still starts via `labeled`.
+# and run workflows. Never listen to `ready_for_review` here.
 #
 # When the job runs, develop PRs without the `ci:full` label run only Jest
 # `--findRelatedTests` on changed files under `src/**` and `functions/**`. The
 # full suite runs for PRs into main, a bare workflow_dispatch (empty
 # base_ref), the `ci:full` label, test/build infrastructure changes, unsafe
 # path characters, and any deleted (or renamed-as-deleted) source file under
-# `src/` or `functions/`. A Ready kick with base_ref follows pull-request
-# scope. Lint, Markdown format check, `build:dev`, and `widget:dev` always
-# run in full.
+# `src/` or `functions/`. A workflow_dispatch with base_ref follows
+# pull-request scope. Lint, Markdown format check, `build:dev`, and
+# `widget:dev` always run in full.
 
 name: PR CI
 
@@ -31,11 +30,11 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: PR number when kicked by ci-on-ready (empty = manual full run)
+        description: PR number for a manual run (empty = manual full run)
         required: false
         type: string
       base_ref:
-        description: PR base branch when kicked by ci-on-ready
+        description: PR base branch for a manual run
         required: false
         type: string
 
@@ -45,8 +44,7 @@ permissions:
 env:
   NODE_VERSION: '20.x'
 
-# A new push must cancel the previous run of this PR. Ready dispatch uses
-# pr_number so it shares the group and does not start a sibling suite.
+# A new push must cancel the previous run of this PR.
 concurrency:
   group: pr-ci-${{ github.event.pull_request.number || inputs.pr_number || github.ref }}
   cancel-in-progress: true
@@ -85,8 +83,8 @@ jobs:
             exit 0
           }
 
-          # Ready kick: workflow_dispatch with a non-empty base_ref maps to
-          # pull-request scope. A bare manual dispatch has empty BASE and stays full.
+          # workflow_dispatch with a non-empty base_ref maps to pull-request
+          # scope. A bare manual dispatch has empty BASE and stays full.
           if [ "$EVENT_NAME" = 'workflow_dispatch' ] && [ -n "${BASE:-}" ]; then
             EVENT_NAME=pull_request
           fi
