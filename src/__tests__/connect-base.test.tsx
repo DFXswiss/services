@@ -216,6 +216,19 @@ describe('ConnectBase auto-connect', () => {
     expect(await screen.findByText('install MetaMask')).toBeInTheDocument();
     expect(mockGetAccount).not.toHaveBeenCalled();
   });
+
+  it('treats a synchronously throwing isSupported as unsupported', async () => {
+    renderBase({
+      autoConnect: true,
+      isSupported: () => {
+        throw new Error('no provider');
+      },
+    });
+
+    expect(await screen.findByText('install MetaMask')).toBeInTheDocument();
+    expect(screen.queryByText('loading')).not.toBeInTheDocument();
+    expect(mockGetAccount).not.toHaveBeenCalled();
+  });
 });
 
 describe('ConnectBase connect', () => {
