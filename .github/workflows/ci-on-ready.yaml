@@ -1,6 +1,8 @@
-# Ready adds the `ci` label and workflow_dispatches the heavy suite because
-# GITHUB_TOKEN cannot trigger `labeled`. If `ci` or `ci:full` is already set,
-# this job is skipped — no dispatch, no cancel-in-progress restart.
+# Ready is not a CI switch for forks. Same-repo Ready may still add `ci` and
+# dispatch because GITHUB_TOKEN cannot trigger `labeled`. If `ci` or
+# `ci:full` is already set, this job is skipped — no dispatch, no
+# cancel-in-progress restart. Forks skip this job; `dfx pr guard` approves
+# held fork runs after an A38 enforce pass.
 
 name: Request CI on ready
 
@@ -23,6 +25,7 @@ jobs:
   ensure-ci-label:
     name: Ensure CI label
     if: >
+      github.event.pull_request.head.repo.full_name == github.repository &&
       !contains(github.event.pull_request.labels.*.name, 'ci') &&
       !contains(github.event.pull_request.labels.*.name, 'ci:full')
     runs-on: ubuntu-latest
@@ -81,16 +84,13 @@ jobs:
           }
           trap 'revert_to_draft' EXIT
 
-          # Fork heads cannot be workflow_dispatched from this repo. Do not add
-          # `ci` with GITHUB_TOKEN first: that would skip later Ready runs and
-          # would not fire `labeled`. A human-applied `ci` still starts CI.
-          # Fork runs get a read-only GITHUB_TOKEN, so convert_to_draft in the
-          # EXIT trap may also fail; the job still fails loud. A maintainer
-          # must apply `ci` (and approve the run) rather than rely on revert.
+          # Fork Ready does not dispatch from this job (GITHUB_TOKEN on
+          # pull_request cannot). The A38 guard approves held fork runs
+          # after a fresh enforce pass; Ready is not a CI switch.
           if [ "$HEAD_REPO" != "$THIS_REPO" ]; then
-            echo "error: fork draft — GITHUB_TOKEN cannot workflow_dispatch a fork head." >&2
-            echo "error: a human must apply the ci label so the labeled event starts CI." >&2
-            exit 1
+            trap - EXIT
+            echo "fork PR — this job skips dispatch; A38 guard approves held runs after enforce pass"
+            exit 0
           fi
 
           # Dispatch first. Adding `ci` with GITHUB_TOKEN does not start
