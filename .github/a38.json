@@ -103,7 +103,7 @@
     {
       "workflow": ".github/workflows/ci-on-ready.yaml",
       "job": "ensure-ci-label",
-      "reason": "Same-repo Ready event policy. Not a code test. Ready does not start CI for forks."
+      "reason": "Ready is not a CI switch. The job is a no-op notice. Not a code test."
     },
     {
       "workflow": ".github/workflows/main-from-develop.yml",
