@@ -62,7 +62,13 @@ export function ConnectBase({
   }, []);
 
   async function init() {
-    const supported = await isSupported();
+    let supported = false;
+    try {
+      supported = await isSupported();
+    } catch {
+      supported = false;
+    }
+
     if (!isMounted.current) return;
 
     if (!supported && fallback) onSwitch(fallback);

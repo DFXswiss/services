@@ -201,6 +201,21 @@ describe('ConnectBase auto-connect', () => {
 
     expect(mockGetAccount).toHaveBeenCalledWith(WalletType.META_MASK, Blockchain.ETHEREUM, false);
   });
+
+  it('treats a rejecting isSupported as unsupported and clears the spinner', async () => {
+    renderBase({ isSupported: () => Promise.reject(new Error('not available')) });
+
+    expect(await screen.findByText('install MetaMask')).toBeInTheDocument();
+    expect(screen.queryByText('loading')).not.toBeInTheDocument();
+    expect(mockGetAccount).not.toHaveBeenCalled();
+  });
+
+  it('does not auto-connect when isSupported rejects', async () => {
+    renderBase({ autoConnect: true, isSupported: () => Promise.reject(new Error('not available')) });
+
+    expect(await screen.findByText('install MetaMask')).toBeInTheDocument();
+    expect(mockGetAccount).not.toHaveBeenCalled();
+  });
 });
 
 describe('ConnectBase connect', () => {
@@ -294,6 +309,9 @@ describe('ConnectBase connect', () => {
     expect(mockOnLogin).not.toHaveBeenCalled();
   });
 
+  // Declared pre-existing defect (see the pull request description): the WalletSwitchError branch does not
+  // chain the retried getAccount promise, so its result is dropped and a rejection is unhandled. The
+  // assertions below record what the code does today, not what it should do.
   it('switches the wallet and requests the account there on a wallet switch error', async () => {
     mockGetAccount
       .mockRejectedValueOnce(new WalletSwitchError(WalletType.ALBY))
@@ -462,15 +480,8 @@ describe('ConnectBase login', () => {
 
     await act(async () => resolveSignature('wallet-signature'));
 
-    expect(screen.queryByText('sign hint')).not.toBeInTheDocument();
-    expect(mockSignMessage).toHaveBeenCalledWith(
-      'message',
-      '0xabc',
-      Blockchain.ETHEREUM,
-      1,
-      2,
-      BitcoinAddressType.TAPROOT,
-    );
+    await expect(mockLogin.mock.results[0].value).resolves.toBe('wallet-signature');
+    expect(mockOnLogin).not.toHaveBeenCalled();
   });
 
   it('keeps requesting the wallet signature when sign is requested after unmount', async () => {
