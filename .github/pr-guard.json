@@ -19,18 +19,10 @@
   "lifecycle": {
     "enabled": true,
     "auto_ready": true,
-    "required_workflows": [
-      ".github/workflows/pr.yml"
-    ],
-    "ignored_workflows": [
-      ".github/workflows/a38-guard.yml",
-      ".github/workflows/ci-on-ready.yaml"
-    ],
+    "required_workflows": [".github/workflows/pr.yml"],
+    "ignored_workflows": [".github/workflows/a38-guard.yml", ".github/workflows/ci-on-ready.yaml"],
     "required_checks": {
-      ".github/workflows/pr.yml": [
-        "Build and test",
-        "Full-stack E2E"
-      ]
+      ".github/workflows/pr.yml": ["Lint and Markdown format", "Build and test", "Full-stack E2E"]
     }
   }
 }

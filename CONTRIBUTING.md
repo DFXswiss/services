@@ -57,12 +57,19 @@ at commit `278732be433b97096cf5df48b80c3e581446940a`. Repo job selection:
 `.github/pr-guard.json`. `dfx pr guard` is
 [wired in](https://github.com/DFXswiss/agent/blob/278732be433b97096cf5df48b80c3e581446940a/docs/a38-guard.md#how-fork-github-actions-are-meant-to-work).
 
-Draft pull requests run the PR CI jobs (GitHub may hold fork runs as
+This is a **public** repository. GitHub-hosted runners execute the heavy suite
+(Jest, `build:dev`, `widget:dev`, handbook smoke, full-stack E2E, CodeQL).
+A38 does not replace those GitHub checks. The author report only covers the
+light local jobs in `.github/a38.json` (`npm run lint` and
+`npm run format:md:check`). Do not run Jest, production builds, widget
+builds, handbook Docker, or full-stack E2E locally for A38.
+
+Draft pull requests run the GitHub PR CI jobs (GitHub may hold fork runs as
 `action_required`). Ready does not start CI. After a fresh A38 enforce pass on
 the current head, `dfx pr guard` approves those waiting initial runs, then sets
-Ready when required jobs are green and the PR is mergeable. The merger does not
-click Approve and run workflows. Do not ask a maintainer to approve workflow
-runs. Post the A38 report on the current head.
+Ready when required GitHub jobs are green and the PR is mergeable. The merger
+does not click Approve and run workflows. Do not ask a maintainer to approve
+workflow runs. Post the light A38 report on the current head.
 
 ### Test architecture
 

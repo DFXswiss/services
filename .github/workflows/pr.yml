@@ -1,13 +1,15 @@
 # PR CI: lint, format, tests, and builds.
 #
-# Drafts run these jobs. GitHub may hold fork runs as `action_required`.
-# Ready does not start CI. After a fresh A38 enforce pass, `dfx pr guard`
-# approves those waiting initial runs. The merger does not click Approve
-# and run workflows. Never listen to `ready_for_review` here.
+# This is a public repository. GitHub-hosted runners execute the heavy suite
+# (Jest, build:dev, widget:dev). A38 locally measures only Lint and Markdown
+# format. Drafts run these jobs. GitHub may hold fork runs as
+# `action_required`. Ready does not start CI. After a fresh A38 enforce pass,
+# `dfx pr guard` approves those waiting initial runs. The merger does not
+# click Approve and run workflows. Never listen to `ready_for_review` here.
 #
-# When the job runs, develop PRs without the `ci:full` label run only Jest
-# `--findRelatedTests` on changed files under `src/**` and `functions/**`. The
-# full suite runs for PRs into main, a bare workflow_dispatch (empty
+# When Build and test runs, develop PRs without the `ci:full` label run only
+# Jest `--findRelatedTests` on changed files under `src/**` and `functions/**`.
+# The full suite runs for PRs into main, a bare workflow_dispatch (empty
 # base_ref), the `ci:full` label, test/build infrastructure changes, unsafe
 # path characters, and any deleted (or renamed-as-deleted) source file under
 # `src/` or `functions/`. A workflow_dispatch with base_ref follows
@@ -50,6 +52,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Lint and Markdown format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Check Markdown formatting
+        run: npm run format:md:check
+
   build:
     name: Build and test
     runs-on: ubuntu-latest
@@ -201,12 +225,6 @@ jobs:
 
       - name: Install packages
         run: npm ci
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Check Markdown formatting
-        run: npm run format:md:check
 
       # One step for all three scope modes: the step always runs so the check cannot be
       # defeated by a skip. Full suite for main/dispatch/ci:full/infra/unsafe/deleted;

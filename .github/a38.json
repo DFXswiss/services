@@ -5,11 +5,11 @@
   "mode": "enforce",
   "jobs": [
     {
-      "id": "build",
-      "name": "Build and test",
-      "timeout_s": 1800,
+      "id": "lint",
+      "name": "Lint and Markdown format",
+      "timeout_s": 600,
       "workflow": ".github/workflows/pr.yml",
-      "job": "build",
+      "job": "lint",
       "executor": {
         "adapter": "commands",
         "config": {
@@ -27,49 +27,8 @@
           },
           "steps": [
             ["npm", "run", "lint"],
-            ["npm", "run", "format:md:check"],
-            ["npm", "test"],
-            ["npm", "run", "build:dev"],
-            ["npm", "run", "widget:dev"]
+            ["npm", "run", "format:md:check"]
           ]
-        }
-      }
-    },
-    {
-      "id": "handbook-build-and-smoke",
-      "name": "Build handbook image + container smoke",
-      "timeout_s": 1500,
-      "workflow": ".github/workflows/handbook-check.yaml",
-      "job": "build-and-smoke",
-      "executor": {
-        "adapter": "http-smoke",
-        "config": {
-          "dockerfile": "Dockerfile.handbook",
-          "platform": "linux/arm64",
-          "build_args": {
-            "GIT_SHA": "{head}"
-          },
-          "container_port": 8080,
-          "credentials": {
-            "user_env": "HANDBOOK_USER",
-            "password_env": "HANDBOOK_PASSWORD",
-            "user": "ci",
-            "password": "ci"
-          },
-          "health": {
-            "path": "/healthz",
-            "contains": "OK"
-          },
-          "root_path": "/",
-          "manifest": {
-            "path": "/usr/share/nginx/html/manifest.json",
-            "artifacts_key": "artifacts",
-            "category_key": "category",
-            "path_key": "outputPath",
-            "index": "index.html",
-            "pdf_category": "pdfs"
-          },
-          "lock": "docker-heavy"
         }
       }
     }
@@ -77,13 +36,18 @@
   "exclusions": [
     {
       "workflow": ".github/workflows/pr.yml",
+      "job": "build",
+      "reason": "GitHub-hosted PR suite on public runners (Jest, build:dev, widget:dev). This public repository does not measure that work locally."
+    },
+    {
+      "workflow": ".github/workflows/pr.yml",
       "job": "e2e",
-      "reason": "Reusable-workflow caller of e2e-stack.yml. Classifying both would double-count one suite. The callee is GitHub-only (see e2e-stack.yml / e2e)."
+      "reason": "Reusable-workflow caller of e2e-stack.yml. Classifying both would double-count one suite. The callee is GitHub-hosted (see e2e-stack.yml / e2e)."
     },
     {
       "workflow": ".github/workflows/e2e-stack.yml",
       "job": "e2e",
-      "reason": "GitHub-hosted full-stack E2E that needs a repository secret to check out the companion API. Fork pull requests never receive that secret, so the job records mode=none. Not a local author-measured suite."
+      "reason": "GitHub-hosted full-stack E2E on public runners. Not a local author-measured job."
     },
     {
       "workflow": ".github/workflows/e2e-images.yml",
@@ -126,9 +90,14 @@
       "reason": "Deploy to PRD (Cloudflare Pages). Production/credentials path; not local author CI."
     },
     {
+      "workflow": ".github/workflows/handbook-check.yaml",
+      "job": "build-and-smoke",
+      "reason": "GitHub-hosted handbook image build and container smoke on public runners. Not a local author-measured job."
+    },
+    {
       "workflow": ".github/workflows/handbook-deploy.yaml",
       "job": "build-and-deploy",
-      "reason": "Handbook deploy. Deploy path; local equivalent is handbook-build-and-smoke."
+      "reason": "Handbook deploy. Deploy path; GitHub-hosted equivalent is handbook-check.yaml / build-and-smoke."
     },
     {
       "workflow": ".github/workflows/a38-guard.yml",
