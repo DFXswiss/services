@@ -56,6 +56,8 @@ export default function ComplianceScreen(): JSX.Element {
   const [pendingTransactions, setPendingTransactions] = useState<PendingTransactionInfo[]>([]);
   const [callQueues, setCallQueues] = useState<CallQueueSummaryEntry[]>([]);
   const latestRequest = useRef(0);
+  const getTaggedUsersRef = useRef(getTaggedUsers);
+  getTaggedUsersRef.current = getTaggedUsers;
 
   const paramSearch = new URLSearchParams(query).get('search') || undefined;
   const paramTag = new URLSearchParams(query).get('tag') || undefined;
@@ -93,9 +95,12 @@ export default function ComplianceScreen(): JSX.Element {
     [navigate, search],
   );
 
+  const onSubmitRef = useRef(onSubmit);
+  onSubmitRef.current = onSubmit;
+
   useEffect(() => {
-    if (paramSearch) onSubmit({ key: paramSearch });
-  }, [paramSearch, onSubmit]);
+    if (paramSearch) onSubmitRef.current({ key: paramSearch });
+  }, [paramSearch]);
 
   useEffect(() => {
     if (paramSearch) return;
@@ -112,11 +117,12 @@ export default function ComplianceScreen(): JSX.Element {
     setError(undefined);
     setSearchResult(undefined);
 
-    getTaggedUsers(paramTag)
+    getTaggedUsersRef
+      .current(paramTag)
       .then((result) => request === latestRequest.current && setSearchResult(result))
       .catch((e) => request === latestRequest.current && setError(e.message))
       .finally(() => request === latestRequest.current && setIsLoading(false));
-  }, [paramTag, paramSearch, getTaggedUsers]);
+  }, [paramTag, paramSearch]);
 
   function handleDownloadUserData(userId: number) {
     setDownloadingUserId(userId);

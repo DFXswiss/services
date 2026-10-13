@@ -5,7 +5,7 @@
 
 const mockUseComplianceGuard = jest.fn();
 const mockNavigate = jest.fn();
-const mockSearch = jest.fn();
+let mockSearch = jest.fn();
 const mockDownloadUserFiles = jest.fn();
 const mockGetPendingReviews = jest.fn();
 const mockGetPendingTransactions = jest.fn();
@@ -189,6 +189,7 @@ describe('ComplianceScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockLocation.search = '';
+    mockSearch = jest.fn();
     mockSearch.mockResolvedValue(result());
     mockDownloadUserFiles.mockResolvedValue(undefined);
     mockGetPendingReviews.mockResolvedValue([{ id: 1 }]);
@@ -344,5 +345,24 @@ describe('ComplianceScreen', () => {
 
     expect(screen.getByText('New Name')).toBeInTheDocument();
     expect(screen.queryByText('Old Name')).not.toBeInTheDocument();
+  });
+
+  it('does not rerun the URL search when the search function identity changes', async () => {
+    mockLocation.search = '?search=foo';
+    mockSearch.mockResolvedValue(result({ type: 'Name', userDatas: [user({ id: 1, name: 'Fay F' })] }));
+
+    const { rerender } = render(<ComplianceScreen />);
+    await waitFor(() => expect(screen.getByTestId('pending-reviews')).toHaveTextContent('1'));
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledWith('foo'));
+    await waitFor(() => expect(screen.getByText('Fay F')).toBeInTheDocument());
+    expect(mockSearch).toHaveBeenCalledTimes(1);
+
+    const originalSearch = mockSearch;
+    mockSearch = jest.fn().mockResolvedValue(result({ type: 'Name', userDatas: [user({ id: 1, name: 'Fay F' })] }));
+    rerender(<ComplianceScreen />);
+
+    expect(originalSearch).toHaveBeenCalledTimes(1);
+    expect(mockSearch).not.toHaveBeenCalled();
+    expect(screen.getByText('Fay F')).toBeInTheDocument();
   });
 });

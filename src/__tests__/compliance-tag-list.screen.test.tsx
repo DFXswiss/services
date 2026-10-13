@@ -5,7 +5,7 @@
 const mockUseComplianceGuard = jest.fn();
 const mockNavigate = jest.fn();
 const mockSearch = jest.fn();
-const mockGetTaggedUsers = jest.fn();
+let mockGetTaggedUsers = jest.fn();
 const mockDownloadUserFiles = jest.fn();
 const mockGetPendingReviews = jest.fn();
 const mockGetPendingTransactions = jest.fn();
@@ -171,6 +171,7 @@ describe('ComplianceScreen tag list', () => {
     jest.clearAllMocks();
     mockLocation.search = '';
     mockSearch.mockResolvedValue(result({ type: 'Name' }));
+    mockGetTaggedUsers = jest.fn();
     mockGetTaggedUsers.mockResolvedValue(result());
     mockDownloadUserFiles.mockResolvedValue(undefined);
     mockGetPendingReviews.mockResolvedValue([{ id: 1 }]);
@@ -370,5 +371,23 @@ describe('ComplianceScreen tag list', () => {
     rerender(<ComplianceScreen />);
 
     await waitFor(() => expect(screen.queryByText('Tag not found')).not.toBeInTheDocument());
+  });
+
+  it('does not reload tagged users when getTaggedUsers identity changes', async () => {
+    mockLocation.search = '?tag=abc';
+    mockGetTaggedUsers.mockResolvedValue(result({ userDatas: [user({ id: 1, name: 'Ada A' })] }));
+
+    const { rerender } = await renderScreen();
+    await waitFor(() => expect(screen.getByText('Ada A')).toBeInTheDocument());
+    expect(mockGetTaggedUsers).toHaveBeenCalledTimes(1);
+    expect(mockGetTaggedUsers).toHaveBeenCalledWith('abc');
+
+    const originalGetTaggedUsers = mockGetTaggedUsers;
+    mockGetTaggedUsers = jest.fn().mockResolvedValue(result({ userDatas: [user({ id: 1, name: 'Ada A' })] }));
+    rerender(<ComplianceScreen />);
+
+    expect(originalGetTaggedUsers).toHaveBeenCalledTimes(1);
+    expect(mockGetTaggedUsers).not.toHaveBeenCalled();
+    expect(screen.getByText('Ada A')).toBeInTheDocument();
   });
 });
