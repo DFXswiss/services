@@ -52,11 +52,15 @@ export function useAddressReactivation(): {
     async (address: string): Promise<void> => {
       // The deletion flag and reactivate route are not part of the published SDK yet, so the route uses the
       // generic call.
+      const requestToken = getAuthToken();
       const { accessToken } = await call<{ accessToken: string }>({
         url: `user/addresses/${encodeURIComponent(address)}/reactivate`,
         version: 'v2',
         method: 'POST',
       });
+      // The session was left or replaced while the request was running; its token must not come back.
+      if (getAuthToken() !== requestToken) return;
+
       updateSession(accessToken);
       setReactivatedToken(accessToken);
 
@@ -71,7 +75,7 @@ export function useAddressReactivation(): {
         window.location.reload();
       }
     },
-    [call, reloadUser, updateSession],
+    [call, getAuthToken, reloadUser, updateSession],
   );
 
   return useMemo(() => ({ deactivatedAddress, reactivateAddress }), [deactivatedAddress, reactivateAddress]);

@@ -20,7 +20,7 @@ const mockUseApiSession = jest.fn();
 const mockUseAuthContext = jest.fn();
 const mockUseUserContext = jest.fn();
 
-let mockAuthToken = 'old-token';
+let mockAuthToken: string | undefined = 'old-token';
 let mockUser: { activeAddress?: { address: string; isDeleted?: boolean } } | undefined;
 
 jest.mock('@dfx.swiss/react', () => ({
@@ -250,6 +250,31 @@ describe('useAddressReactivation', () => {
     expect(mockReloadUser).toHaveBeenCalledTimes(1);
     expect(reload).not.toHaveBeenCalled();
     expect(result.current.deactivatedAddress).toBeUndefined();
+  });
+
+  it.each<{ description: string; token: string | undefined }>([
+    { description: 'the user logged out', token: undefined },
+    { description: 'the session switched', token: 'other-token' },
+  ])('drops a late response when $description during the request', async ({ token }) => {
+    let resolveCall: (value: { accessToken: string }) => void = () => undefined;
+    mockCall.mockImplementation(() => new Promise((resolve) => (resolveCall = resolve)));
+    const { result } = renderHook(() => useAddressReactivation());
+
+    let request: Promise<void> = Promise.resolve();
+    act(() => {
+      request = result.current.reactivateAddress('0xabc');
+    });
+    mockAuthToken = token;
+    await act(async () => {
+      resolveCall({ accessToken: 'new-token' });
+      await request;
+    });
+
+    expect(mockCall).toHaveBeenCalledTimes(1);
+    expect(mockUpdateSession).not.toHaveBeenCalled();
+    expect(mockReloadUser).not.toHaveBeenCalled();
+    expect(reload).not.toHaveBeenCalled();
+    expect(mockGetAuthToken()).toBe(token);
   });
 
   it('URL-encodes reserved characters in the address', async () => {
