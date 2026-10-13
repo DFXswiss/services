@@ -1,20 +1,14 @@
-import { test, expect, APIRequestContext, Page, Route } from '@playwright/test';
-import * as fs from 'fs';
-import * as path from 'path';
-import { createTestCredentials } from './test-wallet';
+import { expect, Page, Route, test } from '@playwright/test';
 
 /**
  * E2E Visual Regression Tests: Compliance Tag list page
  *
  * Route: /compliance?tag=…
  *
- * Auth is REAL (same admin-token flow as compliance-recommendation-graph.spec.ts): the api must be
- * reachable for `/v1/auth` and the frontend's own user/role fetch.
- *
- * Data is MOCKED with synthetic fixtures via page.route(...), so the baselines are deterministic AND
- * contain NO real production data. Only the tagged-users endpoint is intercepted:
- *   - GET support/tag/<tag>
- * Everything else (the real auth/role/user fetch) is passed through via route.continue().
+ * Auth and data are fully synthetic: a JWT with role Compliance is built in the test, and every
+ * `/v1` and `/v2` request is answered by the test. No backend is needed. Unexpected requests are
+ * collected and asserted empty, so baselines stay reproducible and no request leaves the browser
+ * to an API.
  *
  * Synthetic fixtures (fake ids 9100+, fake names, example.com mails):
  *   - Personal KYC level 50, kycStatus Completed
@@ -25,43 +19,7 @@ import { createTestCredentials } from './test-wallet';
  * Not-found test returns HTTP 404 {"statusCode":404,"message":"Tag not found"}.
  */
 
-const API_URL = process.env.REACT_APP_API_URL! + '/v1';
-
-/**
- * Read ADMIN_SEED from the API .env file
- */
-function getAdminSeed(): string {
-  const apiEnvPath = path.join(__dirname, '../../api/.env');
-  if (!fs.existsSync(apiEnvPath)) {
-    throw new Error(`API .env file not found at ${apiEnvPath}. Run 'npm run setup' in the API directory first.`);
-  }
-  const content = fs.readFileSync(apiEnvPath, 'utf8');
-  const match = content.match(/^ADMIN_SEED=(.*)$/m);
-  if (!match || !match[1]) {
-    throw new Error('ADMIN_SEED not found in API .env file. Run "npm run setup" in the API directory first.');
-  }
-  return match[1];
-}
-
-/**
- * Authenticate with admin credentials
- */
-async function getAdminAuth(request: APIRequestContext): Promise<string> {
-  const adminSeed = getAdminSeed();
-  const credentials = await createTestCredentials(adminSeed);
-
-  const response = await request.post(`${API_URL}/auth`, {
-    data: credentials,
-  });
-
-  if (!response.ok()) {
-    const body = await response.text().catch(() => 'unknown');
-    throw new Error(`Admin auth failed: ${response.status()} - ${body}`);
-  }
-
-  const data = await response.json();
-  return data.accessToken;
-}
+const STAFF_ACCOUNT = 9001;
 
 // ---------------------------------------------------------------------------
 // Synthetic fixtures (mirror ComplianceSearchResult / UserSearchResult)
@@ -126,45 +84,110 @@ const EMPTY_FIXTURE: TagListFixture = {
   bankTx: [],
 };
 
-const TAG_RE = /\/v1\/support\/tag\//;
+function jwt(): string {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
+    account: STAFF_ACCOUNT,
+    user: STAFF_ACCOUNT,
+    role: 'Compliance',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  })}.synthetic`;
+}
 
-async function installTagRoute(page: Page, body: unknown, status = 200): Promise<void> {
-  await page.route('**/v1/**', async (route: Route) => {
-    const url = route.request().url();
+async function fulfillJson(route: Route, body: unknown, status = 200): Promise<void> {
+  await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+}
 
-    if (TAG_RE.test(url) && route.request().method() === 'GET') {
-      await route.fulfill({
-        status,
-        contentType: 'application/json',
-        body: JSON.stringify(body),
+async function installSyntheticApi(
+  page: Page,
+  tagResponse: { status: number; body: unknown },
+): Promise<{ unexpectedRequests: string[]; seenGets: string[] }> {
+  const unexpectedRequests: string[] = [];
+  const seenGets: string[] = [];
+
+  await page.route('**/v1/**', async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (request.method() === 'GET') seenGets.push(path);
+
+    if (request.method() === 'GET' && path === '/v1/support/tag/example') {
+      await fulfillJson(route, tagResponse.body, tagResponse.status);
+      return;
+    }
+
+    if (
+      request.method() === 'GET' &&
+      ['/v1/support/pending-reviews', '/v1/support/pending-transactions', '/v1/support/call-queues'].includes(path)
+    ) {
+      await fulfillJson(route, []);
+      return;
+    }
+
+    if (
+      request.method() === 'GET' &&
+      ['/v1/language', '/v1/fiat', '/v1/asset', '/v1/bankAccount', '/v1/country'].includes(path)
+    ) {
+      await fulfillJson(route, []);
+      return;
+    }
+
+    if (request.method() === 'GET' && path === '/v1/setting/infoBanner') {
+      await fulfillJson(route, null);
+      return;
+    }
+
+    unexpectedRequests.push(`${request.method()} ${path}`);
+    await route.fulfill({
+      status: 501,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'Unexpected test request' }),
+    });
+  });
+
+  await page.route('**/v2/**', async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+
+    if (request.method() === 'GET' && path === '/v2/user') {
+      await fulfillJson(route, {
+        id: STAFF_ACCOUNT,
+        activeAddress: { address: '0x0000000000000000000000000000000000000001' },
+        addresses: [],
+        kyc: { level: 50, status: 'Completed' },
+        language: { id: 1, name: 'English', symbol: 'EN' },
       });
       return;
     }
 
-    // everything else (auth, role, user) hits the real api
-    await route.continue();
+    unexpectedRequests.push(`${request.method()} ${path}`);
+    await route.fulfill({
+      status: 501,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'Unexpected test request' }),
+    });
   });
+
+  return { unexpectedRequests, seenGets };
 }
 
-async function gotoList(page: Page, token: string): Promise<void> {
-  await page.goto(`/compliance?tag=example&session=${token}`);
+async function gotoList(page: Page): Promise<void> {
+  await page.goto(`/compliance?tag=example&session=${jwt()}`);
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1000);
 }
 
 test.describe('Compliance Tag list - Visual Regression Tests', () => {
-  let token: string;
-
-  test.beforeAll(async ({ request }) => {
-    token = await getAdminAuth(request);
-  });
+  test.use({ timezoneId: 'Europe/Zurich' });
 
   test('1. loaded list shows tagged customers including a red Check row', async ({ page }) => {
-    await installTagRoute(page, LOADED_FIXTURE);
+    const { unexpectedRequests, seenGets } = await installSyntheticApi(page, {
+      status: 200,
+      body: LOADED_FIXTURE,
+    });
 
-    await gotoList(page, token);
+    await gotoList(page);
 
-    await expect(page.getByRole('table')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Customers' })).toBeVisible();
     await expect(page.getByText('Ada Example')).toBeVisible();
     await expect(page.getByText('Bea Company')).toBeVisible();
     await expect(page.getByText('Cara Check')).toBeVisible();
@@ -174,12 +197,18 @@ test.describe('Compliance Tag list - Visual Regression Tests', () => {
       fullPage: true,
       maxDiffPixels: 5000,
     });
+
+    expect(seenGets).toContain('/v1/support/tag/example');
+    expect(unexpectedRequests).toEqual([]);
   });
 
   test('2. empty state', async ({ page }) => {
-    await installTagRoute(page, EMPTY_FIXTURE);
+    const { unexpectedRequests, seenGets } = await installSyntheticApi(page, {
+      status: 200,
+      body: EMPTY_FIXTURE,
+    });
 
-    await gotoList(page, token);
+    await gotoList(page);
 
     await expect(page.getByText('No entries found')).toBeVisible();
 
@@ -187,12 +216,18 @@ test.describe('Compliance Tag list - Visual Regression Tests', () => {
       fullPage: true,
       maxDiffPixels: 5000,
     });
+
+    expect(seenGets).toContain('/v1/support/tag/example');
+    expect(unexpectedRequests).toEqual([]);
   });
 
   test('3. unknown tag', async ({ page }) => {
-    await installTagRoute(page, { statusCode: 404, message: 'Tag not found' }, 404);
+    const { unexpectedRequests, seenGets } = await installSyntheticApi(page, {
+      status: 404,
+      body: { statusCode: 404, message: 'Tag not found' },
+    });
 
-    await gotoList(page, token);
+    await gotoList(page);
 
     await expect(page.getByText('Tag not found')).toBeVisible();
 
@@ -200,5 +235,8 @@ test.describe('Compliance Tag list - Visual Regression Tests', () => {
       fullPage: true,
       maxDiffPixels: 5000,
     });
+
+    expect(seenGets).toContain('/v1/support/tag/example');
+    expect(unexpectedRequests).toEqual([]);
   });
 });
