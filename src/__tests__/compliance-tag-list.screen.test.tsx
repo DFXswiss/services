@@ -344,4 +344,31 @@ describe('ComplianceScreen tag list', () => {
 
     expect(screen.queryByText('Al A')).not.toBeInTheDocument();
   });
+
+  it('clears tagged users from the table when the tag query is removed', async () => {
+    mockLocation.search = '?tag=abc';
+    mockGetTaggedUsers.mockResolvedValue(result({ userDatas: [user({ id: 1, name: 'Ada A' })] }));
+
+    const { rerender } = await renderScreen();
+    await waitFor(() => expect(screen.getByText('Ada A')).toBeInTheDocument());
+
+    mockLocation.search = '';
+    rerender(<ComplianceScreen />);
+
+    await waitFor(() => expect(screen.queryByText('Ada A')).not.toBeInTheDocument());
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('clears the tag error when the tag query is removed', async () => {
+    mockLocation.search = '?tag=abc';
+    mockGetTaggedUsers.mockRejectedValue(new Error('Tag not found'));
+
+    const { rerender } = await renderScreen();
+    await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('Tag not found'));
+
+    mockLocation.search = '';
+    rerender(<ComplianceScreen />);
+
+    await waitFor(() => expect(screen.queryByText('Tag not found')).not.toBeInTheDocument());
+  });
 });

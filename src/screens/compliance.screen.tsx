@@ -103,6 +103,8 @@ export default function ComplianceScreen(): JSX.Element {
     const request = ++latestRequest.current;
     if (!paramTag) {
       setIsLoading(false);
+      setError(undefined);
+      setSearchResult(undefined);
       return;
     }
 
