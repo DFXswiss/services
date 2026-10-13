@@ -41,7 +41,8 @@ export default function ComplianceScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { search, downloadUserFiles, getPendingReviews, getPendingTransactions, getCallQueues } = useCompliance();
+  const { search, downloadUserFiles, getPendingReviews, getPendingTransactions, getCallQueues, getTaggedUsers } =
+    useCompliance();
   const { navigate } = useNavigation();
   const { search: query } = useLocation();
 
@@ -56,6 +57,7 @@ export default function ComplianceScreen(): JSX.Element {
   const [callQueues, setCallQueues] = useState<CallQueueSummaryEntry[]>([]);
 
   const paramSearch = new URLSearchParams(query).get('search') || undefined;
+  const paramTag = new URLSearchParams(query).get('tag') || undefined;
 
   useEffect(() => {
     Promise.all([getPendingReviews(), getPendingTransactions(), getCallQueues()])
@@ -92,6 +94,19 @@ export default function ComplianceScreen(): JSX.Element {
   useEffect(() => {
     if (paramSearch) onSubmit({ key: paramSearch });
   }, [paramSearch, onSubmit]);
+
+  useEffect(() => {
+    if (!paramTag || paramSearch) return;
+
+    setIsLoading(true);
+    setError(undefined);
+    setSearchResult(undefined);
+
+    getTaggedUsers(paramTag)
+      .then(setSearchResult)
+      .catch((e) => setError(e.message))
+      .finally(() => setIsLoading(false));
+  }, [paramTag]);
 
   function handleDownloadUserData(userId: number) {
     setDownloadingUserId(userId);
