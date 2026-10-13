@@ -33,7 +33,8 @@ export function requiresSessionAddress(pathname: string, search: string): boolea
 
 export function useAddressReactivation(): {
   deactivatedAddress?: string;
-  reactivateAddress: (address: string) => Promise<void>;
+  // Resolves to false when the response was dropped because the session changed during the request.
+  reactivateAddress: (address: string) => Promise<boolean>;
 } {
   const { call } = useApi();
   const { updateSession } = useApiSession();
@@ -49,7 +50,7 @@ export function useAddressReactivation(): {
     activeAddress?.isDeleted === true && getAuthToken() !== reactivatedToken ? activeAddress.address : undefined;
 
   const reactivateAddress = useCallback(
-    async (address: string): Promise<void> => {
+    async (address: string): Promise<boolean> => {
       // The deletion flag and reactivate route are not part of the published SDK yet, so the route uses the
       // generic call.
       const requestToken = getAuthToken();
@@ -59,7 +60,7 @@ export function useAddressReactivation(): {
         method: 'POST',
       });
       // The session was left or replaced while the request was running; its token must not come back.
-      if (getAuthToken() !== requestToken) return;
+      if (getAuthToken() !== requestToken) return false;
 
       updateSession(accessToken);
       setReactivatedToken(accessToken);
@@ -74,6 +75,7 @@ export function useAddressReactivation(): {
       } else {
         window.location.reload();
       }
+      return true;
     },
     [call, getAuthToken, reloadUser, updateSession],
   );

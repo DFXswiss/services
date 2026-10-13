@@ -19,10 +19,14 @@ jest.mock('@dfx.swiss/react-components', () => ({
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { DeactivatedAddress } from 'src/components/deactivated-address';
 
-function deferred(): { promise: Promise<void>; resolve: () => void; reject: (reason: unknown) => void } {
-  let resolve = () => undefined;
+function deferred(): {
+  promise: Promise<boolean>;
+  resolve: (applied: boolean) => void;
+  reject: (reason: unknown) => void;
+} {
+  let resolve = (_applied: boolean) => undefined;
   let reject = (_reason: unknown) => undefined;
-  const promise = new Promise<void>((resolvePromise, rejectPromise) => {
+  const promise = new Promise<boolean>((resolvePromise, rejectPromise) => {
     resolve = resolvePromise;
     reject = rejectPromise;
   });
@@ -31,7 +35,7 @@ function deferred(): { promise: Promise<void>; resolve: () => void; reject: (rea
 
 describe('DeactivatedAddress', () => {
   it('shows the message and an enabled reactivation button', () => {
-    render(<DeactivatedAddress address="0xabc" onReactivate={jest.fn()} />);
+    render(<DeactivatedAddress address="0xabc" onReactivate={jest.fn().mockResolvedValue(true)} />);
 
     expect(screen.getByText('This address is deactivated in DFX.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reactivate address' })).toBeEnabled();
@@ -58,16 +62,29 @@ describe('DeactivatedAddress', () => {
     const button = screen.getByRole('button', { name: 'Reactivate address' });
 
     fireEvent.click(button);
-    await act(async () => request.resolve());
+    await act(async () => request.resolve(true));
 
     expect(button).toBeDisabled();
+    expect(screen.queryByTestId('error-hint')).not.toBeInTheDocument();
+  });
+
+  it('enables the button again without an error when the response was dropped', async () => {
+    const request = deferred();
+    const onReactivate = jest.fn(() => request.promise);
+    render(<DeactivatedAddress address="0xabc" onReactivate={onReactivate} />);
+    const button = screen.getByRole('button', { name: 'Reactivate address' });
+
+    fireEvent.click(button);
+    await act(async () => request.resolve(false));
+
+    expect(button).toBeEnabled();
     expect(screen.queryByTestId('error-hint')).not.toBeInTheDocument();
   });
 
   it('shows an API message, enables retry, and clears the error while retrying', async () => {
     const retry = deferred();
     const onReactivate = jest
-      .fn<Promise<void>, [string]>()
+      .fn<Promise<boolean>, [string]>()
       .mockRejectedValueOnce({ message: 'Address cannot be reactivated' })
       .mockImplementationOnce(() => retry.promise);
     render(<DeactivatedAddress address="0xabc" onReactivate={onReactivate} />);

@@ -6,7 +6,7 @@ import { ErrorHint } from './error-hint';
 
 interface DeactivatedAddressProps {
   address: string;
-  onReactivate: (address: string) => Promise<void>;
+  onReactivate: (address: string) => Promise<boolean>;
 }
 
 export function DeactivatedAddress({ address, onReactivate }: DeactivatedAddressProps): JSX.Element {
@@ -17,11 +17,16 @@ export function DeactivatedAddress({ address, onReactivate }: DeactivatedAddress
   function reactivate(): void {
     setIsReactivating(true);
     setError(undefined);
-    // Success dismisses the notice, so only a failure clears the busy state and allows another request.
-    onReactivate(address).catch((e: ApiError) => {
-      setError(e.message ?? 'Unknown error');
-      setIsReactivating(false);
-    });
+    // Success dismisses the notice, so only a failure or a dropped response clears the busy state and allows
+    // another request.
+    onReactivate(address)
+      .then((applied) => {
+        if (!applied) setIsReactivating(false);
+      })
+      .catch((e: ApiError) => {
+        setError(e.message ?? 'Unknown error');
+        setIsReactivating(false);
+      });
   }
 
   return (

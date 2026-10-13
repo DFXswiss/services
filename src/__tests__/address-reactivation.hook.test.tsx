@@ -157,7 +157,7 @@ describe('useAddressReactivation', () => {
     const { result } = renderHook(() => useAddressReactivation());
 
     await act(async () => {
-      await result.current.reactivateAddress('0xabc');
+      await expect(result.current.reactivateAddress('0xabc')).resolves.toBe(true);
     });
 
     expect(mockCall).toHaveBeenCalledTimes(1);
@@ -257,19 +257,21 @@ describe('useAddressReactivation', () => {
     { description: 'the session switched', token: 'other-token' },
   ])('drops a late response when $description during the request', async ({ token }) => {
     let resolveCall: (value: { accessToken: string }) => void = () => undefined;
+    let applied: boolean | undefined;
     mockCall.mockImplementation(() => new Promise((resolve) => (resolveCall = resolve)));
     const { result } = renderHook(() => useAddressReactivation());
 
-    let request: Promise<void> = Promise.resolve();
+    let request: Promise<boolean> = Promise.resolve(true);
     act(() => {
       request = result.current.reactivateAddress('0xabc');
     });
     mockAuthToken = token;
     await act(async () => {
       resolveCall({ accessToken: 'new-token' });
-      await request;
+      applied = await request;
     });
 
+    expect(applied).toBe(false);
     expect(mockCall).toHaveBeenCalledTimes(1);
     expect(mockUpdateSession).not.toHaveBeenCalled();
     expect(mockReloadUser).not.toHaveBeenCalled();
