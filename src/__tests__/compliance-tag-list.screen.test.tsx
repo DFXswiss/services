@@ -138,7 +138,7 @@ jest.mock('src/util/bank-tx-cache', () => ({
   cacheBankTx: jest.fn(),
 }));
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import type { ComplianceSearchResult, UserSearchResult } from 'src/hooks/compliance.hook';
 import ComplianceScreen from 'src/screens/compliance.screen';
 
@@ -150,9 +150,20 @@ function result(partial: Partial<ComplianceSearchResult> = {}): ComplianceSearch
   return { type: 'Tag', userDatas: [], bankTx: [], ...partial } as ComplianceSearchResult;
 }
 
-async function renderScreen(): Promise<void> {
-  render(<ComplianceScreen />);
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+async function renderScreen() {
+  const view = render(<ComplianceScreen />);
   await waitFor(() => expect(screen.getByTestId('pending-reviews')).toHaveTextContent('1'));
+  return view;
 }
 
 describe('ComplianceScreen tag list', () => {
@@ -211,5 +222,68 @@ describe('ComplianceScreen tag list', () => {
     await renderScreen();
 
     await waitFor(() => expect(screen.getByTestId('error-hint')).toHaveTextContent('Tag not found'));
+  });
+
+  it('does not apply a stale tagged-users response after the tag query changes', async () => {
+    mockLocation.search = '?tag=a';
+    const deferred = createDeferred<ComplianceSearchResult>();
+    mockGetTaggedUsers.mockImplementation((tag: string) => {
+      if (tag === 'a') return deferred.promise;
+      return Promise.resolve(result({ userDatas: [user({ id: 2, name: 'Bea B' })] }));
+    });
+
+    const { rerender } = await renderScreen();
+    await waitFor(() => expect(mockGetTaggedUsers).toHaveBeenCalledWith('a'));
+
+    mockLocation.search = '?tag=b';
+    rerender(<ComplianceScreen />);
+
+    await waitFor(() => expect(screen.getByText('Bea B')).toBeInTheDocument());
+
+    await act(async () => {
+      deferred.resolve(result({ userDatas: [user({ id: 1, name: 'Al A' })] }));
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText('Bea B')).toBeInTheDocument();
+    expect(screen.queryByText('Al A')).not.toBeInTheDocument();
+  });
+
+  it('does not apply a late tagged-users error after a search query takes over', async () => {
+    mockLocation.search = '?tag=a';
+    const deferred = createDeferred<ComplianceSearchResult>();
+    mockGetTaggedUsers.mockReturnValue(deferred.promise);
+    mockSearch.mockResolvedValue(result({ type: 'Name', userDatas: [user({ id: 8, name: 'Sam S' })] }));
+
+    const { rerender } = await renderScreen();
+    await waitFor(() => expect(mockGetTaggedUsers).toHaveBeenCalledWith('a'));
+
+    mockLocation.search = '?search=foo&tag=a';
+    rerender(<ComplianceScreen />);
+
+    await waitFor(() => expect(screen.getByText('Sam S')).toBeInTheDocument());
+
+    await act(async () => {
+      deferred.reject(new Error('late'));
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByText('late')).not.toBeInTheDocument();
+    expect(screen.getByText('Sam S')).toBeInTheDocument();
+  });
+
+  it('loads tagged users when a search query is removed and the tag stays', async () => {
+    mockLocation.search = '?search=foo&tag=abc';
+    mockSearch.mockResolvedValue(result({ type: 'Name', userDatas: [user({ id: 9, name: 'Fay' })] }));
+
+    const { rerender } = await renderScreen();
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledWith('foo'));
+    expect(mockGetTaggedUsers).not.toHaveBeenCalled();
+
+    mockLocation.search = '?tag=abc';
+    rerender(<ComplianceScreen />);
+
+    await waitFor(() => expect(mockGetTaggedUsers).toHaveBeenCalledTimes(1));
+    expect(mockGetTaggedUsers).toHaveBeenCalledWith('abc');
   });
 });

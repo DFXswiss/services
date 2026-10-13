@@ -98,15 +98,20 @@ export default function ComplianceScreen(): JSX.Element {
   useEffect(() => {
     if (!paramTag || paramSearch) return;
 
+    let cancelled = false;
     setIsLoading(true);
     setError(undefined);
     setSearchResult(undefined);
 
     getTaggedUsers(paramTag)
-      .then(setSearchResult)
-      .catch((e) => setError(e.message))
-      .finally(() => setIsLoading(false));
-  }, [paramTag]);
+      .then((result) => !cancelled && setSearchResult(result))
+      .catch((e) => !cancelled && setError(e.message))
+      .finally(() => !cancelled && setIsLoading(false));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paramTag, paramSearch, getTaggedUsers]);
 
   function handleDownloadUserData(userId: number) {
     setDownloadingUserId(userId);
