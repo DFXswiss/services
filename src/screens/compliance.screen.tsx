@@ -11,7 +11,7 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { CallQueuesSection } from 'src/components/compliance/call-queues-section';
@@ -55,6 +55,7 @@ export default function ComplianceScreen(): JSX.Element {
   const [pendingReviews, setPendingReviews] = useState<PendingReviewSummaryEntry[]>([]);
   const [pendingTransactions, setPendingTransactions] = useState<PendingTransactionInfo[]>([]);
   const [callQueues, setCallQueues] = useState<CallQueueSummaryEntry[]>([]);
+  const latestRequest = useRef(0);
 
   const paramSearch = new URLSearchParams(query).get('search') || undefined;
   const paramTag = new URLSearchParams(query).get('tag') || undefined;
@@ -79,14 +80,15 @@ export default function ComplianceScreen(): JSX.Element {
     (data: FormData) => {
       navigate({ search: `search=${data.key}` });
 
+      const request = ++latestRequest.current;
       setIsLoading(true);
       setError(undefined);
       setSearchResult(undefined);
 
       search(data.key)
-        .then(setSearchResult)
-        .catch((e) => setError(e.message))
-        .finally(() => setIsLoading(false));
+        .then((result) => request === latestRequest.current && setSearchResult(result))
+        .catch((e) => request === latestRequest.current && setError(e.message))
+        .finally(() => request === latestRequest.current && setIsLoading(false));
     },
     [navigate, search],
   );
@@ -96,21 +98,22 @@ export default function ComplianceScreen(): JSX.Element {
   }, [paramSearch, onSubmit]);
 
   useEffect(() => {
-    if (!paramTag || paramSearch) return;
+    if (paramSearch) return;
 
-    let cancelled = false;
+    const request = ++latestRequest.current;
+    if (!paramTag) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(undefined);
     setSearchResult(undefined);
 
     getTaggedUsers(paramTag)
-      .then((result) => !cancelled && setSearchResult(result))
-      .catch((e) => !cancelled && setError(e.message))
-      .finally(() => !cancelled && setIsLoading(false));
-
-    return () => {
-      cancelled = true;
-    };
+      .then((result) => request === latestRequest.current && setSearchResult(result))
+      .catch((e) => request === latestRequest.current && setError(e.message))
+      .finally(() => request === latestRequest.current && setIsLoading(false));
   }, [paramTag, paramSearch, getTaggedUsers]);
 
   function handleDownloadUserData(userId: number) {

@@ -139,7 +139,7 @@ jest.mock('src/util/bank-tx-cache', () => ({
   cacheBankTx: (...args: unknown[]) => mockCacheBankTx(...args),
 }));
 
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { BankTxSearchResult, ComplianceSearchResult, UserSearchResult } from 'src/hooks/compliance.hook';
 import ComplianceScreen from 'src/screens/compliance.screen';
 
@@ -159,6 +159,16 @@ function rowOf(text: string): HTMLElement {
   const row = screen.getByText(text).closest('tr');
   if (!row) throw new Error(`row "${text}" not found`);
   return row;
+}
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
 }
 
 // Renders the screen and lets the dashboard sections finish loading, so their state updates do
@@ -305,5 +315,34 @@ describe('ComplianceScreen', () => {
     await waitFor(() => expect(mockSearch).toHaveBeenCalledWith('338759'));
     await waitFor(() => expect(screen.getByText('Jana')).toBeInTheDocument());
     expect(screen.getByPlaceholderText('example@mail.com')).toHaveValue('338759');
+  });
+
+  it('does not apply a stale search response after a later search', async () => {
+    mockLocation.search = '?search=first';
+    const first = createDeferred<ComplianceSearchResult>();
+    const second = createDeferred<ComplianceSearchResult>();
+    mockSearch.mockImplementation((key: string) => (key === 'first' ? first.promise : second.promise));
+
+    const { rerender } = render(<ComplianceScreen />);
+    await waitFor(() => expect(screen.getByTestId('pending-reviews')).toHaveTextContent('1'));
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledWith('first'));
+
+    mockLocation.search = '?search=second';
+    rerender(<ComplianceScreen />);
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledWith('second'));
+
+    await act(async () => {
+      second.resolve(result({ userDatas: [user({ id: 2, name: 'New Name' })] }));
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(screen.getByText('New Name')).toBeInTheDocument());
+
+    await act(async () => {
+      first.resolve(result({ userDatas: [user({ id: 1, name: 'Old Name' })] }));
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText('New Name')).toBeInTheDocument();
+    expect(screen.queryByText('Old Name')).not.toBeInTheDocument();
   });
 });

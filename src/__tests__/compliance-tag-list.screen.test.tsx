@@ -274,7 +274,9 @@ describe('ComplianceScreen tag list', () => {
 
   it('loads tagged users when a search query is removed and the tag stays', async () => {
     mockLocation.search = '?search=foo&tag=abc';
-    mockSearch.mockResolvedValue(result({ type: 'Name', userDatas: [user({ id: 9, name: 'Fay' })] }));
+    const deferredSearch = createDeferred<ComplianceSearchResult>();
+    mockSearch.mockReturnValue(deferredSearch.promise);
+    mockGetTaggedUsers.mockResolvedValue(result({ userDatas: [user({ id: 2, name: 'Tia T' })] }));
 
     const { rerender } = await renderScreen();
     await waitFor(() => expect(mockSearch).toHaveBeenCalledWith('foo'));
@@ -285,5 +287,61 @@ describe('ComplianceScreen tag list', () => {
 
     await waitFor(() => expect(mockGetTaggedUsers).toHaveBeenCalledTimes(1));
     expect(mockGetTaggedUsers).toHaveBeenCalledWith('abc');
+    await waitFor(() => expect(screen.getByText('Tia T')).toBeInTheDocument());
+
+    await act(async () => {
+      deferredSearch.resolve(result({ type: 'Name', userDatas: [user({ id: 9, name: 'Sam S' })] }));
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText('Tia T')).toBeInTheDocument();
+    expect(screen.queryByText('Sam S')).not.toBeInTheDocument();
+  });
+
+  it('does not apply a late search error after the search query is removed and the tag stays', async () => {
+    mockLocation.search = '?search=foo&tag=abc';
+    const deferredSearch = createDeferred<ComplianceSearchResult>();
+    mockSearch.mockReturnValue(deferredSearch.promise);
+    mockGetTaggedUsers.mockResolvedValue(result({ userDatas: [user({ id: 2, name: 'Tia T' })] }));
+
+    const { rerender } = await renderScreen();
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledWith('foo'));
+    expect(mockGetTaggedUsers).not.toHaveBeenCalled();
+
+    mockLocation.search = '?tag=abc';
+    rerender(<ComplianceScreen />);
+
+    await waitFor(() => expect(screen.getByText('Tia T')).toBeInTheDocument());
+
+    await act(async () => {
+      deferredSearch.reject(new Error('late search'));
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByText('late search')).not.toBeInTheDocument();
+    expect(screen.getByText('Tia T')).toBeInTheDocument();
+  });
+
+  it('clears loading when a tag query is removed without a search', async () => {
+    mockLocation.search = '?tag=a';
+    const deferred = createDeferred<ComplianceSearchResult>();
+    mockGetTaggedUsers.mockReturnValue(deferred.promise);
+
+    const { rerender } = await renderScreen();
+    await waitFor(() => expect(mockGetTaggedUsers).toHaveBeenCalledWith('a'));
+
+    mockLocation.search = '';
+    rerender(<ComplianceScreen />);
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Search' })).toHaveAttribute('data-loading', 'false'),
+    );
+
+    await act(async () => {
+      deferred.resolve(result({ userDatas: [user({ id: 1, name: 'Al A' })] }));
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByText('Al A')).not.toBeInTheDocument();
   });
 });
