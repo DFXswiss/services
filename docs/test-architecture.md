@@ -512,6 +512,15 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   `ErrorHint`, labels and app contexts (translation returns the key), that the API returns those statuses,
   that the custody sign-up call reaches the real API, or the reporter's 60 s deduplication of identical
   reports, since the reporter is replaced.
+- **The KYC redirect unit test replaces the SDK, the app contexts and the client-error reporter.**
+  `src/__tests__/kyc-screen-handled-redirects.test.tsx` renders `KycScreen` in a real memory router with the
+  real `useNavigation` and the real `ErrorHint`, but `useKyc`, the session and user contexts, the app-handling,
+  settings and layout contexts, the status table, the styled controls and `reportClientError` are replaced, and
+  the API errors are plain objects written by the test. A green run proves that a 401 with a main account code,
+  a 2FA requirement and a merge conflict each redirect without showing or reporting the API message, and that
+  other errors, a 400 for a merged account and a conflict without a merge are still shown and reported once. It
+  does not prove that the API answers with those errors or shapes, that the real logout or 2FA screen work, or
+  that the real reporter sends the report.
 
 ## Known gaps
 
