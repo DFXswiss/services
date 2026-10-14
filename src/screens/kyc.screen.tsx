@@ -286,7 +286,8 @@ export default function KycScreen(): JSX.Element {
         setIsLoading(true);
         navigate({ search: `?code=${e.switchToCode}` });
         logout();
-        redirectedKycErrors.add(e);
+        // the SDK sets switchToCode on every 401, only a main account code is a handled redirect
+        if (e.switchToCode) redirectedKycErrors.add(e);
       } else if (e.code === 'TFA_REQUIRED') {
         setParams({ autoStart: 'true' });
         navigate('/2fa', { setRedirect: true });

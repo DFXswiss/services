@@ -166,9 +166,12 @@ describe('KycScreen redirects that handle an API error', () => {
     mockStartStep.mockRejectedValueOnce({ statusCode: 401, switchToCode: 'MAIN', message: 'User is merged' });
     const router = renderAt('/kyc?code=MERGED&step=Ident');
 
-    await waitFor(() => expect(router.state.location.search).toBe('?code=MAIN&step=Ident'), { timeout: 10000 });
+    await waitFor(() => expect(mockStartStep).toHaveBeenLastCalledWith('MAIN', 'Ident', undefined, undefined), {
+      timeout: 10000,
+    });
     await settle();
 
+    expect(router.state.location.search).toBe('?code=MAIN');
     expect(mockLogout).toHaveBeenCalledTimes(1);
     expectNothingShownOrReported('User is merged');
   });
@@ -222,6 +225,21 @@ describe('KycScreen API errors that stay visible', () => {
     await settle();
 
     expectShownAndReported('Internal server error', '/kyc');
+  });
+
+  it('reports a 401 whose switch code the SDK left undefined', async () => {
+    mockGetKycInfo.mockRejectedValueOnce({ statusCode: 401, switchToCode: undefined, message: 'Unauthorized' });
+    renderAt('/kyc?code=CODE');
+
+    await waitFor(() => expect(mockReportClientError).toHaveBeenCalled(), { timeout: 10000 });
+    await settle();
+
+    expect(mockReportClientError).toHaveBeenCalledTimes(1);
+    expect(mockReportClientError).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'HandledError', message: 'Unauthorized' }),
+      '/kyc',
+      undefined,
+    );
   });
 
   it('shows and reports a merged account without a main account', async () => {
