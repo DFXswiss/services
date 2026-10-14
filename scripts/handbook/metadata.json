@@ -75,6 +75,10 @@
     "title": "Compliance: Offene Chargebacks",
     "description": "Liste offener Chargebacks mit Blockgründen, Namensvergleich und Leerzustand."
   },
+  "compliance-tag-list": {
+    "title": "Compliance: Tag-Liste",
+    "description": "Versteckte Kundenliste über /compliance?tag=…: Trefferliste mit Kunden des Tags, Leerzustand und unbekannter Tag."
+  },
   "compliance-bank-tx-return": {
     "title": "Compliance: Bank-Tx-Rückzahlung freigeben",
     "description": "Rückzahlungsformular mit Banner für manuelle Freigabe und klarer Meldung wenn die Rückzahlung bereits freigegeben/ausgezahlt ist."

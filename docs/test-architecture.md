@@ -299,6 +299,18 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   a past deadline in red. It does not prove that the API returns those rows,
   that the mark date is the account's phone-call date, or that login and
   token verification succeed.
+- **The compliance tag-list spec answers the tag list itself.**
+  `e2e/compliance-tag-list.spec.ts` fulfils `GET /v1/support/tag/example` with
+  synthetic fixtures: four customer rows, an empty `userDatas`, and a 404 with
+  the message `Tag not found`. It answers the pending-reviews,
+  pending-transactions and call-queues lists with empty arrays, fulfils
+  `/v2/user`, returns empty lists for `/v1/language`, `/v1/fiat`, `/v1/asset`,
+  `/v1/bankAccount` and `/v1/country` plus a null info banner, and answers every
+  other `/v1` or `/v2` request with 501. The session is a synthetic unsigned
+  JWT. A green run proves that `/compliance?tag=…` renders the tagged customers
+  in the existing customer table, the empty state and the not-found error. It
+  does not prove that the API returns those rows for a tag, that a tag setting
+  exists, or that login and token verification succeed.
 - **Full-stack compliance specs SQL-seed a call-queue case.**
   `e2e-stack/specs/fixtures/factories.ts` (`createCallQueueEntry`) inserts a pending `buy_crypto`
   with AML reason `ManualCheckPhone` and SQL-writes `user_data.phoneCallStatus`,
