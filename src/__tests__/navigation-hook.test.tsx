@@ -153,4 +153,43 @@ describe('useNavigation', () => {
       Object.defineProperty(window, 'sessionStorage', { configurable: true, value: original });
     }
   });
+
+  it('goes back to /account when no redirect is stored', () => {
+    renderAt('/login');
+    act(() => {
+      navigation.goBack();
+    });
+    expect(screen.getByTestId('pathname').textContent).toBe('/account');
+    expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith(undefined);
+  });
+
+  it('navigates back one history entry when given a number', () => {
+    render(
+      <MemoryRouter initialEntries={['/buy', '/kyc?wallet=RealUnit']} initialIndex={1}>
+        <Harness />
+      </MemoryRouter>,
+    );
+    act(() => {
+      navigation.navigate(-1);
+    });
+    expect(screen.getByTestId('pathname').textContent).toBe('/buy');
+  });
+
+  it('sets a query param on the current search', () => {
+    renderAt('/kyc?wallet=RealUnit');
+    act(() => {
+      navigation.setParams(new URLSearchParams('client=Aktionariat'));
+    });
+    expect(screen.getByTestId('pathname').textContent).toBe('/kyc');
+    expect(screen.getByTestId('search').textContent).toBe('?wallet=RealUnit&client=Aktionariat');
+  });
+
+  it('clears a named query param and replaces the current entry', () => {
+    renderAt('/kyc?wallet=RealUnit&client=Aktionariat');
+    act(() => {
+      navigation.clearParams(['wallet']);
+    });
+    expect(screen.getByTestId('pathname').textContent).toBe('/kyc');
+    expect(screen.getByTestId('search').textContent).toBe('?client=Aktionariat');
+  });
 });
