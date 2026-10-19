@@ -123,7 +123,29 @@ describe('RealunitReferralScreen', () => {
     render(<RealunitReferralScreen />);
     await waitFor(() => expect(screen.getByText('NOSTAT')).toBeInTheDocument());
     const row = screen.getByText('NOSTAT').closest('tr') as HTMLElement;
-    expect(within(row).getAllByRole('cell')[2]).toHaveTextContent('-');
+    expect(within(row).getAllByRole('cell')[4]).toHaveTextContent('-');
+  });
+
+  it('shows the guest account, the name and the remittance info of the qualifying buy', async () => {
+    mockGetRelations.mockResolvedValue([
+      { ...APPROVED, guestAccountId: 501, guestName: 'Test Guest', qualifyingBuyReference: 'REALU-100001' },
+      PENDING,
+    ]);
+    render(<RealunitReferralScreen />);
+    await waitFor(() => expect(screen.getByText('OK1234')).toBeInTheDocument());
+
+    expect(screen.getByRole('columnheader', { name: 'Guest account' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Remittance info' })).toBeInTheDocument();
+    const credited = within(screen.getByText('OK1234').closest('tr') as HTMLElement).getAllByRole('cell');
+    expect(credited[2]).toHaveTextContent('501');
+    expect(credited[3]).toHaveTextContent('Test Guest');
+    expect(credited[6]).toHaveTextContent('REALU-100001');
+    // without guest data or a qualifying buy the cells show a dash
+    const open = within(screen.getByText('AB12CD').closest('tr') as HTMLElement).getAllByRole('cell');
+    expect(open[2]).toHaveTextContent('-');
+    expect(open[3]).toHaveTextContent('-');
+    expect(open[6]).toHaveTextContent('-');
   });
 
   it('navigates to the referral detail on row click', async () => {

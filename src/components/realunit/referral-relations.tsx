@@ -80,6 +80,12 @@ export function RealunitReferralRelations({ kind, title, withReview, translate }
                   <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
                     {translate('screens/referral', 'Code')}
                   </th>
+                  <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
+                    {translate('screens/referral', 'Guest account')}
+                  </th>
+                  <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
+                    {translate('screens/referral', 'Name')}
+                  </th>
                   {withReview && (
                     <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
                       {translate('screens/referral', 'Review Status')}
@@ -87,6 +93,9 @@ export function RealunitReferralRelations({ kind, title, withReview, translate }
                   )}
                   <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
                     {translate('screens/referral', 'Credited')}
+                  </th>
+                  <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
+                    {translate('screens/referral', 'Remittance info')}
                   </th>
                   <th className="px-3 py-2 text-left font-semibold text-dfxBlue-800">
                     {translate('screens/referral', 'Created')}
@@ -104,6 +113,8 @@ export function RealunitReferralRelations({ kind, title, withReview, translate }
                   >
                     <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{r.id}</td>
                     <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white break-all">{r.code}</td>
+                    <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{r.guestAccountId ?? '-'}</td>
+                    <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">{r.guestName ?? '-'}</td>
                     {withReview && (
                       <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">
                         {r.reviewStatus ? translate('screens/referral', REVIEW_STATUS_LABEL[r.reviewStatus]) : '-'}
@@ -111,6 +122,9 @@ export function RealunitReferralRelations({ kind, title, withReview, translate }
                     )}
                     <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">
                       {r.credited ? translate('general/actions', 'Yes') : translate('general/actions', 'No')}
+                    </td>
+                    <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white break-all">
+                      {r.qualifyingBuyReference ?? '-'}
                     </td>
                     <td className="px-3 py-2 text-dfxBlue-800 group-hover:text-white">
                       {formatSwissDateTimeWithSeconds(r.created)}
