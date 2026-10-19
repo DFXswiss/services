@@ -19,12 +19,17 @@ interface NavigationInterface {
 export function useNavigation(): NavigationInterface {
   const navigateTo = useNavigate();
   const { search, pathname } = useLocation();
-  const { redirectPath, setRedirectPath } = useAppHandlingContext();
+  const { redirectPath, setRedirectPath, params: appParams } = useAppHandlingContext();
 
   function navigate(to: To | number, options?: NavigationOptions) {
     if (options?.setRedirect) {
       if (pathname === '/kyc' && search) {
-        const returnPath = `${pathname}${search}`;
+        const query = new URLSearchParams(search);
+        let returnPath = `${pathname}${search}`;
+        if (!query.has('wallet') && appParams.wallet) {
+          query.set('wallet', appParams.wallet);
+          returnPath = `${pathname}?${query.toString()}`;
+        }
         setRedirectPath(returnPath);
         try {
           sessionStorage.setItem('dfx.kyc.redirect', returnPath);
@@ -87,5 +92,8 @@ export function useNavigation(): NavigationInterface {
     navigate({ pathname }, { replace: true, clearParams: params });
   }
 
-  return useMemo(() => ({ navigate, goBack, setParams, clearParams }), [navigateTo, search, pathname, redirectPath]);
+  return useMemo(
+    () => ({ navigate, goBack, setParams, clearParams }),
+    [navigateTo, search, pathname, redirectPath, appParams],
+  );
 }

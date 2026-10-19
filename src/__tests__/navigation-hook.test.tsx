@@ -1,8 +1,9 @@
 jest.mock('@dfx.swiss/react', () => ({}));
 
-const mockAppHandling: { redirectPath?: string; setRedirectPath: jest.Mock } = {
+const mockAppHandling: { redirectPath?: string; setRedirectPath: jest.Mock; params: { wallet?: string } } = {
   redirectPath: undefined,
   setRedirectPath: jest.fn(),
+  params: {},
 };
 
 jest.mock('src/contexts/app-handling.context', () => ({
@@ -38,6 +39,7 @@ describe('useNavigation', () => {
   beforeEach(() => {
     mockAppHandling.redirectPath = undefined;
     mockAppHandling.setRedirectPath.mockReset();
+    mockAppHandling.params = {};
     sessionStorage.removeItem('dfx.kyc.redirect');
   });
 
@@ -48,6 +50,39 @@ describe('useNavigation', () => {
     });
     expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith('/kyc?wallet=RealUnit&client=Aktionariat');
     expect(sessionStorage.getItem('dfx.kyc.redirect')).toBe('/kyc?wallet=RealUnit&client=Aktionariat');
+  });
+
+  it('puts params.wallet back when the live kyc search has no wallet key', () => {
+    mockAppHandling.params = { wallet: 'RealUnit' };
+    renderAt('/kyc?client=Aktionariat&kyc-redirect=https%3A%2F%2Fshares.realunit.ch%2Fback');
+    act(() => {
+      navigation.navigate('/2fa', { setRedirect: true });
+    });
+    expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith(
+      '/kyc?client=Aktionariat&kyc-redirect=https%3A%2F%2Fshares.realunit.ch%2Fback&wallet=RealUnit',
+    );
+    expect(sessionStorage.getItem('dfx.kyc.redirect')).toBe(
+      '/kyc?client=Aktionariat&kyc-redirect=https%3A%2F%2Fshares.realunit.ch%2Fback&wallet=RealUnit',
+    );
+  });
+
+  it('keeps the live wallet when params.wallet differs', () => {
+    mockAppHandling.params = { wallet: 'Other' };
+    renderAt('/kyc?wallet=RealUnit&client=Aktionariat');
+    act(() => {
+      navigation.navigate('/login', { setRedirect: true });
+    });
+    expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith('/kyc?wallet=RealUnit&client=Aktionariat');
+    expect(sessionStorage.getItem('dfx.kyc.redirect')).toBe('/kyc?wallet=RealUnit&client=Aktionariat');
+  });
+
+  it('does not invent a wallet when params.wallet is missing', () => {
+    renderAt('/kyc?client=Aktionariat');
+    act(() => {
+      navigation.navigate('/login', { setRedirect: true });
+    });
+    expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith('/kyc?client=Aktionariat');
+    expect(sessionStorage.getItem('dfx.kyc.redirect')).toBe('/kyc?client=Aktionariat');
   });
 
   it('stores only the buy pathname and does not write the redirect key', () => {
