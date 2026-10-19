@@ -333,6 +333,8 @@ let openSpy: jest.SpyInstance;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  sessionStorage.removeItem('dfx.kyc.redirect');
+  sessionStorage.removeItem('dfx.kyc.address');
   mockUser.user = undefined;
   mockApp.isInitialized = true;
   mockApp.isWidget = false;
@@ -593,11 +595,15 @@ describe('KycScreen redirect and consent effects', () => {
   const complete = () => info({ kycSteps: [step('ContactData', { status: 'Completed' })] });
 
   it('opens a completed HTTPS redirect in the same window', async () => {
+    sessionStorage.setItem('dfx.kyc.redirect', '/kyc');
+    sessionStorage.setItem('dfx.kyc.address', '0xdef');
     mockGetKycInfo.mockResolvedValueOnce(complete());
     renderPath('/kyc?code=CODE&kyc-redirect=https%3A%2F%2Fshares.realunit.ch%2Fdone');
     await waitFor(() => expect(openSpy).toHaveBeenCalledWith('https://shares.realunit.ch/done', '_self'), {
       timeout: 10000,
     });
+    expect(sessionStorage.getItem('dfx.kyc.redirect')).toBeNull();
+    expect(sessionStorage.getItem('dfx.kyc.address')).toBeNull();
   });
 
   it('opens an allowed redirect when removing the stored redirect throws', async () => {
@@ -739,6 +745,140 @@ describe('KycScreen redirect and consent effects', () => {
     expect(mockGetKycInfo).not.toHaveBeenCalled();
     expect(mockStartStep).not.toHaveBeenCalled();
     expect(mockContinueKyc).not.toHaveBeenCalled();
+  });
+
+  it('shows the mismatch hint when no wallet is connected yet', async () => {
+    mockUser.user = undefined;
+    mockApp.params = { autoStart: 'true' };
+    renderPath('/kyc?code=CODE&address=0xdef&autoStart=true');
+    expect(
+      await screen.findByText('This page was opened for wallet 0xdef. Sign out and connect that wallet.', undefined, {
+        timeout: 10000,
+      }),
+    ).toBeInTheDocument();
+    expect(mockGetKycInfo).not.toHaveBeenCalled();
+    expect(mockStartStep).not.toHaveBeenCalled();
+    expect(mockContinueKyc).not.toHaveBeenCalled();
+  });
+
+  it('shows the mismatch hint when the user has no active address', async () => {
+    mockUser.user = { kyc: { hash: 'USER' } };
+    renderPath('/kyc?code=CODE&address=0xdef');
+    expect(
+      await screen.findByText('This page was opened for wallet 0xdef. Sign out and connect that wallet.', undefined, {
+        timeout: 10000,
+      }),
+    ).toBeInTheDocument();
+    expect(mockGetKycInfo).not.toHaveBeenCalled();
+    expect(mockStartStep).not.toHaveBeenCalled();
+    expect(mockContinueKyc).not.toHaveBeenCalled();
+  });
+
+  it('shows the mismatch hint for the address stored in the redirect', async () => {
+    sessionStorage.setItem('dfx.kyc.redirect', '/kyc?client=Aktionariat&address=0xdef');
+    mockUser.user = { kyc: { hash: 'USER' }, activeAddress: { address: '0xAbC' } };
+    renderPath('/kyc?code=CODE');
+    expect(
+      await screen.findByText('This page was opened for wallet 0xdef. Sign out and connect that wallet.', undefined, {
+        timeout: 10000,
+      }),
+    ).toBeInTheDocument();
+    expect(mockGetKycInfo).not.toHaveBeenCalled();
+    expect(mockStartStep).not.toHaveBeenCalled();
+    expect(mockContinueKyc).not.toHaveBeenCalled();
+  });
+
+  it('shows the mismatch hint for the stored address when the redirect has none', async () => {
+    sessionStorage.setItem('dfx.kyc.redirect', '/kyc?client=Aktionariat');
+    sessionStorage.setItem('dfx.kyc.address', '0xdef');
+    mockUser.user = { kyc: { hash: 'USER' }, activeAddress: { address: '0xAbC' } };
+    renderPath('/kyc?code=CODE');
+    expect(
+      await screen.findByText('This page was opened for wallet 0xdef. Sign out and connect that wallet.', undefined, {
+        timeout: 10000,
+      }),
+    ).toBeInTheDocument();
+    expect(mockGetKycInfo).not.toHaveBeenCalled();
+    expect(mockStartStep).not.toHaveBeenCalled();
+    expect(mockContinueKyc).not.toHaveBeenCalled();
+  });
+
+  it('ignores a leftover address key without a redirect', async () => {
+    sessionStorage.setItem('dfx.kyc.address', '0xdef');
+    mockApp.params = {};
+    mockUser.user = { kyc: { hash: 'USER' }, activeAddress: { address: '0xAbC' } };
+    renderPath('/kyc?code=CODE');
+    await waitFor(() => expect(mockGetKycInfo).toHaveBeenCalled(), { timeout: 10000 });
+    expect(
+      screen.queryByText('This page was opened for wallet 0xdef. Sign out and connect that wallet.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('uses params.address when reading session storage throws', async () => {
+    const original = window.sessionStorage;
+    Object.defineProperty(window, 'sessionStorage', {
+      configurable: true,
+      value: {
+        getItem: () => {
+          throw new Error('blocked');
+        },
+        setItem: (key: string, value: string) => original.setItem(key, value),
+        removeItem: (key: string) => original.removeItem(key),
+        clear: () => original.clear(),
+        key: (index: number) => original.key(index),
+        get length() {
+          return original.length;
+        },
+      },
+    });
+    try {
+      mockApp.params = { address: '0xdef' };
+      mockUser.user = { kyc: { hash: 'USER' }, activeAddress: { address: '0xAbC' } };
+      renderPath('/kyc?code=CODE');
+      expect(
+        await screen.findByText('This page was opened for wallet 0xdef. Sign out and connect that wallet.', undefined, {
+          timeout: 10000,
+        }),
+      ).toBeInTheDocument();
+      expect(mockGetKycInfo).not.toHaveBeenCalled();
+      expect(mockStartStep).not.toHaveBeenCalled();
+      expect(mockContinueKyc).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, 'sessionStorage', { configurable: true, value: original });
+    }
+  });
+
+  it('shows the search hint when storing the address throws', async () => {
+    const original = window.sessionStorage;
+    Object.defineProperty(window, 'sessionStorage', {
+      configurable: true,
+      value: {
+        getItem: (key: string) => original.getItem(key),
+        setItem: () => {
+          throw new Error('blocked');
+        },
+        removeItem: (key: string) => original.removeItem(key),
+        clear: () => original.clear(),
+        key: (index: number) => original.key(index),
+        get length() {
+          return original.length;
+        },
+      },
+    });
+    try {
+      mockUser.user = { kyc: { hash: 'USER' }, activeAddress: { address: '0xAbC' } };
+      renderPath('/kyc?code=CODE&address=0xdef');
+      expect(
+        await screen.findByText('This page was opened for wallet 0xdef. Sign out and connect that wallet.', undefined, {
+          timeout: 10000,
+        }),
+      ).toBeInTheDocument();
+      expect(mockGetKycInfo).not.toHaveBeenCalled();
+      expect(mockStartStep).not.toHaveBeenCalled();
+      expect(mockContinueKyc).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, 'sessionStorage', { configurable: true, value: original });
+    }
   });
 
   it('submits missing-client consent and continues', async () => {

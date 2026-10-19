@@ -26,8 +26,23 @@ export function useNavigation(): NavigationInterface {
       if (pathname === '/kyc' && search) {
         const query = new URLSearchParams(search);
         let returnPath = `${pathname}${search}`;
+        let added = false;
         if (!query.has('wallet') && appParams.wallet) {
           query.set('wallet', appParams.wallet);
+          added = true;
+        }
+        if (!query.has('address')) {
+          try {
+            const storedAddress = sessionStorage.getItem('dfx.kyc.address');
+            if (storedAddress) {
+              query.set('address', storedAddress);
+              added = true;
+            }
+          } catch {
+            // ignore unavailable sessionStorage
+          }
+        }
+        if (added) {
           returnPath = `${pathname}?${query.toString()}`;
         }
         setRedirectPath(returnPath);
@@ -64,6 +79,7 @@ export function useNavigation(): NavigationInterface {
       setRedirectPath(undefined);
       try {
         sessionStorage.removeItem('dfx.kyc.redirect');
+        sessionStorage.removeItem('dfx.kyc.address');
       } catch {
         // ignore unavailable sessionStorage
       }

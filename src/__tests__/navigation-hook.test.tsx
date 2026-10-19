@@ -41,6 +41,7 @@ describe('useNavigation', () => {
     mockAppHandling.setRedirectPath.mockReset();
     mockAppHandling.params = {};
     sessionStorage.removeItem('dfx.kyc.redirect');
+    sessionStorage.removeItem('dfx.kyc.address');
   });
 
   it('stores the kyc location when setRedirect leaves a query', () => {
@@ -85,6 +86,73 @@ describe('useNavigation', () => {
     expect(sessionStorage.getItem('dfx.kyc.redirect')).toBe('/kyc?client=Aktionariat');
   });
 
+  it('appends the stored address when the live search has wallet and client but no address', () => {
+    sessionStorage.setItem('dfx.kyc.address', '0xdef');
+    renderAt('/kyc?wallet=RealUnit&client=Aktionariat');
+    act(() => {
+      navigation.navigate('/login', { setRedirect: true });
+    });
+    expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith(
+      '/kyc?wallet=RealUnit&client=Aktionariat&address=0xdef',
+    );
+    expect(sessionStorage.getItem('dfx.kyc.redirect')).toBe('/kyc?wallet=RealUnit&client=Aktionariat&address=0xdef');
+  });
+
+  it('appends wallet and address together', () => {
+    mockAppHandling.params = { wallet: 'RealUnit' };
+    sessionStorage.setItem('dfx.kyc.address', '0xdef');
+    renderAt('/kyc?client=Aktionariat&kyc-redirect=https%3A%2F%2Fshares.realunit.ch%2Fback');
+    act(() => {
+      navigation.navigate('/login', { setRedirect: true });
+    });
+    expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith(
+      '/kyc?client=Aktionariat&kyc-redirect=https%3A%2F%2Fshares.realunit.ch%2Fback&wallet=RealUnit&address=0xdef',
+    );
+    expect(sessionStorage.getItem('dfx.kyc.redirect')).toBe(
+      '/kyc?client=Aktionariat&kyc-redirect=https%3A%2F%2Fshares.realunit.ch%2Fback&wallet=RealUnit&address=0xdef',
+    );
+  });
+
+  it('keeps the live address when the stored address differs', () => {
+    sessionStorage.setItem('dfx.kyc.address', '0xdef');
+    renderAt('/kyc?wallet=RealUnit&address=0xabc');
+    act(() => {
+      navigation.navigate('/login', { setRedirect: true });
+    });
+    expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith('/kyc?wallet=RealUnit&address=0xabc');
+    expect(sessionStorage.getItem('dfx.kyc.redirect')).toBe('/kyc?wallet=RealUnit&address=0xabc');
+  });
+
+  it('does not invent an address when reading it throws', () => {
+    const original = window.sessionStorage;
+    Object.defineProperty(window, 'sessionStorage', {
+      configurable: true,
+      value: {
+        getItem: () => {
+          throw new Error('blocked');
+        },
+        setItem: (key: string, value: string) => original.setItem(key, value),
+        removeItem: (key: string) => original.removeItem(key),
+        clear: () => original.clear(),
+        key: (index: number) => original.key(index),
+        get length() {
+          return original.length;
+        },
+      },
+    });
+    try {
+      renderAt('/kyc?wallet=RealUnit');
+      expect(() => {
+        act(() => {
+          navigation.navigate('/login', { setRedirect: true });
+        });
+      }).not.toThrow();
+      expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith('/kyc?wallet=RealUnit');
+    } finally {
+      Object.defineProperty(window, 'sessionStorage', { configurable: true, value: original });
+    }
+  });
+
   it('stores only the buy pathname and does not write the redirect key', () => {
     renderAt('/buy?x=1');
     act(() => {
@@ -106,6 +174,7 @@ describe('useNavigation', () => {
   it('goes back to the stored kyc query and clears it', () => {
     mockAppHandling.redirectPath = '/kyc?wallet=RealUnit';
     sessionStorage.setItem('dfx.kyc.redirect', '/kyc?wallet=RealUnit');
+    sessionStorage.setItem('dfx.kyc.address', '0xdef');
     renderAt('/login');
     act(() => {
       navigation.goBack();
@@ -114,6 +183,7 @@ describe('useNavigation', () => {
     expect(screen.getByTestId('search').textContent).toBe('?wallet=RealUnit');
     expect(mockAppHandling.setRedirectPath).toHaveBeenCalledWith(undefined);
     expect(sessionStorage.getItem('dfx.kyc.redirect')).toBeNull();
+    expect(sessionStorage.getItem('dfx.kyc.address')).toBeNull();
   });
 
   it('goes back to a stored path without a query', () => {

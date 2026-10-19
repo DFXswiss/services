@@ -114,6 +114,24 @@ const RequiredKycLevel = {
   [Mode.PROFILE]: KycLevel.Sell,
 };
 
+function readRequestedKycAddress(search: string, address?: string | null): string | undefined {
+  const searchAddress = new URLSearchParams(search).get('address');
+  if (searchAddress) return searchAddress;
+
+  let sessionAddress: string | null = null;
+  try {
+    const redirect = sessionStorage.getItem('dfx.kyc.redirect');
+    if (redirect != null && redirect.startsWith('/kyc?')) {
+      sessionAddress =
+        new URLSearchParams(redirect.slice('/kyc?'.length)).get('address') || sessionStorage.getItem('dfx.kyc.address');
+    }
+  } catch {
+    // ignore unavailable sessionStorage
+  }
+
+  return sessionAddress || address || undefined;
+}
+
 export default function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
   const { translate, changeLanguage, processingKycData } = useSettingsContext();
@@ -152,12 +170,21 @@ export default function KycScreen(): JSX.Element {
   const kycCode = paramKycCode ?? user?.kyc.hash;
   const redirectUri = urlParams.get('kyc-redirect');
   const client = urlParams.get('client') ?? undefined;
-  const [requestedAddress] = useState(
-    () => new URLSearchParams(search).get('address') ?? params.address ?? undefined,
-  );
+  const [requestedAddress] = useState(() => readRequestedKycAddress(search, params.address));
+
+  useEffect(() => {
+    if (requestedAddress) {
+      try {
+        sessionStorage.setItem('dfx.kyc.address', requestedAddress);
+      } catch {
+        // ignore unavailable sessionStorage
+      }
+    }
+  }, [requestedAddress]);
+
   const loggedInAddress = user?.activeAddress?.address;
   const mismatchAddress =
-    loggedInAddress && requestedAddress && loggedInAddress.toLowerCase() !== requestedAddress.toLowerCase()
+    requestedAddress && (!loggedInAddress || loggedInAddress.toLowerCase() !== requestedAddress.toLowerCase())
       ? requestedAddress
       : undefined;
 
@@ -201,6 +228,7 @@ export default function KycScreen(): JSX.Element {
             setIsLoading(true);
             try {
               sessionStorage.removeItem('dfx.kyc.redirect');
+              sessionStorage.removeItem('dfx.kyc.address');
             } catch {
               // ignore unavailable sessionStorage
             }
