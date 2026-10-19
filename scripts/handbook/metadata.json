@@ -247,6 +247,10 @@
     "title": "SPAR-Standorte",
     "description": "Zahlungslink mit Händler SPAR, jeweils die ganze Seite und fest nur SPAR-Läden in der Schweiz, ohne Länder- oder Shop-Auswahl: Standortkarte, geöffneter Standort, leere Liste, der Fehler wenn die Standortliste nicht geladen werden kann, und das Ladebild bevor die Orte da sind."
   },
+  "kyc-wallet-mismatch": {
+    "title": "KYC Wallet-Hinweis",
+    "description": "Die KYC-Seite, wenn die verbundene Wallet nicht die Adresse aus dem Link ist. Der Hinweis nennt die verlangte Adresse und bietet Abmelden. Einwilligung und Ident starten nicht."
+  },
   "docs": {
     "docs/EIP7702-Implementierungsplan.md": {
       "title": "EIP-7702 Implementierungsplan"
