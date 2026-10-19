@@ -44,7 +44,7 @@ const mockKyc = {
   setRecallData: jest.fn(),
 };
 
-const mockUser: { user?: { kyc: { hash: string } }; reloadUser: jest.Mock } = {
+const mockUser: { user?: { kyc: { hash: string }; activeAddress?: { address: string } }; reloadUser: jest.Mock } = {
   user: undefined,
   reloadUser: mockReloadUser,
 };
@@ -585,8 +585,10 @@ describe('KycScreen redirect and consent effects', () => {
 
   it('opens a completed HTTPS redirect in the same window', async () => {
     mockGetKycInfo.mockResolvedValueOnce(complete());
-    renderPath('/kyc?code=CODE&kyc-redirect=https%3A%2F%2Fexample.com%2Fdone');
-    await waitFor(() => expect(openSpy).toHaveBeenCalledWith('https://example.com/done', '_self'), { timeout: 10000 });
+    renderPath('/kyc?code=CODE&kyc-redirect=https%3A%2F%2Fshares.realunit.ch%2Fdone');
+    await waitFor(() => expect(openSpy).toHaveBeenCalledWith('https://shares.realunit.ch/done', '_self'), {
+      timeout: 10000,
+    });
   });
 
   it.each(['http%3A%2F%2Fexample.com', 'invalid-url'])('ignores unsafe redirect %s', async (redirect) => {
@@ -597,8 +599,42 @@ describe('KycScreen redirect and consent effects', () => {
   });
 
   it('does not redirect incomplete KYC', async () => {
-    await overview(info({ kycSteps: [step('ContactData')] }), '/kyc?code=CODE&kyc-redirect=https://example.com');
+    await overview(
+      info({ kycSteps: [step('ContactData')] }),
+      '/kyc?code=CODE&kyc-redirect=https://shares.realunit.ch/done',
+    );
     expect(openSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not open a completed redirect to another host', async () => {
+    mockGetKycInfo.mockResolvedValueOnce(complete());
+    renderPath('/kyc?code=CODE&kyc-redirect=https://evil.example');
+    await screen.findByTestId('kyc-status', undefined, { timeout: 10000 });
+    expect(openSpy).not.toHaveBeenCalled();
+  });
+
+  it('shows a mismatch hint and does not start KYC for a different wallet', async () => {
+    mockUser.user = { kyc: { hash: 'USER' }, activeAddress: { address: '0xAbC' } };
+    renderPath('/kyc?code=CODE&address=0xdef');
+    expect(
+      await screen.findByText('This page was opened for wallet 0xdef. Sign out and connect that wallet.', undefined, {
+        timeout: 10000,
+      }),
+    ).toBeInTheDocument();
+    expect(mockGetKycInfo).not.toHaveBeenCalled();
+    expect(mockStartStep).not.toHaveBeenCalled();
+    expect(mockContinueKyc).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Logout' }));
+    expect(mockLogout).toHaveBeenCalled();
+  });
+
+  it('loads KYC when the wallet address matches ignoring case', async () => {
+    mockUser.user = { kyc: { hash: 'USER' }, activeAddress: { address: '0xAbC' } };
+    renderPath('/kyc?code=CODE&address=0xabc');
+    await waitFor(() => expect(mockGetKycInfo).toHaveBeenCalled(), { timeout: 10000 });
+    expect(
+      screen.queryByText('This page was opened for wallet 0xabc. Sign out and connect that wallet.'),
+    ).not.toBeInTheDocument();
   });
 
   it('submits missing-client consent and continues', async () => {

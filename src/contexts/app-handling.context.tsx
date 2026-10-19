@@ -233,7 +233,14 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const [hasSession, setHasSession] = useState(false);
   const [redirectUri, setRedirectUri] = useState<string>();
   const [params, setParams] = useState<AppParams>({});
-  const [redirectPath, setRedirectPath] = useState<string>();
+  const [redirectPath, setRedirectPath] = useState<string | undefined>(() => {
+    try {
+      const stored = sessionStorage.getItem('dfx.kyc.redirect');
+      return stored?.startsWith('/kyc?') ? stored : undefined;
+    } catch {
+      return undefined;
+    }
+  });
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
 

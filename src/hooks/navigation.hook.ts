@@ -22,7 +22,19 @@ export function useNavigation(): NavigationInterface {
   const { redirectPath, setRedirectPath } = useAppHandlingContext();
 
   function navigate(to: To | number, options?: NavigationOptions) {
-    if (options?.setRedirect) setRedirectPath(options?.redirectPath ?? pathname);
+    if (options?.setRedirect) {
+      if (pathname === '/kyc' && search) {
+        const returnPath = `${pathname}${search}`;
+        setRedirectPath(returnPath);
+        try {
+          sessionStorage.setItem('dfx.kyc.redirect', returnPath);
+        } catch {
+          // ignore unavailable sessionStorage
+        }
+      } else {
+        setRedirectPath(options?.redirectPath ?? pathname);
+      }
+    }
 
     switch (typeof to) {
       case 'number':
@@ -40,8 +52,21 @@ export function useNavigation(): NavigationInterface {
   }
 
   function goBack(options?: NavigationOptions) {
+    const target = redirectPath ?? '/account';
+    const queryIndex = target.indexOf('?');
+    if (queryIndex !== -1) {
+      navigate({ pathname: target.slice(0, queryIndex), search: target.slice(queryIndex) }, options);
+      setRedirectPath(undefined);
+      try {
+        sessionStorage.removeItem('dfx.kyc.redirect');
+      } catch {
+        // ignore unavailable sessionStorage
+      }
+      return;
+    }
+
     setRedirectPath(undefined);
-    navigate(redirectPath ?? '/account', options);
+    navigate(target, options);
   }
 
   function setParams(newParams: URLSearchParams) {

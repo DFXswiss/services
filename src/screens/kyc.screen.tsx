@@ -152,6 +152,11 @@ export default function KycScreen(): JSX.Element {
   const kycCode = paramKycCode ?? user?.kyc.hash;
   const redirectUri = urlParams.get('kyc-redirect');
   const client = urlParams.get('client') ?? undefined;
+  const queryAddress = urlParams.get('address') ?? undefined;
+  const loggedInAddress = user?.activeAddress?.address;
+  const addressMismatch = Boolean(
+    loggedInAddress && queryAddress && loggedInAddress.toLowerCase() !== queryAddress.toLowerCase(),
+  );
 
   useUserGuard('/login', !kycCode);
 
@@ -160,6 +165,7 @@ export default function KycScreen(): JSX.Element {
   }, [info, lang]);
 
   useEffect(() => {
+    if (addressMismatch) return;
     if (!isInitialized) return;
     if (params.autoStart !== 'true') {
       setIsAutoStarting(false);
@@ -169,9 +175,10 @@ export default function KycScreen(): JSX.Element {
         setParams({ autoStart: undefined });
       });
     }
-  }, [isInitialized, kycCode, processingKycData]);
+  }, [isInitialized, kycCode, processingKycData, addressMismatch]);
 
   useEffect(() => {
+    if (addressMismatch) return;
     if (info) {
       const missingClient = client && !info.kycClients.includes(client) ? client : undefined;
 
@@ -182,8 +189,18 @@ export default function KycScreen(): JSX.Element {
         try {
           const validatedUrl = new URL(redirectUri);
 
-          if (validatedUrl.protocol === 'https:') {
+          if (
+            validatedUrl.protocol === 'https:' &&
+            validatedUrl.username === '' &&
+            validatedUrl.password === '' &&
+            validatedUrl.hostname === 'shares.realunit.ch'
+          ) {
             setIsLoading(true);
+            try {
+              sessionStorage.removeItem('dfx.kyc.redirect');
+            } catch {
+              // ignore unavailable sessionStorage
+            }
             // lgtm[js/client-side-unvalidated-url-redirection] - Trusted KYC partner redirect flow
             window.open(validatedUrl.href, '_self');
           }
@@ -192,9 +209,10 @@ export default function KycScreen(): JSX.Element {
         }
       }
     }
-  }, [redirectUri, info, client]);
+  }, [redirectUri, info, client, addressMismatch]);
 
   useEffect(() => {
+    if (addressMismatch) return;
     if (!kycCode) return;
 
     const request = stepName
@@ -221,7 +239,7 @@ export default function KycScreen(): JSX.Element {
         });
 
     request.catch((error: ApiError) => setError(error.message ?? 'Unknown error')).finally(() => setIsLoading(false));
-  }, [kycCode, stepName, stepType]);
+  }, [kycCode, stepName, stepType, addressMismatch]);
 
   async function onLoad(next: boolean): Promise<void> {
     if (!kycCode) return;
@@ -352,6 +370,23 @@ export default function KycScreen(): JSX.Element {
     onBack: handleBack,
     noPadding: isMobile && stepInProgress?.session?.type === UrlType.BROWSER,
   });
+
+  if (addressMismatch && queryAddress) {
+    return (
+      <StyledVerticalStack gap={6} full>
+        <p className="text-dfxGray-700">
+          {translate('screens/kyc', 'This page was opened for wallet {{address}}. Sign out and connect that wallet.', {
+            address: queryAddress,
+          })}
+        </p>
+        <StyledButton
+          width={StyledButtonWidth.MIN}
+          label={translate('general/actions', 'Logout')}
+          onClick={() => logout()}
+        />
+      </StyledVerticalStack>
+    );
+  }
 
   return (
     <>
