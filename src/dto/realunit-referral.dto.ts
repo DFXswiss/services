@@ -53,10 +53,13 @@ export interface RealUnitReferralRelation {
   kind: RealUnitCodeKind;
   userId: number;
   guestAccountId?: number;
+  guestName?: string;
   referrerAccountId?: number;
   code: string;
   consumedAt?: string;
   credited: boolean;
+  // Aktionariat payment reference of the buy that triggered the credit; absent while not credited
+  qualifyingBuyReference?: string;
   created: string;
   reviewStatus?: RealUnitManualReviewStatus;
   reviewedAt?: string;

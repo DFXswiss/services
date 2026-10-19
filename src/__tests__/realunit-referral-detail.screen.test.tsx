@@ -146,6 +146,8 @@ describe('RealunitReferralDetailScreen', () => {
     const FULL = {
       ...PENDING,
       guestAccountId: 501,
+      guestName: 'Test Guest',
+      qualifyingBuyReference: 'REALU-100001',
       referrerAccountId: 777,
       consumedAt: '2026-09-03T12:00:00Z',
       reviewStatus: RealUnitManualReviewStatus.APPROVED,
@@ -162,6 +164,8 @@ describe('RealunitReferralDetailScreen', () => {
 
     await waitFor(() => expect(screen.getByText('AB12CD')).toBeInTheDocument());
     expect(screen.getByText('501')).toBeInTheDocument();
+    expect(screen.getByText('Test Guest')).toBeInTheDocument();
+    expect(screen.getByText('REALU-100001')).toBeInTheDocument();
     expect(screen.getByText('777')).toBeInTheDocument();
     expect(screen.getByText('clerk-a')).toBeInTheDocument();
     expect(screen.getByText('clerk-b')).toBeInTheDocument();
