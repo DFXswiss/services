@@ -180,6 +180,9 @@ export default function KycScreen(): JSX.Element {
         // ignore unavailable sessionStorage
       }
     }
+    if (new URLSearchParams(search).has('address')) {
+      clearParams(['address']);
+    }
   }, [requestedAddress]);
 
   const loggedInAddress = user?.activeAddress?.address;

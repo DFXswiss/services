@@ -16,6 +16,15 @@ interface NavigationInterface {
   clearParams: (params: string[]) => void;
 }
 
+function clearKycReturnStorage() {
+  try {
+    sessionStorage.removeItem('dfx.kyc.redirect');
+    sessionStorage.removeItem('dfx.kyc.address');
+  } catch {
+    // ignore unavailable sessionStorage
+  }
+}
+
 export function useNavigation(): NavigationInterface {
   const navigateTo = useNavigate();
   const { search, pathname } = useLocation();
@@ -77,16 +86,12 @@ export function useNavigation(): NavigationInterface {
     if (queryIndex !== -1) {
       navigate({ pathname: target.slice(0, queryIndex), search: target.slice(queryIndex) }, options);
       setRedirectPath(undefined);
-      try {
-        sessionStorage.removeItem('dfx.kyc.redirect');
-        sessionStorage.removeItem('dfx.kyc.address');
-      } catch {
-        // ignore unavailable sessionStorage
-      }
+      clearKycReturnStorage();
       return;
     }
 
     setRedirectPath(undefined);
+    clearKycReturnStorage();
     navigate(target, options);
   }
 

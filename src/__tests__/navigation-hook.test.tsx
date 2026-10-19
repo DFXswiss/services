@@ -196,6 +196,19 @@ describe('useNavigation', () => {
     expect(screen.getByTestId('search').textContent).toBe('');
   });
 
+  it('clears both kyc session keys when going back without a query', () => {
+    mockAppHandling.redirectPath = '/sell';
+    sessionStorage.setItem('dfx.kyc.redirect', '/kyc?wallet=RealUnit&address=0xdef');
+    sessionStorage.setItem('dfx.kyc.address', '0xdef');
+    renderAt('/login');
+    act(() => {
+      navigation.goBack();
+    });
+    expect(screen.getByTestId('pathname').textContent).toBe('/sell');
+    expect(sessionStorage.getItem('dfx.kyc.redirect')).toBeNull();
+    expect(sessionStorage.getItem('dfx.kyc.address')).toBeNull();
+  });
+
   it('still sets the redirect path when sessionStorage.setItem throws', () => {
     const original = window.sessionStorage;
     Object.defineProperty(window, 'sessionStorage', {

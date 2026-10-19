@@ -681,6 +681,7 @@ describe('KycScreen redirect and consent effects', () => {
     expect(mockGetKycInfo).not.toHaveBeenCalled();
     expect(mockStartStep).not.toHaveBeenCalled();
     expect(mockContinueKyc).not.toHaveBeenCalled();
+    expect(mockClearParams).toHaveBeenCalledWith(['address']);
     fireEvent.click(screen.getByRole('button', { name: 'Logout' }));
     expect(mockLogout).toHaveBeenCalled();
   });
@@ -689,6 +690,7 @@ describe('KycScreen redirect and consent effects', () => {
     mockUser.user = { kyc: { hash: 'USER' }, activeAddress: { address: '0xAbC' } };
     renderPath('/kyc?code=CODE&address=0xabc');
     await waitFor(() => expect(mockGetKycInfo).toHaveBeenCalled(), { timeout: 10000 });
+    expect(mockClearParams).toHaveBeenCalledWith(['address']);
     expect(
       screen.queryByText('This page was opened for wallet 0xabc. Sign out and connect that wallet.'),
     ).not.toBeInTheDocument();
@@ -809,6 +811,7 @@ describe('KycScreen redirect and consent effects', () => {
     mockUser.user = { kyc: { hash: 'USER' }, activeAddress: { address: '0xAbC' } };
     renderPath('/kyc?code=CODE');
     await waitFor(() => expect(mockGetKycInfo).toHaveBeenCalled(), { timeout: 10000 });
+    expect(mockClearParams).not.toHaveBeenCalledWith(['address']);
     expect(
       screen.queryByText('This page was opened for wallet 0xdef. Sign out and connect that wallet.'),
     ).not.toBeInTheDocument();
