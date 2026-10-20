@@ -18,7 +18,8 @@ import { expect, Page, Route, test } from '@playwright/test';
  *     screenshot; one shareable campaign code on the landing/QR variants)
  * The detail screen sources a single relation from that same list (there is no single-relation GET).
  *
- * Synthetic fixtures: fake ids (8100+), fixed ISO dates, fake codes/accounts — no production data.
+ * Synthetic fixtures: fake ids (8100+), fixed ISO dates, fake codes/accounts, guest names and payment
+ * references — no production data.
  */
 
 function jwt(): string {
@@ -43,6 +44,7 @@ const RELATIONS = [
     kind: 'Invite',
     userId: 8201,
     guestAccountId: 8301,
+    guestName: 'Test Guest A',
     referrerAccountId: 8401,
     code: 'AB12CD',
     credited: false,
@@ -59,8 +61,10 @@ const RELATIONS = [
     kind: 'Promo',
     userId: 8202,
     guestAccountId: 8302,
+    guestName: 'Test Guest B',
     code: 'WOV2026',
     credited: true,
+    qualifyingBuyReference: 'REALU-100002',
     consumedAt: '2026-10-01T09:30:00.000Z',
     created: '2026-10-01T09:00:00.000Z',
   },

@@ -78,6 +78,7 @@ export default function RealunitReferralDetailScreen(): JSX.Element {
     ['ID', String(relation.id)],
     [translate('screens/referral', 'User ID'), String(relation.userId)],
     [translate('screens/referral', 'Guest account'), relation.guestAccountId != null ? String(relation.guestAccountId) : '-'],
+    [translate('screens/referral', 'Name'), relation.guestName ?? '-'],
     // A promo code has no referrer, so the row would always be empty there.
     ...(relation.kind === RealUnitCodeKind.PROMO
       ? []
@@ -95,6 +96,7 @@ export default function RealunitReferralDetailScreen(): JSX.Element {
       translate('screens/referral', 'Credited'),
       relation.credited ? translate('general/actions', 'Yes') : translate('general/actions', 'No'),
     ],
+    [translate('screens/referral', 'Remittance info'), relation.qualifyingBuyReference ?? '-'],
     [translate('screens/referral', 'Consumed at'), relation.consumedAt ? formatSwissDateTimeWithSeconds(relation.consumedAt) : '-'],
     [translate('screens/referral', 'Created'), formatSwissDateTimeWithSeconds(relation.created)],
   ];
