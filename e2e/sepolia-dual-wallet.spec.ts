@@ -9,7 +9,7 @@
  *   - USDT sell test (pays gas in ETH)
  *
  * Wallet 2 (0x6aCA95...): Has USDT only (no ETH)
- *   - Gasless sell flow via EIP-7702
+ *   - Gasless sell flow via EIP-5792
  *   - USDT sell without ETH for gas
  */
 
@@ -85,7 +85,9 @@ async function selectOrAddTestIban(page: Page): Promise<void> {
 
   // Click on IBAN selector button to open the form/list
   const ibanSelector = page
-    .locator('button:has-text("Deine IBAN hinzufügen"), button:has-text("IBAN hinzufügen"), button:has-text("Add or select")')
+    .locator(
+      'button:has-text("Deine IBAN hinzufügen"), button:has-text("IBAN hinzufügen"), button:has-text("Add or select")',
+    )
     .first();
   try {
     await ibanSelector.waitFor({ state: 'visible', timeout: 5000 });
@@ -271,7 +273,7 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell', () => {
     console.log('Wallet 2 sell page loaded');
   });
 
-  test('should sell USDT on Sepolia without ETH (gasless via EIP-7702)', async ({ page }) => {
+  test('should sell USDT on Sepolia without ETH (gasless via EIP-5792)', async ({ page }) => {
     test.setTimeout(90000);
 
     // Navigate to sell page
@@ -314,7 +316,9 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell', () => {
 
     // Check for wallet/transaction button
     const walletButton = page
-      .locator('button:has-text("Wallet"), button:has-text("Transaktion"), button:has-text("Schliesse"), button:has-text("Continue")')
+      .locator(
+        'button:has-text("Wallet"), button:has-text("Transaktion"), button:has-text("Schliesse"), button:has-text("Continue")',
+      )
       .first();
 
     if (await walletButton.isVisible().catch(() => false)) {
@@ -366,8 +370,7 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell', () => {
     expect(hasRelevantContent).toBeTruthy();
 
     // Should not show blocking error
-    const hasBlockingGasError =
-      pageContent?.includes('Insufficient ETH') && pageContent?.includes('cannot proceed');
+    const hasBlockingGasError = pageContent?.includes('Insufficient ETH') && pageContent?.includes('cannot proceed');
     expect(hasBlockingGasError).toBeFalsy();
 
     console.log('Wallet 2 gasless detection test completed');

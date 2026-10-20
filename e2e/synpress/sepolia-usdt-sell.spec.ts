@@ -8,7 +8,7 @@
  *   - USDT sell test (pays gas in ETH)
  *
  * Wallet 2 (0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74): Has USDT only (no ETH)
- *   - Gasless sell flow via EIP-7702
+ *   - Gasless sell flow via EIP-5792 (MetaMask smart account)
  *   - USDT sell without ETH for gas
  *
  * Run: npx playwright test --config=playwright.synpress.config.ts e2e/synpress/sepolia-usdt-sell.spec.ts
@@ -42,7 +42,9 @@ async function addSepoliaNetwork(metamaskPage: any): Promise<void> {
       await metamaskPage.waitForTimeout(1000);
 
       // Look for "Add network" button
-      const addNetworkBtn = metamaskPage.locator('button:has-text("Add network"), button:has-text("Netzwerk hinzufügen")').first();
+      const addNetworkBtn = metamaskPage
+        .locator('button:has-text("Add network"), button:has-text("Netzwerk hinzufügen")')
+        .first();
       if (await addNetworkBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
         await addNetworkBtn.click();
         await metamaskPage.waitForTimeout(1000);
@@ -93,12 +95,7 @@ async function switchToSepolia(metamaskPage: any): Promise<void> {
  */
 async function selectUsdtAsset(page: any): Promise<void> {
   // Try clicking on asset selector (various possible selectors)
-  const selectors = [
-    'text=Sepolia Testnet',
-    'text=ETH',
-    '[data-testid="asset-selector"]',
-    '[class*="asset-select"]',
-  ];
+  const selectors = ['text=Sepolia Testnet', 'text=ETH', '[data-testid="asset-selector"]', '[class*="asset-select"]'];
 
   for (const selector of selectors) {
     try {
@@ -145,7 +142,9 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
 
   test('should verify Wallet 1 address is correctly derived', async ({ metamaskPage }) => {
     // Verify the correct seed is being used by checking the address in MetaMask
-    const addressElement = metamaskPage.locator('[data-testid="account-options-menu-button"], [class*="address"]').first();
+    const addressElement = metamaskPage
+      .locator('[data-testid="account-options-menu-button"], [class*="address"]')
+      .first();
 
     // Take screenshot for verification
     await metamaskPage.screenshot({
@@ -236,7 +235,9 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
 
     // Click transaction button
     const txButton = page
-      .locator('button:has-text("Transaktion"), button:has-text("Sell"), button:has-text("Verkaufen"), button:has-text("Wallet")')
+      .locator(
+        'button:has-text("Transaktion"), button:has-text("Sell"), button:has-text("Verkaufen"), button:has-text("Wallet")',
+      )
       .first();
 
     if (await txButton.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -270,14 +271,14 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
 });
 
 // =============================================================================
-// WALLET 2 TESTS: USDT only (no ETH - gasless via EIP-7702)
+// WALLET 2 TESTS: USDT only (no ETH - gasless via EIP-5792)
 // =============================================================================
 
 test.describe('Wallet 2 - Sepolia Gasless USDT Sell (Real MetaMask)', () => {
   test.beforeAll(async () => {
     console.log('=== WALLET 2 TESTS ===');
     console.log(`Expected address: ${TEST_WALLET_2_ADDRESS}`);
-    console.log('This wallet has USDT only (no ETH) for gasless EIP-7702 testing');
+    console.log('This wallet has USDT only (no ETH) for gasless EIP-5792 testing');
   });
 
   test('should verify Wallet 2 address is correctly derived', async ({}) => {
@@ -311,7 +312,7 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell (Real MetaMask)', () => {
 
     // The gasless flow would show:
     // 1. No "Insufficient ETH" blocking error
-    // 2. EIP-7702 delegation option
+    // 2. EIP-5792 gasless transaction option through the MetaMask smart account
     // 3. Paymaster service for gas sponsorship
 
     expect(true).toBeTruthy();
@@ -347,7 +348,11 @@ test.describe('Sepolia USDT Integration Tests', () => {
     await page.waitForTimeout(3000);
 
     // Try to find USDT in asset list
-    const usdtVisible = await page.locator('text=USDT').first().isVisible({ timeout: 5000 }).catch(() => false);
+    const usdtVisible = await page
+      .locator('text=USDT')
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     // Screenshot
     await page.screenshot({
@@ -386,11 +391,11 @@ test.describe('Sepolia USDT Integration Tests', () => {
 });
 
 // =============================================================================
-// EIP-7702 SPECIFIC TESTS
+// EIP-5792 SPECIFIC TESTS
 // =============================================================================
 
-test.describe('EIP-7702 Gasless Flow Tests', () => {
-  test('should detect wallet capabilities for EIP-7702', async ({ page, metamask }) => {
+test.describe('EIP-5792 Gasless Flow Tests', () => {
+  test('should detect wallet capabilities for EIP-5792', async ({ page, metamask }) => {
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
@@ -399,11 +404,12 @@ test.describe('EIP-7702 Gasless Flow Tests', () => {
     await page.waitForTimeout(3000);
 
     // After connection, the app should check wallet_getCapabilities
-    // If MetaMask supports EIP-7702, it will be available for gasless transactions
+    // If MetaMask supports EIP-5792 paymaster calls, it can sponsor gasless transactions.
+    // MetaMask handles its smart account upgrade internally.
 
     // Screenshot for capability detection
     await page.screenshot({
-      path: 'e2e/screenshots/synpress-eip7702-capabilities.png',
+      path: 'e2e/screenshots/synpress-eip5792-capabilities.png',
       fullPage: true,
     });
 
@@ -431,7 +437,7 @@ test.describe('EIP-7702 Gasless Flow Tests', () => {
 
     // Screenshot: Check for gasless UI elements
     await page.screenshot({
-      path: 'e2e/screenshots/synpress-eip7702-gasless-ui.png',
+      path: 'e2e/screenshots/synpress-eip5792-gasless-ui.png',
       fullPage: true,
     });
 
