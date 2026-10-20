@@ -100,11 +100,11 @@ export function useTxHelper(): TxHelperInterface {
           if ('asset' in tx) {
             const result = await confirmSell(tx.id, { txHash });
             if (!result?.id) throw new TranslatedError('Failed to confirm sell transaction');
-            return result.id.toString();
+            return txHash;
           } else {
             const result = await confirmSwap(tx.id, { txHash });
             if (!result?.id) throw new TranslatedError('Failed to confirm swap transaction');
-            return result.id.toString();
+            return txHash;
           }
         }
 

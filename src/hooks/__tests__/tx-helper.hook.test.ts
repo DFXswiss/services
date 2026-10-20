@@ -104,23 +104,23 @@ beforeEach(() => {
 });
 
 describe('useTxHelper', () => {
-  it('uses EIP-5792 calls and confirms sells with the returned hash', async () => {
+  it('returns the EIP-5792 transaction hash after confirming a sell', async () => {
     const calls = [{ to: '0xto', data: '0xdata', value: '0x0' }];
     const tx = { ...sell, depositTx: { eip5792: { calls, paymasterUrl: 'https://paymaster', chainId: 1 } } } as Sell;
     const { result } = renderHook(() => useTxHelper());
 
-    await expect(result.current.sendTransaction(tx)).resolves.toBe('101');
+    await expect(result.current.sendTransaction(tx)).resolves.toBe('eip5792-hash');
     expect(mockState.sendCallsWithPaymaster).toHaveBeenCalledWith(calls, 'https://paymaster', 1);
     expect(mockState.confirmSell).toHaveBeenCalledWith(1, { txHash: 'eip5792-hash' });
     expect(mockState.createTransactionMetaMask).not.toHaveBeenCalled();
   });
 
-  it('uses EIP-5792 calls and confirms swaps with the returned hash', async () => {
+  it('returns the EIP-5792 transaction hash after confirming a swap', async () => {
     const calls = [{ to: '0xto', data: '0xdata', value: '0x0' }];
     const tx = { ...swap, depositTx: { eip5792: { calls, paymasterUrl: 'https://paymaster', chainId: 10 } } } as Swap;
     const { result } = renderHook(() => useTxHelper());
 
-    await expect(result.current.sendTransaction(tx)).resolves.toBe('202');
+    await expect(result.current.sendTransaction(tx)).resolves.toBe('eip5792-hash');
     expect(mockState.sendCallsWithPaymaster).toHaveBeenCalledWith(calls, 'https://paymaster', 10);
     expect(mockState.confirmSwap).toHaveBeenCalledWith(2, { txHash: 'eip5792-hash' });
   });

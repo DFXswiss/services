@@ -394,8 +394,8 @@ test.describe('Sepolia USDT Integration Tests', () => {
 // EIP-5792 SPECIFIC TESTS
 // =============================================================================
 
-test.describe('EIP-5792 Gasless Flow Tests', () => {
-  test('should detect wallet capabilities for EIP-5792', async ({ page, metamask }) => {
+test.describe('EIP-5792 Gasless Manual Review Screenshots', () => {
+  test('captures a connected-wallet screenshot for manual capability review', async ({ page, metamask }) => {
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
@@ -416,7 +416,7 @@ test.describe('EIP-5792 Gasless Flow Tests', () => {
     expect(page).toBeTruthy();
   });
 
-  test('should show appropriate UI for gasless transactions when available', async ({ page, metamask }) => {
+  test('captures the selected-asset gasless UI for manual review', async ({ page, metamask }) => {
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
