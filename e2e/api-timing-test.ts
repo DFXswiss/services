@@ -96,7 +96,6 @@ async function main() {
   console.log(`   Has depositAddress: ${!!dataWith.depositAddress}`);
   console.log(`   Has depositTx: ${!!dataWith.depositTx}`);
   console.log(`   gaslessAvailable: ${dataWith.gaslessAvailable}`);
-  console.log(`   eip7702Authorization: ${dataWith.eip7702Authorization ? 'YES' : 'no'}`);
   console.log(`   depositTx.eip5792: ${dataWith.depositTx?.eip5792 ? 'YES' : 'no'}\n`);
 
   // Summary
@@ -117,12 +116,7 @@ async function main() {
   // Check for gasless data that could cause issues
   if (dataWith.depositTx?.eip5792) {
     console.log('\n⚠️  Backend returns eip5792 data!');
-    console.log('This could cause MetaMask issues if wallet doesn\'t support EIP-5792.');
-  }
-
-  if (dataWith.eip7702Authorization) {
-    console.log('\n⚠️  Backend returns eip7702Authorization!');
-    console.log('This requires MetaMask signature before transaction.');
+    console.log("This could cause MetaMask issues if wallet doesn't support EIP-5792.");
   }
 
   console.log('\n=== RAW RESPONSE ===');

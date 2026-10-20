@@ -7,21 +7,13 @@ import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { TranslatedError } from '../util/translated-error';
 import { useBlockchainBalance } from './blockchain-balance.hook';
 import { useAlby } from './wallets/alby.hook';
-import { Eip7702AuthorizationData, useMetaMask } from './wallets/metamask.hook';
+import { useMetaMask } from './wallets/metamask.hook';
 import { usePhantom } from './wallets/phantom.hook';
 import { useTronLinkTrx } from './wallets/tronlink-trx.hook';
 import { useTrustSol } from './wallets/trust-sol.hook';
 import { useTrustTrx } from './wallets/trust-trx.hook';
 import { useWalletConnect } from './wallets/wallet-connect.hook';
 
-// Extended Sell/Swap interface with gasless fields (from backend)
-interface GaslessPaymentInfo {
-  gaslessAvailable?: boolean;
-  eip7702Authorization?: Eip7702AuthorizationData;
-}
-
-type SellWithGasless = Sell & GaslessPaymentInfo;
-type SwapWithGasless = Swap & GaslessPaymentInfo;
 export interface TxHelperInterface {
   getBalances: (assets: Asset[], address: string, blockchain?: Blockchain) => Promise<AssetBalance[] | undefined>;
   sendTransaction: (tx: Sell | Swap) => Promise<string>;
@@ -34,7 +26,6 @@ export function useTxHelper(): TxHelperInterface {
     createTransaction: createTransactionMetaMask,
     requestChangeToBlockchain: requestChangeToBlockchainMetaMask,
     sendCallsWithPaymaster,
-    signEip7702Authorization,
   } = useMetaMask();
   const {
     createTransaction: createTransactionWalletConnect,
@@ -98,29 +89,7 @@ export function useTxHelper(): TxHelperInterface {
 
         await requestChangeToBlockchainMetaMask(asset.blockchain);
 
-        // Cast to extended type to access gasless fields
-        const txWithGasless = tx as SellWithGasless | SwapWithGasless;
-
-        // EIP-7702 gasless transaction flow (NEW - preferred method)
-        // Used when user has 0 ETH for gas - backend provides EIP-7702 authorization data
-        if (txWithGasless.gaslessAvailable && txWithGasless.eip7702Authorization) {
-          // Sign the EIP-7702 authorization
-          const signedAuth = await signEip7702Authorization(txWithGasless.eip7702Authorization);
-
-          // Send to backend's gasless endpoint
-          if ('asset' in tx) {
-            const result = await confirmSell(tx.id, { authorization: signedAuth } as any);
-            if (!result?.id) throw new TranslatedError('Failed to execute gasless sell transaction');
-            return result.id.toString();
-          } else {
-            const result = await confirmSwap(tx.id, { authorization: signedAuth } as any);
-            if (!result?.id) throw new TranslatedError('Failed to execute gasless swap transaction');
-            return result.id.toString();
-          }
-        }
-
-        // EIP-5792 gasless transaction flow via wallet_sendCalls with paymaster (fallback)
-        // Used when user has no ETH for gas - backend provides EIP-5792 paymaster data
+        // EIP-5792 gasless transaction flow via wallet_sendCalls with paymaster
         if (tx.depositTx?.eip5792) {
           const { paymasterUrl, calls, chainId } = tx.depositTx.eip5792;
 
@@ -201,7 +170,6 @@ export function useTxHelper(): TxHelperInterface {
       requestChangeToBlockchainWalletConnect,
       canClose,
       sendCallsWithPaymaster,
-      signEip7702Authorization,
       confirmSell,
       confirmSwap,
     ],
