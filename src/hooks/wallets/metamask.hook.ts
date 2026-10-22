@@ -41,8 +41,13 @@ export interface MetaMaskInterface {
     to: string,
     config?: { isWeiAmount?: boolean; gasPrice?: number },
   ) => Promise<string>;
-  sendCallsWithPaymaster: (calls: Eip5792Call[], paymasterUrl: string, chainId: number) => Promise<string>;
-  supportsEip5792Paymaster: (chainId: number) => Promise<boolean>;
+  sendCallsWithPaymaster: (
+    calls: Eip5792Call[],
+    paymasterUrl: string,
+    chainId: number,
+    from: string,
+  ) => Promise<string>;
+  supportsEip5792Paymaster: (chainId: number, account?: string) => Promise<boolean>;
 }
 
 interface MetaMaskError {
@@ -264,9 +269,9 @@ export function useMetaMask(): MetaMaskInterface {
   /**
    * Check if the wallet supports EIP-5792 paymaster service
    */
-  async function supportsEip5792Paymaster(chainId: number): Promise<boolean> {
+  async function supportsEip5792Paymaster(chainId: number, requestedAccount?: string): Promise<boolean> {
     try {
-      const account = await getAccount();
+      const account = requestedAccount ?? (await getAccount());
       if (!account) return false;
 
       const capabilities = await ethereum().request({
@@ -292,12 +297,12 @@ export function useMetaMask(): MetaMaskInterface {
         params: [callsId],
       });
 
-      if (status.status === 200) {
+      if (status.status >= 200 && status.status < 300) {
         const transactionHash = status.receipts?.[0]?.transactionHash;
         if (!transactionHash) throw new TranslatedError('Transaction failed');
         return transactionHash;
       }
-      if (status.status >= 400) {
+      if (status.status >= 300) {
         throw new TranslatedError('Transaction failed');
       }
 
@@ -309,15 +314,19 @@ export function useMetaMask(): MetaMaskInterface {
   /**
    * Send transaction via EIP-5792 wallet_sendCalls with paymaster sponsorship
    */
-  async function sendCallsWithPaymaster(calls: Eip5792Call[], paymasterUrl: string, chainId: number): Promise<string> {
+  async function sendCallsWithPaymaster(
+    calls: Eip5792Call[],
+    paymasterUrl: string,
+    chainId: number,
+    from: string,
+  ): Promise<string> {
     try {
-      const account = await getAccount();
-      if (!account) throw new Error('No account connected');
+      if (!from) throw new Error('No account connected');
 
       const chainHex = `0x${chainId.toString(16)}`;
 
       // Check if wallet supports paymaster
-      const supported = await supportsEip5792Paymaster(chainId);
+      const supported = await supportsEip5792Paymaster(chainId, from);
       if (!supported) {
         throw new TranslatedError(UNSUPPORTED_PAYMASTER_MESSAGE);
       }
@@ -329,7 +338,7 @@ export function useMetaMask(): MetaMaskInterface {
           {
             version: '2.0.0',
             chainId: chainHex,
-            from: account,
+            from,
             atomicRequired: true,
             calls: calls.map((c) => ({
               to: c.to,

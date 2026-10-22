@@ -110,7 +110,7 @@ describe('useTxHelper', () => {
     const { result } = renderHook(() => useTxHelper());
 
     await expect(result.current.sendTransaction(tx)).resolves.toBe('eip5792-hash');
-    expect(mockState.sendCallsWithPaymaster).toHaveBeenCalledWith(calls, 'https://paymaster', 1);
+    expect(mockState.sendCallsWithPaymaster).toHaveBeenCalledWith(calls, 'https://paymaster', 1, '0xabc');
     expect(mockState.confirmSell).toHaveBeenCalledWith(1, { txHash: 'eip5792-hash' });
     expect(mockState.createTransactionMetaMask).not.toHaveBeenCalled();
   });
@@ -121,7 +121,7 @@ describe('useTxHelper', () => {
     const { result } = renderHook(() => useTxHelper());
 
     await expect(result.current.sendTransaction(tx)).resolves.toBe('eip5792-hash');
-    expect(mockState.sendCallsWithPaymaster).toHaveBeenCalledWith(calls, 'https://paymaster', 10);
+    expect(mockState.sendCallsWithPaymaster).toHaveBeenCalledWith(calls, 'https://paymaster', 10, '0xabc');
     expect(mockState.confirmSwap).toHaveBeenCalledWith(2, { txHash: 'eip5792-hash' });
   });
 

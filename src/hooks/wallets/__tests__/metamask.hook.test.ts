@@ -249,7 +249,8 @@ describe('useMetaMask', () => {
       await expect(result.current.supportsEip5792Paymaster(1)).resolves.toBe(false);
     });
 
-    it('sends v2.0.0 atomic paymaster calls and returns the confirmed transaction hash', async () => {
+    it('sends v2 calls from the supplied account and returns the confirmed hash', async () => {
+      const sessionAddress = '0x9876543210987654321098765432109876543210';
       const calls = [
         { to: '0xto', data: '0xdata', value: '0x0' },
         { to: '0xsecond', data: '0xseconddata', value: '0x1' },
@@ -264,7 +265,9 @@ describe('useMetaMask', () => {
       const { result } = renderHook(() => useMetaMask());
       setHookAccount();
 
-      await expect(result.current.sendCallsWithPaymaster(calls, 'https://paymaster', 1)).resolves.toBe('0xhash');
+      await expect(result.current.sendCallsWithPaymaster(calls, 'https://paymaster', 1, sessionAddress)).resolves.toBe(
+        '0xhash',
+      );
       expect(request).toHaveBeenCalledWith(
         expect.objectContaining({
           method: 'wallet_sendCalls',
@@ -272,7 +275,7 @@ describe('useMetaMask', () => {
             expect.objectContaining({
               version: '2.0.0',
               chainId: '0x1',
-              from: account,
+              from: sessionAddress,
               atomicRequired: true,
               calls,
               capabilities: { paymasterService: { url: 'https://paymaster' } },
@@ -280,6 +283,7 @@ describe('useMetaMask', () => {
           ],
         }),
       );
+      expect(request).toHaveBeenCalledWith({ method: 'wallet_getCapabilities', params: [sessionAddress] });
     });
 
     it('rejects when the wallet lacks paymaster support', async () => {
@@ -288,7 +292,7 @@ describe('useMetaMask', () => {
       const { result } = renderHook(() => useMetaMask());
       setHookAccount();
 
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toThrow(
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account)).rejects.toThrow(
         'Your wallet does not support sponsored (gasless) transactions.',
       );
     });
@@ -302,7 +306,7 @@ describe('useMetaMask', () => {
       const { result } = renderHook(() => useMetaMask());
       setHookAccount();
 
-      const resultPromise = result.current.sendCallsWithPaymaster([], 'https://paymaster', 1);
+      const resultPromise = result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account);
       await expect(resultPromise).rejects.toEqual(expect.any(AbortError));
       await expect(resultPromise).rejects.toMatchObject({ message: 'User cancelled', code: 4001 });
     });
@@ -314,7 +318,7 @@ describe('useMetaMask', () => {
       });
       const { result } = renderMetaMask({ request });
 
-      const resultPromise = result.current.sendCallsWithPaymaster([], 'https://paymaster', 1);
+      const resultPromise = result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account);
       await expect(resultPromise).rejects.toEqual(expect.any(AbortError));
       await expect(resultPromise).rejects.toMatchObject({ message: 'User cancelled', code: 4001 });
     });
@@ -326,7 +330,7 @@ describe('useMetaMask', () => {
       });
       const { result } = renderMetaMask({ request });
 
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toThrow(
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account)).rejects.toThrow(
         'Your wallet does not support sponsored (gasless) transactions.',
       );
     });
@@ -337,7 +341,7 @@ describe('useMetaMask', () => {
       web3.eth.getAccounts.mockResolvedValue([]);
 
       await expect(result.current.supportsEip5792Paymaster(1)).resolves.toBe(false);
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toThrow(
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, '')).rejects.toThrow(
         'No account connected',
       );
       expect(request).not.toHaveBeenCalled();
@@ -351,46 +355,44 @@ describe('useMetaMask', () => {
       });
       const { result } = renderMetaMask({ request });
 
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toThrow(
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account)).rejects.toThrow(
         'Transaction failed',
       );
     });
 
-    it('polls after status 100 and returns the hash for status 200 with a string calls ID', async () => {
+    it('polls after missing and status 100, then returns the hash for status 201', async () => {
       let statusCalls = 0;
       const request = jest.fn(async ({ method }: { method: string }) => {
         if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
         if (method === 'wallet_sendCalls') return 'string-id';
         statusCalls += 1;
-        return statusCalls === 1
-          ? { status: 100 }
-          : { status: 200, receipts: [{ transactionHash: 'hash-after-pending' }] };
+        if (statusCalls === 1) return {};
+        if (statusCalls === 2) return { status: 100 };
+        return { status: 201, receipts: [{ transactionHash: 'hash-after-pending' }] };
       });
       const { result } = renderMetaMask({ request });
 
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).resolves.toBe(
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account)).resolves.toBe(
         'hash-after-pending',
       );
       expect(request).toHaveBeenCalledWith({ method: 'wallet_getCallsStatus', params: ['string-id'] });
-      expect(statusCalls).toBe(2);
+      expect(statusCalls).toBe(3);
     });
 
-    it('polls after unknown status 300 and returns a hash for status 200', async () => {
+    it('rejects status 300 from wallet_getCallsStatus', async () => {
       let statusCalls = 0;
       const request = jest.fn(async ({ method }: { method: string }) => {
         if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
         if (method === 'wallet_sendCalls') return { id: 'unknown-status-id' };
         statusCalls += 1;
-        return statusCalls === 1
-          ? { status: 300 }
-          : { status: 200, receipts: [{ transactionHash: 'hash-after-unknown-status' }] };
+        return { status: 300 };
       });
       const { result } = renderMetaMask({ request });
 
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).resolves.toBe(
-        'hash-after-unknown-status',
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account)).rejects.toThrow(
+        'Transaction failed',
       );
-      expect(statusCalls).toBe(2);
+      expect(statusCalls).toBe(1);
     });
 
     it.each([
@@ -405,7 +407,7 @@ describe('useMetaMask', () => {
       });
       const { result } = renderMetaMask({ request });
 
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toThrow(
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account)).rejects.toThrow(
         'Transaction failed',
       );
     });
@@ -418,7 +420,7 @@ describe('useMetaMask', () => {
       });
       const { result } = renderMetaMask({ request });
 
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toBe(error);
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account)).rejects.toBe(error);
     });
 
     it('times out after the wallet leaves every call pending', async () => {
@@ -433,7 +435,7 @@ describe('useMetaMask', () => {
       });
       const { result } = renderMetaMask({ request });
 
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toThrow(
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1, account)).rejects.toThrow(
         'Transaction timeout',
       );
       expect(request.mock.calls.filter(([call]) => call.method === 'wallet_getCallsStatus')).toHaveLength(120);

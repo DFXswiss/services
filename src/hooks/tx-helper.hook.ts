@@ -94,7 +94,7 @@ export function useTxHelper(): TxHelperInterface {
           const { paymasterUrl, calls, chainId } = tx.depositTx.eip5792;
 
           // Send transaction via wallet_sendCalls with paymaster sponsorship
-          const txHash = await sendCallsWithPaymaster(calls, paymasterUrl, chainId);
+          const txHash = await sendCallsWithPaymaster(calls, paymasterUrl, chainId, session.address);
 
           // Confirm the transaction with the backend using the txHash
           if ('asset' in tx) {

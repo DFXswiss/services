@@ -273,7 +273,7 @@ describe('EIP-5792 Real Hook Tests', () => {
       },
     ];
 
-    it('should send v2.0.0 atomic calls and return the confirmed transaction hash', async () => {
+    it('sends v2 atomic calls and returns the hash for status 201', async () => {
       mockEthereumRequest.mockImplementation(async ({ method, params }: { method: string; params?: any[] }) => {
         if (method === 'eth_accounts') return [TEST_ACCOUNT];
         if (method === 'wallet_getCapabilities') {
@@ -293,7 +293,7 @@ describe('EIP-5792 Real Hook Tests', () => {
         }
         if (method === 'wallet_getCallsStatus') {
           return {
-            status: 200,
+            status: 201,
             receipts: [{ transactionHash: '0xfinaltxhash' }],
           };
         }
@@ -304,7 +304,12 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       let txHash = '';
       await act(async () => {
-        txHash = await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
+        txHash = await result.current.sendCallsWithPaymaster(
+          mockCalls,
+          TEST_PAYMASTER_URL,
+          TEST_CHAIN_ID,
+          TEST_ACCOUNT,
+        );
       });
 
       expect(txHash).toBe('0xfinaltxhash');
@@ -323,7 +328,7 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       await expect(
         act(async () => {
-          await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
+          await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID, TEST_ACCOUNT);
         }),
       ).rejects.toThrow();
     });
@@ -343,7 +348,7 @@ describe('EIP-5792 Real Hook Tests', () => {
       const { result } = renderHook(() => useMetaMask());
 
       const rejection = act(async () => {
-        await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
+        await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID, TEST_ACCOUNT);
       });
       await expect(rejection).rejects.toMatchObject({ message: 'User cancelled', code: 4001 });
       await expect(rejection).rejects.toBeInstanceOf(AbortError);
@@ -365,12 +370,12 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       await expect(
         act(async () => {
-          await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
+          await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID, TEST_ACCOUNT);
         }),
       ).rejects.toThrow('There is already a request pending');
     });
 
-    it.each([400, 500, 600])('rejects status %i from wallet_getCallsStatus', async (status) => {
+    it.each([300, 400, 500, 600])('rejects status %i from wallet_getCallsStatus', async (status) => {
       mockEthereumRequest.mockImplementation(async ({ method }: { method: string }) => {
         if (method === 'eth_accounts') return [TEST_ACCOUNT];
         if (method === 'wallet_getCapabilities') {
@@ -389,12 +394,12 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       await expect(
         act(async () => {
-          await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
+          await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID, TEST_ACCOUNT);
         }),
       ).rejects.toThrow('Transaction failed');
     });
 
-    it('should poll for transaction status until confirmed', async () => {
+    it('polls after missing and status 100, then returns the hash for status 201', async () => {
       let pollCount = 0;
 
       mockEthereumRequest.mockImplementation(async ({ method }: { method: string }) => {
@@ -407,11 +412,10 @@ describe('EIP-5792 Real Hook Tests', () => {
         }
         if (method === 'wallet_getCallsStatus') {
           pollCount++;
-          if (pollCount < 3) {
-            return { status: 100 };
-          }
+          if (pollCount === 1) return {};
+          if (pollCount === 2) return { status: 100 };
           return {
-            status: 200,
+            status: 201,
             receipts: [{ transactionHash: '0xpolledtxhash' }],
           };
         }
@@ -422,7 +426,12 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       let txHash = '';
       await act(async () => {
-        txHash = await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
+        txHash = await result.current.sendCallsWithPaymaster(
+          mockCalls,
+          TEST_PAYMASTER_URL,
+          TEST_CHAIN_ID,
+          TEST_ACCOUNT,
+        );
       });
 
       expect(txHash).toBe('0xpolledtxhash');
@@ -453,7 +462,7 @@ describe('EIP-5792 Real Hook Tests', () => {
       const { result } = renderHook(() => useMetaMask());
 
       await act(async () => {
-        await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
+        await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID, TEST_ACCOUNT);
       });
 
       expect(capturedParams[0]).toEqual({
@@ -501,7 +510,7 @@ describe('EIP-5792 Real Hook Tests', () => {
       const { result } = renderHook(() => useMetaMask());
       let txHash = '';
       await act(async () => {
-        txHash = await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, chainId);
+        txHash = await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, chainId, TEST_ACCOUNT);
       });
 
       expect(txHash).toBe(`hash-${chainHex}`);
