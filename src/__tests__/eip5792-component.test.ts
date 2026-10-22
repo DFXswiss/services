@@ -81,11 +81,11 @@ describe('EIP-5792 Component Tests', () => {
         if (tx.asset) {
           const result = await deps.confirmSell(tx.id, { txHash });
           if (!result?.id) throw new Error('Failed to confirm sell transaction');
-          return result.id.toString();
+          return txHash;
         } else {
           const result = await deps.confirmSwap(tx.id, { txHash });
           if (!result?.id) throw new Error('Failed to confirm swap transaction');
-          return result.id.toString();
+          return txHash;
         }
       }
 
@@ -93,7 +93,7 @@ describe('EIP-5792 Component Tests', () => {
       return deps.createTransaction();
     }
 
-    it('should use sendCallsWithPaymaster when eip5792 data is present', async () => {
+    it('should return the EIP-5792 transaction hash after confirming a sell', async () => {
       mockSendCallsWithPaymaster.mockResolvedValue('0xtxhash123');
       mockConfirmSell.mockResolvedValue({ id: 456 });
 
@@ -130,7 +130,7 @@ describe('EIP-5792 Component Tests', () => {
       );
       expect(mockConfirmSell).toHaveBeenCalledWith(123, { txHash: '0xtxhash123' });
       expect(mockCreateTransaction).not.toHaveBeenCalled();
-      expect(result).toBe('456');
+      expect(result).toBe('0xtxhash123');
     });
 
     it('should use normal transaction flow when no eip5792 data', async () => {
@@ -159,7 +159,7 @@ describe('EIP-5792 Component Tests', () => {
       expect(result).toBe('0xnormaltx');
     });
 
-    it('should handle swap transaction with EIP-5792', async () => {
+    it('should return the EIP-5792 transaction hash after confirming a swap', async () => {
       mockSendCallsWithPaymaster.mockResolvedValue('0xswaptxhash');
       mockConfirmSwap.mockResolvedValue({ id: 789 });
 
@@ -190,7 +190,7 @@ describe('EIP-5792 Component Tests', () => {
 
       expect(mockConfirmSwap).toHaveBeenCalledWith(456, { txHash: '0xswaptxhash' });
       expect(mockConfirmSell).not.toHaveBeenCalled();
-      expect(result).toBe('789');
+      expect(result).toBe('0xswaptxhash');
     });
 
     it('should throw error when sendCallsWithPaymaster fails', async () => {
@@ -368,9 +368,7 @@ describe('EIP-5792 Component Tests', () => {
 
   describe('Error Scenarios', () => {
     it('should handle paymaster service unavailable', async () => {
-      mockSendCallsWithPaymaster.mockRejectedValue(
-        new Error('Paymaster service unavailable'),
-      );
+      mockSendCallsWithPaymaster.mockRejectedValue(new Error('Paymaster service unavailable'));
 
       const tx = {
         id: 1,
@@ -386,9 +384,9 @@ describe('EIP-5792 Component Tests', () => {
         },
       };
 
-      await expect(
-        simulateSendTransactionErr(tx, mockSendCallsWithPaymaster, mockConfirmSell),
-      ).rejects.toThrow('Paymaster service unavailable');
+      await expect(simulateSendTransactionErr(tx, mockSendCallsWithPaymaster, mockConfirmSell)).rejects.toThrow(
+        'Paymaster service unavailable',
+      );
     });
 
     it('should handle user rejection (code 4001)', async () => {
@@ -409,9 +407,9 @@ describe('EIP-5792 Component Tests', () => {
         },
       };
 
-      await expect(
-        simulateSendTransactionErr(tx, mockSendCallsWithPaymaster, mockConfirmSell),
-      ).rejects.toEqual(userRejection);
+      await expect(simulateSendTransactionErr(tx, mockSendCallsWithPaymaster, mockConfirmSell)).rejects.toEqual(
+        userRejection,
+      );
     });
 
     it('should handle network timeout', async () => {
@@ -431,9 +429,9 @@ describe('EIP-5792 Component Tests', () => {
         },
       };
 
-      await expect(
-        simulateSendTransactionErr(tx, mockSendCallsWithPaymaster, mockConfirmSell),
-      ).rejects.toThrow('Network timeout');
+      await expect(simulateSendTransactionErr(tx, mockSendCallsWithPaymaster, mockConfirmSell)).rejects.toThrow(
+        'Network timeout',
+      );
     });
 
     async function simulateSendTransactionErr(

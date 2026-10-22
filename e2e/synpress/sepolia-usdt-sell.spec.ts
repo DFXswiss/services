@@ -297,7 +297,9 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell (Real MetaMask)', () => {
      * 2. Or use a separate browser profile with Wallet 2
      *
      * For now, this test is skipped as it requires manual wallet switching.
-     * The gasless flow is tested via the mock tests in sepolia-dual-wallet.spec.ts
+     * The app's gasless logic is covered by unit tests in
+     * src/hooks/__tests__/tx-helper.hook.test.ts and
+     * src/hooks/wallets/__tests__/metamask.hook.test.ts. E2E specs only capture screenshots.
      */
     test.setTimeout(180000);
 

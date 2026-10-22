@@ -9,8 +9,7 @@
  *   - USDT sell test (pays gas in ETH)
  *
  * Wallet 2 (0x6aCA95...): Has USDT only (no ETH)
- *   - Gasless sell flow via EIP-5792
- *   - USDT sell without ETH for gas
+ *   - Captures Wallet 2 USDT sell screens without ETH and verifies the page does not crash
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -273,7 +272,7 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell', () => {
     console.log('Wallet 2 sell page loaded');
   });
 
-  test('should sell USDT on Sepolia without ETH (gasless via EIP-5792)', async ({ page }) => {
+  test('captures Wallet 2 USDT sell screens without ETH and does not crash', async ({ page }) => {
     test.setTimeout(90000);
 
     // Navigate to sell page

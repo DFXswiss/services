@@ -211,7 +211,7 @@ describe('useTxHelper', () => {
     await expect(result.current.sendTransaction(sell)).rejects.toThrow('Not supported yet');
   });
 
-  it('requires an address for every EVM wallet transaction path', async () => {
+  it('requires an address for WalletConnect, Phantom, Trust, and TronLink paths', async () => {
     const { result, rerender } = renderHook(() => useTxHelper());
     mockState.session = undefined;
 
