@@ -511,6 +511,13 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   its v2 `wallet_sendCalls` and `wallet_getCallsStatus` responses are fixtures. A green run does
   not prove that MetaMask returns those responses, the Paymaster accepts the request, or a
   transaction is sent.
+- **The EIP-5792 sell Playwright spec injects a mock wallet provider.**
+  `e2e/eip5792-gasless-sell.spec.ts:26-112` installs `window.ethereum` with fixture capabilities;
+  `wallet_sendCalls` returns `{ id }` and `wallet_getCallsStatus` returns numeric v2 statuses 100,
+  200 or 500. The production counterpart is `src/hooks/wallets/metamask.hook.ts:267-367`, which
+  queries capabilities, sends v2 calls and polls their status. This local Playwright spec does not
+  run in CI. A green run does not prove that a real wallet responds this way, that a Paymaster
+  accepts the request, or that a transaction is sent.
 - **The rejected address switch visual spec answers the user and the switch itself.**
   `e2e/connect-address-switch.spec.ts` authenticates with a synthetic unsigned JWT without an address, fulfils
   `GET /v2/user` with one synthetic address (and with none in the custody case) and the bootstrap GETs,

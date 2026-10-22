@@ -50,6 +50,8 @@ interface MetaMaskError {
   message: string;
 }
 
+const UNSUPPORTED_PAYMASTER_MESSAGE = 'Your wallet does not support sponsored (gasless) transactions.';
+
 export function useMetaMask(): MetaMaskInterface {
   const web3 = useMemo(() => {
     try {
@@ -317,7 +319,7 @@ export function useMetaMask(): MetaMaskInterface {
       // Check if wallet supports paymaster
       const supported = await supportsEip5792Paymaster(chainId);
       if (!supported) {
-        throw new TranslatedError('Your wallet does not support sponsored (gasless) transactions.');
+        throw new TranslatedError(UNSUPPORTED_PAYMASTER_MESSAGE);
       }
 
       // Send calls with paymaster capability
@@ -352,6 +354,13 @@ export function useMetaMask(): MetaMaskInterface {
     switch (e.code) {
       case 4001:
         throw new AbortError('User cancelled', 4001);
+
+      case 5750:
+        // EIP-5792 5750 means the wallet rejected the atomic upgrade.
+        throw new AbortError('User cancelled', 4001);
+
+      case 5700:
+        throw new TranslatedError(UNSUPPORTED_PAYMASTER_MESSAGE);
 
       case -32002:
         throw new TranslatedError('There is already a request pending. Please confirm it in your MetaMask and retry.');

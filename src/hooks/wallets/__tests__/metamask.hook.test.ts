@@ -307,6 +307,30 @@ describe('useMetaMask', () => {
       await expect(resultPromise).rejects.toMatchObject({ message: 'User cancelled', code: 4001 });
     });
 
+    it('maps atomic-upgrade rejection 5750 to AbortError with code 4001', async () => {
+      const request = jest.fn(async ({ method }: { method: string }) => {
+        if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
+        throw { code: 5750, message: 'Atomic upgrade rejected' };
+      });
+      const { result } = renderMetaMask({ request });
+
+      const resultPromise = result.current.sendCallsWithPaymaster([], 'https://paymaster', 1);
+      await expect(resultPromise).rejects.toEqual(expect.any(AbortError));
+      await expect(resultPromise).rejects.toMatchObject({ message: 'User cancelled', code: 4001 });
+    });
+
+    it('maps unsupported capability error 5700 to the paymaster gate message', async () => {
+      const request = jest.fn(async ({ method }: { method: string }) => {
+        if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
+        throw { code: 5700, message: 'Unsupported non-optional capability' };
+      });
+      const { result } = renderMetaMask({ request });
+
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toThrow(
+        'Your wallet does not support sponsored (gasless) transactions.',
+      );
+    });
+
     it('returns false when no account is connected', async () => {
       const request = jest.fn();
       const { result, web3 } = renderMetaMask({ request });
