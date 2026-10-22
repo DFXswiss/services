@@ -564,6 +564,7 @@ describe('useMetaMask', () => {
       const { result } = renderMetaMask(provider);
       await expect(result.current.requestChangeToBlockchain('Ethereum' as any)).rejects.toMatchObject({
         message: 'User cancelled',
+        code: 4001,
       });
       const error = { code: -32603, message: 'RPC error' };
       provider.request.mockRejectedValueOnce(error);
@@ -575,7 +576,10 @@ describe('useMetaMask', () => {
       web3.eth.personal.sign.mockResolvedValueOnce('signed-message');
       await expect(result.current.sign(account, 'hello')).resolves.toBe('signed-message');
       web3.eth.personal.sign.mockRejectedValueOnce({ code: 4001, message: 'Rejected' });
-      await expect(result.current.sign(account, 'hello')).rejects.toMatchObject({ message: 'User cancelled' });
+      await expect(result.current.sign(account, 'hello')).rejects.toMatchObject({
+        message: 'User cancelled',
+        code: 4001,
+      });
       web3.eth.personal.sign.mockRejectedValueOnce({ code: -32002, message: 'Pending' });
       await expect(result.current.sign(account, 'hello')).rejects.toThrow('There is already a request pending');
     });

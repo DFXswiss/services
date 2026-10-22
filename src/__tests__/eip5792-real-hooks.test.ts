@@ -114,6 +114,7 @@ jest.mock('src/dto/safe.dto', () => ({}));
 
 // NOW import testing utilities and the hook
 import { renderHook, act } from '@testing-library/react';
+import { AbortError } from 'src/util/abort-error';
 import { useMetaMask } from '../hooks/wallets/metamask.hook';
 
 describe('EIP-5792 Real Hook Tests', () => {
@@ -341,11 +342,11 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       const { result } = renderHook(() => useMetaMask());
 
-      await expect(
-        act(async () => {
-          await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
-        }),
-      ).rejects.toThrow();
+      const rejection = act(async () => {
+        await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
+      });
+      await expect(rejection).rejects.toMatchObject({ message: 'User cancelled', code: 4001 });
+      await expect(rejection).rejects.toBeInstanceOf(AbortError);
     });
 
     it('should handle pending request error (code -32002)', async () => {
@@ -366,7 +367,7 @@ describe('EIP-5792 Real Hook Tests', () => {
         act(async () => {
           await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
         }),
-      ).rejects.toThrow();
+      ).rejects.toThrow('There is already a request pending');
     });
 
     it.each([400, 500, 600])('rejects status %i from wallet_getCallsStatus', async (status) => {
@@ -536,22 +537,5 @@ describe('EIP-5792 Real Hook Tests', () => {
       expect(result.current.isInstalled()).toBe(true);
       expect(result.current.getWalletType()).toBe('Rabby');
     });
-  });
-
-  describe('Multi-chain EIP-5792 Support', () => {
-    const chains = [
-      { name: 'Ethereum', chainId: 1, chainHex: '0x1' },
-      { name: 'Optimism', chainId: 10, chainHex: '0xa' },
-      { name: 'Polygon', chainId: 137, chainHex: '0x89' },
-      { name: 'Arbitrum', chainId: 42161, chainHex: '0xa4b1' },
-      { name: 'Base', chainId: 8453, chainHex: '0x2105' },
-    ];
-
-    for (const chain of chains) {
-      it(`should correctly format chainId for ${chain.name}`, () => {
-        const formatted = `0x${chain.chainId.toString(16)}`;
-        expect(formatted).toBe(chain.chainHex);
-      });
-    }
   });
 });
