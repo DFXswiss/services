@@ -249,13 +249,16 @@ describe('useMetaMask', () => {
       await expect(result.current.supportsEip5792Paymaster(1)).resolves.toBe(false);
     });
 
-    it('sends paymaster calls and returns the confirmed transaction hash', async () => {
-      const calls = [{ to: '0xto', data: '0xdata', value: '0x0' }];
+    it('sends v2.0.0 atomic paymaster calls and returns the confirmed transaction hash', async () => {
+      const calls = [
+        { to: '0xto', data: '0xdata', value: '0x0' },
+        { to: '0xsecond', data: '0xseconddata', value: '0x1' },
+      ];
       const request = jest.fn(async ({ method }: { method: string }) => {
         if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
         if (method === 'wallet_sendCalls') return { id: 'calls-id' };
         if (method === 'wallet_getCallsStatus')
-          return { status: 'CONFIRMED', receipts: [{ transactionHash: '0xhash' }] };
+          return { status: 200, receipts: [{ transactionHash: '0xhash' }] };
         throw new Error(`Unexpected method ${method}`);
       });
       (window as any).ethereum = { request };
@@ -268,9 +271,10 @@ describe('useMetaMask', () => {
           method: 'wallet_sendCalls',
           params: [
             expect.objectContaining({
-              version: '1.0',
+              version: '2.0.0',
               chainId: '0x1',
               from: account,
+              atomicRequired: true,
               calls,
               capabilities: { paymasterService: { url: 'https://paymaster' } },
             }),
@@ -286,7 +290,7 @@ describe('useMetaMask', () => {
       setHookAccount();
 
       await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toThrow(
-        'Your wallet does not support gasless transactions.',
+        'Your wallet does not support sponsored (gasless) transactions.',
       );
     });
 
@@ -316,11 +320,11 @@ describe('useMetaMask', () => {
       expect(request).not.toHaveBeenCalled();
     });
 
-    it('rejects calls when the wallet reports a failed status', async () => {
+    it.each([400, 500, 600])('rejects calls when wallet_getCallsStatus returns %i', async (status) => {
       const request = jest.fn(async ({ method }: { method: string }) => {
         if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
         if (method === 'wallet_sendCalls') return { id: 'failed-id' };
-        return { status: 'FAILED' };
+        return { status };
       });
       const { result } = renderMetaMask({ request });
 
@@ -329,15 +333,15 @@ describe('useMetaMask', () => {
       );
     });
 
-    it('waits through a pending status and accepts a string calls ID', async () => {
+    it('polls after status 100 and returns the hash for status 200 with a string calls ID', async () => {
       let statusCalls = 0;
       const request = jest.fn(async ({ method }: { method: string }) => {
         if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
         if (method === 'wallet_sendCalls') return 'string-id';
         statusCalls += 1;
         return statusCalls === 1
-          ? { status: 'PENDING' }
-          : { status: 'CONFIRMED', receipts: [{ transactionHash: 'hash-after-pending' }] };
+          ? { status: 100 }
+          : { status: 200, receipts: [{ transactionHash: 'hash-after-pending' }] };
       });
       const { result } = renderMetaMask({ request });
 
@@ -346,6 +350,41 @@ describe('useMetaMask', () => {
       );
       expect(request).toHaveBeenCalledWith({ method: 'wallet_getCallsStatus', params: ['string-id'] });
       expect(statusCalls).toBe(2);
+    });
+
+    it('polls after unknown status 300 and returns a hash for status 200', async () => {
+      let statusCalls = 0;
+      const request = jest.fn(async ({ method }: { method: string }) => {
+        if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
+        if (method === 'wallet_sendCalls') return { id: 'unknown-status-id' };
+        statusCalls += 1;
+        return statusCalls === 1
+          ? { status: 300 }
+          : { status: 200, receipts: [{ transactionHash: 'hash-after-unknown-status' }] };
+      });
+      const { result } = renderMetaMask({ request });
+
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).resolves.toBe(
+        'hash-after-unknown-status',
+      );
+      expect(statusCalls).toBe(2);
+    });
+
+    it.each([
+      { name: 'missing receipts', response: { status: 200 } },
+      { name: 'empty receipts', response: { status: 200, receipts: [] } },
+      { name: 'missing transaction hash', response: { status: 200, receipts: [{}] } },
+    ])('throws for status 200 with $name', async ({ response }) => {
+      const request = jest.fn(async ({ method }: { method: string }) => {
+        if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
+        if (method === 'wallet_sendCalls') return { id: 'missing-receipt-id' };
+        return response;
+      });
+      const { result } = renderMetaMask({ request });
+
+      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toThrow(
+        'Transaction failed',
+      );
     });
 
     it('passes through unrecognized wallet RPC errors', async () => {
@@ -367,7 +406,7 @@ describe('useMetaMask', () => {
       const request = jest.fn(async ({ method }: { method: string }) => {
         if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
         if (method === 'wallet_sendCalls') return { id: 'pending-id' };
-        return { status: 'PENDING' };
+        return { status: 100 };
       });
       const { result } = renderMetaMask({ request });
 

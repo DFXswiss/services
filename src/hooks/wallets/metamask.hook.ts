@@ -290,10 +290,12 @@ export function useMetaMask(): MetaMaskInterface {
         params: [callsId],
       });
 
-      if (status.status === 'CONFIRMED') {
-        return status.receipts[0].transactionHash;
+      if (status.status === 200) {
+        const transactionHash = status.receipts?.[0]?.transactionHash;
+        if (!transactionHash) throw new TranslatedError('Transaction failed');
+        return transactionHash;
       }
-      if (status.status === 'FAILED') {
+      if (status.status >= 400) {
         throw new TranslatedError('Transaction failed');
       }
 
@@ -315,9 +317,7 @@ export function useMetaMask(): MetaMaskInterface {
       // Check if wallet supports paymaster
       const supported = await supportsEip5792Paymaster(chainId);
       if (!supported) {
-        throw new TranslatedError(
-          'Your wallet does not support gasless transactions. Please update MetaMask to v12.20+ and enable Smart Account.',
-        );
+        throw new TranslatedError('Your wallet does not support sponsored (gasless) transactions.');
       }
 
       // Send calls with paymaster capability
@@ -325,9 +325,10 @@ export function useMetaMask(): MetaMaskInterface {
         method: 'wallet_sendCalls',
         params: [
           {
-            version: '1.0',
+            version: '2.0.0',
             chainId: chainHex,
             from: account,
+            atomicRequired: true,
             calls: calls.map((c) => ({
               to: c.to,
               data: c.data,

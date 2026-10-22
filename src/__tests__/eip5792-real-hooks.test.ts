@@ -272,7 +272,7 @@ describe('EIP-5792 Real Hook Tests', () => {
       },
     ];
 
-    it('should send transaction and return txHash on success', async () => {
+    it('should send v2.0.0 atomic calls and return the confirmed transaction hash', async () => {
       mockEthereumRequest.mockImplementation(async ({ method, params }: { method: string; params?: any[] }) => {
         if (method === 'eth_accounts') return [TEST_ACCOUNT];
         if (method === 'wallet_getCapabilities') {
@@ -280,7 +280,8 @@ describe('EIP-5792 Real Hook Tests', () => {
         }
         if (method === 'wallet_sendCalls') {
           expect(params?.[0]).toMatchObject({
-            version: '1.0',
+            version: '2.0.0',
+            atomicRequired: true,
             chainId: '0x1',
             from: TEST_ACCOUNT,
             capabilities: {
@@ -291,7 +292,7 @@ describe('EIP-5792 Real Hook Tests', () => {
         }
         if (method === 'wallet_getCallsStatus') {
           return {
-            status: 'CONFIRMED',
+            status: 200,
             receipts: [{ transactionHash: '0xfinaltxhash' }],
           };
         }
@@ -368,7 +369,7 @@ describe('EIP-5792 Real Hook Tests', () => {
       ).rejects.toThrow();
     });
 
-    it('should handle transaction failure', async () => {
+    it.each([400, 500, 600])('rejects status %i from wallet_getCallsStatus', async (status) => {
       mockEthereumRequest.mockImplementation(async ({ method }: { method: string }) => {
         if (method === 'eth_accounts') return [TEST_ACCOUNT];
         if (method === 'wallet_getCapabilities') {
@@ -378,7 +379,7 @@ describe('EIP-5792 Real Hook Tests', () => {
           return { id: 'bundle-fail' };
         }
         if (method === 'wallet_getCallsStatus') {
-          return { status: 'FAILED' };
+          return { status };
         }
         return null;
       });
@@ -389,7 +390,7 @@ describe('EIP-5792 Real Hook Tests', () => {
         act(async () => {
           await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
         }),
-      ).rejects.toThrow();
+      ).rejects.toThrow('Transaction failed');
     });
 
     it('should poll for transaction status until confirmed', async () => {
@@ -406,10 +407,10 @@ describe('EIP-5792 Real Hook Tests', () => {
         if (method === 'wallet_getCallsStatus') {
           pollCount++;
           if (pollCount < 3) {
-            return { status: 'PENDING' };
+            return { status: 100 };
           }
           return {
-            status: 'CONFIRMED',
+            status: 200,
             receipts: [{ transactionHash: '0xpolledtxhash' }],
           };
         }
@@ -441,7 +442,7 @@ describe('EIP-5792 Real Hook Tests', () => {
         }
         if (method === 'wallet_getCallsStatus') {
           return {
-            status: 'CONFIRMED',
+            status: 200,
             receipts: [{ transactionHash: '0xtxhash' }],
           };
         }
@@ -455,9 +456,10 @@ describe('EIP-5792 Real Hook Tests', () => {
       });
 
       expect(capturedParams[0]).toEqual({
-        version: '1.0',
+        version: '2.0.0',
         chainId: '0x1',
         from: TEST_ACCOUNT,
+        atomicRequired: true,
         calls: [
           {
             to: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
@@ -469,6 +471,39 @@ describe('EIP-5792 Real Hook Tests', () => {
           paymasterService: { url: TEST_PAYMASTER_URL },
         },
       });
+    });
+
+    it.each([
+      { chainId: 1, chainHex: '0x1' },
+      { chainId: 10, chainHex: '0xa' },
+      { chainId: 137, chainHex: '0x89' },
+      { chainId: 42161, chainHex: '0xa4b1' },
+      { chainId: 8453, chainHex: '0x2105' },
+      { chainId: 56, chainHex: '0x38' },
+      { chainId: 100, chainHex: '0x64' },
+      { chainId: 11155111, chainHex: '0xaa36a7' },
+    ])('sends chain ID $chainId as $chainHex in the v2 request', async ({ chainId, chainHex }) => {
+      mockEthereumRequest.mockImplementation(async ({ method, params }: { method: string; params?: any[] }) => {
+        if (method === 'wallet_getCapabilities') {
+          return { [chainHex]: { paymasterService: { supported: true } } };
+        }
+        if (method === 'wallet_sendCalls') {
+          expect(params?.[0]).toMatchObject({ version: '2.0.0', atomicRequired: true, chainId: chainHex });
+          return { id: `calls-${chainHex}` };
+        }
+        if (method === 'wallet_getCallsStatus') {
+          return { status: 200, receipts: [{ transactionHash: `hash-${chainHex}` }] };
+        }
+        return null;
+      });
+
+      const { result } = renderHook(() => useMetaMask());
+      let txHash = '';
+      await act(async () => {
+        txHash = await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, chainId);
+      });
+
+      expect(txHash).toBe(`hash-${chainHex}`);
     });
   });
 
