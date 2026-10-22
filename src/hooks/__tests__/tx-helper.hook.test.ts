@@ -171,7 +171,7 @@ describe('useTxHelper', () => {
     expect(result.current.canSendTransaction()).toBe(true);
   });
 
-  it('supports the non-EVM wallet transaction branches', async () => {
+  it('supports the remaining wallet transaction branches', async () => {
     const { result, rerender } = renderHook(() => useTxHelper());
     const scenarios: Array<[WalletType, string, jest.Mock]> = [
       [WalletType.ALBY, 'payment-preimage', mockState.sendPayment],
