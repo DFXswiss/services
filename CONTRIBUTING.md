@@ -54,7 +54,9 @@ This repository requires A38 according to the canonical A38 standard in
 [DFXswiss/agent](https://github.com/DFXswiss/agent/blob/3f67e2e3d484097c3f29ea4cf9995200a8c257b4/docs/a38.md)
 at commit `3f67e2e3d484097c3f29ea4cf9995200a8c257b4`. Repo job selection:
 `.github/a38.json`. Target-branch applicability and fork workflow approval:
-`.github/pr-guard.json`. `dfx pr guard` is
+`.github/pr-guard.json`. `workflow_approval.workflows` stays a required field
+there but no longer filters: after a fresh enforce pass the guard approves
+every initial held fork `pull_request` run. `dfx pr guard` is
 [wired in](https://github.com/DFXswiss/agent/blob/3f67e2e3d484097c3f29ea4cf9995200a8c257b4/docs/a38-guard.md#how-fork-github-actions-are-meant-to-work).
 
 This is a **public** repository. GitHub-hosted runners execute the heavy suite
