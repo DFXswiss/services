@@ -3,11 +3,11 @@
  *
  * Tests using two distinct wallets derived from TEST_SEED:
  *
- * Wallet 1 (0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120): Has ETH + USDT
- *   - Standard sell flow with gas
- *   - USDT sell test (pays gas in ETH)
+ * Wallet 1 (0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120): Used for sell-page screenshots
+ *   - Captures the Sepolia sell page and USDT screens
+ *   - Checks that the page does not show a critical error
  *
- * Wallet 2 (0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74): Has USDT only (no ETH)
+ * Wallet 2 (0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74): Second-account sell scenario
  *   - Wallet 2 sell scenario is skipped because this Synpress setup uses the first account
  *   - Gasless logic is covered by unit tests; E2E specs capture screens for manual review
  *
@@ -130,10 +130,10 @@ async function waitForPageReady(page: any): Promise<void> {
 }
 
 // =============================================================================
-// WALLET 1 TESTS: ETH + USDT (with gas)
+// WALLET 1 TESTS: Sepolia sell-page screenshots and no-crash check
 // =============================================================================
 
-test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
+test.describe('Wallet 1 - Sepolia Sell Screens (Real MetaMask)', () => {
   test.beforeAll(async () => {
     console.log('=== WALLET 1 TESTS ===');
     console.log(`Expected address: ${TEST_WALLET_1_ADDRESS}`);
@@ -141,7 +141,7 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
   });
 
   test('checks the Wallet 1 address constant', async ({ metamaskPage }) => {
-    // Verify the correct seed is being used by checking the address in MetaMask
+    // Compare the configured address constant with the expected literal
     const addressElement = metamaskPage
       .locator('[data-testid="account-options-menu-button"], [class*="address"]')
       .first();
@@ -155,7 +155,7 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
     expect(TEST_WALLET_1_ADDRESS.toLowerCase()).toBe('0x482c8a499c7ac19925a0d2aa3980e1f3c5f19120');
   });
 
-  test('should load sell page for Wallet 1 on Sepolia', async ({ page, metamask, metamaskPage }) => {
+  test('captures Wallet 1 Sepolia sell page', async ({ page, metamask, metamaskPage }) => {
     test.setTimeout(120000);
 
     // Ensure MetaMask is on Sepolia
@@ -245,7 +245,7 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
       await txButton.click();
       await page.waitForTimeout(5000);
 
-      // MetaMask should show transaction approval
+      // The click may open a MetaMask transaction approval prompt
       // Screenshot after clicking
       await page.screenshot({
         path: 'e2e/screenshots/synpress-wallet1-usdt-05-after-tx-click.png',
@@ -271,7 +271,7 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
 });
 
 // =============================================================================
-// WALLET 2 TESTS: USDT only (no ETH; sell scenario skipped)
+// WALLET 2 TESTS: second-account sell scenario (skipped)
 // =============================================================================
 
 test.describe('Wallet 2 - Sepolia USDT Sell Scenario (Skipped)', () => {
@@ -282,7 +282,7 @@ test.describe('Wallet 2 - Sepolia USDT Sell Scenario (Skipped)', () => {
   });
 
   test('checks the Wallet 2 address constant', async ({}) => {
-    // Verify the derivation is correct
+    // Compare the configured address constant with the expected literal
     console.log(`Wallet 2 expected: ${TEST_WALLET_2_ADDRESS}`);
     expect(TEST_WALLET_2_ADDRESS.toLowerCase()).toBe('0x6aca95ed0705babf3b91fa9212af495510bf8b74');
   });
@@ -331,7 +331,7 @@ test.describe('Sepolia USDT Integration Tests', () => {
     await waitForPageReady(page);
 
     const content = await page.textContent('body');
-    // Page should show Sepolia-related content or sell interface
+    // Confirm that the page has some content
     expect(content).toBeTruthy();
 
     // Screenshot
@@ -366,8 +366,8 @@ test.describe('Sepolia USDT Integration Tests', () => {
     expect(page).toBeTruthy();
   });
 
-  test('should handle network mismatch gracefully', async ({ page, metamask, metamaskPage }) => {
-    // Navigate to Sepolia sell page but MetaMask might be on different network
+  test('checks for critical errors after connecting the wallet', async ({ page, metamask, metamaskPage }) => {
+    // Navigate to the Sepolia sell page
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
@@ -375,10 +375,7 @@ test.describe('Sepolia USDT Integration Tests', () => {
     await connectWallet(page, metamask);
     await page.waitForTimeout(3000);
 
-    // The app should either:
-    // 1. Prompt for network switch
-    // 2. Show appropriate message
-    // 3. Handle the mismatch gracefully
+    // Check that the page does not show a critical error
 
     const content = await page.textContent('body');
     const hasCriticalError = content?.includes('Fatal') || content?.includes('crashed');
@@ -405,11 +402,11 @@ test.describe('EIP-5792 Gasless Manual Review Screenshots', () => {
     await connectWallet(page, metamask);
     await page.waitForTimeout(3000);
 
-    // After connection, the app should check wallet_getCapabilities
+    // Wallet capabilities are not asserted in this screenshot test.
     // If MetaMask supports EIP-5792 paymaster calls, it can sponsor gasless transactions.
     // MetaMask handles its smart account upgrade internally.
 
-    // Screenshot for capability detection
+    // Screenshot for manual capability review
     await page.screenshot({
       path: 'e2e/screenshots/synpress-eip5792-capabilities.png',
       fullPage: true,
@@ -418,7 +415,7 @@ test.describe('EIP-5792 Gasless Manual Review Screenshots', () => {
     expect(page).toBeTruthy();
   });
 
-  test('captures the selected-asset gasless UI for manual review', async ({ page, metamask }) => {
+  test('captures the selected-asset screen for manual gasless review', async ({ page, metamask }) => {
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
@@ -437,13 +434,13 @@ test.describe('EIP-5792 Gasless Manual Review Screenshots', () => {
       await page.waitForTimeout(2000);
     }
 
-    // Screenshot: Check for gasless UI elements
+    // Screenshot for manual review of possible gasless UI elements
     await page.screenshot({
       path: 'e2e/screenshots/synpress-eip5792-gasless-ui.png',
       fullPage: true,
     });
 
-    // Look for gasless-related UI elements
+    // Gasless UI elements are not asserted; this screen is for manual review.
     const content = await page.textContent('body');
     console.log('Checking for gasless UI elements...');
 

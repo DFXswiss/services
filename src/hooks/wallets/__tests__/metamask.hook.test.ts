@@ -5,6 +5,7 @@
  */
 import { renderHook } from '@testing-library/react';
 import BigNumber from 'bignumber.js';
+import { AbortError } from 'src/util/abort-error';
 
 const mockWeb3Instances: any[] = [];
 const mockTimeout = jest.fn();
@@ -298,9 +299,9 @@ describe('useMetaMask', () => {
       const { result } = renderHook(() => useMetaMask());
       setHookAccount();
 
-      await expect(result.current.sendCallsWithPaymaster([], 'https://paymaster', 1)).rejects.toMatchObject({
-        message: 'User cancelled',
-      });
+      const resultPromise = result.current.sendCallsWithPaymaster([], 'https://paymaster', 1);
+      await expect(resultPromise).rejects.toEqual(expect.any(AbortError));
+      await expect(resultPromise).rejects.toMatchObject({ message: 'User cancelled' });
     });
 
     it('returns false when no account is connected', async () => {
