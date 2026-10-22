@@ -8,8 +8,8 @@
  *   - USDT sell test (pays gas in ETH)
  *
  * Wallet 2 (0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74): Has USDT only (no ETH)
- *   - Gasless sell flow via EIP-5792 (MetaMask smart account)
- *   - USDT sell without ETH for gas
+ *   - Wallet 2 sell scenario is skipped because this Synpress setup uses the first account
+ *   - Gasless logic is covered by unit tests; E2E specs capture screens for manual review
  *
  * Run: npx playwright test --config=playwright.synpress.config.ts e2e/synpress/sepolia-usdt-sell.spec.ts
  */
@@ -140,7 +140,7 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
     console.log('This wallet has ETH + USDT for standard gas payments');
   });
 
-  test('should verify Wallet 1 address is correctly derived', async ({ metamaskPage }) => {
+  test('checks the Wallet 1 address constant', async ({ metamaskPage }) => {
     // Verify the correct seed is being used by checking the address in MetaMask
     const addressElement = metamaskPage
       .locator('[data-testid="account-options-menu-button"], [class*="address"]')
@@ -179,7 +179,7 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
     console.log('Wallet 1 Sepolia sell page loaded successfully');
   });
 
-  test('should sell USDT on Sepolia with ETH for gas (Wallet 1)', async ({ page, metamask, metamaskPage }) => {
+  test('captures Wallet 1 USDT sell screens without crash', async ({ page, metamask, metamaskPage }) => {
     test.setTimeout(180000);
 
     // Ensure MetaMask is on Sepolia
@@ -271,23 +271,23 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
 });
 
 // =============================================================================
-// WALLET 2 TESTS: USDT only (no ETH - gasless via EIP-5792)
+// WALLET 2 TESTS: USDT only (no ETH; sell scenario skipped)
 // =============================================================================
 
-test.describe('Wallet 2 - Sepolia Gasless USDT Sell (Real MetaMask)', () => {
+test.describe('Wallet 2 - Sepolia USDT Sell Scenario (Skipped)', () => {
   test.beforeAll(async () => {
     console.log('=== WALLET 2 TESTS ===');
     console.log(`Expected address: ${TEST_WALLET_2_ADDRESS}`);
-    console.log('This wallet has USDT only (no ETH) for gasless EIP-5792 testing');
+    console.log('This wallet has USDT but no ETH for gas');
   });
 
-  test('should verify Wallet 2 address is correctly derived', async ({}) => {
+  test('checks the Wallet 2 address constant', async ({}) => {
     // Verify the derivation is correct
     console.log(`Wallet 2 expected: ${TEST_WALLET_2_ADDRESS}`);
     expect(TEST_WALLET_2_ADDRESS.toLowerCase()).toBe('0x6aca95ed0705babf3b91fa9212af495510bf8b74');
   });
 
-  test.skip('should sell USDT on Sepolia without ETH (gasless flow)', async ({ page, metamask, metamaskPage }) => {
+  test.skip('Wallet 2 USDT sell (needs second account)', async ({ page, metamask, metamaskPage }) => {
     /**
      * NOTE: This test requires MetaMask to be configured with Wallet 2's derivation path
      * The current Synpress setup only supports the default (first) wallet.
@@ -326,7 +326,7 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell (Real MetaMask)', () => {
 // =============================================================================
 
 test.describe('Sepolia USDT Integration Tests', () => {
-  test('should verify Sepolia network is available', async ({ page }) => {
+  test('captures the Sepolia sell page for manual inspection', async ({ page }) => {
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
@@ -341,7 +341,7 @@ test.describe('Sepolia USDT Integration Tests', () => {
     });
   });
 
-  test('should verify USDT is available as sell asset on Sepolia', async ({ page, metamask }) => {
+  test('captures the sell page after attempting to locate USDT', async ({ page, metamask }) => {
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 

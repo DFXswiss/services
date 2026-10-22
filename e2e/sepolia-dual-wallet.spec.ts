@@ -9,7 +9,7 @@
  *   - USDT sell test (pays gas in ETH)
  *
  * Wallet 2 (0x6aCA95...): Has USDT only (no ETH)
- *   - Captures Wallet 2 USDT sell screens without ETH and verifies the page does not crash
+ *   - Captures Wallet 2 USDT sell screens without ETH and checks that the page does not crash
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -147,7 +147,7 @@ test.describe('Wallet 1 - Sepolia Sell with Gas', () => {
     expect(auth.credentials.address.toLowerCase()).toBe(expectedAddresses.WALLET_1.toLowerCase());
   });
 
-  test('should sell ETH on Sepolia (Wallet 1 has ETH for gas)', async ({ page }) => {
+  test('captures Wallet 1 ETH sell screens and page state', async ({ page }) => {
     test.setTimeout(60000);
 
     // Navigate to sell page
@@ -188,7 +188,7 @@ test.describe('Wallet 1 - Sepolia Sell with Gas', () => {
     console.log('Wallet 1 ETH sell flow completed');
   });
 
-  test('should sell USDT on Sepolia (Wallet 1 has ETH for gas)', async ({ page }) => {
+  test('captures Wallet 1 USDT sell screens and checks page text', async ({ page }) => {
     test.setTimeout(60000);
 
     // Navigate to sell page
@@ -239,7 +239,7 @@ test.describe('Wallet 1 - Sepolia Sell with Gas', () => {
 // Address: 0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74
 // =============================================================================
 
-test.describe('Wallet 2 - Sepolia Gasless USDT Sell', () => {
+test.describe('Wallet 2 - Sepolia USDT Sell Screens Without ETH', () => {
   let token: string;
   let expectedAddresses: { WALLET_1: string; WALLET_2: string };
 
@@ -345,7 +345,7 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell', () => {
     console.log('Wallet 2 gasless USDT sell flow completed');
   });
 
-  test('should handle gasless flow when user has USDT but zero ETH', async ({ page }) => {
+  test('checks Wallet 2 sell page text with zero ETH', async ({ page }) => {
     test.setTimeout(60000);
 
     await page.goto(`/sell?session=${token}&blockchain=Sepolia`);

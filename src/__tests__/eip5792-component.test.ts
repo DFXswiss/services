@@ -265,7 +265,7 @@ describe('EIP-5792 Component Tests', () => {
     ];
 
     for (const chain of chains) {
-      it(`should handle EIP-5792 on ${chain.name} (chainId: ${chain.chainId})`, async () => {
+      it(`should return the EIP-5792 transaction hash on ${chain.name} (chainId: ${chain.chainId})`, async () => {
         mockSendCallsWithPaymaster.mockResolvedValue(`0xtxhash_${chain.name}`);
         mockConfirmSell.mockResolvedValue({ id: 100 });
 
@@ -298,7 +298,7 @@ describe('EIP-5792 Component Tests', () => {
           tx.depositTx.eip5792.paymasterUrl,
           chain.chainId,
         );
-        expect(result).toBe('100');
+        expect(result).toBe(`0xtxhash_${chain.name}`);
       });
     }
 
@@ -320,10 +320,12 @@ describe('EIP-5792 Component Tests', () => {
 
         if (tx.asset) {
           const result = await deps.confirmSell(tx.id, { txHash });
-          return result?.id?.toString() ?? '';
+          if (!result?.id) throw new Error('Failed to confirm sell transaction');
+          return txHash;
         } else {
           const result = await deps.confirmSwap(tx.id, { txHash });
-          return result?.id?.toString() ?? '';
+          if (!result?.id) throw new Error('Failed to confirm swap transaction');
+          return txHash;
         }
       }
 
@@ -443,7 +445,8 @@ describe('EIP-5792 Component Tests', () => {
         const { paymasterUrl, calls, chainId } = tx.depositTx.eip5792;
         const txHash = await sendCallsWithPaymaster(calls, paymasterUrl, chainId);
         const result = await confirmSell(tx.id, { txHash });
-        return result?.id?.toString() ?? '';
+        if (!result?.id) throw new Error('Failed to confirm sell transaction');
+        return txHash;
       }
       throw new Error('No EIP-5792 data');
     }
