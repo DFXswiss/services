@@ -250,7 +250,7 @@ test.describe('Wallet 2 - Sepolia USDT Sell Screens', () => {
     expect(auth.credentials.address.toLowerCase()).toBe(expectedAddresses.WALLET_2.toLowerCase());
   });
 
-  test('captures Wallet 2 sell page and IBAN screen', async ({ page }) => {
+  test('captures Wallet 2 sell page', async ({ page }) => {
     test.setTimeout(60000);
 
     await page.goto(`/sell?session=${token}&blockchain=Sepolia`);
@@ -263,7 +263,7 @@ test.describe('Wallet 2 - Sepolia USDT Sell Screens', () => {
     await selectOrAddTestIban(page);
     await page.waitForTimeout(1000);
 
-    // Screenshot: Initial page for Wallet 2 with IBAN
+    // Screenshot: Initial page for Wallet 2
     await expect(page).toHaveScreenshot('wallet2-sell-01-initial.png', {
       maxDiffPixels: 2000,
     });
