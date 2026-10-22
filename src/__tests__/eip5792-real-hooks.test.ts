@@ -205,7 +205,7 @@ describe('EIP-5792 Real Hook Tests', () => {
       expect(supported).toBe(false);
     });
 
-    it('should return false when no account connected', async () => {
+    it('should return false when the wallet returns no capabilities', async () => {
       mockEthereumRequest.mockImplementation(async ({ method }: { method: string }) => {
         if (method === 'eth_accounts') return [];
         return null;
