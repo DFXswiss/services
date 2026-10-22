@@ -505,6 +505,12 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   the hook's requests, error mapping and EIP-5792 `wallet_sendCalls` handling against those
   answers. It does not prove that MetaMask or any other injected wallet answers that way, that
   `wallet_sendCalls` with a paymaster is accepted on a real chain, or that a transaction is sent.
+- **The EIP-5792 real-hook test replaces the wallet environment around `useMetaMask`.**
+  `src/__tests__/eip5792-real-hooks.test.ts` renders the production hook from
+  `src/hooks/wallets/metamask.hook.ts`, but replaces `window.ethereum`, Web3 and SDK chain data;
+  its v2 `wallet_sendCalls` and `wallet_getCallsStatus` responses are fixtures. A green run does
+  not prove that MetaMask returns those responses, the Paymaster accepts the request, or a
+  transaction is sent.
 - **The rejected address switch visual spec answers the user and the switch itself.**
   `e2e/connect-address-switch.spec.ts` authenticates with a synthetic unsigned JWT without an address, fulfils
   `GET /v2/user` with one synthetic address (and with none in the custody case) and the bootstrap GETs,

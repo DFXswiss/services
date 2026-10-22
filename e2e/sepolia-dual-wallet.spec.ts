@@ -3,12 +3,12 @@
  *
  * Tests using two distinct wallets derived from TEST_SEED:
  *
- * Wallet 1 (0x482c8a...): Used for ETH and USDT sell-page screenshots
- *   - Captures ETH sell screens and page state
- *   - Captures USDT sell screens and checks page text
+ * Wallet 1 (0x482c8a...): Used for ETH and attempted USDT sell-page screenshots
+ *   - Captures ETH sell-page screenshots
+ *   - Attempts USDT selection, captures screenshots and checks page text
  *
- * Wallet 2 (0x6aCA95...): Used for USDT sell-page screenshots
- *   - Captures Wallet 2 USDT sell screens and checks that the page does not crash
+ * Wallet 2 (0x6aCA95...): Used for sell-page screenshots and text checks
+ *   - Captures screenshots after attempting USDT selection and checks selected page text
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -52,7 +52,7 @@ async function selectUsdt(page: Page): Promise<void> {
     }
   }
 
-  // Select USDT from dropdown
+  // Attempt to select USDT from the dropdown
   const usdtOption = page.locator('text=USDT').first();
   try {
     await usdtOption.waitFor({ state: 'visible', timeout: 5000 });
@@ -130,11 +130,11 @@ async function selectOrAddTestIban(page: Page): Promise<void> {
 }
 
 // =============================================================================
-// WALLET 1 TESTS: ETH and USDT sell screens
+// WALLET 1 TESTS: ETH and attempted USDT sell-page screenshots
 // Address: 0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120
 // =============================================================================
 
-test.describe('Wallet 1 - Sepolia Sell Screens', () => {
+test.describe('Wallet 1 - Sepolia Sell-Page Screenshots and Text Checks', () => {
   let token: string;
   let expectedAddresses: { WALLET_1: string; WALLET_2: string };
 
@@ -146,7 +146,7 @@ test.describe('Wallet 1 - Sepolia Sell Screens', () => {
     expect(auth.credentials.address.toLowerCase()).toBe(expectedAddresses.WALLET_1.toLowerCase());
   });
 
-  test('captures Wallet 1 ETH sell screens and page state', async ({ page }) => {
+  test('captures Wallet 1 ETH sell screenshots', async ({ page }) => {
     test.setTimeout(60000);
 
     // Navigate to sell page
@@ -168,7 +168,7 @@ test.describe('Wallet 1 - Sepolia Sell Screens', () => {
       await page.waitForTimeout(2000);
     }
 
-    // Screenshot: Form filled
+    // Screenshot after attempting amount entry
     await expect(page).toHaveScreenshot('wallet1-eth-sell-02-amount-entered.png', {
       maxDiffPixels: 2000,
       fullPage: true,
@@ -178,26 +178,26 @@ test.describe('Wallet 1 - Sepolia Sell Screens', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(500);
 
-    // Screenshot: Ready to transact
+    // Screenshot after scrolling to the transaction area
     await expect(page).toHaveScreenshot('wallet1-eth-sell-03-ready.png', {
       maxDiffPixels: 2000,
       fullPage: true,
     });
 
-    console.log('Wallet 1 ETH sell flow completed');
+    console.log('Wallet 1 ETH sell screenshots captured');
   });
 
-  test('captures Wallet 1 USDT sell screens and checks page text', async ({ page }) => {
+  test('captures Wallet 1 sell screenshots after attempting USDT selection', async ({ page }) => {
     test.setTimeout(60000);
 
     // Navigate to sell page
     await page.goto(`/sell?session=${token}&blockchain=Sepolia`);
     await waitForPageReady(page);
 
-    // Select USDT
+    // Attempt to select USDT
     await selectUsdt(page);
 
-    // Screenshot: USDT selected
+    // Screenshot after attempting USDT selection
     await expect(page).toHaveScreenshot('wallet1-usdt-sell-01-asset-selected.png', {
       maxDiffPixels: 2000,
     });
@@ -209,7 +209,7 @@ test.describe('Wallet 1 - Sepolia Sell Screens', () => {
       await page.waitForTimeout(2000);
     }
 
-    // Screenshot: Form filled
+    // Screenshot after attempting amount entry
     await expect(page).toHaveScreenshot('wallet1-usdt-sell-02-amount-entered.png', {
       maxDiffPixels: 2000,
       fullPage: true,
@@ -223,22 +223,22 @@ test.describe('Wallet 1 - Sepolia Sell Screens', () => {
     const bodyContent = await page.textContent('body');
     expect(bodyContent?.includes('USDT') || bodyContent?.includes('Tether')).toBeTruthy();
 
-    // Screenshot: Ready to transact
+    // Screenshot after scrolling to the transaction area
     await expect(page).toHaveScreenshot('wallet1-usdt-sell-03-ready.png', {
       maxDiffPixels: 2000,
       fullPage: true,
     });
 
-    console.log('Wallet 1 USDT sell flow completed (with gas)');
+    console.log('Wallet 1 sell screenshots captured after attempting USDT selection');
   });
 });
 
 // =============================================================================
-// WALLET 2 TESTS: USDT sell screens
+// WALLET 2 TESTS: sell-page screenshots and text checks
 // Address: 0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74
 // =============================================================================
 
-test.describe('Wallet 2 - Sepolia USDT Sell Screens', () => {
+test.describe('Wallet 2 - Sepolia Sell-Page Screenshots and Text Checks', () => {
   let token: string;
   let expectedAddresses: { WALLET_1: string; WALLET_2: string };
 
@@ -268,10 +268,10 @@ test.describe('Wallet 2 - Sepolia USDT Sell Screens', () => {
       maxDiffPixels: 2000,
     });
 
-    console.log('Wallet 2 sell page loaded');
+    console.log('Wallet 2 sell-page screenshot captured');
   });
 
-  test('captures Wallet 2 USDT sell screens and does not crash', async ({ page }) => {
+  test('captures Wallet 2 sell screenshots after attempting USDT selection', async ({ page }) => {
     test.setTimeout(90000);
 
     // Navigate to sell page
@@ -281,10 +281,10 @@ test.describe('Wallet 2 - Sepolia USDT Sell Screens', () => {
     // Add/select test IBAN for Wallet 2
     await selectOrAddTestIban(page);
 
-    // Select USDT
+    // Attempt to select USDT
     await selectUsdt(page);
 
-    // Screenshot: USDT selected
+    // Screenshot after attempting USDT selection
     await expect(page).toHaveScreenshot('wallet2-usdt-sell-01-asset-selected.png', {
       maxDiffPixels: 2000,
     });
@@ -296,7 +296,7 @@ test.describe('Wallet 2 - Sepolia USDT Sell Screens', () => {
       await page.waitForTimeout(2000);
     }
 
-    // Screenshot: Form filled
+    // Screenshot after attempting amount entry
     await expect(page).toHaveScreenshot('wallet2-usdt-sell-02-amount-entered.png', {
       maxDiffPixels: 2000,
       fullPage: true,
@@ -306,7 +306,7 @@ test.describe('Wallet 2 - Sepolia USDT Sell Screens', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(500);
 
-    // Screenshot: Transaction section
+    // Screenshot of the transaction area
     await expect(page).toHaveScreenshot('wallet2-usdt-sell-03-transaction-section.png', {
       maxDiffPixels: 2000,
       fullPage: true,
@@ -336,24 +336,24 @@ test.describe('Wallet 2 - Sepolia USDT Sell Screens', () => {
       });
     }
 
-    // Verify no critical errors
+    // Check that page text excludes the Fatal and crashed labels
     const bodyContent = await page.textContent('body');
     const hasCriticalError = bodyContent?.includes('Fatal') || bodyContent?.includes('crashed');
     expect(hasCriticalError).toBeFalsy();
 
-    console.log('Wallet 2 gasless USDT sell flow completed');
+    console.log('Wallet 2 sell screenshots captured after attempting USDT selection');
   });
 
-  test('checks Wallet 2 sell page text after selecting USDT', async ({ page }) => {
+  test('checks the sell page shows relevant text', async ({ page }) => {
     test.setTimeout(60000);
 
     await page.goto(`/sell?session=${token}&blockchain=Sepolia`);
     await waitForPageReady(page);
 
-    // Navigate to USDT
+    // Attempt to select USDT
     await selectUsdt(page);
 
-    // Read the page content after selecting USDT
+    // Read the page content after attempting USDT selection
     const pageContent = await page.textContent('body');
 
     // Page should still be functional
@@ -371,7 +371,7 @@ test.describe('Wallet 2 - Sepolia USDT Sell Screens', () => {
     const hasBlockingGasError = pageContent?.includes('Insufficient ETH') && pageContent?.includes('cannot proceed');
     expect(hasBlockingGasError).toBeFalsy();
 
-    console.log('Wallet 2 gasless detection test completed');
+    console.log('Wallet 2 sell-page text checked after attempting USDT selection');
   });
 });
 

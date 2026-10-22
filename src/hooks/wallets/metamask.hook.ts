@@ -351,7 +351,7 @@ export function useMetaMask(): MetaMaskInterface {
   function handleError(e: MetaMaskError): never {
     switch (e.code) {
       case 4001:
-        throw new AbortError('User cancelled');
+        throw new AbortError('User cancelled', 4001);
 
       case -32002:
         throw new TranslatedError('There is already a request pending. Please confirm it in your MetaMask and retry.');

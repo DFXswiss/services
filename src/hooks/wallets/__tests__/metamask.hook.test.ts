@@ -257,8 +257,7 @@ describe('useMetaMask', () => {
       const request = jest.fn(async ({ method }: { method: string }) => {
         if (method === 'wallet_getCapabilities') return { '0x1': { paymasterService: { supported: true } } };
         if (method === 'wallet_sendCalls') return { id: 'calls-id' };
-        if (method === 'wallet_getCallsStatus')
-          return { status: 200, receipts: [{ transactionHash: '0xhash' }] };
+        if (method === 'wallet_getCallsStatus') return { status: 200, receipts: [{ transactionHash: '0xhash' }] };
         throw new Error(`Unexpected method ${method}`);
       });
       (window as any).ethereum = { request };
@@ -305,7 +304,7 @@ describe('useMetaMask', () => {
 
       const resultPromise = result.current.sendCallsWithPaymaster([], 'https://paymaster', 1);
       await expect(resultPromise).rejects.toEqual(expect.any(AbortError));
-      await expect(resultPromise).rejects.toMatchObject({ message: 'User cancelled' });
+      await expect(resultPromise).rejects.toMatchObject({ message: 'User cancelled', code: 4001 });
     });
 
     it('returns false when no account is connected', async () => {
@@ -502,7 +501,7 @@ describe('useMetaMask', () => {
     it('maps account request cancellation and pending errors', async () => {
       const { result, web3 } = renderMetaMask({});
       web3.eth.requestAccounts.mockRejectedValueOnce({ code: 4001, message: 'User rejected' });
-      await expect(result.current.requestAccount()).rejects.toMatchObject({ message: 'User cancelled' });
+      await expect(result.current.requestAccount()).rejects.toMatchObject({ message: 'User cancelled', code: 4001 });
       web3.eth.requestAccounts.mockRejectedValueOnce({ code: -32002, message: 'Pending' });
       await expect(result.current.requestAccount()).rejects.toThrow('There is already a request pending');
       const error = { code: -32603, message: 'Unexpected wallet error' };
@@ -680,6 +679,15 @@ describe('useMetaMask', () => {
         isWeiAmount: true,
       });
       expect(transfer).toHaveBeenLastCalledWith('0xto', '125');
+    });
+
+    it('preserves the rejection code for a cancelled native transaction', async () => {
+      const { result, web3 } = renderMetaMask({});
+      web3.eth.sendTransaction.mockRejectedValue({ code: 4001, message: 'User rejected' });
+
+      await expect(
+        result.current.createTransaction(new BigNumber('0.5'), { type: 'Coin' } as any, account, '0xto'),
+      ).rejects.toMatchObject({ code: 4001 });
     });
   });
 });
