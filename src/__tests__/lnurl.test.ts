@@ -137,6 +137,26 @@ describe('Lnurl', () => {
       expect(Lnurl.toLightningAddress(otherSuffix)).toBeUndefined();
     });
 
+    it('returns undefined when the raw URL is not the canonical well-known path', () => {
+      const defaultPort = Lnurl.encode('https://lightning.space:443/.well-known/lnurlp/abc');
+      const dotSegment = Lnurl.encode('https://lightning.space/foo/../.well-known/lnurlp/abc');
+      const backslash = Lnurl.encode('https://lightning.space/\\.well-known/lnurlp/abc');
+      const upperScheme = Lnurl.encode('HTTPS://lightning.space/.well-known/lnurlp/abc');
+      const encodedLocal = Lnurl.encode('https://lightning.space/.well-known/lnurlp/%61bc');
+
+      expect(Lnurl.toLightningAddress(defaultPort)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(dotSegment)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(backslash)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(upperScheme)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(encodedLocal)).toBeUndefined();
+    });
+
+    it('lowercases a mixed-case host', () => {
+      const mixedHost = Lnurl.encode('https://Lightning.Space/.well-known/lnurlp/abc');
+
+      expect(Lnurl.toLightningAddress(mixedHost)).toBe('abc@lightning.space');
+    });
+
     it('returns undefined for a bad local part, a host without a dot, or a broken escape', () => {
       const uppercaseLocal = Lnurl.encode('https://lightning.space/.well-known/lnurlp/ABC');
       const bareHost = Lnurl.encode('https://localhost/.well-known/lnurlp/abc');

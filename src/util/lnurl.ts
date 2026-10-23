@@ -74,6 +74,13 @@ export class Lnurl {
     }
     if (!lightningLocalPartPattern.test(local)) return undefined;
     if (!parsed.hostname.includes('.')) return undefined;
+    if (!decoded.startsWith('https://')) return undefined;
+
+    const slash = decoded.indexOf('/', 'https://'.length);
+    const authority = decoded.slice('https://'.length, slash);
+    const path = decoded.slice(slash);
+    if (authority.toLowerCase() !== parsed.hostname) return undefined;
+    if (path !== `/.well-known/lnurlp/${local}`) return undefined;
 
     return `${local}@${parsed.hostname}`;
   }
