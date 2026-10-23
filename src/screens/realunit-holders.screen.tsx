@@ -86,7 +86,7 @@ export default function RealunitHoldersScreen(): JSX.Element {
   return (
     <>
       <select
-        className="px-2 py-1 border border-dfxGray-400 rounded bg-white"
+        className="px-2 py-1 border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
         value={registration}
         onChange={(event) => setRegistration(event.target.value as HolderRegistration)}
       >

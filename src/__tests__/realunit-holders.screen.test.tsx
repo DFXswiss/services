@@ -137,7 +137,7 @@ function mailCell(address: string): HTMLElement {
 
 function expectRegistrationSelect(): void {
   const select = screen.getByRole('combobox') as HTMLSelectElement;
-  expect(select).toHaveAttribute('class', 'px-2 py-1 border border-dfxGray-400 rounded bg-white');
+  expect(select).toHaveAttribute('class', 'px-2 py-1 border border-dfxGray-400 rounded bg-white text-dfxBlue-800');
   expect(select).toHaveValue('all');
   expect(Array.from(select.options).map((option) => [option.value, option.textContent])).toEqual([
     ['all', 'All'],
