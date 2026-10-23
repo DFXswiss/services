@@ -115,6 +115,7 @@
     },
     "@coinbase/wallet-sdk": "3.9.3",
     "axios": "^1.15.0",
+    "dompurify": "^3.4.17",
     "protobufjs": "^7.5.5",
     "proxy-addr": "~2.0.8",
     "shell-quote": "^1.11.0",
