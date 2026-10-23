@@ -366,6 +366,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   activeStepName = 'ContactData';
   mockSettings.nationalityCountries = [COUNTRY_CH, COUNTRY_DE];
+  mockSettings.allowedCountries = [COUNTRY_DE, COUNTRY_CH];
+  mockSettings.allowedOrganizationCountries = [COUNTRY_DE, COUNTRY_CH];
   mockContinueKyc.mockImplementation(() => Promise.resolve(session(activeStepName)));
   mockGetKycInfo.mockImplementation(() => Promise.resolve(session(activeStepName)));
   mockSetContactData.mockResolvedValue({ status: 'InProgress' });
@@ -510,6 +512,23 @@ describe('KycScreen personal data', () => {
       'step-url',
       expect.objectContaining({ accountType: 'Personal' }),
     );
+  });
+
+  it('lists the residence country and the organization country from separate allow-lists', async () => {
+    mockSettings.allowedCountries = [{ id: 1, symbol: 'CH', name: 'Switzerland' }];
+    mockSettings.allowedOrganizationCountries = [
+      { id: 3, symbol: 'US', name: 'United States' },
+      { id: 2, symbol: 'DE', name: 'Germany' },
+    ];
+
+    await renderStep('PersonalData');
+    await pick('accountType', 1);
+    await screen.findByTestId('address.country-option-0', undefined, { timeout: 10000 });
+
+    expect(screen.getByTestId('address.country-option-0')).toHaveTextContent('Switzerland');
+    expect(screen.queryByTestId('address.country-option-1')).not.toBeInTheDocument();
+    expect(screen.getByTestId('organizationAddress.country-option-0')).toHaveTextContent('United States');
+    expect(screen.getByTestId('organizationAddress.country-option-1')).toHaveTextContent('Germany');
   });
 });
 
