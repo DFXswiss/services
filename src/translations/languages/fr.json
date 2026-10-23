@@ -97,6 +97,7 @@
     "KYC progress": "Progression du KYC",
     "This step has already been finished.": "Cette étape est déjà terminée.",
     "This step has failed.": "Cette étape a échoué.",
+    "This page was opened for wallet {{address}}. Sign out and connect that wallet.": "Cette page a été ouverte pour le portefeuille {{address}}. Déconnectez-vous et connectez ce portefeuille.",
     "per 24h": "par 24h",
     "per 30 days": "par 30 jours",
     "per year": "par an",
