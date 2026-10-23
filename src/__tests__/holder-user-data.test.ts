@@ -76,6 +76,21 @@ describe('holderUserDataLines', () => {
     ).toEqual({ primary: 'Ada' });
   });
 
+  it('shows #id and trimmed mail when every name is blank', () => {
+    expect(
+      holderUserDataLines(
+        userData({
+          id: 9,
+          verifiedName: ' ',
+          firstname: '',
+          surname: '  ',
+          organizationName: null,
+          mail: '  ada@example.com ',
+        }),
+      ),
+    ).toEqual({ primary: '#9', secondary: 'ada@example.com' });
+  });
+
   it('shows #id and no secondary when every name and the mail are blank', () => {
     expect(
       holderUserDataLines(

@@ -88,6 +88,16 @@ describe('useRealunitApi', () => {
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/admin/holders?after=h2', method: 'GET' });
   });
 
+  it('getAdminHolders omits before and after when called with a cursor and no direction', async () => {
+    const { result } = renderHook(() => useRealunitApi());
+    await result.current.getAdminHolders('only-cursor');
+    expect(mockCall).toHaveBeenCalledTimes(1);
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/admin/holders', method: 'GET' });
+    const url = String(mockCall.mock.calls[0][0].url);
+    expect(url).not.toContain('before');
+    expect(url).not.toContain('after');
+  });
+
   it('getTokenInfo GETs realunit/tokenInfo', async () => {
     const { result } = renderHook(() => useRealunitApi());
     await result.current.getTokenInfo();

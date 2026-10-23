@@ -48,8 +48,8 @@ jest.mock('src/util/utils', () => ({
   blankedAddress: (address: string) => address,
 }));
 
-import { fireEvent, render, screen } from '@testing-library/react';
-import { PaginationDirection } from 'src/dto/realunit.dto';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { AdminHoldersResponse, PaginationDirection } from 'src/dto/realunit.dto';
 import RealunitHoldersScreen from 'src/screens/realunit-holders.screen';
 
 const EMPTY_PAGE = {
@@ -72,6 +72,57 @@ const UNKNOWN = {
   percentage: 0.5,
   userData: null,
 };
+
+const FIRST_PAGE: AdminHoldersResponse = {
+  holders: [
+    {
+      address: '0xabc0000000000000000000000000000000008101',
+      balance: '10',
+      percentage: 1,
+      userData: { id: 1, verifiedName: 'First' },
+    },
+  ],
+  pageInfo: {
+    hasNextPage: true,
+    hasPreviousPage: true,
+    startCursor: 's',
+    endCursor: 'e',
+  },
+  totalCount: 1,
+};
+
+function deferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason: Error) => void;
+} {
+  let resolve: (value: T) => void = () => {
+    throw new Error('deferred not initialized');
+  };
+  let reject: (reason: Error) => void = () => {
+    throw new Error('deferred not initialized');
+  };
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+function holderPage(verifiedName: string, address: string, totalCount: number): AdminHoldersResponse {
+  return {
+    holders: [
+      {
+        address,
+        balance: '10',
+        percentage: 1,
+        userData: { id: 1, verifiedName },
+      },
+    ],
+    pageInfo: EMPTY_PAGE,
+    totalCount,
+  };
+}
 
 describe('RealunitHoldersScreen', () => {
   beforeEach(() => {
@@ -123,6 +174,64 @@ describe('RealunitHoldersScreen', () => {
     expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
     expect(screen.queryByText('Verified Ada')).not.toBeInTheDocument();
+  });
+
+  it('keeps the later holder when a slower next response resolves afterwards', async () => {
+    const nextPage = deferred<AdminHoldersResponse>();
+    const previousPage = deferred<AdminHoldersResponse>();
+    mockGetAdminHolders.mockImplementation((_cursor?: string, direction?: PaginationDirection) => {
+      if (direction === PaginationDirection.NEXT) return nextPage.promise;
+      if (direction === PaginationDirection.PREV) return previousPage.promise;
+      return Promise.resolve(FIRST_PAGE);
+    });
+
+    render(<RealunitHoldersScreen />);
+    expect(await screen.findByText('First')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    await act(async () => {
+      previousPage.resolve(holderPage('Later', '0xabc0000000000000000000000000000000008102', 3));
+    });
+
+    expect(screen.getByText('Later')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'All Holders (3)' })).toBeInTheDocument();
+
+    await act(async () => {
+      nextPage.resolve(holderPage('Stale', '0xabc0000000000000000000000000000000008103', 99));
+    });
+    expect(screen.getByText('Later')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'All Holders (3)' })).toBeInTheDocument();
+    expect(screen.queryByText('Stale')).not.toBeInTheDocument();
+  });
+
+  it('keeps the load error when a slower next response resolves afterwards', async () => {
+    const nextPage = deferred<AdminHoldersResponse>();
+    const previousPage = deferred<AdminHoldersResponse>();
+    mockGetAdminHolders.mockImplementation((_cursor?: string, direction?: PaginationDirection) => {
+      if (direction === PaginationDirection.NEXT) return nextPage.promise;
+      if (direction === PaginationDirection.PREV) return previousPage.promise;
+      return Promise.resolve(FIRST_PAGE);
+    });
+
+    render(<RealunitHoldersScreen />);
+    expect(await screen.findByText('First')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    await act(async () => {
+      previousPage.reject(new Error('unavailable'));
+    });
+
+    expect(await screen.findByText('Failed to load holders.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'All Holders (0)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+
+    await act(async () => {
+      nextPage.resolve(holderPage('Stale', '0xabc0000000000000000000000000000000008103', 99));
+    });
+    expect(screen.getByText('Failed to load holders.')).toBeInTheDocument();
+    expect(screen.queryByText('Stale')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
   });
 
   it('requests the next and previous page with the cursors from pageInfo', async () => {
