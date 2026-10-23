@@ -100,6 +100,52 @@ describe('Lnurl', () => {
       expect(Lnurl.toLightningAddress(withQuery)).toBeUndefined();
       expect(Lnurl.toLightningAddress(withExtraSegment)).toBeUndefined();
     });
+
+    it('trims an already-email value', () => {
+      expect(Lnurl.toLightningAddress('  user@domain.com  ')).toBe('user@domain.com');
+    });
+
+    it('returns undefined for a value that is not a lightning address', () => {
+      expect(Lnurl.toLightningAddress('a@b@c.com')).toBeUndefined();
+      expect(Lnurl.toLightningAddress('ABC@lightning.space')).toBeUndefined();
+      expect(Lnurl.toLightningAddress('user@localhost')).toBeUndefined();
+      expect(Lnurl.toLightningAddress('user@light ning.space')).toBeUndefined();
+      expect(Lnurl.toLightningAddress('not an address')).toBeUndefined();
+    });
+
+    it('returns undefined when the decoded payload is not a URL', () => {
+      expect(Lnurl.toLightningAddress(Lnurl.encode('not a url'))).toBeUndefined();
+    });
+
+    it('returns undefined for userinfo, a port, or a hash', () => {
+      const withUser = Lnurl.encode('https://user@lightning.space/.well-known/lnurlp/abc');
+      const withPassword = Lnurl.encode('https://:secret@lightning.space/.well-known/lnurlp/abc');
+      const withPort = Lnurl.encode('https://lightning.space:8443/.well-known/lnurlp/abc');
+      const withHash = Lnurl.encode('https://lightning.space/.well-known/lnurlp/abc#frag');
+
+      expect(Lnurl.toLightningAddress(withUser)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(withPassword)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(withPort)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(withHash)).toBeUndefined();
+    });
+
+    it('returns undefined for a path that is not well-known lnurlp', () => {
+      const otherRoot = Lnurl.encode('https://lightning.space/other/lnurlp/abc');
+      const otherSuffix = Lnurl.encode('https://lightning.space/.well-known/other/abc');
+
+      expect(Lnurl.toLightningAddress(otherRoot)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(otherSuffix)).toBeUndefined();
+    });
+
+    it('returns undefined for a bad local part, a host without a dot, or a broken escape', () => {
+      const uppercaseLocal = Lnurl.encode('https://lightning.space/.well-known/lnurlp/ABC');
+      const bareHost = Lnurl.encode('https://localhost/.well-known/lnurlp/abc');
+      const brokenEscape = Lnurl.encode('https://lightning.space/.well-known/lnurlp/%ZZ');
+
+      expect(Lnurl.toLightningAddress(uppercaseLocal)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(bareHost)).toBeUndefined();
+      expect(Lnurl.toLightningAddress(brokenEscape)).toBeUndefined();
+    });
   });
 
   describe('prependLnurl', () => {
