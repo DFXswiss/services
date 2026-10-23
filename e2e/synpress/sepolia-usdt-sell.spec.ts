@@ -298,9 +298,8 @@ test.describe('Wallet 2 - Second-Account Scenario (Skipped)', () => {
      * 2. Or use a separate browser profile with Wallet 2
      *
      * For now, this test is skipped as it requires manual wallet switching.
-     * The app's sponsored-transaction logic is covered by unit tests in
-     * src/hooks/__tests__/tx-helper.hook.test.ts and
-     * src/hooks/wallets/__tests__/metamask.hook.test.ts. E2E specs only capture screenshots.
+     * The sponsored-transaction path was removed; unit tests cover the regular ERC-20 transfer
+     * helper, and the full-stack test covers the MetaMask transfer request. E2E specs capture screenshots.
      */
     test.setTimeout(180000);
 

@@ -255,7 +255,7 @@ async function runMetaMaskNoNativeGasFlow(page: Page, kind: 'sell' | 'swap'): Pr
   const methods = requests.map((request) => request.method);
   const sends = requests.filter((request) => request.method === 'eth_sendTransaction');
   expect(sends).toHaveLength(1);
-  // Before sending, the app requests no native balance or fee data; eth_call reads token decimals.
+  // Before sending, the app makes no native balance or fee request to the wallet; eth_call reads decimals.
   expect(methods).toEqual([
     'wallet_switchEthereumChain',
     'eth_call',
@@ -1149,13 +1149,13 @@ test.describe('MetaMask transfer request', () => {
     await cleanupCreatedData();
   });
 
-  test('/sell with MetaMask hands one ERC-20 transfer to the API deposit address to the wallet without a balance or fee lookup', async ({
+  test('/sell with MetaMask hands one ERC-20 transfer to the API deposit address to the wallet without a native balance or fee request to the wallet', async ({
     page,
   }) => {
     await runMetaMaskNoNativeGasFlow(page, 'sell');
   });
 
-  test('/swap with MetaMask hands one ERC-20 transfer to the API deposit address to the wallet without a balance or fee lookup', async ({
+  test('/swap with MetaMask hands one ERC-20 transfer to the API deposit address to the wallet without a native balance or fee request to the wallet', async ({
     page,
   }) => {
     await runMetaMaskNoNativeGasFlow(page, 'swap');

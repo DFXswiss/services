@@ -1,7 +1,7 @@
 import { AbortError } from '../abort-error';
 
 describe('AbortError', () => {
-  it('stores the cancellation code used by MetaMask error handling', () => {
+  it('stores its message and cancellation code', () => {
     const error = new AbortError('User cancelled', 4001);
 
     expect(error).toBeInstanceOf(Error);

@@ -490,12 +490,12 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   deeplink opens, that the asset catalog matches production, or that the SPAR map draws the
   place list.
 - **The transaction helper unit test replaces the SDK, the contexts and every wallet hook.**
-  `src/hooks/__tests__/tx-helper.hook.test.ts` replaces `useSell`/`useSwap`/`useAuthContext` from
-  `@dfx.swiss/react`, the app-handling, balance and wallet contexts, the blockchain balance hook and
-  the MetaMask, WalletConnect, Alby, Phantom, Trust (Solana and Tron) and TronLink hooks with
+  `src/hooks/__tests__/tx-helper.hook.test.ts` replaces `useAuthContext` from `@dfx.swiss/react`,
+  the app-handling, balance and wallet contexts, the blockchain balance hook and the MetaMask,
+  WalletConnect, Alby, Phantom, Trust (Solana and Tron) and TronLink hooks with
   in-memory functions. A green run proves which wallet function the helper picks for each wallet
   type and payment info, including that sell and swap data carrying a legacy `depositTx.eip5792`
-  field still use the regular MetaMask transaction function without a backend confirm call. It
+  field still use the regular MetaMask transaction function. It
   does not prove that a wallet builds or signs that transaction, or that the API accepts it.
 - **The MetaMask hook unit test replaces Web3, the injected provider and the timer.**
   `src/hooks/wallets/__tests__/metamask.hook.test.ts` replaces the `web3` constructor with an

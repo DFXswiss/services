@@ -19,8 +19,6 @@ const mockState = {
   createTransactionTrustSol: jest.fn(),
   createTransactionTrustTrx: jest.fn(),
   createTransactionTronLinkTrx: jest.fn(),
-  confirmSell: jest.fn(),
-  confirmSwap: jest.fn(),
 };
 
 jest.mock('../../contexts/app-handling.context', () => ({
@@ -44,8 +42,6 @@ jest.mock('../../contexts/wallet.context', () => ({
 jest.mock('@dfx.swiss/react', () => ({
   Blockchain: { ETHEREUM: 'Ethereum' },
   useAuthContext: () => ({ session: mockState.session }),
-  useSell: () => ({ confirmSell: mockState.confirmSell }),
-  useSwap: () => ({ confirmSwap: mockState.confirmSwap }),
 }));
 jest.mock('../blockchain-balance.hook', () => ({
   useBlockchainBalance: () => ({ getAddressBalances: mockState.getAddressBalances }),
@@ -112,8 +108,6 @@ describe('useTxHelper', () => {
       '0xabc',
       '0xdeposit',
     );
-    expect(mockState.confirmSell).not.toHaveBeenCalled();
-    expect(mockState.confirmSwap).not.toHaveBeenCalled();
   });
 
   it('uses backend balances only for supported wallets with a full address context', async () => {
