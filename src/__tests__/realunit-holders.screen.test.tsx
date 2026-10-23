@@ -204,6 +204,35 @@ describe('RealunitHoldersScreen', () => {
     expect(screen.queryByText('Stale')).not.toBeInTheDocument();
   });
 
+  it('keeps the later holder when a slower next response rejects afterwards', async () => {
+    const nextPage = deferred<AdminHoldersResponse>();
+    const previousPage = deferred<AdminHoldersResponse>();
+    mockGetAdminHolders.mockImplementation((_cursor?: string, direction?: PaginationDirection) => {
+      if (direction === PaginationDirection.NEXT) return nextPage.promise;
+      if (direction === PaginationDirection.PREV) return previousPage.promise;
+      return Promise.resolve(FIRST_PAGE);
+    });
+
+    render(<RealunitHoldersScreen />);
+    expect(await screen.findByText('First')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    await act(async () => {
+      previousPage.resolve(holderPage('Later', '0xabc0000000000000000000000000000000008102', 3));
+    });
+
+    expect(screen.getByText('Later')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'All Holders (3)' })).toBeInTheDocument();
+
+    await act(async () => {
+      nextPage.reject(new Error('Stale'));
+    });
+    expect(screen.getByText('Later')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'All Holders (3)' })).toBeInTheDocument();
+    expect(screen.queryByText('Failed to load holders.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Stale')).not.toBeInTheDocument();
+  });
+
   it('keeps the load error when a slower next response resolves afterwards', async () => {
     const nextPage = deferred<AdminHoldersResponse>();
     const previousPage = deferred<AdminHoldersResponse>();

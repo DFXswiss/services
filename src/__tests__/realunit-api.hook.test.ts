@@ -98,6 +98,26 @@ describe('useRealunitApi', () => {
     expect(url).not.toContain('after');
   });
 
+  it('getAccountHistory omits before and after when called with a cursor and no direction', async () => {
+    const { result } = renderHook(() => useRealunitApi());
+    await result.current.getAccountHistory('0xabc', 'only-cursor');
+    expect(mockCall).toHaveBeenCalledTimes(1);
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/account/0xabc/history', method: 'GET' });
+    const url = String(mockCall.mock.calls[0][0].url);
+    expect(url).not.toContain('before');
+    expect(url).not.toContain('after');
+  });
+
+  it('getHolders omits before and after when called with a cursor and no direction', async () => {
+    const { result } = renderHook(() => useRealunitApi());
+    await result.current.getHolders('only-cursor');
+    expect(mockCall).toHaveBeenCalledTimes(1);
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/holders', method: 'GET' });
+    const url = String(mockCall.mock.calls[0][0].url);
+    expect(url).not.toContain('before');
+    expect(url).not.toContain('after');
+  });
+
   it('getTokenInfo GETs realunit/tokenInfo', async () => {
     const { result } = renderHook(() => useRealunitApi());
     await result.current.getTokenInfo();
