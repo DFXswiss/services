@@ -524,6 +524,11 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   `ErrorHint`, labels and app contexts (translation returns the key), that the API returns those statuses,
   that the custody sign-up call reaches the real API, or the reporter's 60 s deduplication of identical
   reports, since the reporter is replaced.
+- **The KYC wallet-mismatch visual spec answers the user endpoint itself.**
+  `e2e/kyc-wallet-mismatch.spec.ts` fulfils the user routes with a built user and the placeholder
+  address `0x1111111111111111111111111111111111111111`, and does not call a live API. A green run
+  proves the mismatch hint renders for that fixture. It does not prove that the hint comes from a
+  real session or a real API response.
 
 ## Known gaps
 

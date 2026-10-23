@@ -100,9 +100,56 @@ describe('AppHandlingContextProvider', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
+    sessionStorage.removeItem('dfx.kyc.redirect');
     window.history.pushState({}, '', '/');
     mockSession = { isInitialized: true, isLoggedIn: false, availableBlockchains: ['Bitcoin', 'Ethereum'] };
     mockIsUsedByIframe = false;
+  });
+
+  it('restores a stored kyc redirect before the first render', async () => {
+    sessionStorage.setItem('dfx.kyc.redirect', '/kyc?wallet=RealUnit');
+    try {
+      await renderProvider();
+      expect(ctx.redirectPath).toBe('/kyc?wallet=RealUnit');
+    } finally {
+      sessionStorage.removeItem('dfx.kyc.redirect');
+    }
+  });
+
+  it('ignores a stored redirect outside kyc before the first render', async () => {
+    sessionStorage.setItem('dfx.kyc.redirect', '/sell');
+    try {
+      await renderProvider();
+      expect(ctx.redirectPath).toBeUndefined();
+    } finally {
+      sessionStorage.removeItem('dfx.kyc.redirect');
+    }
+  });
+
+  it('leaves the redirect unset when sessionStorage.getItem throws', async () => {
+    const original = window.sessionStorage;
+    Object.defineProperty(window, 'sessionStorage', {
+      configurable: true,
+      value: {
+        getItem: () => {
+          throw new Error('blocked');
+        },
+        setItem: (key: string, value: string) => original.setItem(key, value),
+        removeItem: (key: string) => original.removeItem(key),
+        clear: () => original.clear(),
+        key: (index: number) => original.key(index),
+        get length() {
+          return original.length;
+        },
+      },
+    });
+    try {
+      await renderProvider();
+      expect(ctx.redirectPath).toBeUndefined();
+    } finally {
+      Object.defineProperty(window, 'sessionStorage', { configurable: true, value: original });
+      sessionStorage.removeItem('dfx.kyc.redirect');
+    }
   });
 
   describe('standalone', () => {
