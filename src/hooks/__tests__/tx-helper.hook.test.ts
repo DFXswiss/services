@@ -162,7 +162,11 @@ describe('useTxHelper', () => {
       rerender();
       const tx = wallet === WalletType.ALBY ? { ...sell, paymentRequest: 'lnbc' } : sell;
       await expect(result.current.sendTransaction(tx)).resolves.toBe(expected);
-      expect(called).toHaveBeenCalled();
+      if (wallet === WalletType.ALBY) {
+        expect(called).toHaveBeenCalledWith('lnbc');
+      } else {
+        expect(called).toHaveBeenCalledWith(new BigNumber(tx.amount), asset, '0xabc', tx.depositAddress);
+      }
     }
   });
 

@@ -6,6 +6,9 @@
 **Projekt:** DFXswiss Services
 **Ziel:** Token-Transfer ohne ETH-Besitz über MetaMask Browser Extension
 
+> Abschnitte 4 bis 11 beschreiben den Stand vom Januar 2026, einschließlich damals geplanter oder
+> umgesetzter Änderungen, die es heute nicht mehr gibt. Den aktuellen Stand beschreibt Abschnitt 12.
+
 ---
 
 ## 1. Anforderungen
@@ -690,9 +693,10 @@ _Implementierung dokumentiert: 8. Januar 2026_
 Die App nutzt für MetaMask ausschließlich `eth_sendTransaction` mit einem ERC-20-`transfer`.
 Laut MetaMask-Quellcode lädt `TransactionController#updateSimulationData` für jede hinzugefügte
 Transaktion die verfügbaren `gasFeeTokens`; `useIsGaslessSupported` berücksichtigt Smart
-Transactions (`sendBundle`) und den 7702-Relay. Die Gas Station deckt damit auch eine normale
-dApp-Transaktion ab; die offene Frage aus §10.2 Punkt 1 (Gas Station mit `wallet_sendCalls`) stellt
-sich nicht mehr, weil die App diesen Weg nicht mehr nutzt.
+Transactions (`sendBundle`) und den 7702-Relay. Laut MetaMask kann die Gas Station damit auch eine
+normale dApp-Transaktion abdecken, sofern Netzwerk und Gebühren-Token unterstützt sind und „Smart
+Transactions“ sowie „Estimate balance changes“ aktiv sind. Die offene Frage aus §10.2 Punkt 1 (Gas
+Station mit `wallet_sendCalls`) stellt sich nicht mehr, weil die App diesen Weg nicht mehr nutzt.
 
 Der `wallet_sendCalls`-Weg aus §5 und §11 wurde entfernt. Der Full-Stack-Test mit injiziertem
 Wallet prüft, dass die App ohne Abfrage von nativem Guthaben oder Gebührendaten eine normale

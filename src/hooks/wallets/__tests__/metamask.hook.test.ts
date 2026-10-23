@@ -6,6 +6,7 @@ const mockTimeout = jest.fn();
 const mockDevice = { isMobile: false };
 const mockToChainHex = jest.fn((chain?: string) => (chain ? '0x1' : undefined));
 const mockToChainObject = jest.fn(() => ({ chainId: '0x1', chainName: 'Ethereum' }));
+const mockToWei = (value: string) => new BigNumber(value).shiftedBy(18).toFixed();
 
 function createWeb3() {
   const instance = {
@@ -21,7 +22,7 @@ function createWeb3() {
     utils: {
       toChecksumAddress: (address: string) => address,
       toHex: (value: number) => `0x${value.toString(16)}`,
-      toWei: (value: string) => value,
+      toWei: mockToWei,
     },
   };
   web3Instances.push(instance);
@@ -51,7 +52,10 @@ jest.mock('web3', () => {
   Web3Mock.utils = {
     toChecksumAddress: (address: string) => address,
     toHex: (value: number) => `0x${value.toString(16)}`,
-    toWei: (value: string) => value,
+    toWei: (value: string) =>
+      new (jest.requireActual('bignumber.js').default ?? jest.requireActual('bignumber.js'))(value)
+        .shiftedBy(18)
+        .toFixed(),
   };
   return Web3Mock;
 });
@@ -253,7 +257,18 @@ describe('useMetaMask', () => {
       isWeiAmount: true,
       gasPrice: 5,
     });
-    expect(web3.eth.sendTransaction).toHaveBeenLastCalledWith(expect.objectContaining({ value: '500' }));
+    expect(web3.eth.sendTransaction).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        value: '500000000000000000',
+        from: account,
+        to: '0xto',
+      }),
+    );
+    expect(web3.eth.sendTransaction).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ value: '500', from: account, to: '0xto' }),
+    );
     const transfer = jest.fn().mockReturnValue({
       send: jest.fn().mockResolvedValue({ transactionHash: 'token-hash' }),
     });
@@ -263,7 +278,7 @@ describe('useMetaMask', () => {
     await expect(result.current.createTransaction(new BigNumber('1.25'), token as any, account, '0xto')).resolves.toBe(
       'token-hash',
     );
-    expect(transfer).toHaveBeenLastCalledWith('0xto', '1250000');
+    expect(transfer).toHaveBeenNthCalledWith(1, '0xto', '1250000');
     await result.current.createTransaction(new BigNumber('125'), token as any, account, '0xto', { isWeiAmount: true });
     expect(transfer).toHaveBeenLastCalledWith('0xto', '125');
   });
