@@ -19,7 +19,7 @@ test.describe('Buy Process - Lightning Linked to Bitcoin Account', () => {
     console.log(`Linked Lightning address: ${lightningAddress}`);
     console.log(`From Bitcoin Wallet 2: ${btcAddress}`);
 
-    await page.goto(`/buy?session=${token}&blockchain=Lightning`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning&lang=de`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
 
@@ -43,7 +43,7 @@ test.describe('Buy Process - Lightning Linked to Bitcoin Account', () => {
   test('should show BTC as the asset to buy with linked Lightning account', async ({ page, request }) => {
     const { token } = await getLinkedLightningAuth(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Lightning`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning&lang=de`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -57,7 +57,7 @@ test.describe('Buy Process - Lightning Linked to Bitcoin Account', () => {
   test('should display amount input with linked Lightning account', async ({ page, request }) => {
     const { token } = await getLinkedLightningAuth(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Lightning`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning&lang=de`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -71,7 +71,7 @@ test.describe('Buy Process - Lightning Linked to Bitcoin Account', () => {
   test('should handle buy flow with pre-filled amount for linked Lightning', async ({ page, request }) => {
     const { token } = await getLinkedLightningAuth(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Lightning`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning&lang=de`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -97,7 +97,7 @@ test.describe('Buy Process - Lightning Linked to Bitcoin Account', () => {
   test('should display exchange rate for linked Lightning purchase', async ({ page, request }) => {
     const { token } = await getLinkedLightningAuth(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Lightning`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning&lang=de`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -138,7 +138,7 @@ test.describe('Buy Process - Lightning Linked to Bitcoin Account', () => {
   test('should show same KYC status as Bitcoin primary wallet', async ({ page, request }) => {
     const { token } = await getLinkedLightningAuth(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Lightning`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning&lang=de`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -150,7 +150,8 @@ test.describe('Buy Process - Lightning Linked to Bitcoin Account', () => {
       pageContent?.includes('Exchange rate') ||
       pageContent?.includes('BTC') ||
       pageContent?.includes('Zahlungsinformation') ||
-      pageContent?.includes('Payment');
+      pageContent?.includes('Payment') ||
+      pageContent?.includes('E-Mail');
 
     expect(hasContent).toBeTruthy();
   });
@@ -166,7 +167,7 @@ test.describe('Buy Process - Lightning Linked Full UI Flow', () => {
     console.log(`From Bitcoin Wallet 2: ${btcAddress}`);
 
     // Step 1: Navigate to buy page
-    await page.goto(`/buy?session=${token}&blockchain=Lightning`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning&lang=de`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 

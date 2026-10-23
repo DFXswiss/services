@@ -14,7 +14,8 @@ test.describe('Swap with Lightning URL Parameter', () => {
     console.log('Lightning address linked');
 
     // Navigate to swap with Lightning as target
-    const url = `https://dev.app.dfx.swiss/swap?session=${bitcoinAuth.token}&asset-out=Lightning/BTC&amount-in=0.001`;
+    const baseUrl = process.env.REACT_APP_PUBLIC_URL!;
+    const url = `${baseUrl}/swap?session=${bitcoinAuth.token}&asset-out=Lightning/BTC&amount-in=0.001&lang=de`;
     await page.goto(url);
 
     // Wait for page to load completely
