@@ -532,6 +532,17 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   address `0x1111111111111111111111111111111111111111`, and does not call a live API. A green run
   proves the mismatch hint renders for that fixture. It does not prove that the hint comes from a
   real session or a real API response.
+- **The account screen coverage test replaces the SDK and the component library.**
+  `src/__tests__/account-screen-coverage.test.tsx` replaces the user, auth, session, API and
+  transaction hooks with in-memory stubs, and replaces the styled components with passthrough
+  markup. A green run proves those stubs exercise the profile, address, referral and PDF branches.
+  It does not prove a live user, a live transaction list, a real address switch, or that the
+  production components render.
+- **The order form coverage test replaces the order hook and the SDK.**
+  `src/__tests__/order-interface.test.tsx` supplies a hand-built order state and replaces the SDK
+  enums, the order hook, the debounce hook and the payment-info component. A green run proves the
+  form follows that stub, including which address label it shows. It does not prove a live quote,
+  a live balance lookup, or a real payment-info request.
 
 ## Known gaps
 
