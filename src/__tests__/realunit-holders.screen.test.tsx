@@ -96,12 +96,8 @@ function deferred<T>(): {
   resolve: (value: T) => void;
   reject: (reason: Error) => void;
 } {
-  let resolve: (value: T) => void = () => {
-    throw new Error('deferred not initialized');
-  };
-  let reject: (reason: Error) => void = () => {
-    throw new Error('deferred not initialized');
-  };
+  let resolve!: (value: T) => void;
+  let reject!: (reason: Error) => void;
   const promise = new Promise<T>((res, rej) => {
     resolve = res;
     reject = rej;
