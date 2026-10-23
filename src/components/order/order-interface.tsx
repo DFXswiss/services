@@ -27,7 +27,7 @@ import { OrderPaymentInfo } from 'src/dto/order.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import useDebounce from 'src/hooks/debounce.hook';
 import { OrderFormData, OrderType, Side, useOrder } from 'src/hooks/order.hook';
-import { blankedAddress } from 'src/util/utils';
+import { displayWalletAddress } from 'src/util/lnurl';
 import { AssetInput } from './asset-input';
 import { BankAccountSelector } from './bank-account-selector';
 import { PaymentInfo } from './payment-info';
@@ -233,7 +233,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
               rootRef={rootRef}
               name="address"
               items={addressItems}
-              labelFunc={(item) => blankedAddress(item.address, { width })}
+              labelFunc={(item) => displayWalletAddress(item.address, { width })}
               descriptionFunc={(item) => item.label}
               full
               forceEnable

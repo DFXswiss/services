@@ -48,8 +48,8 @@ import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { displayWalletAddress } from 'src/util/lnurl';
 import {
-  blankedAddress,
   downloadPdfFromString,
   formatSwissDateTimeWithSeconds,
   sortAddressesByBlockchain,
@@ -476,7 +476,7 @@ export default function AccountScreen(): JSX.Element {
                   rootRef={rootRef}
                   placeholder={translate('general/actions', 'Select') + '...'}
                   items={userAddresses.sort(sortAddressesByBlockchain)}
-                  labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
+                  labelFunc={(item) => displayWalletAddress(addressLabel(item), { width })}
                   descriptionFunc={(item) => item.label ?? item.wallet}
                   forceEnable={user?.activeAddress === undefined}
                 />
