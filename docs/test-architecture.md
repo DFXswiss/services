@@ -146,8 +146,8 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   `GET /v1/realunit/account/:address` and `GET /v1/realunit/account/:address/history`,
   and it answers price history, buy volume, holder count, registration, the prize wallet
   and the buy limit with HTTP errors when a scenario asks for the error state.
-  The dashboard answers `GET /v1/realunit/admin/holders` itself. The first row carries a
-  synthetic `verifiedName` and `mail`, and the remaining `userData` values are null.
+  The dashboard answers `GET /v1/realunit/admin/holders` itself. Fixture rows carry `mail`
+  or null, and the spec also requests `registration=registered` and `registration=unregistered`.
   A green run proves the overview, treasury, insights, holder, transaction and account
   fixtures render, including those error states. It does not prove that the API returns
   those payloads, that the API attaches UserData to the address, that login or token

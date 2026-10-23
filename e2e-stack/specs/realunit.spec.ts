@@ -251,7 +251,7 @@ test.describe('RealUnit area', () => {
       await expect(tableHeader(page, 'Address')).toBeVisible();
       await expect(tableHeader(page, 'Balance')).toBeVisible();
       await expect(tableHeader(page, 'Percentage')).toBeVisible();
-      await expect(tableHeader(page, 'User data')).toBeVisible();
+      await expect(tableHeader(page, 'E-mail')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Previous' })).toBeDisabled();
       await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
       await expect(page.locator('tbody tr')).toHaveCount(0);

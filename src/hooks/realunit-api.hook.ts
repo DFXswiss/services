@@ -4,6 +4,7 @@ import {
   AccountHistory,
   AccountSummary,
   AdminHoldersResponse,
+  HolderRegistration,
   HoldersResponse,
   PaginationDirection,
   PriceHistoryEntry,
@@ -56,9 +57,11 @@ export function useRealunitApi() {
   async function getAdminHolders(
     cursor?: string,
     direction?: PaginationDirection,
+    registration?: HolderRegistration,
   ): Promise<AdminHoldersResponse> {
     const params = new URLSearchParams();
     cursor && direction && params.set(String(direction) === 'prev' ? 'before' : 'after', cursor);
+    if (registration === 'registered' || registration === 'unregistered') params.set('registration', registration);
 
     return call<AdminHoldersResponse>({
       url: apiUrl({ path: 'realunit/admin/holders', params }),

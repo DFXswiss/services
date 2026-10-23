@@ -8,13 +8,12 @@ import {
 } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { AdminHolder, PageInfo, PaginationDirection } from 'src/dto/realunit.dto';
+import { AdminHolder, HolderRegistration, PageInfo, PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useRealunitApi } from 'src/hooks/realunit-api.hook';
-import { holderUserDataLines } from 'src/util/holder-user-data';
 import { blankedAddress } from 'src/util/utils';
 
 const emptyPageInfo: PageInfo = {
@@ -37,6 +36,7 @@ export default function RealunitHoldersScreen(): JSX.Element {
   const [pageInfo, setPageInfo] = useState<PageInfo>(emptyPageInfo);
   const [isLoading, setIsLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [registration, setRegistration] = useState<HolderRegistration>('all');
   const requestSeq = useRef(0);
 
   useLayoutOptions({ title: translate('screens/realunit', 'All Holders'), backButton: true });
@@ -47,7 +47,7 @@ export default function RealunitHoldersScreen(): JSX.Element {
       requestSeq.current = requestId;
       setIsLoading(true);
       setLoadFailed(false);
-      getAdminHolders(cursor, direction)
+      getAdminHolders(cursor, direction, registration)
         .then((data) => {
           if (requestSeq.current !== requestId) return;
           setHolders(data.holders);
@@ -66,7 +66,7 @@ export default function RealunitHoldersScreen(): JSX.Element {
           setIsLoading(false);
         });
     },
-    [getAdminHolders],
+    [getAdminHolders, registration],
   );
 
   useEffect(() => {
@@ -85,6 +85,15 @@ export default function RealunitHoldersScreen(): JSX.Element {
 
   return (
     <>
+      <select
+        className="px-2 py-1 border border-dfxGray-400 rounded bg-white"
+        value={registration}
+        onChange={(event) => setRegistration(event.target.value as HolderRegistration)}
+      >
+        <option value="all">{translate('screens/realunit', 'All')}</option>
+        <option value="registered">{translate('screens/realunit', 'Registered')}</option>
+        <option value="unregistered">{translate('screens/realunit', 'Not registered')}</option>
+      </select>
       {isLoading && !holders.length ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
@@ -109,40 +118,36 @@ export default function RealunitHoldersScreen(): JSX.Element {
                     {translate('screens/realunit', 'Percentage')}
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                    {translate('screens/realunit', 'User data')}
+                    {translate('screens/realunit', 'E-mail')}
                   </th>
                 </tr>
               </thead>
 
               <tbody>
-                {holders.map((holder) => {
-                  const lines = holderUserDataLines(holder.userData);
-                  return (
-                    <tr
-                      key={holder.address}
-                      className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300"
-                    >
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            className="text-left text-sm text-dfxBlue-800 cursor-pointer hover:text-dfxBlue-600 hover:underline break-all bg-transparent border-0 p-0"
-                            onClick={() => handleAddressClick(holder.address)}
-                          >
-                            {blankedAddress(holder.address, { displayLength: 18 })}
-                          </button>
-                          <CopyButton color={IconColor.GRAY} onCopy={() => copy(holder.address)} />
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{holder.balance}</td>
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{holder.percentage.toFixed(2)}%</td>
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                        <div>{lines.primary}</div>
-                        {lines.secondary !== undefined ? <div>{lines.secondary}</div> : null}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {holders.map((holder) => (
+                  <tr
+                    key={holder.address}
+                    className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300"
+                  >
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="text-left text-sm text-dfxBlue-800 cursor-pointer hover:text-dfxBlue-600 hover:underline break-all bg-transparent border-0 p-0"
+                          onClick={() => handleAddressClick(holder.address)}
+                        >
+                          {blankedAddress(holder.address, { displayLength: 18 })}
+                        </button>
+                        <CopyButton color={IconColor.GRAY} onCopy={() => copy(holder.address)} />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{holder.balance}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{holder.percentage.toFixed(2)}%</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                      {holder.mail === null ? '' : holder.mail.trim()}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

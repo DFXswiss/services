@@ -82,17 +82,10 @@ export interface HoldersResponse {
   totalCount: number;
 }
 
-export interface HolderUserData {
-  id: number;
-  mail?: string | null;
-  firstname?: string | null;
-  surname?: string | null;
-  verifiedName?: string | null;
-  organizationName?: string | null;
-}
+export type HolderRegistration = 'all' | 'registered' | 'unregistered';
 
 export interface AdminHolder extends Holder {
-  userData: HolderUserData | null;
+  mail: string | null;
 }
 
 export interface AdminHoldersResponse {

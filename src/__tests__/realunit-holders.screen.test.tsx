@@ -59,18 +59,25 @@ const EMPTY_PAGE = {
   endCursor: '',
 };
 
-const NAMED = {
+const WITH_MAIL = {
   address: '0xabc0000000000000000000000000000000008001',
   balance: '100',
   percentage: 1.5,
-  userData: { id: 7, verifiedName: 'Verified Ada', mail: 'ada@example.com' },
+  mail: 'ada@example.com',
 };
 
-const UNKNOWN = {
+const NULL_MAIL = {
   address: '0xabc0000000000000000000000000000000008002',
   balance: '50',
   percentage: 0.5,
-  userData: null,
+  mail: null,
+};
+
+const BLANK_MAIL = {
+  address: '0xabc0000000000000000000000000000000008003',
+  balance: '25',
+  percentage: 0.25,
+  mail: '   ',
 };
 
 const FIRST_PAGE: AdminHoldersResponse = {
@@ -79,7 +86,7 @@ const FIRST_PAGE: AdminHoldersResponse = {
       address: '0xabc0000000000000000000000000000000008101',
       balance: '10',
       percentage: 1,
-      userData: { id: 1, verifiedName: 'First' },
+      mail: 'First',
     },
   ],
   pageInfo: {
@@ -105,14 +112,14 @@ function deferred<T>(): {
   return { promise, resolve, reject };
 }
 
-function holderPage(verifiedName: string, address: string, totalCount: number): AdminHoldersResponse {
+function holderPage(mail: string, address: string, totalCount: number): AdminHoldersResponse {
   return {
     holders: [
       {
         address,
         balance: '10',
         percentage: 1,
-        userData: { id: 1, verifiedName },
+        mail,
       },
     ],
     pageInfo: EMPTY_PAGE,
@@ -120,31 +127,57 @@ function holderPage(verifiedName: string, address: string, totalCount: number): 
   };
 }
 
+function mailCell(address: string): HTMLElement {
+  const row = screen.getByText(address).closest('tr');
+  if (!row) throw new Error(`missing row for ${address}`);
+  const cell = row.querySelectorAll('td')[3];
+  if (!(cell instanceof HTMLElement)) throw new Error(`missing mail cell for ${address}`);
+  return cell;
+}
+
+function expectRegistrationSelect(): void {
+  const select = screen.getByRole('combobox') as HTMLSelectElement;
+  expect(select).toHaveAttribute('class', 'px-2 py-1 border border-dfxGray-400 rounded bg-white');
+  expect(select).toHaveValue('all');
+  expect(Array.from(select.options).map((option) => [option.value, option.textContent])).toEqual([
+    ['all', 'All'],
+    ['registered', 'Registered'],
+    ['unregistered', 'Not registered'],
+  ]);
+}
+
 describe('RealunitHoldersScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetAdminHolders.mockResolvedValue({
-      holders: [NAMED, UNKNOWN],
+      holders: [WITH_MAIL, NULL_MAIL, BLANK_MAIL],
       pageInfo: EMPTY_PAGE,
-      totalCount: 2,
+      totalCount: 3,
     });
   });
 
-  it('shows the large spinner while the first page has no rows yet', () => {
+  it('shows the large spinner and the registration select while the first page has no rows yet', () => {
     mockGetAdminHolders.mockImplementation(() => new Promise(() => undefined));
     render(<RealunitHoldersScreen />);
     expect(screen.getByTestId('loading-spinner')).toHaveAttribute('data-size', 'lg');
     expect(screen.queryByText('User data')).not.toBeInTheDocument();
+    expect(screen.queryByText('E-mail')).not.toBeInTheDocument();
+    expectRegistrationSelect();
     expect(mockUseRealunitGuard).toHaveBeenCalled();
   });
 
-  it('shows User data, the holder name and mail, and an em dash when userData is null', async () => {
+  it('shows E-mail and the mail, and an empty cell when mail is null or whitespace', async () => {
     render(<RealunitHoldersScreen />);
-    expect(await screen.findByText('User data')).toBeInTheDocument();
-    expect(screen.getByText('Verified Ada')).toBeInTheDocument();
-    expect(screen.getByText('ada@example.com')).toBeInTheDocument();
-    expect(screen.getByText('\u2014')).toBeInTheDocument();
+    expect(await screen.findByText('E-mail')).toBeInTheDocument();
+    expect(screen.queryByText('User data')).not.toBeInTheDocument();
+    expect(mailCell(WITH_MAIL.address).textContent).toBe('ada@example.com');
+    expect(mailCell(NULL_MAIL.address).textContent).toBe('');
+    expect(mailCell(BLANK_MAIL.address).textContent).toBe('');
+    expect(mailCell(WITH_MAIL.address).querySelector('a')).toBeNull();
+    expect(screen.queryByText('\u2014')).not.toBeInTheDocument();
+    expect(screen.queryByText('Verified Ada')).not.toBeInTheDocument();
     expect(screen.queryByText('Failed to load holders.')).not.toBeInTheDocument();
+    expectRegistrationSelect();
     expect(mockGetAdminHolders).toHaveBeenCalled();
   });
 
@@ -152,8 +185,10 @@ describe('RealunitHoldersScreen', () => {
     mockGetAdminHolders.mockResolvedValue({ holders: [], pageInfo: EMPTY_PAGE, totalCount: 0 });
     render(<RealunitHoldersScreen />);
     expect(await screen.findByRole('heading', { name: 'All Holders (0)' })).toBeInTheDocument();
-    expect(screen.getByText('User data')).toBeInTheDocument();
+    expect(screen.getByText('E-mail')).toBeInTheDocument();
+    expect(screen.queryByText('User data')).not.toBeInTheDocument();
     expect(screen.queryByText('Failed to load holders.')).not.toBeInTheDocument();
+    expectRegistrationSelect();
     expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
   });
@@ -166,10 +201,42 @@ describe('RealunitHoldersScreen', () => {
     expect(screen.getByText('Address')).toBeInTheDocument();
     expect(screen.getByText('Balance')).toBeInTheDocument();
     expect(screen.getByText('Percentage')).toBeInTheDocument();
-    expect(screen.getByText('User data')).toBeInTheDocument();
+    expect(screen.getByText('E-mail')).toBeInTheDocument();
+    expect(screen.queryByText('User data')).not.toBeInTheDocument();
+    expect(screen.queryByText('\u2014')).not.toBeInTheDocument();
+    expectRegistrationSelect();
     expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-    expect(screen.queryByText('Verified Ada')).not.toBeInTheDocument();
+    expect(screen.queryByText('ada@example.com')).not.toBeInTheDocument();
+  });
+
+  it('reloads from the first page when the registration select changes', async () => {
+    mockGetAdminHolders.mockResolvedValue({
+      holders: [WITH_MAIL],
+      pageInfo: {
+        hasNextPage: true,
+        hasPreviousPage: false,
+        startCursor: 'start-cursor',
+        endCursor: 'end-cursor',
+      },
+      totalCount: 8,
+    });
+    render(<RealunitHoldersScreen />);
+    await screen.findByText('ada@example.com');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(mockGetAdminHolders).toHaveBeenLastCalledWith('end-cursor', PaginationDirection.NEXT, 'all');
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'registered' } });
+    expect(mockGetAdminHolders).toHaveBeenLastCalledWith(undefined, undefined, 'registered');
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'unregistered' } });
+    expect(mockGetAdminHolders).toHaveBeenLastCalledWith(undefined, undefined, 'unregistered');
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'all' } });
+    const call = mockGetAdminHolders.mock.calls[mockGetAdminHolders.mock.calls.length - 1];
+    expect(call[0]).toBeUndefined();
+    expect(call[1]).toBeUndefined();
+    expect(call[2] === 'all' || call[2] === undefined).toBe(true);
   });
 
   it('keeps the later holder when a slower next response resolves afterwards', async () => {
@@ -261,7 +328,7 @@ describe('RealunitHoldersScreen', () => {
 
   it('requests the next and previous page with the cursors from pageInfo', async () => {
     mockGetAdminHolders.mockResolvedValue({
-      holders: [NAMED],
+      holders: [WITH_MAIL],
       pageInfo: {
         hasNextPage: true,
         hasPreviousPage: true,
@@ -271,18 +338,18 @@ describe('RealunitHoldersScreen', () => {
       totalCount: 8,
     });
     render(<RealunitHoldersScreen />);
-    await screen.findByText('Verified Ada');
+    await screen.findByText('ada@example.com');
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    expect(mockGetAdminHolders).toHaveBeenLastCalledWith('end-cursor', PaginationDirection.NEXT);
+    expect(mockGetAdminHolders).toHaveBeenLastCalledWith('end-cursor', PaginationDirection.NEXT, 'all');
     fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
-    expect(mockGetAdminHolders).toHaveBeenLastCalledWith('start-cursor', PaginationDirection.PREV);
+    expect(mockGetAdminHolders).toHaveBeenLastCalledWith('start-cursor', PaginationDirection.PREV, 'all');
   });
 
   it('navigates to the holder and copies the address', async () => {
     render(<RealunitHoldersScreen />);
-    fireEvent.click(await screen.findByText(NAMED.address));
-    expect(mockNavigate).toHaveBeenCalledWith(`/realunit/user/${encodeURIComponent(NAMED.address)}`);
+    fireEvent.click(await screen.findByText(WITH_MAIL.address));
+    expect(mockNavigate).toHaveBeenCalledWith(`/realunit/user/${encodeURIComponent(WITH_MAIL.address)}`);
     fireEvent.click(screen.getAllByTestId('copy-button')[0]);
-    expect(mockCopy).toHaveBeenCalledWith(NAMED.address);
+    expect(mockCopy).toHaveBeenCalledWith(WITH_MAIL.address);
   });
 });
