@@ -52,10 +52,7 @@ jest.mock('web3', () => {
   Web3Mock.utils = {
     toChecksumAddress: (address: string) => address,
     toHex: (value: number) => `0x${value.toString(16)}`,
-    toWei: (value: string) =>
-      new (jest.requireActual('bignumber.js').default ?? jest.requireActual('bignumber.js'))(value)
-        .shiftedBy(18)
-        .toFixed(),
+    toWei: (value: string) => value,
   };
   return Web3Mock;
 });

@@ -6,7 +6,7 @@
 **Projekt:** DFXswiss Services
 **Ziel:** Token-Transfer ohne ETH-Besitz über MetaMask Browser Extension
 
-> Abschnitte 4 bis 11 beschreiben den Stand vom Januar 2026, einschließlich damals geplanter oder
+> Abschnitte 1 bis 11 beschreiben den Stand vom Januar 2026, einschließlich damals geplanter oder
 > umgesetzter Änderungen, die es heute nicht mehr gibt. Den aktuellen Stand beschreibt Abschnitt 12.
 
 ---
@@ -706,4 +706,5 @@ Gebührendeckung durch MetaMask.
 Die in §11.2 aufgeführte Real-Hook-Testdatei beschreibt den früheren Stand; sie wurde mit #307
 gelöscht.
 
-Offen bleibt der Praxistest aus §10.3 auf Mainnet.
+Offen bleibt der Praxistest auf Mainnet: ein normaler ERC-20-Verkauf aus der App mit einer
+MetaMask-Wallet, die Token, aber kein natives Guthaben hält, auf einem der Gas-Station-Netzwerke.
