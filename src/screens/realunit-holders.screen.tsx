@@ -6,15 +6,23 @@ import {
   StyledButtonWidth,
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
-import { useEffect } from 'react';
-import { useRealunitContext } from 'src/contexts/realunit.context';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { PaginationDirection } from 'src/dto/realunit.dto';
+import { AdminHolder, PageInfo, PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useRealunitApi } from 'src/hooks/realunit-api.hook';
+import { holderUserDataLines } from 'src/util/holder-user-data';
 import { blankedAddress } from 'src/util/utils';
+
+const emptyPageInfo: PageInfo = {
+  hasNextPage: false,
+  hasPreviousPage: false,
+  startCursor: '',
+  endCursor: '',
+};
 
 export default function RealunitHoldersScreen(): JSX.Element {
   useRealunitGuard();
@@ -22,14 +30,48 @@ export default function RealunitHoldersScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { copy } = useClipboard();
+  const { getAdminHolders } = useRealunitApi();
 
-  const { holders, totalCount, pageInfo, isLoading, fetchHolders } = useRealunitContext();
+  const [holders, setHolders] = useState<AdminHolder[]>([]);
+  const [totalCount, setTotalCount] = useState<number | undefined>();
+  const [pageInfo, setPageInfo] = useState<PageInfo>(emptyPageInfo);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const requestSeq = useRef(0);
 
   useLayoutOptions({ title: translate('screens/realunit', 'All Holders'), backButton: true });
 
+  const loadHolders = useCallback(
+    (cursor?: string, direction?: PaginationDirection) => {
+      const requestId = requestSeq.current + 1;
+      requestSeq.current = requestId;
+      setIsLoading(true);
+      setLoadFailed(false);
+      getAdminHolders(cursor, direction)
+        .then((data) => {
+          if (requestSeq.current !== requestId) return;
+          setHolders(data.holders);
+          setPageInfo(data.pageInfo);
+          setTotalCount(data.totalCount);
+        })
+        .catch(() => {
+          if (requestSeq.current !== requestId) return;
+          setHolders([]);
+          setPageInfo(emptyPageInfo);
+          setTotalCount(undefined);
+          setLoadFailed(true);
+        })
+        .finally(() => {
+          if (requestSeq.current !== requestId) return;
+          setIsLoading(false);
+        });
+    },
+    [getAdminHolders],
+  );
+
   useEffect(() => {
-    if (!holders.length) fetchHolders();
-  }, [fetchHolders]);
+    loadHolders();
+  }, [loadHolders]);
 
   const handleAddressClick = (address: string) => {
     const encodedAddress = encodeURIComponent(address);
@@ -37,7 +79,9 @@ export default function RealunitHoldersScreen(): JSX.Element {
   };
 
   const changePage = (dir: PaginationDirection) =>
-    fetchHolders(dir === PaginationDirection.NEXT ? pageInfo.endCursor : pageInfo.startCursor, dir);
+    loadHolders(dir === PaginationDirection.NEXT ? pageInfo.endCursor : pageInfo.startCursor, dir);
+
+  const headingCount = totalCount != null ? totalCount.toLocaleString() : '0';
 
   return (
     <>
@@ -47,8 +91,11 @@ export default function RealunitHoldersScreen(): JSX.Element {
         <div className="w-full">
           <div className="w-full overflow-x-auto mb-4">
             <h2 className="text-dfxGray-700 mb-4">
-              {translate('screens/realunit', 'All Holders')} ({totalCount?.toLocaleString() ?? '0'})
+              {translate('screens/realunit', 'All Holders')} ({headingCount})
             </h2>
+            {loadFailed ? (
+              <p className="text-sm text-dfxGray-800 mb-4">{translate('screens/realunit', 'Failed to load holders.')}</p>
+            ) : null}
             <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
               <thead>
                 <tr className="bg-dfxGray-300">
@@ -61,31 +108,41 @@ export default function RealunitHoldersScreen(): JSX.Element {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                     {translate('screens/realunit', 'Percentage')}
                   </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'User data')}
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
-                {holders.map((holder) => (
-                  <tr
-                    key={holder.address}
-                    className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300"
-                  >
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="text-left text-sm text-dfxBlue-800 cursor-pointer hover:text-dfxBlue-600 hover:underline break-all bg-transparent border-0 p-0"
-                          onClick={() => handleAddressClick(holder.address)}
-                        >
-                          {blankedAddress(holder.address, { displayLength: 18 })}
-                        </button>
-                        <CopyButton color={IconColor.GRAY} onCopy={() => copy(holder.address)} />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{holder.balance}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{holder.percentage.toFixed(2)}%</td>
-                  </tr>
-                ))}
+                {holders.map((holder) => {
+                  const lines = holderUserDataLines(holder.userData);
+                  return (
+                    <tr
+                      key={holder.address}
+                      className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300"
+                    >
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="text-left text-sm text-dfxBlue-800 cursor-pointer hover:text-dfxBlue-600 hover:underline break-all bg-transparent border-0 p-0"
+                            onClick={() => handleAddressClick(holder.address)}
+                          >
+                            {blankedAddress(holder.address, { displayLength: 18 })}
+                          </button>
+                          <CopyButton color={IconColor.GRAY} onCopy={() => copy(holder.address)} />
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{holder.balance}</td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{holder.percentage.toFixed(2)}%</td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                        <div>{lines.primary}</div>
+                        {lines.secondary !== undefined ? <div>{lines.secondary}</div> : null}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -95,7 +152,7 @@ export default function RealunitHoldersScreen(): JSX.Element {
               <StyledButton
                 label={translate('general/actions', 'Previous')}
                 onClick={() => changePage(PaginationDirection.PREV)}
-                disabled={!pageInfo.hasPreviousPage}
+                disabled={loadFailed || !pageInfo.hasPreviousPage}
                 width={StyledButtonWidth.MIN}
               />
             </div>
@@ -104,7 +161,7 @@ export default function RealunitHoldersScreen(): JSX.Element {
               <StyledButton
                 label={translate('general/actions', 'Next')}
                 onClick={() => changePage(PaginationDirection.NEXT)}
-                disabled={!pageInfo.hasNextPage}
+                disabled={loadFailed || !pageInfo.hasNextPage}
                 width={StyledButtonWidth.MIN}
               />
             </div>

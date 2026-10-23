@@ -1184,6 +1184,8 @@
     "Price History": "Preisverlauf",
     "Top Holders": "Top Inhaber",
     "All Holders": "Alle Inhaber",
+    "User data": "Nutzerdaten",
+    "Failed to load holders.": "Inhaber konnten nicht geladen werden.",
     "Pending Transactions": "Pendente Transaktionen",
     "No pending transactions found": "Keine pendenten Transaktionen gefunden",
     "Received Transactions": "Erhaltene Transaktionen",

@@ -224,6 +224,18 @@ function holdersBody(page: 1 | 2) {
   };
 }
 
+function adminHoldersBody(page: 1 | 2) {
+  const body = holdersBody(page);
+  return {
+    ...body,
+    holders: body.holders.map((entry, index) => ({
+      ...entry,
+      userData:
+        index === 0 ? { id: 1, verifiedName: 'Verified Holder', mail: 'holder@example.com' } : null,
+    })),
+  };
+}
+
 function quotesBody() {
   if (world.quotes === 'empty') return [];
   if (world.quotes === 'many') {
@@ -266,6 +278,11 @@ async function installDashboardRoutes(page: Page): Promise<void> {
       holderCalls += 1;
       const pageNo = world.holders === 'paged' && holderCalls > 1 ? 2 : 1;
       return json(route, holdersBody(pageNo));
+    }
+    if (path === '/v1/realunit/admin/holders') {
+      holderCalls += 1;
+      const pageNo = world.holders === 'paged' && holderCalls > 1 ? 2 : 1;
+      return json(route, adminHoldersBody(pageNo));
     }
     if (path === '/v1/realunit/tokenInfo') return json(route, TOKEN);
     if (path === '/v1/realunit/price/history') {

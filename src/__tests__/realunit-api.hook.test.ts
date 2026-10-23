@@ -71,6 +71,23 @@ describe('useRealunitApi', () => {
     expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/holders?after=h2', method: 'GET' });
   });
 
+  it('getAdminHolders GETs realunit/admin/holders', async () => {
+    const { result } = renderHook(() => useRealunitApi());
+    await result.current.getAdminHolders();
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/admin/holders', method: 'GET' });
+  });
+
+  it('getAdminHolders maps prev to before and other directions to after', async () => {
+    const { result } = renderHook(() => useRealunitApi());
+
+    await result.current.getAdminHolders('h1', PaginationDirection.PREV);
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/admin/holders?before=h1', method: 'GET' });
+
+    mockCall.mockClear();
+    await result.current.getAdminHolders('h2', PaginationDirection.NEXT);
+    expect(mockCall).toHaveBeenCalledWith({ url: 'realunit/admin/holders?after=h2', method: 'GET' });
+  });
+
   it('getTokenInfo GETs realunit/tokenInfo', async () => {
     const { result } = renderHook(() => useRealunitApi());
     await result.current.getTokenInfo();

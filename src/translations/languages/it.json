@@ -1183,6 +1183,8 @@
     "Price History": "Storico dei prezzi",
     "Top Holders": "Principali titolari",
     "All Holders": "Tutti i titolari",
+    "User data": "Dati utente",
+    "Failed to load holders.": "Impossibile caricare i titolari.",
     "Pending Transactions": "Transazioni in sospeso",
     "No pending transactions found": "Nessuna transazione in sospeso trovata",
     "Received Transactions": "Transazioni ricevute",
