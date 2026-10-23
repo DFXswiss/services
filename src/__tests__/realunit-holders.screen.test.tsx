@@ -8,7 +8,7 @@ jest.mock('@dfx.swiss/react-components', () => ({
   IconColor: { GRAY: 'gray' },
   StyledLoadingSpinner: ({ size }: { size?: string }) => <div data-testid="loading-spinner" data-size={size} />,
   StyledButton: ({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) => (
-    <button type="button" onClick={onClick} disabled={disabled}>
+    <button type="button" onClick={disabled ? undefined : onClick} disabled={disabled}>
       {label}
     </button>
   ),
@@ -237,6 +237,60 @@ describe('RealunitHoldersScreen', () => {
     expect(call[0]).toBeUndefined();
     expect(call[1]).toBeUndefined();
     expect(call[2] === 'all' || call[2] === undefined).toBe(true);
+  });
+
+  it('does not request the previous cursor while a registration change waits for the first page', async () => {
+    mockGetAdminHolders.mockResolvedValue({
+      holders: [WITH_MAIL],
+      pageInfo: {
+        hasNextPage: true,
+        hasPreviousPage: true,
+        startCursor: 'start-cursor',
+        endCursor: 'end-cursor',
+      },
+      totalCount: 8,
+    });
+    render(<RealunitHoldersScreen />);
+    expect(await screen.findByText('ada@example.com')).toBeInTheDocument();
+
+    const pending = deferred<AdminHoldersResponse>();
+    mockGetAdminHolders.mockImplementation((cursor?: string) => {
+      if (cursor === undefined) return pending.promise;
+      return new Promise(() => undefined);
+    });
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'registered' } });
+    expect(screen.getByText('ada@example.com')).toBeInTheDocument();
+    expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+
+    const calls = mockGetAdminHolders.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(mockGetAdminHolders).toHaveBeenCalledTimes(calls);
+    expect(mockGetAdminHolders.mock.calls.some((call) => call[0] === 'end-cursor' && call[2] === 'registered')).toBe(
+      false,
+    );
+
+    await act(async () => {
+      pending.resolve({
+        holders: [
+          {
+            address: '0xabc0000000000000000000000000000000008004',
+            balance: '1',
+            percentage: 1,
+            mail: 'bob@example.com',
+          },
+        ],
+        pageInfo: EMPTY_PAGE,
+        totalCount: 1,
+      });
+    });
+
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    expect(screen.queryByText('ada@example.com')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'All Holders (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
   });
 
   it('keeps the later holder when a slower next response resolves afterwards', async () => {

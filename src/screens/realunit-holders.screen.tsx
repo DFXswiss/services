@@ -47,6 +47,7 @@ export default function RealunitHoldersScreen(): JSX.Element {
       requestSeq.current = requestId;
       setIsLoading(true);
       setLoadFailed(false);
+      if (cursor === undefined) setPageInfo(emptyPageInfo);
       getAdminHolders(cursor, direction, registration)
         .then((data) => {
           if (requestSeq.current !== requestId) return;
@@ -103,7 +104,9 @@ export default function RealunitHoldersScreen(): JSX.Element {
               {translate('screens/realunit', 'All Holders')} ({headingCount})
             </h2>
             {loadFailed ? (
-              <p className="text-sm text-dfxGray-800 mb-4">{translate('screens/realunit', 'Failed to load holders.')}</p>
+              <p className="text-sm text-dfxGray-800 mb-4">
+                {translate('screens/realunit', 'Failed to load holders.')}
+              </p>
             ) : null}
             <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
               <thead>
