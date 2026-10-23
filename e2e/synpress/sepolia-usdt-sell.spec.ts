@@ -236,7 +236,8 @@ test.describe('Wallet 1 - Sell-Page Screenshots (Real MetaMask)', () => {
     // Click transaction button
     const txButton = page
       .locator(
-        'button:has-text("Transaktion"), button:has-text("Sell"), button:has-text("Verkaufen"), button:has-text("Wallet")',
+        'button:has-text("Transaktion"), button:has-text("Sell"), ' +
+          'button:has-text("Verkaufen"), button:has-text("Wallet")',
       )
       .first();
 
@@ -383,60 +384,5 @@ test.describe('Sepolia Sell-Page Screenshots and Text Checks', () => {
       path: 'e2e/screenshots/synpress-sepolia-network-mismatch.png',
       fullPage: true,
     });
-  });
-});
-
-// =============================================================================
-// EIP-5792 MANUAL REVIEW SCREENSHOTS
-// =============================================================================
-
-test.describe('EIP-5792 Manual Review Screenshots', () => {
-  test('captures a connected-wallet screenshot for manual review', async ({ page, metamask }) => {
-    await page.goto('/sell?blockchain=Sepolia');
-    await waitForPageReady(page);
-
-    // Connect wallet
-    await connectWallet(page, metamask);
-    await page.waitForTimeout(3000);
-
-    // Wallet capabilities and transaction outcome are not asserted here.
-    await page.screenshot({
-      path: 'e2e/screenshots/synpress-eip5792-capabilities.png',
-      fullPage: true,
-    });
-
-    expect(page).toBeTruthy();
-  });
-
-  test('captures a sell page screenshot for manual review', async ({ page, metamask }) => {
-    await page.goto('/sell?blockchain=Sepolia');
-    await waitForPageReady(page);
-
-    // Connect wallet
-    await connectWallet(page, metamask);
-    await page.waitForTimeout(3000);
-
-    // Attempt to select USDT
-    await selectUsdtAsset(page);
-    await page.waitForTimeout(2000);
-
-    // Enter amount
-    const amountInput = page.locator('input[type="number"], input[inputmode="decimal"]').first();
-    if (await amountInput.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await amountInput.fill('10');
-      await page.waitForTimeout(2000);
-    }
-
-    // Capture the page for manual review.
-    await page.screenshot({
-      path: 'e2e/screenshots/synpress-eip5792-gasless-ui.png',
-      fullPage: true,
-    });
-
-    // The screenshot test does not assert page content or wallet capabilities.
-    const content = await page.textContent('body');
-    console.log('Sell-page screenshot captured for manual review');
-
-    expect(page).toBeTruthy();
   });
 });

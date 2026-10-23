@@ -12,7 +12,6 @@ const mockState = {
   getAddressBalances: jest.fn(),
   createTransactionMetaMask: jest.fn(),
   requestChangeToBlockchainMetaMask: jest.fn(),
-  sendCallsWithPaymaster: jest.fn(),
   createTransactionWalletConnect: jest.fn(),
   requestChangeToBlockchainWalletConnect: jest.fn(),
   sendPayment: jest.fn(),
@@ -56,7 +55,6 @@ jest.mock('../wallets/metamask.hook', () => ({
   useMetaMask: () => ({
     createTransaction: mockState.createTransactionMetaMask,
     requestChangeToBlockchain: mockState.requestChangeToBlockchainMetaMask,
-    sendCallsWithPaymaster: mockState.sendCallsWithPaymaster,
   }),
 }));
 jest.mock('../wallets/phantom.hook', () => ({
@@ -96,43 +94,26 @@ beforeEach(() => {
   mockState.createTransactionTrustTrx.mockResolvedValue('trust-trx-hash');
   mockState.createTransactionTronLinkTrx.mockResolvedValue('tronlink-hash');
   mockState.sendPayment.mockResolvedValue({ preimage: 'payment-preimage' });
-  mockState.sendCallsWithPaymaster.mockResolvedValue('eip5792-hash');
-  mockState.confirmSell.mockResolvedValue({ id: 101 });
-  mockState.confirmSwap.mockResolvedValue({ id: 202 });
   mockState.getParamBalances.mockResolvedValue([{ amount: 1 }]);
   mockState.getAddressBalances.mockResolvedValue([{ amount: 2 }]);
 });
 
 describe('useTxHelper', () => {
-  it('returns the EIP-5792 transaction hash after confirming a sell', async () => {
-    const calls = [{ to: '0xto', data: '0xdata', value: '0x0' }];
-    const tx = { ...sell, depositTx: { eip5792: { calls, paymasterUrl: 'https://paymaster', chainId: 1 } } } as Sell;
+  it.each<[string, Sell | Swap]>([
+    ['sell', { ...sell, depositTx: { eip5792: { calls: [], paymasterUrl: 'https://old', chainId: 1 } } } as Sell],
+    ['swap', { ...swap, depositTx: { eip5792: { calls: [], paymasterUrl: 'https://old', chainId: 1 } } } as Swap],
+  ])('sends old EIP-5792 %s payment data through the regular MetaMask transfer', async (_kind, tx) => {
     const { result } = renderHook(() => useTxHelper());
 
-    await expect(result.current.sendTransaction(tx)).resolves.toBe('eip5792-hash');
-    expect(mockState.sendCallsWithPaymaster).toHaveBeenCalledWith(calls, 'https://paymaster', 1, '0xabc');
-    expect(mockState.confirmSell).toHaveBeenCalledWith(1, { txHash: 'eip5792-hash' });
-    expect(mockState.createTransactionMetaMask).not.toHaveBeenCalled();
-  });
-
-  it('returns the EIP-5792 transaction hash after confirming a swap', async () => {
-    const calls = [{ to: '0xto', data: '0xdata', value: '0x0' }];
-    const tx = { ...swap, depositTx: { eip5792: { calls, paymasterUrl: 'https://paymaster', chainId: 10 } } } as Swap;
-    const { result } = renderHook(() => useTxHelper());
-
-    await expect(result.current.sendTransaction(tx)).resolves.toBe('eip5792-hash');
-    expect(mockState.sendCallsWithPaymaster).toHaveBeenCalledWith(calls, 'https://paymaster', 10, '0xabc');
-    expect(mockState.confirmSwap).toHaveBeenCalledWith(2, { txHash: 'eip5792-hash' });
-  });
-
-  it('uses the regular MetaMask transaction path when EIP-5792 data is absent, ignoring obsolete 7702 fields', async () => {
-    const legacySell = { ...sell, gaslessAvailable: true, eip7702Authorization: { typedData: {} } } as Sell;
-    const { result } = renderHook(() => useTxHelper());
-
-    await expect(result.current.sendTransaction(legacySell)).resolves.toBe('normal-hash');
-    expect(mockState.createTransactionMetaMask).toHaveBeenCalledWith(new BigNumber(2), asset, '0xabc', '0xdeposit');
+    await expect(result.current.sendTransaction(tx)).resolves.toBe('normal-hash');
+    expect(mockState.createTransactionMetaMask).toHaveBeenCalledWith(
+      new BigNumber(tx.amount),
+      asset,
+      '0xabc',
+      '0xdeposit',
+    );
     expect(mockState.confirmSell).not.toHaveBeenCalled();
-    expect(mockState.sendCallsWithPaymaster).not.toHaveBeenCalled();
+    expect(mockState.confirmSwap).not.toHaveBeenCalled();
   });
 
   it('uses backend balances only for supported wallets with a full address context', async () => {
@@ -226,27 +207,5 @@ describe('useTxHelper', () => {
       rerender();
       await expect(result.current.sendTransaction(sell)).rejects.toThrow('Address is not defined');
     }
-  });
-
-  it('rejects unsuccessful EIP-5792 backend confirmation', async () => {
-    mockState.confirmSell.mockResolvedValueOnce(undefined);
-    const tx = {
-      ...sell,
-      depositTx: { eip5792: { calls: [], paymasterUrl: 'https://paymaster', chainId: 1 } },
-    } as Sell;
-    const { result } = renderHook(() => useTxHelper());
-
-    await expect(result.current.sendTransaction(tx)).rejects.toThrow('Failed to confirm sell transaction');
-  });
-
-  it('rejects unsuccessful EIP-5792 swap confirmation', async () => {
-    mockState.confirmSwap.mockResolvedValueOnce(undefined);
-    const tx = {
-      ...swap,
-      depositTx: { eip5792: { calls: [], paymasterUrl: 'https://paymaster', chainId: 1 } },
-    } as Swap;
-    const { result } = renderHook(() => useTxHelper());
-
-    await expect(result.current.sendTransaction(tx)).rejects.toThrow('Failed to confirm swap transaction');
   });
 });

@@ -1,10 +1,9 @@
-import { Asset, Blockchain, Sell, Swap, useAuthContext, useSell, useSwap } from '@dfx.swiss/react';
+import { Asset, Blockchain, Sell, Swap, useAuthContext } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
-import { TranslatedError } from '../util/translated-error';
 import { useBlockchainBalance } from './blockchain-balance.hook';
 import { useAlby } from './wallets/alby.hook';
 import { useMetaMask } from './wallets/metamask.hook';
@@ -22,11 +21,8 @@ export interface TxHelperInterface {
 
 // CAUTION: This is a helper hook for all blockchain transaction functionalities. Think about lazy loading, as soon as it gets bigger.
 export function useTxHelper(): TxHelperInterface {
-  const {
-    createTransaction: createTransactionMetaMask,
-    requestChangeToBlockchain: requestChangeToBlockchainMetaMask,
-    sendCallsWithPaymaster,
-  } = useMetaMask();
+  const { createTransaction: createTransactionMetaMask, requestChangeToBlockchain: requestChangeToBlockchainMetaMask } =
+    useMetaMask();
   const {
     createTransaction: createTransactionWalletConnect,
     requestChangeToBlockchain: requestChangeToBlockchainWalletConnect,
@@ -41,8 +37,6 @@ export function useTxHelper(): TxHelperInterface {
   const { session } = useAuthContext();
   const { canClose } = useAppHandlingContext();
   const { getAddressBalances } = useBlockchainBalance();
-  const { confirmSell } = useSell();
-  const { confirmSwap } = useSwap();
 
   async function getBalances(
     assets: Asset[],
@@ -88,25 +82,6 @@ export function useTxHelper(): TxHelperInterface {
         if (!session?.address) throw new Error('Address is not defined');
 
         await requestChangeToBlockchainMetaMask(asset.blockchain);
-
-        // EIP-5792 gasless transaction flow via wallet_sendCalls with paymaster
-        if (tx.depositTx?.eip5792) {
-          const { paymasterUrl, calls, chainId } = tx.depositTx.eip5792;
-
-          // Send transaction via wallet_sendCalls with paymaster sponsorship
-          const txHash = await sendCallsWithPaymaster(calls, paymasterUrl, chainId, session.address);
-
-          // Confirm the transaction with the backend using the txHash
-          if ('asset' in tx) {
-            const result = await confirmSell(tx.id, { txHash });
-            if (!result?.id) throw new TranslatedError('Failed to confirm sell transaction');
-            return txHash;
-          } else {
-            const result = await confirmSwap(tx.id, { txHash });
-            if (!result?.id) throw new TranslatedError('Failed to confirm swap transaction');
-            return txHash;
-          }
-        }
 
         return createTransactionMetaMask(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
@@ -169,9 +144,6 @@ export function useTxHelper(): TxHelperInterface {
       requestChangeToBlockchainMetaMask,
       requestChangeToBlockchainWalletConnect,
       canClose,
-      sendCallsWithPaymaster,
-      confirmSell,
-      confirmSwap,
     ],
   );
 }

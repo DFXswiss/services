@@ -684,3 +684,22 @@ _Dokument erstellt am 8. Januar 2026_
 _Letzte Aktualisierung: 8. Januar 2026_
 _Verifizierung hinzugefügt: 8. Januar 2026_
 _Implementierung dokumentiert: 8. Januar 2026_
+
+## 12. Stand nach #307
+
+Die App nutzt für MetaMask ausschließlich `eth_sendTransaction` mit einem ERC-20-`transfer`.
+Laut MetaMask-Quellcode lädt `TransactionController#updateSimulationData` für jede hinzugefügte
+Transaktion die verfügbaren `gasFeeTokens`; `useIsGaslessSupported` berücksichtigt Smart
+Transactions (`sendBundle`) und den 7702-Relay. Die Gas Station deckt damit auch eine normale
+dApp-Transaktion ab; die offene Frage aus §10.2 Punkt 1 (Gas Station mit `wallet_sendCalls`) stellt
+sich nicht mehr, weil die App diesen Weg nicht mehr nutzt.
+
+Der `wallet_sendCalls`-Weg aus §5 und §11 wurde entfernt. Der Full-Stack-Test mit injiziertem
+Wallet prüft, dass die App ohne Abfrage von nativem Guthaben oder Gebührendaten eine normale
+ERC-20-Transaktion an die Deposit-Adresse aus der API an die Wallet übergibt. Er prüft nicht die
+Gebührendeckung durch MetaMask.
+
+Die in §11.2 aufgeführte Real-Hook-Testdatei beschreibt den früheren Stand; sie wurde mit #307
+gelöscht.
+
+Offen bleibt der Praxistest aus §10.3 auf Mainnet.

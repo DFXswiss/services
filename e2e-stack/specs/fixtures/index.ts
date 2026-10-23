@@ -6,6 +6,7 @@ export * from './api-client';
 export * from './auth';
 export * from './db';
 export * from './factories';
+export * from './injected-wallet';
 export * from './mail';
 export * from './routes';
 export * from './screen-sync';

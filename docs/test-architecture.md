@@ -493,31 +493,24 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   `src/hooks/__tests__/tx-helper.hook.test.ts` replaces `useSell`/`useSwap`/`useAuthContext` from
   `@dfx.swiss/react`, the app-handling, balance and wallet contexts, the blockchain balance hook and
   the MetaMask, WalletConnect, Alby, Phantom, Trust (Solana and Tron) and TronLink hooks with
-  in-memory functions. A green run proves which wallet function and which confirm payload the
-  helper picks for each wallet type and payment info, including that a sell carrying the old
-  `eip7702Authorization` field takes the normal MetaMask path. It does not prove that any wallet
-  builds or signs a transaction, or that the API accepts the confirm payload.
+  in-memory functions. A green run proves which wallet function the helper picks for each wallet
+  type and payment info, including that sell and swap data carrying a legacy `depositTx.eip5792`
+  field still use the regular MetaMask transaction function without a backend confirm call. It
+  does not prove that a wallet builds or signs that transaction, or that the API accepts it.
 - **The MetaMask hook unit test replaces Web3, the injected provider and the timer.**
   `src/hooks/wallets/__tests__/metamask.hook.test.ts` replaces the `web3` constructor with an
   in-memory instance (re-applied in `beforeEach`, because the Jest setup resets mock
   implementations), `window.ethereum` with a provider object whose `request` and `on` are mocks,
   the `useWeb3` chain helpers, the `timeout` utility and `react-device-detect`. A green run proves
-  the hook's requests, error mapping and EIP-5792 `wallet_sendCalls` handling against those
-  answers. It does not prove that MetaMask or any other injected wallet answers that way, that
-  `wallet_sendCalls` with a paymaster is accepted on a real chain, or that a transaction is sent.
-- **The EIP-5792 real-hook test replaces the wallet environment around `useMetaMask`.**
-  `src/__tests__/eip5792-real-hooks.test.ts` renders the production hook from
-  `src/hooks/wallets/metamask.hook.ts`, but replaces `window.ethereum`, Web3 and SDK chain data;
-  its v2 `wallet_sendCalls` and `wallet_getCallsStatus` responses are fixtures. A green run does
-  not prove that MetaMask returns those responses, the Paymaster accepts the request, or a
-  transaction is sent.
-- **The EIP-5792 sell Playwright spec injects a mock wallet provider.**
-  `e2e/eip5792-gasless-sell.spec.ts:26-112` installs `window.ethereum` with fixture capabilities;
-  `wallet_sendCalls` returns `{ id }` and `wallet_getCallsStatus` returns numeric v2 statuses 100,
-  200 or 500. The production counterpart is `src/hooks/wallets/metamask.hook.ts:267-367`, which
-  queries capabilities, sends v2 calls and polls their status. This local Playwright spec does not
-  run in CI. A green run does not prove that a real wallet responds this way, that a Paymaster
-  accepts the request, or that a transaction is sent.
+  the hook's standard wallet requests, error mapping and ERC-20 transfer construction against
+  those answers. It does not prove that a real injected wallet answers the same way, signs a
+  transfer, or submits it to a chain.
+- **The MetaMask no-native-gas full-stack tests inject a wallet provider.**
+  `e2e-stack/specs/fixtures/injected-wallet.ts:1` records requests, returns a zero native balance,
+  simulates token reads and accepts one ERC-20 transfer. A green run proves the app requests no
+  native balance or fee data before sending, and sends the API's deposit address and quoted amount
+  through `eth_sendTransaction`; it does not prove that MetaMask pays the fee from tokens, that
+  the transaction lands on-chain, or that the backend recognizes the pay-in.
 - **The rejected address switch visual spec answers the user and the switch itself.**
   `e2e/connect-address-switch.spec.ts` authenticates with a synthetic unsigned JWT without an address, fulfils
   `GET /v2/user` with one synthetic address (and with none in the custody case) and the bootstrap GETs,

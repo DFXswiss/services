@@ -1,4 +1,4 @@
-import { Asset, AssetType, Blockchain, Eip5792Call } from '@dfx.swiss/react';
+import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import { useMemo } from 'react';
@@ -41,21 +41,12 @@ export interface MetaMaskInterface {
     to: string,
     config?: { isWeiAmount?: boolean; gasPrice?: number },
   ) => Promise<string>;
-  sendCallsWithPaymaster: (
-    calls: Eip5792Call[],
-    paymasterUrl: string,
-    chainId: number,
-    from: string,
-  ) => Promise<string>;
-  supportsEip5792Paymaster: (chainId: number, account?: string) => Promise<boolean>;
 }
 
 interface MetaMaskError {
   code: number;
   message: string;
 }
-
-const UNSUPPORTED_PAYMASTER_MESSAGE = 'Your wallet does not support sponsored (gasless) transactions.';
 
 export function useMetaMask(): MetaMaskInterface {
   const web3 = useMemo(() => {
@@ -266,110 +257,10 @@ export function useMetaMask(): MetaMaskInterface {
     return new web3.eth.Contract(ERC20_ABI as any, chainId);
   }
 
-  /**
-   * Check if the wallet supports EIP-5792 paymaster service
-   */
-  async function supportsEip5792Paymaster(chainId: number, requestedAccount?: string): Promise<boolean> {
-    try {
-      const account = requestedAccount ?? (await getAccount());
-      if (!account) return false;
-
-      const capabilities = await ethereum().request({
-        method: 'wallet_getCapabilities',
-        params: [account],
-      });
-
-      const chainHex = `0x${chainId.toString(16)}`;
-      return capabilities?.[chainHex]?.paymasterService?.supported === true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Wait for wallet_sendCalls transaction to be confirmed
-   */
-  async function waitForCallsStatus(callsId: string): Promise<string> {
-    const maxAttempts = 120; // 2 minutes
-    for (let i = 0; i < maxAttempts; i++) {
-      const status = await ethereum().request({
-        method: 'wallet_getCallsStatus',
-        params: [callsId],
-      });
-
-      if (status.status >= 200 && status.status < 300) {
-        const transactionHash = status.receipts?.[0]?.transactionHash;
-        if (!transactionHash) throw new TranslatedError('Transaction failed');
-        return transactionHash;
-      }
-      if (status.status >= 300) {
-        throw new TranslatedError('Transaction failed');
-      }
-
-      await new Promise((r) => setTimeout(r, 1000));
-    }
-    throw new TranslatedError('Transaction timeout - please check your wallet');
-  }
-
-  /**
-   * Send transaction via EIP-5792 wallet_sendCalls with paymaster sponsorship
-   */
-  async function sendCallsWithPaymaster(
-    calls: Eip5792Call[],
-    paymasterUrl: string,
-    chainId: number,
-    from: string,
-  ): Promise<string> {
-    try {
-      if (!from) throw new Error('No account connected');
-
-      const chainHex = `0x${chainId.toString(16)}`;
-
-      // Check if wallet supports paymaster
-      const supported = await supportsEip5792Paymaster(chainId, from);
-      if (!supported) {
-        throw new TranslatedError(UNSUPPORTED_PAYMASTER_MESSAGE);
-      }
-
-      // Send calls with paymaster capability
-      const result = await ethereum().request({
-        method: 'wallet_sendCalls',
-        params: [
-          {
-            version: '2.0.0',
-            chainId: chainHex,
-            from,
-            atomicRequired: true,
-            calls: calls.map((c) => ({
-              to: c.to,
-              data: c.data,
-              value: c.value,
-            })),
-            capabilities: {
-              paymasterService: { url: paymasterUrl },
-            },
-          },
-        ],
-      });
-
-      // Wait for transaction confirmation
-      return await waitForCallsStatus(result.id ?? result);
-    } catch (e) {
-      return handleError(e as MetaMaskError);
-    }
-  }
-
   function handleError(e: MetaMaskError): never {
     switch (e.code) {
       case 4001:
         throw new AbortError('User cancelled', 4001);
-
-      case 5750:
-        // EIP-5792 5750 means the wallet rejected the atomic upgrade.
-        throw new AbortError('User cancelled', 4001);
-
-      case 5700:
-        throw new TranslatedError(UNSUPPORTED_PAYMASTER_MESSAGE);
 
       case -32002:
         throw new TranslatedError('There is already a request pending. Please confirm it in your MetaMask and retry.');
@@ -392,8 +283,6 @@ export function useMetaMask(): MetaMaskInterface {
       addContract,
       readBalance,
       createTransaction,
-      sendCallsWithPaymaster,
-      supportsEip5792Paymaster,
     }),
     [web3, toBlockchain, toChainHex, toChainObject],
   );
