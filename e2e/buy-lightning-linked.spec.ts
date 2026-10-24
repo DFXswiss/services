@@ -111,22 +111,10 @@ test.describe('Buy Process - Lightning Linked to Bitcoin Account', () => {
       }
     });
 
-    // Wait for exchange rate to load
-    try {
-      await page.waitForSelector('text=Wechselkurs', { timeout: 10000 });
-    } catch {
-      await page.waitForSelector('text=Exchange rate', { timeout: 5000 }).catch(() => {});
-    }
-
-    await page.waitForTimeout(1000);
+    await page.locator('text=/Wechselkurs|Exchange rate/').first().waitFor({ timeout: 15000 });
 
     const pageContent = await page.textContent('body');
-
-    const hasExchangeInfo =
-      pageContent?.includes('Wechselkurs') ||
-      pageContent?.includes('Exchange rate') ||
-      pageContent?.includes('BTC') ||
-      pageContent?.includes('CHF');
+    const hasExchangeInfo = pageContent?.includes('Wechselkurs') || pageContent?.includes('Exchange rate');
 
     expect(hasExchangeInfo).toBeTruthy();
 

@@ -128,23 +128,10 @@ test.describe('Sell Process - Lightning Linked to Bitcoin Account', () => {
       }
     });
 
-    // Wait for exchange rate or IBAN selector
-    try {
-      await page.waitForSelector('text=/Wechselkurs|IBAN|erhältst/i', { timeout: 10000 });
-    } catch {
-      // Continue even if not found
-    }
-
-    await page.waitForTimeout(1000);
+    await page.locator('text=/Wechselkurs|Exchange rate/').first().waitFor({ timeout: 15000 });
 
     const pageContent = await page.textContent('body');
-
-    const hasExchangeInfo =
-      pageContent?.includes('Wechselkurs') ||
-      pageContent?.includes('Exchange rate') ||
-      pageContent?.includes('CHF') ||
-      pageContent?.includes('EUR') ||
-      pageContent?.includes('IBAN');
+    const hasExchangeInfo = pageContent?.includes('Wechselkurs') || pageContent?.includes('Exchange rate');
 
     expect(hasExchangeInfo).toBeTruthy();
 
