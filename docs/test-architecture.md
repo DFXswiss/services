@@ -146,10 +146,13 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   `GET /v1/realunit/account/:address` and `GET /v1/realunit/account/:address/history`,
   and it answers price history, buy volume, holder count, registration, the prize wallet
   and the buy limit with HTTP errors when a scenario asks for the error state.
+  The dashboard answers `GET /v1/realunit/admin/holders` itself. Fixture rows carry `mail`
+  or null, and the spec also requests `registration=registered` and `registration=unregistered`.
   A green run proves the overview, treasury, insights, holder, transaction and account
   fixtures render, including those error states. It does not prove that the API returns
-  those payloads, that login or token verification works, or that the staff, stats,
-  prize-wallet, alert, payout, buy-limit or account endpoints return real data.
+  those payloads, that the API attaches UserData to the address, that login or token
+  verification works, or that the staff, stats, prize-wallet, alert, payout, buy-limit
+  or account endpoints return real data.
 - **The RealUnit support visual spec answers the issue list and thread itself.**
   `e2e/realunit-support.spec.ts` fulfils the RealUnit support list, counts, activity, clerks,
   issue data and messages with synthetic fixtures. Auth is a synthetic unsigned Admin JWT.
@@ -529,6 +532,17 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   address `0x1111111111111111111111111111111111111111`, and does not call a live API. A green run
   proves the mismatch hint renders for that fixture. It does not prove that the hint comes from a
   real session or a real API response.
+- **The account screen coverage test replaces the SDK and the component library.**
+  `src/__tests__/account-screen-coverage.test.tsx` replaces the user, auth, session, API and
+  transaction hooks with in-memory stubs, and replaces the styled components with passthrough
+  markup. A green run proves those stubs exercise the profile, address, referral and PDF branches.
+  It does not prove a live user, a live transaction list, a real address switch, or that the
+  production components render.
+- **The order form coverage test replaces the order hook and the SDK.**
+  `src/__tests__/order-interface.test.tsx` supplies a hand-built order state and replaces the SDK
+  enums, the order hook, the debounce hook and the payment-info component. A green run proves the
+  form follows that stub, including which address label it shows. It does not prove a live quote,
+  a live balance lookup, or a real payment-info request.
 
 ## Known gaps
 

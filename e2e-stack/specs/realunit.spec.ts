@@ -229,13 +229,21 @@ test.describe('RealUnit area', () => {
     );
   });
 
-  // CONFIRMED product bug (live uncaught pageerror): fetchHolders() has no .catch() in
-  // realunit.context.tsx. Observed: ApiException: Cannot read properties of undefined (reading 'document').
-  test.fail(
+  // GET /v1/realunit/admin/holders returns 503 when the graph URL is not configured. The screen
+  // shows the failure sentence. The browser line names no URL, so only one such line is dropped
+  // per counted admin-holders 503. pageerror stays strict.
+  test(
     '/realunit/holders empty state — uncaught ApiException from fetchHolders() (no .catch; reading document)',
     async ({ page }) => {
       const { jwt } = await loginAs('RealUnit');
       const { pageErrors, consoleErrors } = attachErrorListeners(page);
+
+      let adminHolders503 = 0;
+      page.on('response', (response) => {
+        if (response.status() === 503 && response.url().includes('/v1/realunit/admin/holders')) {
+          adminHolders503 += 1;
+        }
+      });
 
       await openScreen(page, '/realunit/holders', jwt);
 
@@ -243,10 +251,25 @@ test.describe('RealUnit area', () => {
       await expect(tableHeader(page, 'Address')).toBeVisible();
       await expect(tableHeader(page, 'Balance')).toBeVisible();
       await expect(tableHeader(page, 'Percentage')).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Previous' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Next' })).toBeVisible();
+      await expect(tableHeader(page, 'E-mail')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Previous' })).toBeDisabled();
+      await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
+      await expect(page.locator('tbody tr')).toHaveCount(0);
+      await expect(page.getByText('Failed to load holders.')).toBeVisible();
 
-      assertNoErrors(pageErrors, consoleErrors);
+      const adminHolders503Line =
+        'Failed to load resource: the server responded with a status of 503 (Service Unavailable)';
+      let remainingAdminHolders503 = adminHolders503;
+      assertNoErrors(
+        pageErrors,
+        consoleErrors.filter((msg) => {
+          if (msg === adminHolders503Line && remainingAdminHolders503 > 0) {
+            remainingAdminHolders503 -= 1;
+            return false;
+          }
+          return true;
+        }),
+      );
     },
   );
 
