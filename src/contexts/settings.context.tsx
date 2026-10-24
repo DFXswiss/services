@@ -181,6 +181,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     }
 
     const filteredCountries = countries.filter((c) => c.kycAllowed);
+    const filteredOrganizationCountries = countries.filter((c) => c.kycOrganizationAllowed);
 
     setData({
       mail,
@@ -201,7 +202,9 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
         houseNumber: organizationHouseNumber,
         city: organizationCity,
         zip: organizationZip,
-        country: filteredCountries.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
+        country: filteredOrganizationCountries.find(
+          (c) => c.symbol === organizationCountry || c.name === organizationCountry,
+        ),
       },
     } as UserData)
       .catch(() => {

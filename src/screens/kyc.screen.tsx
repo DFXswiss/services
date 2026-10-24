@@ -764,7 +764,6 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
 
   const { countryCode } = useGeoLocation();
 
-  const [countries, setCountries] = useState<Country[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -781,8 +780,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
   useEffect(() => {
     if (!selectedAccountType) return;
 
-    const countries = selectedAccountType === AccountType.PERSONAL ? allowedCountries : allowedOrganizationCountries;
-    const ipCountry = countries.find((c) => c.symbol === countryCode);
+    const ipCountry = allowedCountries.find((c) => c.symbol === countryCode);
 
     reset({
       ...getValues(),
@@ -800,9 +798,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
         country: undefined,
       },
     });
-
-    setCountries(countries);
-  }, [selectedAccountType, countryCode, allowedCountries, allowedOrganizationCountries]);
+  }, [selectedAccountType, countryCode, allowedCountries]);
 
   function onSubmit(data: KycPersonalData) {
     if (!step.session) return;
@@ -925,7 +921,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                 autocomplete="country"
                 label={translate('screens/kyc', 'Country')}
                 placeholder={translate('general/actions', 'Select') + '...'}
-                items={countries}
+                items={allowedCountries}
                 labelFunc={(item) => item.name}
                 filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                 matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
@@ -997,7 +993,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   autocomplete="country"
                   label={translate('screens/kyc', 'Country')}
                   placeholder={translate('general/actions', 'Select') + '...'}
-                  items={countries}
+                  items={allowedOrganizationCountries}
                   labelFunc={(item) => item.name}
                   filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                   matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
