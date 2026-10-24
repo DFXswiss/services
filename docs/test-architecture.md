@@ -492,6 +492,28 @@ run does not prove for each one; the taxonomy and cross-repository entries live 
   block. It does not prove that the DFX payment-link API returns those payloads, that a wallet
   deeplink opens, that the asset catalog matches production, or that the SPAR map draws the
   place list.
+- **The transaction helper unit test replaces the SDK, the contexts and every wallet hook.**
+  `src/hooks/__tests__/tx-helper.hook.test.ts` replaces `useAuthContext` from `@dfx.swiss/react`,
+  the app-handling, balance and wallet contexts, the blockchain balance hook and the MetaMask,
+  WalletConnect, Alby, Phantom, Trust (Solana and Tron) and TronLink hooks with
+  in-memory functions. A green run proves which wallet function the helper picks for each wallet
+  type and payment info, including that sell and swap data carrying a legacy `depositTx.eip5792`
+  field still use the regular MetaMask transaction function. It
+  does not prove that a wallet builds or signs that transaction, or that the API accepts it.
+- **The MetaMask hook unit test replaces Web3, the injected provider and the timer.**
+  `src/hooks/wallets/__tests__/metamask.hook.test.ts` replaces the `web3` constructor with an
+  in-memory instance (re-applied in `beforeEach`, because the Jest setup resets mock
+  implementations), `window.ethereum` with a provider object whose `request` and `on` are mocks,
+  the `useWeb3` chain helpers, the `timeout` utility and `react-device-detect`. A green run proves
+  the hook's standard wallet requests, error mapping and ERC-20 transfer construction against
+  those answers. It does not prove that a real injected wallet answers the same way, signs a
+  transfer, or submits it to a chain.
+- **The MetaMask no-native-gas full-stack tests inject a wallet provider.**
+  `e2e-stack/specs/fixtures/injected-wallet.ts:1` records requests, returns a zero native balance,
+  simulates token reads and accepts one ERC-20 transfer. A green run proves the app requests no
+  native balance or fee data before sending, and sends the API's deposit address and quoted amount
+  through `eth_sendTransaction`; it does not prove that MetaMask pays the fee from tokens, that
+  the transaction lands on-chain, or that the backend recognizes the pay-in.
 - **The rejected address switch visual spec answers the user and the switch itself.**
   `e2e/connect-address-switch.spec.ts` authenticates with a synthetic unsigned JWT without an address, fulfils
   `GET /v2/user` with one synthetic address (and with none in the custody case) and the bootstrap GETs,

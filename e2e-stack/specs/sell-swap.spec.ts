@@ -12,7 +12,17 @@
  */
 
 import type { Page, Response } from '@playwright/test';
-import { expect, gotoWithSession, normPath, openScreen, test, waitForRow } from './fixtures';
+import {
+  expect,
+  gotoWithSession,
+  normPath,
+  openScreen,
+  test,
+  waitForRow,
+  installInjectedMetaMask,
+  readWalletRequests,
+  type WalletRequest,
+} from './fixtures';
 import {
   cleanupCreatedData,
   createBankAccount,
@@ -96,6 +106,8 @@ interface AssetDto {
   name: string;
   uniqueName?: string;
   blockchain?: string;
+  chainId?: string;
+  decimals?: number;
   sellable?: boolean;
   buyable?: boolean;
   comingSoon?: boolean;
@@ -114,6 +126,168 @@ async function fetchAssets(): Promise<AssetDto[]> {
   const res = await fetch(`${apiBase()}/v1/asset`);
   expect(res.ok, `GET /v1/asset status ${res.status}`).toBe(true);
   return (await res.json()) as AssetDto[];
+}
+
+interface PaymentInfoDto {
+  amount: string;
+  depositAddress: string;
+  exactPrice?: boolean;
+}
+
+function trackPaymentInfoPayloads(page: Page, pathIncludes: string, decimals: number): { all: PaymentInfoDto[] } {
+  const tracker: { all: PaymentInfoDto[] } = { all: [] };
+  page.on('response', async (response: Response) => {
+    if (!response.url().includes(pathIncludes) || response.request().method() !== 'PUT') return;
+    if (response.status() < 200 || response.status() >= 300) return;
+    try {
+      const body = await response.text();
+      const payload = JSON.parse(body) as {
+        amount?: number | string;
+        depositAddress?: string;
+        exactPrice?: boolean;
+      };
+      const rawAmount = payload.amount;
+      const amount =
+        typeof rawAmount === 'number'
+          ? String(rawAmount).includes('e')
+            ? rawAmount.toFixed(decimals)
+            : String(rawAmount)
+          : typeof rawAmount === 'string'
+            ? /e/i.test(rawAmount)
+              ? Number(rawAmount).toFixed(decimals)
+              : rawAmount
+            : undefined;
+      const requestBody = response.request().postDataJSON() as { exactPrice?: boolean } | null;
+      const exactPrice = new URL(response.url()).searchParams.get('exactPrice') === 'true';
+      if (payload?.depositAddress && amount != null) {
+        tracker.all.push({
+          depositAddress: payload.depositAddress,
+          amount,
+          exactPrice: payload.exactPrice ?? requestBody?.exactPrice ?? exactPrice,
+        });
+      }
+    } catch {
+      // Non-JSON and unsuccessful responses are not valid payment information.
+    }
+  });
+  return tracker;
+}
+
+function toTokenUnits(amount: string, decimals: number): bigint {
+  const [whole, fraction = ''] = amount.split('.');
+  if (fraction.length > decimals) throw new Error(`Quote amount ${amount} exceeds ${decimals} decimals`);
+  return BigInt(`${whole}${fraction.padEnd(decimals, '0')}`);
+}
+
+async function runMetaMaskNoNativeGasFlow(page: Page, kind: 'sell' | 'swap'): Promise<void> {
+  // The first quote on a fresh stack takes about 20 s with cold caches and offline outbound calls;
+  // host load can extend that wait further.
+  test.setTimeout(180000);
+  const assets = await fetchAssets();
+  const source = assets
+    .filter((asset) => asset.blockchain === 'Base' && asset.name === 'USDC' && asset.sellable && asset.chainId)
+    .sort((left, right) => left.id - right.id)[0];
+  expect(source, 'GET /v1/asset must include sellable Base USDC with its contract address').toBeTruthy();
+  const target = assets
+    .filter((asset) => asset.blockchain === 'Base' && asset.id !== source?.id && asset.buyable)
+    .sort((left, right) => left.id - right.id)[0];
+  expect(target, 'GET /v1/asset must include another buyable Base asset for the swap target').toBeTruthy();
+  expect(source?.decimals, 'Base USDC decimals must be present in GET /v1/asset').toEqual(expect.any(Number));
+
+  const user = await createUser({
+    walletIndex: nextWalletIndex(),
+    tag: `metamask-${kind}-no-gas`,
+    kycLevel: 30,
+    completePersonalData: true,
+    language: 'EN',
+  });
+  if (kind === 'sell') await createBankAccount(user.jwt, { iban: TEST_IBAN, label: 'MetaMask sell' });
+
+  const txHash = `0x${'a'.repeat(64)}`;
+  await installInjectedMetaMask(page, {
+    address: user.address,
+    chainIdHex: '0x2105',
+    tokenDecimals: source!.decimals!,
+    tokenBalance: '1000000000000',
+    txHash,
+  });
+  const path = kind === 'sell' ? '/sell/paymentInfos' : '/swap/paymentInfos';
+  const paymentInfos = trackPaymentInfoPayloads(page, path, source!.decimals!);
+  const pimlicoRequests: string[] = [];
+  page.on('request', (request) => {
+    if (/pimlico/i.test(request.url())) pimlicoRequests.push(request.url());
+  });
+  const query = new URLSearchParams({
+    'asset-in': String(source!.id),
+    'amount-in': '1',
+    blockchain: kind === 'swap' ? target!.blockchain! : 'Base',
+    type: 'MetaMask',
+  });
+  if (kind === 'sell') query.set('asset-out', 'CHF');
+  else query.set('asset-out', String(target!.id));
+  await gotoWithSession(page, `${kind === 'sell' ? '/sell' : '/swap'}?${query}`, user.jwt);
+
+  const paymentButton = page.getByRole('button', { name: 'Complete transaction in your wallet' });
+  await expect(paymentButton).toBeVisible({ timeout: 90000 });
+  const spendArea = page.getByRole('heading', { name: 'You spend' }).locator('..');
+  await expect(spendArea).toContainText('Base');
+  const beforeClickBody = await page.locator('body').innerText();
+  expect(beforeClickBody).not.toMatch(
+    /insufficient|not enough.*(?:native|fee|fund|gas|ETH)|gas required exceeds allowance/i,
+  );
+
+  await expect
+    .poll(() => paymentInfos.all.filter((info) => info.exactPrice === true).length, { timeout: 10000 })
+    .toBeGreaterThan(0);
+  const exactQuotes = paymentInfos.all.filter((info) => info.exactPrice === true);
+  const paymentInfo = exactQuotes[exactQuotes.length - 1];
+  expect(paymentInfo?.depositAddress).toBeTruthy();
+  expect(toTokenUnits(paymentInfo!.amount, source!.decimals!)).toBe(10n ** BigInt(source!.decimals!));
+  await paymentButton.click();
+  await expect(page.getByText('Nice! You are all set! Give us a minute to handle your transaction.')).toBeVisible({
+    timeout: 30000,
+  });
+  const completion = await page.locator('body').innerText();
+  expect(completion).toContain(txHash.slice(0, 12));
+  expect(completion).toContain(txHash.slice(-8));
+
+  const requests: WalletRequest[] = await readWalletRequests(page);
+  const methods = requests.map((request) => request.method);
+  const sends = requests.filter((request) => request.method === 'eth_sendTransaction');
+  expect(sends).toHaveLength(1);
+  // Before sending, the app makes no native balance or fee request to the wallet; eth_call reads decimals.
+  expect(methods).toEqual([
+    'wallet_switchEthereumChain',
+    'eth_call',
+    'eth_sendTransaction',
+    'eth_getTransactionReceipt',
+  ]);
+  const tokenRead = requests.find((request) => request.method === 'eth_call');
+  const call = tokenRead?.params?.[0] as { to?: string; data?: string } | undefined;
+  expect(call?.to?.toLowerCase()).toBe(source!.chainId!.toLowerCase());
+  expect(call?.data?.toLowerCase()).toBe('0x313ce567');
+  expect(pimlicoRequests).toEqual([]);
+
+  const tx = sends[0].params?.[0] as { from: string; to: string; data: string; value?: string };
+  expect(tx.from.toLowerCase()).toBe(user.address.toLowerCase());
+  expect(tx.to.toLowerCase()).toBe(source!.chainId!.toLowerCase());
+  expect(tx.value == null || BigInt(tx.value) === 0n).toBe(true);
+  expect(tx.data).toMatch(/^0xa9059cbb[0-9a-f]{128}$/i);
+  const recipient = `0x${tx.data.slice(34, 74)}`;
+  const amount = BigInt(`0x${tx.data.slice(74, 138)}`);
+  expect(recipient.toLowerCase()).toBe(paymentInfo!.depositAddress.toLowerCase());
+  expect(amount).toBe(toTokenUnits(paymentInfo!.amount, source!.decimals!));
+
+  const route = await waitForRow<{ address: string; type: string }>(
+    `SELECT d.address, r.type FROM deposit_route r
+     JOIN deposit d ON d.id = r."depositId"
+     WHERE r."userId" = $1 AND r.type = $2
+     ORDER BY r.id DESC LIMIT 1`,
+    [user.userId, kind === 'sell' ? 'Sell' : 'Crypto'],
+    20000,
+  );
+  expect(route.address.toLowerCase()).toBe(paymentInfo!.depositAddress.toLowerCase());
+  expect(route.type).toBe(kind === 'sell' ? 'Sell' : 'Crypto');
 }
 
 async function fetchFiats(): Promise<FiatDto[]> {
@@ -967,5 +1141,23 @@ test.describe('Sell + Swap e2e', () => {
 
     expect(bankAccountPosts, 'an existing bank account must not be created again').toBe(0);
     expect(paymentInfos.last, 'the screen must get as far as requesting payment information').toBeTruthy();
+  });
+});
+
+test.describe('MetaMask transfer request', () => {
+  test.afterAll(async () => {
+    await cleanupCreatedData();
+  });
+
+  test('/sell with MetaMask hands one ERC-20 transfer to the API deposit address to the wallet without a native balance or fee request to the wallet', async ({
+    page,
+  }) => {
+    await runMetaMaskNoNativeGasFlow(page, 'sell');
+  });
+
+  test('/swap with MetaMask hands one ERC-20 transfer to the API deposit address to the wallet without a native balance or fee request to the wallet', async ({
+    page,
+  }) => {
+    await runMetaMaskNoNativeGasFlow(page, 'swap');
   });
 });

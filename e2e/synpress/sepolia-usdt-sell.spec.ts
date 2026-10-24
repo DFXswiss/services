@@ -3,13 +3,13 @@
  *
  * Tests using two distinct wallets derived from TEST_SEED:
  *
- * Wallet 1 (0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120): Has ETH + USDT
- *   - Standard sell flow with gas
- *   - USDT sell test (pays gas in ETH)
+ * Wallet 1 (0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120): Used for sell-page screenshots
+ *   - Captures the sell page and screenshots after attempting USDT selection
+ *   - Checks page text for the `Fatal` and `crashed` labels
  *
- * Wallet 2 (0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74): Has USDT only (no ETH)
- *   - Gasless sell flow via EIP-7702
- *   - USDT sell without ETH for gas
+ * Wallet 2 (0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74): Second-account sell scenario
+ *   - Wallet 2 sell scenario is skipped because this Synpress setup uses the first account
+ *   - Hook behavior is covered by unit tests; E2E specs capture screens for manual review
  *
  * Run: npx playwright test --config=playwright.synpress.config.ts e2e/synpress/sepolia-usdt-sell.spec.ts
  */
@@ -30,7 +30,7 @@ import {
 // =============================================================================
 
 /**
- * Add Sepolia network to MetaMask
+ * Attempt to add Sepolia network to MetaMask
  */
 async function addSepoliaNetwork(metamaskPage: any): Promise<void> {
   // Try opening network settings
@@ -42,7 +42,9 @@ async function addSepoliaNetwork(metamaskPage: any): Promise<void> {
       await metamaskPage.waitForTimeout(1000);
 
       // Look for "Add network" button
-      const addNetworkBtn = metamaskPage.locator('button:has-text("Add network"), button:has-text("Netzwerk hinzufügen")').first();
+      const addNetworkBtn = metamaskPage
+        .locator('button:has-text("Add network"), button:has-text("Netzwerk hinzufügen")')
+        .first();
       if (await addNetworkBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
         await addNetworkBtn.click();
         await metamaskPage.waitForTimeout(1000);
@@ -67,7 +69,7 @@ async function addSepoliaNetwork(metamaskPage: any): Promise<void> {
 }
 
 /**
- * Switch MetaMask to Sepolia network
+ * Attempt to switch MetaMask to Sepolia
  */
 async function switchToSepolia(metamaskPage: any): Promise<void> {
   try {
@@ -89,16 +91,11 @@ async function switchToSepolia(metamaskPage: any): Promise<void> {
 }
 
 /**
- * Select USDT token from asset selector
+ * Attempt to select USDT from the asset selector
  */
 async function selectUsdtAsset(page: any): Promise<void> {
   // Try clicking on asset selector (various possible selectors)
-  const selectors = [
-    'text=Sepolia Testnet',
-    'text=ETH',
-    '[data-testid="asset-selector"]',
-    '[class*="asset-select"]',
-  ];
+  const selectors = ['text=Sepolia Testnet', 'text=ETH', '[data-testid="asset-selector"]', '[class*="asset-select"]'];
 
   for (const selector of selectors) {
     try {
@@ -113,7 +110,7 @@ async function selectUsdtAsset(page: any): Promise<void> {
     }
   }
 
-  // Select USDT from dropdown
+  // Attempt to select USDT from the dropdown
   const usdtOption = page.locator('text=USDT').first();
   try {
     await usdtOption.waitFor({ state: 'visible', timeout: 5000 });
@@ -133,19 +130,21 @@ async function waitForPageReady(page: any): Promise<void> {
 }
 
 // =============================================================================
-// WALLET 1 TESTS: ETH + USDT (with gas)
+// WALLET 1 TESTS: sell-page screenshots and a critical-error text check
 // =============================================================================
 
-test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
+test.describe('Wallet 1 - Sell-Page Screenshots (Real MetaMask)', () => {
   test.beforeAll(async () => {
     console.log('=== WALLET 1 TESTS ===');
     console.log(`Expected address: ${TEST_WALLET_1_ADDRESS}`);
-    console.log('This wallet has ETH + USDT for standard gas payments');
+    console.log('Wallet 1 sell-page screenshot scenario');
   });
 
-  test('should verify Wallet 1 address is correctly derived', async ({ metamaskPage }) => {
-    // Verify the correct seed is being used by checking the address in MetaMask
-    const addressElement = metamaskPage.locator('[data-testid="account-options-menu-button"], [class*="address"]').first();
+  test('checks the Wallet 1 address constant', async ({ metamaskPage }) => {
+    // Compare the configured address constant with the expected literal
+    const addressElement = metamaskPage
+      .locator('[data-testid="account-options-menu-button"], [class*="address"]')
+      .first();
 
     // Take screenshot for verification
     await metamaskPage.screenshot({
@@ -156,14 +155,14 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
     expect(TEST_WALLET_1_ADDRESS.toLowerCase()).toBe('0x482c8a499c7ac19925a0d2aa3980e1f3c5f19120');
   });
 
-  test('should load sell page for Wallet 1 on Sepolia', async ({ page, metamask, metamaskPage }) => {
+  test('captures a sell screenshot after a Sepolia switch attempt', async ({ page, metamask, metamaskPage }) => {
     test.setTimeout(120000);
 
-    // Ensure MetaMask is on Sepolia
+    // Attempt to switch MetaMask to Sepolia
     await addSepoliaNetwork(metamaskPage);
     await switchToSepolia(metamaskPage);
 
-    // Navigate to sell page with Sepolia blockchain
+    // Navigate to the sell page with the Sepolia route parameter
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
@@ -177,13 +176,13 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
     const content = await page.textContent('body');
     expect(content).toBeTruthy();
 
-    console.log('Wallet 1 Sepolia sell page loaded successfully');
+    console.log('Wallet 1 sell-page screenshot captured');
   });
 
-  test('should sell USDT on Sepolia with ETH for gas (Wallet 1)', async ({ page, metamask, metamaskPage }) => {
+  test('captures sell screenshots after a USDT selection attempt', async ({ page, metamask, metamaskPage }) => {
     test.setTimeout(180000);
 
-    // Ensure MetaMask is on Sepolia
+    // Attempt to switch MetaMask to Sepolia
     await switchToSepolia(metamaskPage);
     await page.waitForTimeout(2000);
 
@@ -201,11 +200,11 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
       fullPage: true,
     });
 
-    // Select USDT token
+    // Attempt to select the USDT token
     await selectUsdtAsset(page);
     await page.waitForTimeout(2000);
 
-    // Screenshot: USDT selected
+    // Screenshot after attempting USDT selection
     await page.screenshot({
       path: 'e2e/screenshots/synpress-wallet1-usdt-02-asset-selected.png',
       fullPage: true,
@@ -218,7 +217,7 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
       await page.waitForTimeout(2000);
     }
 
-    // Screenshot: Amount entered
+    // Screenshot after attempting amount entry
     await page.screenshot({
       path: 'e2e/screenshots/synpress-wallet1-usdt-03-amount-entered.png',
       fullPage: true,
@@ -228,7 +227,7 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(1000);
 
-    // Screenshot: Ready to transact
+    // Screenshot after scrolling to the transaction area
     await page.screenshot({
       path: 'e2e/screenshots/synpress-wallet1-usdt-04-ready-to-transact.png',
       fullPage: true,
@@ -236,7 +235,10 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
 
     // Click transaction button
     const txButton = page
-      .locator('button:has-text("Transaktion"), button:has-text("Sell"), button:has-text("Verkaufen"), button:has-text("Wallet")')
+      .locator(
+        'button:has-text("Transaktion"), button:has-text("Sell"), ' +
+          'button:has-text("Verkaufen"), button:has-text("Wallet")',
+      )
       .first();
 
     if (await txButton.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -244,7 +246,7 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
       await txButton.click();
       await page.waitForTimeout(5000);
 
-      // MetaMask should show transaction approval
+      // The click may open a MetaMask transaction approval prompt
       // Screenshot after clicking
       await page.screenshot({
         path: 'e2e/screenshots/synpress-wallet1-usdt-05-after-tx-click.png',
@@ -254,81 +256,79 @@ test.describe('Wallet 1 - Sepolia USDT Sell with Gas (Real MetaMask)', () => {
       // Try to approve in MetaMask if popup appears
       try {
         await metamask.confirmTransaction();
-        console.log('MetaMask transaction confirmed');
+        console.log('MetaMask confirmation prompt accepted');
       } catch (e) {
         console.log('MetaMask confirmation note:', e);
       }
     }
 
-    // Verify no critical errors
+    // Check that page text excludes the Fatal and crashed labels
     const bodyContent = await page.textContent('body');
     const hasCriticalError = bodyContent?.includes('Fatal') || bodyContent?.includes('crashed');
     expect(hasCriticalError).toBeFalsy();
 
-    console.log('Wallet 1 USDT sell flow completed (with gas)');
+    console.log('Wallet 1 sell screenshots captured after attempting USDT selection');
   });
 });
 
 // =============================================================================
-// WALLET 2 TESTS: USDT only (no ETH - gasless via EIP-7702)
+// WALLET 2 TESTS: second-account sell scenario (skipped)
 // =============================================================================
 
-test.describe('Wallet 2 - Sepolia Gasless USDT Sell (Real MetaMask)', () => {
+test.describe('Wallet 2 - Second-Account Scenario (Skipped)', () => {
   test.beforeAll(async () => {
     console.log('=== WALLET 2 TESTS ===');
     console.log(`Expected address: ${TEST_WALLET_2_ADDRESS}`);
-    console.log('This wallet has USDT only (no ETH) for gasless EIP-7702 testing');
+    console.log('Wallet 2 second-account sell scenario');
   });
 
-  test('should verify Wallet 2 address is correctly derived', async ({}) => {
-    // Verify the derivation is correct
+  test('checks the Wallet 2 address constant', async ({}) => {
+    // Compare the configured address constant with the expected literal
     console.log(`Wallet 2 expected: ${TEST_WALLET_2_ADDRESS}`);
     expect(TEST_WALLET_2_ADDRESS.toLowerCase()).toBe('0x6aca95ed0705babf3b91fa9212af495510bf8b74');
   });
 
-  test.skip('should sell USDT on Sepolia without ETH (gasless flow)', async ({ page, metamask, metamaskPage }) => {
+  test.skip('Wallet 2 second-account scenario', async ({ page, metamask, metamaskPage }) => {
     /**
      * NOTE: This test requires MetaMask to be configured with Wallet 2's derivation path
      * The current Synpress setup only supports the default (first) wallet.
      *
-     * To fully test gasless flow:
+     * To run this scenario:
      * 1. Configure MetaMask with the second account (m/44'/60'/0'/0/0)
      * 2. Or use a separate browser profile with Wallet 2
      *
      * For now, this test is skipped as it requires manual wallet switching.
-     * The gasless flow is tested via the mock tests in sepolia-dual-wallet.spec.ts
+     * The sponsored-transaction path was removed; unit tests cover the regular ERC-20 transfer
+     * helper, and the full-stack test covers the MetaMask transfer request. E2E specs capture screenshots.
      */
     test.setTimeout(180000);
 
     // This would need MetaMask configured with Wallet 2
-    console.log('Gasless USDT sell test requires Wallet 2 configuration');
+    console.log('Wallet 2 sell scenario requires second-account configuration');
     console.log(`Wallet 2 address: ${TEST_WALLET_2_ADDRESS}`);
-    console.log('This wallet has USDT but no ETH for gas');
+    console.log('Wallet 2 is reserved for the second-account scenario');
 
     // Navigate to sell page
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
-    // The gasless flow would show:
-    // 1. No "Insufficient ETH" blocking error
-    // 2. EIP-7702 delegation option
-    // 3. Paymaster service for gas sponsorship
+    // This skipped scenario does not inspect the page state or wallet capabilities.
 
     expect(true).toBeTruthy();
   });
 });
 
 // =============================================================================
-// INTEGRATION TESTS
+// SELL-PAGE SCREENSHOTS AND TEXT CHECKS
 // =============================================================================
 
-test.describe('Sepolia USDT Integration Tests', () => {
-  test('should verify Sepolia network is available', async ({ page }) => {
+test.describe('Sepolia Sell-Page Screenshots and Text Checks', () => {
+  test('captures a sell-page screenshot for manual inspection', async ({ page }) => {
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
     const content = await page.textContent('body');
-    // Page should show Sepolia-related content or sell interface
+    // Confirm that the page has some content
     expect(content).toBeTruthy();
 
     // Screenshot
@@ -338,7 +338,7 @@ test.describe('Sepolia USDT Integration Tests', () => {
     });
   });
 
-  test('should verify USDT is available as sell asset on Sepolia', async ({ page, metamask }) => {
+  test('captures the sell page after attempting to locate USDT', async ({ page, metamask }) => {
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
@@ -347,7 +347,11 @@ test.describe('Sepolia USDT Integration Tests', () => {
     await page.waitForTimeout(3000);
 
     // Try to find USDT in asset list
-    const usdtVisible = await page.locator('text=USDT').first().isVisible({ timeout: 5000 }).catch(() => false);
+    const usdtVisible = await page
+      .locator('text=USDT')
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     // Screenshot
     await page.screenshot({
@@ -359,8 +363,8 @@ test.describe('Sepolia USDT Integration Tests', () => {
     expect(page).toBeTruthy();
   });
 
-  test('should handle network mismatch gracefully', async ({ page, metamask, metamaskPage }) => {
-    // Navigate to Sepolia sell page but MetaMask might be on different network
+  test('checks page text for the Fatal and crashed labels', async ({ page, metamask, metamaskPage }) => {
+    // Navigate to the sell page with the Sepolia route parameter
     await page.goto('/sell?blockchain=Sepolia');
     await waitForPageReady(page);
 
@@ -368,10 +372,7 @@ test.describe('Sepolia USDT Integration Tests', () => {
     await connectWallet(page, metamask);
     await page.waitForTimeout(3000);
 
-    // The app should either:
-    // 1. Prompt for network switch
-    // 2. Show appropriate message
-    // 3. Handle the mismatch gracefully
+    // Check that page text excludes the Fatal and crashed labels
 
     const content = await page.textContent('body');
     const hasCriticalError = content?.includes('Fatal') || content?.includes('crashed');
@@ -382,68 +383,5 @@ test.describe('Sepolia USDT Integration Tests', () => {
       path: 'e2e/screenshots/synpress-sepolia-network-mismatch.png',
       fullPage: true,
     });
-  });
-});
-
-// =============================================================================
-// EIP-7702 SPECIFIC TESTS
-// =============================================================================
-
-test.describe('EIP-7702 Gasless Flow Tests', () => {
-  test('should detect wallet capabilities for EIP-7702', async ({ page, metamask }) => {
-    await page.goto('/sell?blockchain=Sepolia');
-    await waitForPageReady(page);
-
-    // Connect wallet
-    await connectWallet(page, metamask);
-    await page.waitForTimeout(3000);
-
-    // After connection, the app should check wallet_getCapabilities
-    // If MetaMask supports EIP-7702, it will be available for gasless transactions
-
-    // Screenshot for capability detection
-    await page.screenshot({
-      path: 'e2e/screenshots/synpress-eip7702-capabilities.png',
-      fullPage: true,
-    });
-
-    expect(page).toBeTruthy();
-  });
-
-  test('should show appropriate UI for gasless transactions when available', async ({ page, metamask }) => {
-    await page.goto('/sell?blockchain=Sepolia');
-    await waitForPageReady(page);
-
-    // Connect wallet
-    await connectWallet(page, metamask);
-    await page.waitForTimeout(3000);
-
-    // Select USDT
-    await selectUsdtAsset(page);
-    await page.waitForTimeout(2000);
-
-    // Enter amount
-    const amountInput = page.locator('input[type="number"], input[inputmode="decimal"]').first();
-    if (await amountInput.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await amountInput.fill('10');
-      await page.waitForTimeout(2000);
-    }
-
-    // Screenshot: Check for gasless UI elements
-    await page.screenshot({
-      path: 'e2e/screenshots/synpress-eip7702-gasless-ui.png',
-      fullPage: true,
-    });
-
-    // Look for gasless-related UI elements
-    const content = await page.textContent('body');
-    console.log('Checking for gasless UI elements...');
-
-    // The UI might show:
-    // - "Gasless" label
-    // - "Sponsored" transaction option
-    // - No gas fee display for gasless path
-
-    expect(page).toBeTruthy();
   });
 });
