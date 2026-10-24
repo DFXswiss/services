@@ -91,6 +91,8 @@ test.describe('Buy Process - Lightning Linked to Bitcoin Account', () => {
     const pageContent = await page.textContent('body');
     expect(pageContent).toBeTruthy();
 
+    await page.locator('text=/Wechselkurs|Exchange rate/').first().waitFor({ timeout: 15000 });
+
     await expect(page).toHaveScreenshot('buy-lightning-linked-with-amount.png', {
       maxDiffPixels: 10000,
     });
