@@ -17,7 +17,7 @@ test.describe('Swap Bitcoin to Lightning', () => {
     await page.goto(url);
 
     // Wait for page to load and exchange rate to appear
-    await page.locator('text=/Wechselkurs|E-Mail/i').first().waitFor({ timeout: 15000 });
+    await page.locator('text=/Wechselkurs|Exchange rate/').first().waitFor({ timeout: 15000 });
     await page.waitForTimeout(2000);
 
     // Take screenshot after full load

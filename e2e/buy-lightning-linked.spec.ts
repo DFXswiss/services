@@ -163,6 +163,8 @@ test.describe('Buy Process - Lightning Linked Full UI Flow', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
+    await page.locator('text=/Wechselkurs|Exchange rate/').first().waitFor({ timeout: 15000 });
+
     await expect(page).toHaveScreenshot('lightning-linked-buy-01-initial.png', {
       maxDiffPixels: 10000,
     });
@@ -178,12 +180,7 @@ test.describe('Buy Process - Lightning Linked Full UI Flow', () => {
     });
     await page.waitForTimeout(1500);
 
-    // Step 3: Wait for exchange rate
-    try {
-      await page.waitForSelector('text=/Wechselkurs|Zahlungsinformation/i', { timeout: 10000 });
-    } catch {
-      // Continue even if not found
-    }
+    await page.locator('text=/Wechselkurs|Exchange rate/').first().waitFor({ timeout: 15000 });
     await page.waitForTimeout(500);
 
     await expect(page).toHaveScreenshot('lightning-linked-buy-02-form-filled.png', {
